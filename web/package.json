@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node ./node_modules/next/dist/bin/next dev",
     "dev:https": "node server.js",
-    "build": "next build",
-    "start": "next start",
+    "build": "node ./node_modules/next/dist/bin/next build",
+    "start": "node ./node_modules/next/dist/bin/next start",
     "start:https": "cross-env NODE_ENV=production node server.js",
-    "lint": "next lint"
+    "lint": "node ./node_modules/eslint/bin/eslint.js ."
   },
   "dependencies": {
     "@iconify/react": "^5.2.0",

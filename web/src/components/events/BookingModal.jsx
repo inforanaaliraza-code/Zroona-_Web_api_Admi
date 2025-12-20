@@ -416,46 +416,62 @@ export default function BookingModal({
 
 						{step === "payment" && (
 							<div className="space-y-6">
-								{/* Payment Summary */}
-								<div className="bg-gradient-to-br from-[#a797cc]/5 to-orange-50 rounded-xl p-5 border border-[#a797cc]/10">
-									<div className="flex items-center justify-between mb-3">
-										<span className="text-sm font-medium text-gray-700">
-											{getTranslation(t, "events.totalAmount", "Total Amount")}
-										</span>
-										<span className="text-2xl font-bold text-[#a797cc]">
-											{totalAmount.toFixed(2)} SAR
-										</span>
+								{/* Payment Summary - Improved Design */}
+								<div className="bg-gradient-to-br from-[#a797cc]/10 via-white to-orange-50/50 rounded-2xl p-6 border-2 border-[#a797cc]/20 shadow-lg">
+									<div className="flex items-center justify-between mb-4">
+										<div className="flex flex-col">
+											<span className="text-sm font-semibold text-gray-600 mb-1">
+												{getTranslation(t, "events.totalAmount", "Total Amount")}
+											</span>
+											<span className="text-3xl font-bold text-[#a797cc] tracking-tight">
+												{totalAmount.toFixed(2)} <span className="text-xl text-gray-600">SAR</span>
+											</span>
+										</div>
+										<div className="flex items-center justify-center w-16 h-16 bg-[#a797cc]/10 rounded-full">
+											<Icon icon="lucide:wallet" className="w-8 h-8 text-[#a797cc]" />
+										</div>
 									</div>
-									<p className="text-xs text-gray-500 flex items-center gap-1">
-										<Icon icon="lucide:shield-check" className="w-3 h-3" />
-										{getTranslation(t, "events.securePayment", "Secure payment powered by Moyasar")}
-									</p>
+									<div className="pt-4 border-t border-[#a797cc]/20">
+										<p className="text-xs font-medium text-gray-600 flex items-center gap-2">
+											<Icon icon="lucide:shield-check" className="w-4 h-4 text-green-600" />
+											<span>{getTranslation(t, "events.securePayment", "Secure payment powered by Moyasar")}</span>
+										</p>
+									</div>
 								</div>
 
-								{/* Payment Form Container */}
+								{/* Payment Form Container - Enhanced */}
 								<div className="relative">
+									<div className="mb-3">
+										<h3 className="text-lg font-semibold text-gray-800 mb-1">
+											{getTranslation(t, "events.paymentDetails", "Payment Details")}
+										</h3>
+										<p className="text-sm text-gray-500">
+											{getTranslation(t, "events.enterCardInfo", "Enter your card information to complete the payment")}
+										</p>
+									</div>
 									<div
 										ref={moyasarFormRef}
-										className="w-full min-h-[280px] bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm transition-all duration-300 hover:border-[#a797cc]/30 focus-within:border-[#a797cc] focus-within:shadow-md"
+										className="w-full min-h-[320px] bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:border-[#a797cc]/40 focus-within:border-[#a797cc] focus-within:shadow-xl"
 									>
-										{/* Loading Placeholder */}
+										{/* Loading Placeholder - Improved */}
 										{(!moyasarFormRef.current?.innerHTML || moyasarFormRef.current.innerHTML.trim() === "") && (
-											<div className="flex flex-col justify-center items-center h-[280px] space-y-4">
+											<div className="flex flex-col justify-center items-center h-[320px] space-y-5">
 												<div className="relative">
-													<div className="absolute inset-0 bg-[#a797cc]/10 rounded-full animate-ping"></div>
+													<div className="absolute inset-0 bg-[#a797cc]/20 rounded-full animate-ping"></div>
+													<div className="absolute inset-0 bg-[#a797cc]/10 rounded-full animate-pulse"></div>
 													<Icon
 														icon="lucide:credit-card"
-														className="w-12 h-12 text-[#a797cc] relative z-10"
+														className="w-16 h-16 text-[#a797cc] relative z-10"
 													/>
 												</div>
-												<div className="text-center space-y-2">
-													<p className="text-sm font-medium text-gray-700">
+												<div className="text-center space-y-3">
+													<p className="text-base font-semibold text-gray-700">
 														{getTranslation(t, "events.loadingPaymentForm", "Loading secure payment form...")}
 													</p>
-													<div className="flex justify-center gap-1">
-														<div className="w-2 h-2 bg-[#a797cc] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-														<div className="w-2 h-2 bg-[#a797cc] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-														<div className="w-2 h-2 bg-[#a797cc] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+													<div className="flex justify-center gap-2">
+														<div className="w-2.5 h-2.5 bg-[#a797cc] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+														<div className="w-2.5 h-2.5 bg-[#a797cc] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+														<div className="w-2.5 h-2.5 bg-[#a797cc] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
 													</div>
 												</div>
 											</div>
@@ -463,10 +479,14 @@ export default function BookingModal({
 									</div>
 								</div>
 
-								{/* Accepted Payment Methods Info */}
-								<div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-									<Icon icon="lucide:lock" className="w-4 h-4" />
-									<span>{getTranslation(t, "events.acceptedCards", "We accept Visa, Mastercard, Mada, and AMEX")}</span>
+								{/* Accepted Payment Methods Info - Enhanced */}
+								<div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+									<div className="flex items-center justify-center gap-3 text-sm text-gray-600">
+										<Icon icon="lucide:lock" className="w-5 h-5 text-green-600" />
+										<span className="font-medium">
+											{getTranslation(t, "events.acceptedCards", "We accept Visa, Mastercard, Mada, and AMEX")}
+										</span>
+									</div>
 								</div>
 							</div>
 						)}

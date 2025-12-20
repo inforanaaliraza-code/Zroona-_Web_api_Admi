@@ -95,6 +95,11 @@ const eventSchema = new Schema(
 			type: [Schema.Types.ObjectId],
 			default: [],
 		},
+		// Support for multiple event types (array of strings: conference, workshop, etc.)
+		event_types: {
+			type: [String],
+			default: [],
+		},
 		event_for: {
 			type: Number,
 			enum: [1, 2, 3],

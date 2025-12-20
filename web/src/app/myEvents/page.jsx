@@ -11,6 +11,9 @@ import useAuthStore from "@/store/useAuthStore";
 import { GetUserBookingsApi, CancelBookingApi } from "@/app/api/setting";
 import CancelConfirmDialog from "@/components/ui/CancelConfirmDialog";
 import { useRTL } from "@/utils/rtl";
+import Header from "@/components/Header/Header";
+import GuestNavbar from "@/components/Header/GuestNavbar";
+import Footer from "@/components/Footer/Footer";
 
 // Helper function to safely get translations with fallbacks
 const getTranslation = (t, key, fallback) => {
@@ -29,8 +32,10 @@ const getTranslation = (t, key, fallback) => {
 export default function MyEventsPage() {
   const { t, i18n } = useTranslation();
   const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized);
-  const { token, isAuthenticated } = useAuthStore();
+  const { token, isAuthenticated, user } = useAuthStore();
   const { isRTL, textAlign, flexDirection, marginStart, marginEnd } = useRTL();
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   // Wait for i18n to be ready
   useEffect(() => {
@@ -84,6 +89,28 @@ export default function MyEventsPage() {
     return date.toLocaleDateString();
   };
 
+  // Format time
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    try {
+      const time = new Date(`2000-01-01T${timeString}`);
+      return time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    } catch (error) {
+      return timeString;
+    }
+  };
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    if (!amount && amount !== 0) return "N/A";
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
   // Load user bookings
   useEffect(() => {
     if (!token || !isAuthenticated) {
@@ -105,6 +132,16 @@ export default function MyEventsPage() {
             payment_status: booking.payment_status,
             attendees: booking.no_of_attendees || booking.attendees || 0,
             total_amount: booking.book_details?.total_amount || booking.total_amount,
+            // Top-level fields for easy access
+            event_start_time: booking.event_start_time || booking.event?.event_start_time,
+            event_end_time: booking.event_end_time || booking.event?.event_end_time,
+            event_address: booking.event_address || booking.event?.event_address,
+            event_category: booking.event_category || booking.event?.event_category,
+            organizer: {
+              first_name: booking.organizer_first_name || booking.organizer?.first_name,
+              last_name: booking.organizer_last_name || booking.organizer?.last_name,
+              profile_image: booking.organizer_profile_image || booking.organizer?.profile_image,
+            },
             event: {
               _id: booking.event_id || booking.event?._id,
               event_name: booking.event_name || booking.event?.event_name,
@@ -221,6 +258,19 @@ export default function MyEventsPage() {
             payment_status: booking.payment_status,
             attendees: booking.no_of_attendees || booking.attendees || 0,
             total_amount: booking.book_details?.total_amount || booking.total_amount,
+            invoice_id: booking.invoice_id,
+            invoice_url: booking.invoice_url,
+            order_id: booking.order_id,
+            // Top-level fields for easy access
+            event_start_time: booking.event_start_time || booking.event?.event_start_time,
+            event_end_time: booking.event_end_time || booking.event?.event_end_time,
+            event_address: booking.event_address || booking.event?.event_address,
+            event_category: booking.event_category || booking.event?.event_category,
+            organizer: {
+              first_name: booking.organizer_first_name || booking.organizer?.first_name,
+              last_name: booking.organizer_last_name || booking.organizer?.last_name,
+              profile_image: booking.organizer_profile_image || booking.organizer?.profile_image,
+            },
             event: {
               _id: booking.event_id || booking.event?._id,
               event_name: booking.event_name || booking.event?.event_name,
@@ -292,16 +342,19 @@ export default function MyEventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <div className={`text-center mb-8 ${textAlign}`}>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {getTranslation(t, "sidemenu.tab4", "My Bookings")}
-          </h1>
-          <p className="mt-2 text-lg text-gray-600">
-            {getTranslation(t, "events.viewYourBookings", "View and manage your event bookings")}
-          </p>
-        </div>
+    <>
+      <Header bgColor="#fff" />
+      <GuestNavbar search={search} setSearch={setSearch} setPage={setPage} />
+      <div className="min-h-screen bg-gray-50 pt-32 pb-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className={`text-center mb-8 ${textAlign}`}>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {getTranslation(t, "sidemenu.tab4", "My Bookings")}
+            </h1>
+            <p className="mt-2 text-lg text-gray-600">
+              {getTranslation(t, "events.viewYourBookings", "View and manage your event bookings")}
+            </p>
+          </div>
 
         {/* Requirement #1: Tabs - Only Approved, Pending, Rejected */}
         <div className="mb-6 flex justify-center">
@@ -425,39 +478,145 @@ export default function MyEventsPage() {
                       </span>
                     </div>
                     
-                    <div className={`flex items-start ${flexDirection}`}>
-                      <Icon icon="lucide:credit-card" className={`mt-0.5 ${marginEnd(2)} h-4 w-4 text-gray-500`} />
-                      <span className={`text-sm text-gray-600 ${textAlign}`}>
-                        {getPaymentStatusText(booking.payment_status)}
+                    <div className={`flex items-start justify-between ${flexDirection}`}>
+                      <div className={`flex items-start ${flexDirection}`}>
+                        <Icon icon="lucide:credit-card" className={`mt-0.5 ${marginEnd(2)} h-4 w-4 text-gray-500`} />
+                        <span className={`text-sm text-gray-600 ${textAlign}`}>
+                          {getPaymentStatusText(booking.payment_status)}
+                        </span>
+                      </div>
+                      {/* Payment Status Badge */}
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        booking.payment_status 
+                          ? "bg-green-100 text-green-700 border border-green-300" 
+                          : "bg-blue-100 text-blue-700 border border-blue-300"
+                      }`}>
+                        {booking.payment_status 
+                          ? getTranslation(t, "events.paid", "Paid") 
+                          : getTranslation(t, "events.unpaid", "Unpaid")}
                       </span>
                     </div>
+
+                    {/* Event Time */}
+                    {(booking.event?.event_start_time || booking.event_start_time) && (
+                      <div className={`flex items-start ${flexDirection}`}>
+                        <Icon icon="lucide:clock" className={`mt-0.5 ${marginEnd(2)} h-4 w-4 text-gray-500`} />
+                        <span className={`text-sm text-gray-600 ${textAlign}`}>
+                          {formatTime(booking.event?.event_start_time || booking.event_start_time)}
+                          {(booking.event?.event_end_time || booking.event_end_time) && 
+                            ` - ${formatTime(booking.event?.event_end_time || booking.event_end_time)}`
+                          }
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Event Location */}
+                    {(booking.event?.event_address || booking.event_address) && (
+                      <div className={`flex items-start ${flexDirection}`}>
+                        <Icon icon="lucide:map-pin" className={`mt-0.5 ${marginEnd(2)} h-4 w-4 text-gray-500 flex-shrink-0`} />
+                        <span className={`text-sm text-gray-600 ${textAlign} line-clamp-1`}>
+                          {booking.event?.event_address || booking.event_address}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Total Amount */}
+                    {booking.total_amount && (
+                      <div className={`flex items-start justify-between ${flexDirection}`}>
+                        <div className={`flex items-start ${flexDirection}`}>
+                          <Icon icon="lucide:dollar-sign" className={`mt-0.5 ${marginEnd(2)} h-4 w-4 text-gray-500`} />
+                          <span className={`text-sm font-medium text-gray-900 ${textAlign}`}>
+                            {formatCurrency(booking.total_amount)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Organizer Name */}
+                    {(booking.organizer?.first_name || booking.organizer?.last_name || booking.event?.organizer?.first_name) && (
+                      <div className={`flex items-start ${flexDirection}`}>
+                        <Icon icon="lucide:user" className={`mt-0.5 ${marginEnd(2)} h-4 w-4 text-gray-500`} />
+                        <span className={`text-sm text-gray-600 ${textAlign}`}>
+                          {getTranslation(t, "events.organizer", "Organizer")}: {(() => {
+                            const firstName = booking.organizer?.first_name || booking.event?.organizer?.first_name || "";
+                            const lastName = booking.organizer?.last_name || booking.event?.organizer?.last_name || "";
+                            return `${firstName} ${lastName}`.trim();
+                          })()}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Event Category */}
+                    {(booking.event?.event_category || booking.event_category) && (
+                      <div className={`flex items-start ${flexDirection}`}>
+                        <Icon icon="lucide:tag" className={`mt-0.5 ${marginEnd(2)} h-4 w-4 text-gray-500`} />
+                        <span className={`text-sm text-gray-600 ${textAlign}`}>
+                          {booking.event?.event_category || booking.event_category}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex gap-2 mt-4">
-                    <Link
-                      href={`/events/${booking.event?._id}`}
-                      className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                    >
-                      {getTranslation(t, "events.viewDetails", "View Details")}
-                    </Link>
-                    
-                    {(booking.status === 0 || booking.status === 1) && (
-                      <button
-                        onClick={() => handleCancelBookingClick(booking._id)}
-                        className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-                      >
-                        {getTranslation(t, "events.cancelBooking", "Cancel Booking")}
-                      </button>
-                    )}
-                    
-                    {booking.status === 1 && !booking.payment_status && (
+                  <div className="flex flex-col gap-2 mt-4">
+                    {/* Primary Actions Row */}
+                    <div className="flex gap-2">
                       <Link
-                        href={`/events/${booking.event?._id}?initiate_payment=true`}
-                        className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:shadow-lg"
+                        href={`/events/${booking.event?._id}`}
+                        className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-all"
                       >
-                        {getTranslation(t, "events.proceedToPayment", "Proceed to Payment")}
+                        <Icon icon="lucide:eye" className={`h-4 w-4 ${marginEnd(2)}`} />
+                        {getTranslation(t, "events.viewDetails", "View Details")}
                       </Link>
-                    )}
+                      
+                      {/* Group Chat Button - Show for paid bookings (status 2 with payment_status 1) */}
+                      {booking.status === 2 && booking.payment_status === 1 && booking.event?._id && (
+                        <Link
+                          href={`/messaging?event_id=${booking.event._id}`}
+                          className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transition-all"
+                        >
+                          <Icon icon="lucide:message-circle" className={`h-4 w-4 ${marginEnd(2)}`} />
+                          {getTranslation(t, "events.openGroupChat", "Group Chat")}
+                        </Link>
+                      )}
+                      
+                      {/* Payment Button - Show for approved bookings (status 1) that are unpaid */}
+                      {booking.status === 1 && !booking.payment_status && (
+                        <Link
+                          href={`/events/${booking.event?._id}?initiate_payment=true`}
+                          className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:shadow-lg transition-all"
+                        >
+                          <Icon icon="lucide:credit-card" className={`h-4 w-4 ${marginEnd(2)}`} />
+                          {getTranslation(t, "events.proceedToPayment", "Proceed to Payment")}
+                        </Link>
+                      )}
+                    </div>
+                    
+                    {/* Secondary Actions Row */}
+                    <div className="flex gap-2">
+                      {/* Cancel Button - Show for approved (1) or confirmed (2) bookings that are not already cancelled */}
+                      {(booking.status === 1 || booking.status === 2) && booking.status !== 3 && (
+                        <button
+                          onClick={() => handleCancelBookingClick(booking._id)}
+                          className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-all"
+                        >
+                          <Icon icon="lucide:x-circle" className={`h-4 w-4 ${marginEnd(2)}`} />
+                          {getTranslation(t, "events.cancelBooking", "Cancel Booking")}
+                        </button>
+                      )}
+                      
+                      {/* Invoice Download - Show for paid bookings */}
+                      {booking.status === 2 && booking.payment_status === 1 && booking.invoice_url && (
+                        <a
+                          href={booking.invoice_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100 transition-all"
+                        >
+                          <Icon icon="lucide:file-text" className={`h-4 w-4 ${marginEnd(2)}`} />
+                          {getTranslation(t, "events.downloadInvoice", "Invoice")}
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -476,6 +635,8 @@ export default function MyEventsPage() {
         type="booking"
         showRefundWarning={true}
       />
-    </div>
+      </div>
+      <Footer />
+    </>
   );
 }

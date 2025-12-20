@@ -1,4 +1,23 @@
-import { getData, postRawData } from "../index";
+import { getData, postRawData, postFormData } from "../index";
+
+// Helper function to create FormData for file uploads
+const createFormData = (data, file) => {
+    const formData = {};
+    
+    // Add all data fields
+    Object.keys(data).forEach(key => {
+        if (data[key] !== null && data[key] !== undefined) {
+            formData[key] = data[key];
+        }
+    });
+    
+    // Add file if provided
+    if (file) {
+        formData['file'] = file;
+    }
+    
+    return formData;
+};
 
 // Get all conversations
 export const GetConversationsApi = async (params) => {
@@ -29,6 +48,18 @@ export const SendMessageApi = async (payload) => {
         return response;
     } catch (error) {
         console.error("SendMessageApi error:", error);
+        throw error;
+    }
+};
+
+// Send a message with attachment (image/file)
+export const SendMessageWithAttachmentApi = async (payload, file) => {
+    try {
+        const formData = createFormData(payload, file);
+        const response = await postFormData("user/message/send-with-attachment", formData);
+        return response;
+    } catch (error) {
+        console.error("SendMessageWithAttachmentApi error:", error);
         throw error;
     }
 };
@@ -82,6 +113,17 @@ export const SendMessageOrganizerApi = async (payload) => {
         return response;
     } catch (error) {
         console.error("SendMessageOrganizerApi error:", error);
+        throw error;
+    }
+};
+
+export const SendMessageWithAttachmentOrganizerApi = async (payload, file) => {
+    try {
+        const formData = createFormData(payload, file);
+        const response = await postFormData("organizer/message/send-with-attachment", formData);
+        return response;
+    } catch (error) {
+        console.error("SendMessageWithAttachmentOrganizerApi error:", error);
         throw error;
     }
 };

@@ -13,6 +13,7 @@ export const useAuth = () => {
   const { token, user, isAuthenticated, login, logout, setUser, setToken } =
     useAuthStore();
 
+    
   /**
    * Log user out and redirect to home page
    */

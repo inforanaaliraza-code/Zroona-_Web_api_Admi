@@ -44,6 +44,7 @@ router.get('/withdrawalList', AuthenticateUser ,organizerController.withdrawalLi
 router.get('/conversations', AuthenticateUser, AuthenticateOrganizer, messageController.getConversations);
 router.get('/messages', AuthenticateUser, AuthenticateOrganizer, messageController.getMessages);
 router.post('/message/send', AuthenticateUser, AuthenticateOrganizer, messageController.sendMessage);
+router.post('/message/send-with-attachment', AuthenticateUser, AuthenticateOrganizer, messageController.sendMessageWithAttachment);
 router.get('/conversation/get-or-create', AuthenticateUser, AuthenticateOrganizer, messageController.getOrCreateConversation);
 router.get('/messages/unread-count', AuthenticateUser, AuthenticateOrganizer, messageController.getUnreadCount);
 router.get('/group-chat', AuthenticateUser, AuthenticateOrganizer, messageController.getGroupChat);

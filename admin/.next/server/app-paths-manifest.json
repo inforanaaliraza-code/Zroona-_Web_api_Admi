@@ -1,10 +1,11 @@
 {
-  "/adminsa111xyz/page": "app/adminsa111xyz/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/(AfterLogin)/organizer/page": "app/(AfterLogin)/organizer/page.js",
-  "/(AfterLogin)/withdrawal-requests/page": "app/(AfterLogin)/withdrawal-requests/page.js",
-  "/(AfterLogin)/setting/page": "app/(AfterLogin)/setting/page.js",
-  "/(AfterLogin)/cms/page": "app/(AfterLogin)/cms/page.js",
+  "/(AfterLogin)/organizer/detail/[id]/page": "app/(AfterLogin)/organizer/detail/[id]/page.js",
   "/(AfterLogin)/wallet/page": "app/(AfterLogin)/wallet/page.js",
-  "/(AfterLogin)/events/page": "app/(AfterLogin)/events/page.js"
+  "/(AfterLogin)/events/page": "app/(AfterLogin)/events/page.js",
+  "/(AfterLogin)/user/page": "app/(AfterLogin)/user/page.js",
+  "/(AfterLogin)/cms/page": "app/(AfterLogin)/cms/page.js",
+  "/(AfterLogin)/events/detail/[id]/page": "app/(AfterLogin)/events/detail/[id]/page.js",
+  "/(AfterLogin)/admin-management/page": "app/(AfterLogin)/admin-management/page.js"
 }

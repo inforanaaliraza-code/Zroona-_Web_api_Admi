@@ -197,11 +197,16 @@ export default function Wallet() {
                         </td>
                         <td className="px-2 py-2">
                           <span className={`text-sm font-medium ${
-                            request.status === "pending" ? "text-yellow-500" :
-                            request.status === "approved" ? "text-green-500" :
+                            request.status === "pending" || request.status === 0 ? "text-yellow-500" :
+                            request.status === "approved" || request.status === 1 ? "text-green-500" :
                             "text-red-500"
                           }`}>
-                            {request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
+                            {(() => {
+                              const status = request.status;
+                              if (status === undefined || status === null) return "Unknown";
+                              const statusStr = String(status);
+                              return statusStr.charAt(0).toUpperCase() + statusStr.slice(1);
+                            })()}
                           </span>
                         </td>
                       </tr>

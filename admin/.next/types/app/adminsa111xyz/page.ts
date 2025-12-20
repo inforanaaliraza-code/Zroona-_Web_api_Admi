@@ -1,4 +1,4 @@
-// File: C:\Users\AL-REHMAN\Downloads\Updated\Updated\admin\src\app\adminsa111xyz\page.js
+// File: E:\chat\zuro\web & api & Admin\admin\src\app\adminsa111xyz\page.js
 import * as entry from '../../../../src/app/adminsa111xyz/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

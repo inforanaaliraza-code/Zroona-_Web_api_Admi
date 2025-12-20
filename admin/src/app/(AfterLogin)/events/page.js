@@ -13,6 +13,70 @@ import { ChangeEventStatusApi } from "@/api/events/apis";
 import { toast } from "react-toastify";
 import RejectEventModal from "@/components/Modals/RejectEventModal";
 
+// Predefined Event Types (matching organizer side)
+const EVENT_TYPES = [
+  { value: 'conference', label: 'Conference' },
+  { value: 'workshop', label: 'Workshop' },
+  { value: 'exhibition', label: 'Exhibition' },
+  { value: 'concert', label: 'Concert' },
+  { value: 'festival', label: 'Festival' },
+  { value: 'seminar', label: 'Seminar' },
+  { value: 'webinar', label: 'Webinar' },
+  { value: 'networking', label: 'Networking Event' },
+  { value: 'corporate', label: 'Corporate Event' },
+  { value: 'privateParty', label: 'Private Party' },
+];
+
+// Helper function to format event types
+const formatEventTypes = (eventTypes, eventType = null) => {
+  // If event_types array exists and has values, use it
+  if (eventTypes && Array.isArray(eventTypes) && eventTypes.length > 0) {
+    // Filter out any null/undefined/empty values
+    const validTypes = eventTypes.filter(type => type && typeof type === 'string' && type.trim() !== '');
+    
+    if (validTypes.length > 0) {
+      // Map event type values to labels
+      const typeLabels = validTypes.map(type => {
+        const eventTypeObj = EVENT_TYPES.find(et => et.value === type);
+        return eventTypeObj ? eventTypeObj.label : type.charAt(0).toUpperCase() + type.slice(1);
+      });
+      
+      return typeLabels.join(", ");
+    }
+  }
+  
+  // Fallback: If no event_types but event_type (number) exists, show a default
+  // This handles old events that don't have event_types field
+  if (eventType !== null && eventType !== undefined) {
+    // event_type: 1 = Join Us, 2 = Welcome (legacy field)
+    return eventType === 1 ? "Join Us" : eventType === 2 ? "Welcome" : "N/A";
+  }
+  
+  return "N/A";
+};
+
+// Helper function to format event categories
+const formatEventCategories = (eventCategoryDetails) => {
+  if (!eventCategoryDetails || !Array.isArray(eventCategoryDetails) || eventCategoryDetails.length === 0) {
+    return "N/A";
+  }
+  
+  // Extract category names (support both en and ar)
+  const categoryNames = eventCategoryDetails.map(cat => {
+    if (typeof cat === 'string') return cat;
+    if (cat?.name) {
+      // If name is an object with en/ar, use en (or ar if en not available)
+      if (typeof cat.name === 'object') {
+        return cat.name.en || cat.name.ar || cat.name;
+      }
+      return cat.name;
+    }
+    return "N/A";
+  });
+  
+  return categoryNames.filter(name => name !== "N/A").join(", ") || "N/A";
+};
+
 // Helper function to get proper image URL
 const getEventImageUrl = (event) => {
   // Check for event_images array first (up to 6 images)
@@ -312,12 +376,10 @@ export default function ManageEvents() {
                         </div>
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap">
-                        {event.event_for === 1 ? "Male" : event.event_for === 2 ? "Female" : "Everyone"}
+                        {formatEventTypes(event.event_types, event.event_type)}
                       </td>
                       <td className="px-2 py-3 whitespace-nowrap">
-                        {event.event_category && Array.isArray(event.event_category)
-                          ? event.event_category.map(cat => cat.name).join(", ")
-                          : "N/A"}
+                        {formatEventCategories(event.event_category_details)}
                       </td>
                       <td className="px-2 py-3">{event.no_of_attendees}</td>
                       <td className="px-2 py-3 whitespace-nowrap">

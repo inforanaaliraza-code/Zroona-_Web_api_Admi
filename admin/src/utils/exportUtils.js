@@ -1,19 +1,70 @@
 // Export and Print Functions for Admin Tables
 
+// Predefined Event Types (matching organizer side)
+const EVENT_TYPES = [
+  { value: 'conference', label: 'Conference' },
+  { value: 'workshop', label: 'Workshop' },
+  { value: 'exhibition', label: 'Exhibition' },
+  { value: 'concert', label: 'Concert' },
+  { value: 'festival', label: 'Festival' },
+  { value: 'seminar', label: 'Seminar' },
+  { value: 'webinar', label: 'Webinar' },
+  { value: 'networking', label: 'Networking Event' },
+  { value: 'corporate', label: 'Corporate Event' },
+  { value: 'privateParty', label: 'Private Party' },
+];
+
+// Helper function to format event types
+const formatEventTypes = (eventTypes) => {
+  if (!eventTypes || !Array.isArray(eventTypes) || eventTypes.length === 0) {
+    return "N/A";
+  }
+  
+  // Map event type values to labels
+  const typeLabels = eventTypes.map(type => {
+    const eventType = EVENT_TYPES.find(et => et.value === type);
+    return eventType ? eventType.label : type;
+  });
+  
+  return typeLabels.join(", ");
+};
+
+// Helper function to format event categories
+const formatEventCategories = (eventCategoryDetails) => {
+  if (!eventCategoryDetails || !Array.isArray(eventCategoryDetails) || eventCategoryDetails.length === 0) {
+    return "N/A";
+  }
+  
+  // Extract category names (support both en and ar)
+  const categoryNames = eventCategoryDetails.map(cat => {
+    if (typeof cat === 'string') return cat;
+    if (cat?.name) {
+      // If name is an object with en/ar, use en (or ar if en not available)
+      if (typeof cat.name === 'object') {
+        return cat.name.en || cat.name.ar || cat.name;
+      }
+      return cat.name;
+    }
+    return "N/A";
+  });
+  
+  return categoryNames.filter(name => name !== "N/A").join(", ") || "N/A";
+};
+
 export const exportEventsToCSV = (data) => {
     const headers = ["Event ID", "Event Name", "Organizer", "Event Type", "Event Category", "Attendees", "Date", "Time", "Price", "City", "Status"];
     const csvContent = [
         headers.join(","),
         ...data.map(event => [
-            event.id,
-            `"${event.event_name}"`,
-            `"${event?.organizer?.first_name} ${event?.organizer?.last_name}"`,
-            event.event_for === 1 ? "Male" : event.event_for === 2 ? "Female" : "Everyone",
-            `"${event.event_category && Array.isArray(event.event_category) ? event.event_category.map(cat => cat.name).join(", ") : "N/A"}"`,
-            event.no_of_attendees,
-            new Date(event.event_date).toLocaleDateString(),
-            `"${new Date(`1970-01-01T${event.event_start_time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(`1970-01-01T${event.event_end_time}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}"`,
-            event.event_price,
+            event.id || event._id || "N/A",
+            `"${event.event_name || "N/A"}"`,
+            `"${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}"`.trim() || "N/A",
+            formatEventTypes(event.event_types),
+            `"${formatEventCategories(event.event_category_details)}"`,
+            event.no_of_attendees || 0,
+            event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
+            `"${event.event_start_time && event.event_end_time ? `${event.event_start_time} - ${event.event_end_time}` : "N/A"}"`,
+            event.event_price || 0,
             `"${event.event_address || ""}"`,
             event.event_status === 1 ? "Pending" : event.event_status === 2 ? "Upcoming" : event.event_status === 3 ? "Completed" : event.event_status === 4 ? "Rejected" : "N/A"
         ].join(","))
@@ -74,8 +125,8 @@ export const exportEventsToPDF = (data) => {
         event.id || event._id || "N/A",
         event.event_name || "N/A",
         `${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}`.trim() || "N/A",
-        event.event_for === 1 ? "Male" : event.event_for === 2 ? "Female" : "Everyone",
-        event.event_category && Array.isArray(event.event_category) ? event.event_category.map(cat => cat.name || cat).join(", ") : "N/A",
+        formatEventTypes(event.event_types),
+        formatEventCategories(event.event_category_details),
         event.no_of_attendees || 0,
         event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
         event.event_start_time && event.event_end_time ? `${event.event_start_time} - ${event.event_end_time}` : "N/A",

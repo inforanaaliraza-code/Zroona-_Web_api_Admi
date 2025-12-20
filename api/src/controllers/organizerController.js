@@ -1175,9 +1175,14 @@ const organizerController = {
 
 		req.body.organizer_id = userId;
 		
-		// Remove event_types from body if present (it's for frontend use only, not stored in DB)
+		// Store event_types in database (array of strings: conference, workshop, etc.)
+		// Ensure event_types is an array
 		if (req.body.event_types) {
-			delete req.body.event_types;
+			req.body.event_types = Array.isArray(req.body.event_types) 
+				? req.body.event_types 
+				: [req.body.event_types];
+		} else {
+			req.body.event_types = [];
 		}
 		
 		// Set event_category as primary (first) category for backward compatibility
@@ -1585,160 +1590,68 @@ const organizerController = {
 					new Date().getUTCDate()
 				)
 			);
+			// Build match query - show all bookings regardless of payment status
+			// Filter by book_status only, not payment_status
 			const matchQuery = {
 				organizer_id: new mongoose.Types.ObjectId(userId),
 				"eventDetails.event_name": { $regex: search, $options: "i" },
-				$and: [{ payment_status: book_status == 2 ? 1 : 0 }],
 			};
 
-			if (book_status == "3") {
-				matchQuery.$and.push(
-					{ book_status: Number(book_status) },
-					{ payment_status: 0 },
-					...(booking_date
-						? [
-							{
-								$expr: {
-									$eq: [
-										{
-											$dateFromParts: {
-												year: {
-													$year: "$createdAt",
-												},
-												month: {
-													$month: "$createdAt",
-												},
-												day: {
-													$dayOfMonth:
-														"$createdAt",
-												},
-											},
-										},
-										{
-											$dateFromParts: {
-												year: {
-													$year: new Date(
-														booking_date
-													),
-												},
-												month: {
-													$month: new Date(
-														booking_date
-													),
-												},
-												day: {
-													$dayOfMonth: new Date(
-														booking_date
-													),
-												},
-											},
-										},
-									],
-								},
-							},
-						]
-						: [])
-				);
-			} else if (book_status == "2") {
-				matchQuery.$and.push(
-					{ book_status: Number(book_status) },
-					{ payment_status: 1 },
-					...(booking_date
-						? [
-							{
-								$expr: {
-									$eq: [
-										{
-											$dateFromParts: {
-												year: {
-													$year: "$createdAt",
-												},
-												month: {
-													$month: "$createdAt",
-												},
-												day: {
-													$dayOfMonth:
-														"$createdAt",
-												},
-											},
-										},
-										{
-											$dateFromParts: {
-												year: {
-													$year: new Date(
-														booking_date
-													),
-												},
-												month: {
-													$month: new Date(
-														booking_date
-													),
-												},
-												day: {
-													$dayOfMonth: new Date(
-														booking_date
-													),
-												},
-											},
-										},
-									],
-								},
-							},
-						]
-						: [])
-				);
-			} else if (book_status == "1") {
-				matchQuery.$and.push(
-					{ book_status: { $nin: [3] } },
-					{ payment_status: 0 },
-					...(booking_date
-						? [
-							{
-								$expr: {
-									$eq: [
-										{
-											$dateFromParts: {
-												year: {
-													$year: "$createdAt",
-												},
-												month: {
-													$month: "$createdAt",
-												},
-												day: {
-													$dayOfMonth:
-														"$createdAt",
-												},
-											},
-										},
-										{
-											$dateFromParts: {
-												year: {
-													$year: new Date(
-														booking_date
-													),
-												},
-												month: {
-													$month: new Date(
-														booking_date
-													),
-												},
-												day: {
-													$dayOfMonth: new Date(
-														booking_date
-													),
-												},
-											},
-										},
-									],
-								},
-							},
-						]
-						: [])
-				);
+			// Add book_status filter if provided
+			if (book_status !== undefined && book_status !== null && book_status !== "") {
+				if (book_status == "0") {
+					// Pending bookings (status 0 or 1)
+					matchQuery.$and = [
+						{ book_status: { $in: [0, 1] } }
+					];
+				} else if (book_status == "1") {
+					// Pending bookings (status 0 or 1) - same as 0
+					matchQuery.$and = [
+						{ book_status: { $in: [0, 1] } }
+					];
+				} else if (book_status == "2") {
+					// Approved/Confirmed bookings
+					matchQuery.$and = [
+						{ book_status: Number(book_status) }
+					];
+				} else if (book_status == "3") {
+					// Rejected bookings
+					matchQuery.$and = [
+						{ book_status: Number(book_status) }
+					];
+				}
 			}
 
-			const eventDateFilter =
-				book_status == "1"
+			// Add booking date filter if provided
+			if (booking_date) {
+				if (!matchQuery.$and) {
+					matchQuery.$and = [];
+				}
+				matchQuery.$and.push({
+					$expr: {
+						$eq: [
+							{
+								$dateFromParts: {
+									year: { $year: "$createdAt" },
+									month: { $month: "$createdAt" },
+									day: { $dayOfMonth: "$createdAt" },
+								},
+							},
+							{
+								$dateFromParts: {
+									year: { $year: new Date(booking_date) },
+									month: { $month: new Date(booking_date) },
+									day: { $dayOfMonth: new Date(booking_date) },
+								},
+							},
+						],
+					},
+				});
+			}
+
+			// Add event date filter for pending bookings (only future events)
+			const eventDateFilter = 
+				(book_status === "0" || book_status === "1" || book_status === "")
 					? {
 						"$eventDetails.event_date": {
 							$gte: startOfTodayUTC,
@@ -1758,14 +1671,10 @@ const organizerController = {
 				{ $unwind: "$eventDetails" },
 
 				{ $match: matchQuery },
-				...(book_status == "1"
+				...(Object.keys(eventDateFilter).length > 0
 					? [
 						{
-							$match: {
-								"eventDetails.event_date": {
-									$gte: startOfTodayUTC,
-								},
-							},
+							$match: eventDateFilter,
 						},
 					]
 					: []),
@@ -1792,14 +1701,10 @@ const organizerController = {
 				{ $unwind: "$eventDetails" },
 				{ $unwind: "$user" },
 				{ $match: matchQuery },
-				...(book_status == "1"
+				...(Object.keys(eventDateFilter).length > 0
 					? [
 						{
-							$match: {
-								"eventDetails.event_date": {
-									$gte: startOfTodayUTC,
-								},
-							},
+							$match: eventDateFilter,
 						},
 					]
 					: []),

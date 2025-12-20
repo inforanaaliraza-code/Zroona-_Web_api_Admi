@@ -36,6 +36,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(AfterLogin)/wallet/page.js"
     ],
+    "/(AfterLogin)/admin-management/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/admin-management/page.js"
+    ],
     "/(AfterLogin)/setting/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -50,6 +55,26 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(AfterLogin)/events/page.js"
+    ],
+    "/(AfterLogin)/events/detail/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/events/detail/[id]/page.js"
+    ],
+    "/(AfterLogin)/user/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/user/page.js"
+    ],
+    "/(AfterLogin)/user/detail/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/user/detail/[id]/page.js"
+    ],
+    "/(AfterLogin)/organizer/detail/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/organizer/detail/[id]/page.js"
     ]
   }
 }

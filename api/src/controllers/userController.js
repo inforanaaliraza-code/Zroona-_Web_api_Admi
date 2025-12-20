@@ -18,6 +18,7 @@ const TransactionService = require("../services/recentTransaction");
 const WalletService = require("../services/walletService");
 const DaftraService = require("../helpers/daftraService");
 const MoyasarService = require("../helpers/MoyasarService");
+const ConversationService = require("../services/conversationService");
 
 const custom_log = new PrettyConsole();
 custom_log.clear();
@@ -1781,6 +1782,9 @@ const UserController = {
 						},
 						payment_status: 1,
 						book_status: 1,
+						invoice_id: 1,
+						invoice_url: 1,
+						order_id: 1,
 						event_id: "$event._id",
 						event_date: "$event.event_date",
 						event_start_time: "$event.event_start_time",
@@ -2000,9 +2004,10 @@ const UserController = {
 				return Response.badRequestResponse(res, resp_messages(lang).bookingAlreadyCancelled || "Booking already cancelled");
 			}
 
-			// Check if event is approved (status 2 = confirmed/approved)
-			if (book_event.book_status !== 2) {
-				return Response.badRequestResponse(res, resp_messages(lang).onlyApprovedBookingsCanBeCancelled || "Only approved bookings can be cancelled");
+			// Check if booking can be cancelled (status 1 = approved OR status 2 = confirmed)
+			// Status: 0 = pending, 1 = approved, 2 = confirmed, 3 = cancelled, 4 = rejected
+			if (book_event.book_status !== 1 && book_event.book_status !== 2) {
+				return Response.badRequestResponse(res, resp_messages(lang).onlyApprovedBookingsCanBeCancelled || "Only approved or confirmed bookings can be cancelled");
 			}
 
 			// Get event details
@@ -2537,7 +2542,7 @@ const UserController = {
 	updatePaymentStatus: async (req, res) => {
 		try {
 			const { booking_id, payment_id, payment_status, amount } = req.body;
-			console.log("Payment update request:", req.body);
+			console.log("[PAYMENT] Payment update request:", { booking_id, payment_id, payment_status, amount });
 
 			// Validate the booking_id
 			if (!booking_id || !mongoose.Types.ObjectId.isValid(booking_id)) {
@@ -2556,7 +2561,7 @@ const UserController = {
 				return Response.notFoundResponse(res, "Booking not found");
 			}
 
-			console.log("Found booking:", bookingDetails._id);
+			console.log("[PAYMENT] Found booking:", bookingDetails._id);
 
 			// Check if payment was already processed
 			if (bookingDetails.payment_status === 1) {
@@ -2586,7 +2591,7 @@ const UserController = {
 				);
 
 			console.log(
-				"Updated booking payment status:",
+				"[PAYMENT] Updated booking payment status:",
 				updatedBooking.payment_status
 			);
 
@@ -2614,61 +2619,122 @@ const UserController = {
 			]);
 
 			// Generate invoice using Daftra API
-			try {
-				const daftraResponse = await DaftraService.generateEventInvoice(
-					bookingDetails,
-					event,
-					user,
-					organizer
-				);
-
-				if (daftraResponse && daftraResponse.id) {
-					// Save invoice ID to booking
-					updatedBooking.invoice_id = daftraResponse.id;
-					updatedBooking.invoice_url =
-						daftraResponse.invoice_pdf_url || "";
-					await updatedBooking.save();
-
-					console.log(
-						"Invoice generated successfully:",
-						daftraResponse.id
+			// Check if Daftra credentials are configured before attempting invoice generation
+			const daftraSubdomain = process.env.DAFTRA_SUBDOMAIN;
+			const daftraApiKey = process.env.DAFTRA_API_KEY;
+			
+			if (daftraSubdomain && daftraApiKey && daftraSubdomain.trim() !== "" && daftraApiKey.trim() !== "") {
+				try {
+					console.log("[INVOICE] Attempting to generate invoice via Daftra API");
+					const daftraResponse = await DaftraService.generateEventInvoice(
+						bookingDetails,
+						event,
+						user,
+						organizer
 					);
+
+					if (daftraResponse && daftraResponse.id) {
+						// Save invoice ID to booking
+						updatedBooking.invoice_id = daftraResponse.id;
+						updatedBooking.invoice_url =
+							daftraResponse.invoice_pdf_url || daftraResponse.pdf_url || "";
+						await updatedBooking.save();
+
+						console.log(
+							"[INVOICE] Invoice generated successfully:",
+							daftraResponse.id
+						);
+					} else {
+						console.warn("[INVOICE] Daftra response received but no invoice ID found");
+					}
+				} catch (invoiceError) {
+					// Log detailed error information
+					console.error(
+						"[INVOICE] Error generating invoice:",
+						invoiceError.message
+					);
+					
+					// Log additional error details if available
+					if (invoiceError.response) {
+						console.error("[INVOICE] Error status:", invoiceError.response.status);
+						console.error("[INVOICE] Error data:", JSON.stringify(invoiceError.response.data));
+					}
+					
+					// Continue with the process even if invoice generation fails
+					// Payment is still successful, invoice can be generated later
+					console.log("[INVOICE] Payment processed successfully. Invoice generation failed but booking is confirmed.");
 				}
-			} catch (invoiceError) {
-				console.error(
-					"Error generating invoice:",
-					invoiceError.message
-				);
-				// Continue with the process even if invoice generation fails
+			} else {
+				console.warn("[INVOICE] Daftra API credentials not configured. Skipping invoice generation.");
+				console.warn("[INVOICE] To enable invoice generation, set DAFTRA_SUBDOMAIN and DAFTRA_API_KEY in environment variables.");
 			}
 
-			// Create a notification for the user
-			if (event) {
+			// Add user to group chat if event is approved and payment is successful
+			if (event && event.is_approved === 1 && payment_status === 1) {
+				try {
+					const groupChat = await ConversationService.GetGroupChatByEventService(event._id);
+					
+					if (groupChat) {
+						// Add paying guest to group chat
+						await ConversationService.AddParticipantToGroupService(
+							event._id,
+							bookingDetails.user_id,
+							1 // Role: User/Guest
+						);
+						console.log(`[GROUP-CHAT] Added user ${bookingDetails.user_id} to group chat for event: ${event.event_name} (Payment successful)`);
+					} else {
+						console.log(`[GROUP-CHAT] Group chat not found for event: ${event.event_name} - User will be added when organizer approves booking`);
+					}
+				} catch (groupChatError) {
+					console.error('[GROUP-CHAT] Error adding participant to group chat after payment:', groupChatError);
+					// Don't fail the payment update if group chat addition fails
+				}
+			}
+
+			// Create notifications for user and organizer
+			if (event && user && organizer) {
+				const userLang = user.language || req.lang || "en";
+				const organizerLang = organizer.language || req.lang || "en";
+				
+				// Notify the guest about successful payment
 				await NotificationService.CreateService({
 					user_id: bookingDetails.user_id,
-					title: "Payment Successful",
-					description: `Your payment for ${event.event_name} has been processed successfully.`,
-					type: "payment",
+					role: 1, // User/Guest role
+					title: userLang === "ar" ? "تم الدفع بنجاح" : "Payment Successful",
+					description: userLang === "ar" 
+						? `تم معالجة دفعتك لـ "${event.event_name}" بنجاح.`
+						: `Your payment for "${event.event_name}" has been processed successfully.`,
+					event_id: event._id,
+					book_id: booking_id,
+					notification_type: 2, // Payment success type
+					status: 2, // Approved status
 					isRead: false,
-					data: {
-						event_id: event._id,
-						booking_id: booking_id,
-					},
 				});
 
-				// Also notify the organizer
-				await NotificationService.CreateService({
-					user_id: bookingDetails.organizer_id,
-					title: "New Booking Payment",
-					description: `Payment received for ${event.event_name} booking.`,
-					type: "payment",
-					isRead: false,
-					data: {
-						event_id: event._id,
-						booking_id: booking_id,
-						user_id: bookingDetails.user_id,
-					},
-				});
+				// Notify the organizer/host about new payment
+				const organizerNotificationData = {
+					title: organizerLang === "ar" ? "تم استلام دفعة جديدة" : "New Booking Payment Received",
+					description: organizerLang === "ar"
+						? `${user.first_name} ${user.last_name} دفع مبلغ ${amount || bookingDetails.total_amount} ريال لحجز "${event.event_name}".`
+						: `${user.first_name} ${user.last_name} has paid ${amount || bookingDetails.total_amount} SAR for booking "${event.event_name}".`,
+					event_id: event.event_id,
+					event_type: event.event_type,
+					event_name: event.event_name,
+					userId: user._id,
+					book_id: booking_id,
+					notification_type: 1, // Booking request type (payment completed)
+					status: 2, // Approved status
+					first_name: user.first_name,
+					last_name: user.last_name,
+					profile_image: user.profile_image,
+				};
+
+				// Send push notification to organizer
+				await sendEventBookingNotification(
+					res,
+					bookingDetails.organizer_id,
+					organizerNotificationData
+				);
 			}
 
 			return Response.ok(

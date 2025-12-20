@@ -92,11 +92,11 @@ const getBookingStatusDescription = (status, t) => {
 const getPaymentStatusLabel = (status, t) => {
 	switch (status) {
 		case 0:
-			return t("events.unpaid");
+			return getTranslation(t, "events.unpaid", "Unpaid");
 		case 1:
-			return t("events.paid");
+			return getTranslation(t, "events.paid", "Paid");
 		default:
-			return t("events.unknown");
+			return getTranslation(t, "events.unknown", "Unknown");
 	}
 };
 
@@ -132,83 +132,86 @@ export default function BookingDetails({
 
 	if (!booking) return null;
 
-	// Check if payment button should be shown (only for approved status=2, not paid yet)
-	// Status mapping: 0=Pending, 1=Pending (old), 2=Approved, 3=Rejected/Cancelled
+	// Check if payment button should be shown (only for approved status=1 or confirmed=2, not paid yet)
+	// Status mapping: 0=Pending, 1=Approved, 2=Confirmed, 3=Cancelled, 4=Rejected
 	const showPaymentButton =
-		(booking.book_status === 2 || booking.book_status === 1) &&
+		(booking.book_status === 1 || booking.book_status === 2) &&
 		(booking.payment_status === 0 || booking.payment_status === undefined);
 
-	// Check if cancel button should be shown (only for approved bookings - book_status === 2)
-	// According to requirements: "After the event is approved there should be 1 option, 1. Cancel Event"
-	const showCancelButton = booking.book_status === 2;
+	// Check if cancel button should be shown (only for approved (1) or confirmed (2) bookings)
+	const showCancelButton = (booking.book_status === 1 || booking.book_status === 2) && booking.book_status !== 3;
 
 	// Check if invoice is available (paid bookings with invoice_url)
 	const showInvoiceButton =
 		booking.payment_status === 1 && booking.invoice_url;
 
 	return (
-		<div className="p-8 bg-white rounded-2xl border border-gray-100 shadow-xl transition-all duration-300 hover:shadow-2xl">
+		<div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-lg transition-all duration-300 hover:shadow-xl">
 			{/* Header with booking status - Professional Design */}
-			<div className="flex items-start gap-4 mb-6 pb-6 border-b border-gray-200">
+			<div className="flex items-start gap-4 mb-6 pb-6 border-b-2 border-gray-100">
 				<div
-					className={`p-3 rounded-xl rtl:ml-4 ltr:mr-4 ${getBookingStatusColor(
+					className={`p-4 rounded-xl ${getBookingStatusColor(
 						booking.book_status
 					).replace(
 						"text",
 						"bg"
-					)}/10 flex items-center justify-center shadow-sm`}
+					)}/10 flex items-center justify-center shadow-md`}
 				>
 					<Icon
 						icon={getBookingStatusIcon(booking.book_status)}
-						className={`w-6 h-6 ${getBookingStatusColor(
+						className={`w-7 h-7 ${getBookingStatusColor(
 							booking.book_status
 						)}`}
 					/>
 				</div>
 				<div className="flex-1">
 					<div className="flex justify-between items-start mb-2">
-						<div>
-							<div className="flex items-center gap-2 mb-1">
-								<span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-									{getTranslation(t, "events.status", getTranslation(t, "tab.tab7", "Status"))}
+						<div className="flex-1">
+							<div className="flex items-center gap-2 mb-2">
+								<span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+									{getTranslation(t, "events.status", "Status")}
 								</span>
 								<span
-									className={`text-lg font-bold ${getBookingStatusColor(
+									className={`text-xl font-bold ${getBookingStatusColor(
 										booking.book_status
 									)}`}
 								>
 									{getBookingStatusLabel(booking.book_status, t)}
 								</span>
 							</div>
-							<p className="text-sm text-gray-600 mt-1">
+							<p className="text-sm text-gray-600 leading-relaxed">
 								{getBookingStatusDescription(booking.book_status, t)}
 							</p>
 						</div>
-						<span className="px-3 py-1.5 text-xs font-bold text-gray-700 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-300 shadow-sm">
-							#
-							{booking.order_id ||
-								booking._id.substring(0, 6).toUpperCase()}
-						</span>
+						<div className="px-4 py-2 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-sm">
+							<span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
+								{getTranslation(t, "events.bookingId", "Booking ID")}
+							</span>
+							<span className="text-sm font-bold text-gray-900">
+								#{booking.order_id ||
+									booking._id?.substring(0, 8).toUpperCase() || "N/A"}
+							</span>
+						</div>
 					</div>
 				</div>
 			</div>
 
 			{/* Booking Details - Professional Design */}
-			<div className="mb-6 space-y-4">
+			<div className="mb-6 space-y-3">
 				{/* Booking Date */}
-				<div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+				<div className="flex justify-between items-center p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 shadow-sm">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+						<div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-md">
 							<Icon
 								icon="lucide:calendar"
-								className="w-5 h-5 text-blue-600"
+								className="w-6 h-6 text-white"
 							/>
 						</div>
 						<span className="text-sm font-semibold text-gray-700">
 							{getTranslation(t, "events.bookingDate", "Booking Date")}
 						</span>
 					</div>
-					<span className="font-bold text-gray-900">
+					<span className="font-bold text-base text-gray-900">
 						{format(
 							new Date(booking.createdAt || new Date()),
 							"MMMM d, yyyy"
@@ -217,63 +220,65 @@ export default function BookingDetails({
 				</div>
 
 				{/* Attendees */}
-				<div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+				<div className="flex justify-between items-center p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 shadow-sm">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+						<div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-md">
 							<Icon
 								icon="lucide:users"
-								className="w-5 h-5 text-purple-600"
+								className="w-6 h-6 text-white"
 							/>
 						</div>
 						<span className="text-sm font-semibold text-gray-700">
 							{getTranslation(t, "events.attendees", "Attendees")}
 						</span>
 					</div>
-					<span className="px-4 py-1.5 font-bold text-purple-800 bg-purple-100 rounded-full border border-purple-200">
-						{booking.no_of_attendees}
+					<span className="px-4 py-2 font-bold text-purple-700 bg-white rounded-full border-2 border-purple-300 shadow-sm">
+						{booking.no_of_attendees || 0}
 					</span>
 				</div>
 
 				{/* Total Amount */}
-				<div className="flex justify-between items-center p-4 bg-gradient-to-br from-[#a797cc]/5 to-orange-50 rounded-lg border border-[#a797cc]/20">
+				<div className="flex justify-between items-center p-4 bg-gradient-to-br from-[#a797cc]/10 via-[#a797cc]/5 to-orange-50 rounded-xl border-2 border-[#a797cc]/30 shadow-md">
 					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 bg-[#a797cc] rounded-lg flex items-center justify-center shadow-md">
+						<div className="w-12 h-12 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-xl flex items-center justify-center shadow-lg">
 							<Icon
 								icon="lucide:credit-card"
-								className="w-5 h-5 text-white"
+								className="w-6 h-6 text-white"
 							/>
 						</div>
 						<span className="text-sm font-semibold text-gray-700">
 							{getTranslation(t, "events.totalAmount", "Total Amount")}
 						</span>
 					</div>
-					<span className="font-bold text-2xl text-[#a797cc]">
-						{(booking.total_amount || eventPrice * booking.no_of_attendees).toFixed(2)}{" "}
-						<span className="text-lg">{t("card.tab2")}</span>
+					<span className="font-bold text-2xl bg-gradient-to-r from-[#a797cc] to-[#8ba179] bg-clip-text text-transparent">
+						{(booking.total_amount || (eventPrice || 0) * (booking.no_of_attendees || 0)).toFixed(2)}{" "}
+						<span className="text-lg text-gray-700">{getTranslation(t, "card.tab2", "SAR")}</span>
 					</span>
 				</div>
 
-				{/* Payment Status - Only show for approved bookings with payment status */}
-				{(booking.book_status === 2 || booking.book_status === 1) &&
+				{/* Payment Status - Only show for approved/confirmed bookings with payment status */}
+				{(booking.book_status === 1 || booking.book_status === 2) &&
 					booking.payment_status !== undefined && (
-						<div className="flex justify-between items-center pt-2">
-							<div className="flex items-center">
+						<div className="flex justify-between items-center p-4 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 shadow-sm">
+							<div className="flex items-center gap-3">
 								<Icon
 									icon={getPaymentStatusIcon(
 										booking.payment_status
 									)}
-									className={`w-4 h-4 rtl:ml-3 ltr:mr-3 ${getPaymentStatusColor(
+									className={`w-5 h-5 ${getPaymentStatusColor(
 										booking.payment_status
 									)}`}
 								/>
-								<span className="text-sm font-medium text-gray-700">
+								<span className="text-sm font-semibold text-gray-700">
 									{getTranslation(t, "events.paymentStatus", "Payment Status")}
 								</span>
 							</div>
 							<span
-								className={`font-medium ${getPaymentStatusColor(
-									booking.payment_status
-								)}`}
+								className={`px-3 py-1.5 font-bold rounded-lg ${
+									booking.payment_status === 1
+										? "bg-green-100 text-green-700 border border-green-300"
+										: "bg-blue-100 text-blue-700 border border-blue-300"
+								}`}
 							>
 								{getPaymentStatusLabel(
 									booking.payment_status,
@@ -303,21 +308,21 @@ export default function BookingDetails({
 			</div>
 
 			{/* Action Buttons Section */}
-			<div className="space-y-3">
+			<div className="space-y-3 pt-2">
 				{/* Invoice Button - Show if invoice is available */}
 				{showInvoiceButton && (
 					<Button
 						onClick={() =>
 							window.open(booking.invoice_url, "_blank")
 						}
-						className="w-full text-green-600 text-sm font-medium h-10 rounded-full bg-white border border-green-300 hover:bg-green-50 transition-all duration-300 flex items-center justify-center shadow-sm hover:shadow"
+						className="w-full text-green-700 text-sm font-semibold h-12 rounded-xl bg-white border-2 border-green-300 hover:bg-green-50 transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg hover:scale-[1.02]"
 					>
-						<span className="inline-flex justify-center items-center">
+						<span className="inline-flex justify-center items-center gap-2">
 							<Icon
 								icon="lucide:file-text"
-								className="w-4 h-4 rtl:ml-3 ltr:mr-3"
+								className="w-5 h-5"
 							/>
-							{t("events.downloadInvoice")}
+							{getTranslation(t, "events.downloadInvoice", "Download Invoice")}
 						</span>
 					</Button>
 				)}
@@ -326,34 +331,34 @@ export default function BookingDetails({
 				{showPaymentButton && (
 					<Button
 						onClick={onInitiatePayment}
-						className="w-full text-white text-sm font-medium h-10 rounded-full bg-[#a797cc] hover:bg-[#e56b00] transition-all duration-300 flex items-center justify-center shadow-sm hover:shadow"
+						className="w-full text-white text-sm font-semibold h-12 rounded-xl bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#a797cc] transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-[1.02]"
 					>
-						<span className="inline-flex justify-center items-center">
+						<span className="inline-flex justify-center items-center gap-2">
 							<Icon
 								icon="lucide:credit-card"
-								className="w-4 h-4 rtl:ml-3 ltr:mr-3"
+								className="w-5 h-5"
 							/>
-							{t("events.proceedToPayment")}
+							{getTranslation(t, "events.proceedToPayment", "Proceed to Payment")}
 						</span>
 					</Button>
 				)}
 
-				{/* Cancel Button - Show for pending (0) and approved (1) statuses */}
+				{/* Cancel Button - Show for approved (1) and confirmed (2) statuses */}
 				{showCancelButton && (
 					<Button
 						onClick={onCancelBooking}
-						className={`w-full text-sm font-medium h-10 rounded-full transition-all duration-300 flex items-center justify-center shadow-sm hover:shadow ${
+						className={`w-full text-sm font-semibold h-12 rounded-xl transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg hover:scale-[1.02] ${
 							showPaymentButton || showInvoiceButton
-								? "text-red-600 bg-white border border-red-300 hover:bg-red-50"
-								: "text-white bg-red-500 hover:bg-red-600"
+								? "text-red-700 bg-white border-2 border-red-400 hover:bg-red-50"
+								: "text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
 						}`}
 					>
-						<span className="inline-flex justify-center items-center">
+						<span className="inline-flex justify-center items-center gap-2">
 							<Icon
-								icon="lucide:x"
-								className="w-4 h-4 rtl:ml-3 ltr:mr-3"
+								icon="lucide:x-circle"
+								className="w-5 h-5"
 							/>
-							{t("events.cancelBooking")}
+							{getTranslation(t, "events.cancelBooking", "Cancel Booking")}
 						</span>
 					</Button>
 				)}

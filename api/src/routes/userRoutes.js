@@ -86,6 +86,7 @@ router.post(
 router.get("/conversations", AuthenticateUser, messageController.getConversations);
 router.get("/messages", AuthenticateUser, messageController.getMessages);
 router.post("/message/send", AuthenticateUser, messageController.sendMessage);
+router.post("/message/send-with-attachment", AuthenticateUser, messageController.sendMessageWithAttachment);
 router.get("/conversation/get-or-create", AuthenticateUser, messageController.getOrCreateConversation);
 router.get("/messages/unread-count", AuthenticateUser, messageController.getUnreadCount);
 router.get("/group-chat", AuthenticateUser, messageController.getGroupChat);

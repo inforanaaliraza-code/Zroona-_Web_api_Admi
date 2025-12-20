@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "next/navigation";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,9 +12,11 @@ import {
   GetConversationsApi, 
   GetMessagesApi, 
   SendMessageApi,
+  SendMessageWithAttachmentApi,
   GetConversationsOrganizerApi,
   GetMessagesOrganizerApi,
   SendMessageOrganizerApi,
+  SendMessageWithAttachmentOrganizerApi,
   GetGroupChatApi,
   GetGroupChatOrganizerApi
 } from "@/app/api/messaging/apis";
@@ -26,6 +29,8 @@ export default function MessagingPage() {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const { token, user, isAuthenticated } = useAuthStore();
+  const searchParams = useSearchParams();
+  const eventIdFromUrl = searchParams?.get('event_id');
   
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -35,8 +40,11 @@ export default function MessagingPage() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const isOrganizer = user?.role === 2;
 
@@ -124,11 +132,46 @@ export default function MessagingPage() {
     }
   };
 
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      toast.error("File size must be less than 10MB");
+      return;
+    }
+
+    setSelectedFile(file);
+
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  // Remove selected file
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   // Send message
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
-    if (!messageInput.trim() || !selectedConversation) return;
+    if ((!messageInput.trim() && !selectedFile) || !selectedConversation) return;
     
     try {
       setSending(true);
@@ -159,7 +202,7 @@ export default function MessagingPage() {
 
       const payload = {
         event_id: eventId,
-        message: messageInput.trim(),
+        message: messageInput.trim() || "",
         is_group_chat: isGroupChat
       };
 
@@ -168,27 +211,44 @@ export default function MessagingPage() {
         payload.receiver_id = receiverId;
       }
 
-      const apiCall = isOrganizer ? SendMessageOrganizerApi : SendMessageApi;
-      const response = await apiCall(payload);
+      let response;
+      
+      // If file is selected, use attachment endpoint
+      if (selectedFile) {
+        const apiCall = isOrganizer ? SendMessageWithAttachmentOrganizerApi : SendMessageWithAttachmentApi;
+        response = await apiCall(payload, selectedFile);
+      } else {
+        // Regular text message
+        const apiCall = isOrganizer ? SendMessageOrganizerApi : SendMessageApi;
+        response = await apiCall(payload);
+      }
       
       if (response && (response.status === 1 || response.status === true)) {
         // Add message to local state immediately
         const newMessage = response.data?.message || response.message || {
           _id: Date.now().toString(),
-          message: messageInput.trim(),
+          message: messageInput.trim() || (selectedFile?.type.startsWith('image/') ? '📷 Image' : '📎 File'),
           sender_id: user._id,
           sender_role: isOrganizer ? 2 : 1,
+          message_type: selectedFile ? (selectedFile.type.startsWith('image/') ? 'image' : 'file') : 'text',
+          attachment_url: selectedFile ? filePreview : null,
           createdAt: new Date(),
           isRead: false
         };
         setMessages(prev => [...prev, newMessage]);
         setMessageInput("");
+        setSelectedFile(null);
+        setFilePreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
         
         // Update conversation's last message
+        const lastMessageText = messageInput.trim() || (selectedFile?.type.startsWith('image/') ? '📷 Image' : '📎 File');
         setConversations(prev => 
           prev.map(conv => 
             conv._id === selectedConversation._id
-              ? { ...conv, last_message: messageInput.trim(), last_message_at: new Date() }
+              ? { ...conv, last_message: lastMessageText, last_message_at: new Date() }
               : conv
           )
         );
@@ -213,6 +273,41 @@ export default function MessagingPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, token, isOrganizer]);
+
+  // Auto-select group chat if event_id is in URL
+  useEffect(() => {
+    if (eventIdFromUrl && conversations.length > 0 && !selectedConversation) {
+      // Find group chat for this event
+      const groupChat = conversations.find(conv => 
+        conv.is_group === true && 
+        (conv.event_id?._id === eventIdFromUrl || conv.event_id === eventIdFromUrl)
+      );
+      
+      if (groupChat) {
+        setSelectedConversation(groupChat);
+        fetchMessages(groupChat._id);
+      } else {
+        // Try to fetch group chat directly
+        const fetchGroupChat = async () => {
+          try {
+            const apiCall = isOrganizer ? GetGroupChatOrganizerApi : GetGroupChatApi;
+            const response = await apiCall(eventIdFromUrl);
+            if (response && (response.status === 1 || response.status === true)) {
+              const groupChat = response.data?.conversation || response.conversation;
+              if (groupChat) {
+                setSelectedConversation(groupChat);
+                fetchMessages(groupChat._id);
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching group chat:", error);
+          }
+        };
+        fetchGroupChat();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventIdFromUrl, conversations, isOrganizer]);
 
   // Poll for new messages every 5 seconds
   useEffect(() => {
@@ -504,6 +599,8 @@ export default function MessagingPage() {
                         {messages.map((msg, index) => {
                           const isSender = (isOrganizer && msg.sender_role === 2) || (!isOrganizer && msg.sender_role === 1);
                           const showAvatar = index === 0 || messages[index - 1].sender_id !== msg.sender_id;
+                          const isImage = msg.message_type === 'image' && msg.attachment_url;
+                          const isFile = msg.message_type === 'file' && msg.attachment_url;
                           
                           return (
                             <div
@@ -547,9 +644,37 @@ export default function MessagingPage() {
                                     isSender
                                       ? "bg-[#a797cc] text-white"
                                       : "bg-white text-gray-900 border border-gray-200"
-                                  }`}
+                                  } ${isImage ? "p-0 overflow-hidden" : ""}`}
                                 >
-                                  <p className="text-sm">{msg.message}</p>
+                                  {isImage && msg.attachment_url ? (
+                                    <div className="relative">
+                                      <Image
+                                        src={msg.attachment_url}
+                                        alt="Shared image"
+                                        width={300}
+                                        height={300}
+                                        className="max-w-full h-auto rounded-lg cursor-pointer"
+                                        onClick={() => window.open(msg.attachment_url, '_blank')}
+                                      />
+                                      {msg.message && (
+                                        <p className="text-sm mt-2 px-2 pb-2">{msg.message}</p>
+                                      )}
+                                    </div>
+                                  ) : isFile && msg.attachment_url ? (
+                                    <div className="flex items-center gap-2">
+                                      <Icon icon="lucide:file" className="h-5 w-5" />
+                                      <a
+                                        href={msg.attachment_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm underline hover:opacity-80"
+                                      >
+                                        {msg.message || "Download file"}
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    <p className="text-sm">{msg.message}</p>
+                                  )}
                                 </div>
                                 <p className={`text-xs text-gray-400 mt-1 ${isSender ? "text-right" : "text-left"}`}>
                                   {formatMessageTime(msg.createdAt)}
@@ -574,33 +699,85 @@ export default function MessagingPage() {
                         </p>
                       </div>
                     ) : (
-                      <form onSubmit={handleSendMessage} className="flex items-end gap-2">
-                        <textarea
-                          value={messageInput}
-                          onChange={(e) => setMessageInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage(e);
-                          }
-                        }}
-                        placeholder={t("messaging.typeMessage")}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] resize-none"
-                        rows={1}
-                        style={{ minHeight: "40px", maxHeight: "120px" }}
-                      />
-                      <button
-                        type="submit"
-                        disabled={!messageInput.trim() || sending}
-                        className="px-4 py-2 bg-[#a797cc] text-white rounded-lg hover:bg-[#8ba179] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {sending ? (
-                          <Icon icon="lucide:loader" className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <Icon icon="lucide:send" className="h-5 w-5" />
+                      <form onSubmit={handleSendMessage} className="space-y-2">
+                        {/* File Preview */}
+                        {filePreview && (
+                          <div className="relative inline-block">
+                            <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-[#a797cc]">
+                              <Image
+                                src={filePreview}
+                                alt="Preview"
+                                fill
+                                className="object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleRemoveFile}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                              >
+                                <Icon icon="lucide:x" className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
                         )}
-                      </button>
-                    </form>
+                        {selectedFile && !filePreview && (
+                          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
+                            <Icon icon="lucide:file" className="h-5 w-5 text-gray-600" />
+                            <span className="text-sm text-gray-700 flex-1 truncate">{selectedFile.name}</span>
+                            <button
+                              type="button"
+                              onClick={handleRemoveFile}
+                              className="text-red-500 hover:text-red-600"
+                            >
+                              <Icon icon="lucide:x" className="h-5 w-5" />
+                            </button>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-end gap-2">
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileSelect}
+                            accept="image/*,.pdf,.doc,.docx,.txt"
+                            className="hidden"
+                            id="file-input"
+                          />
+                          <label
+                            htmlFor="file-input"
+                            className="p-2 text-gray-600 hover:text-[#a797cc] cursor-pointer transition-colors"
+                            title="Attach file"
+                          >
+                            <Icon icon="lucide:paperclip" className="h-5 w-5" />
+                          </label>
+                          
+                          <textarea
+                            value={messageInput}
+                            onChange={(e) => setMessageInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendMessage(e);
+                              }
+                            }}
+                            placeholder={t("messaging.typeMessage")}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] resize-none"
+                            rows={1}
+                            style={{ minHeight: "40px", maxHeight: "120px" }}
+                          />
+                          <button
+                            type="submit"
+                            disabled={(!messageInput.trim() && !selectedFile) || sending}
+                            className="px-4 py-2 bg-[#a797cc] text-white rounded-lg hover:bg-[#8ba179] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {sending ? (
+                              <Icon icon="lucide:loader" className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <Icon icon="lucide:send" className="h-5 w-5" />
+                            )}
+                          </button>
+                        </div>
+                      </form>
                     )}
                   </div>
                 </>

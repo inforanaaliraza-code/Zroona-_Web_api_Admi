@@ -952,7 +952,15 @@ const adminController = {
                         as: 'organizer'
                     }
                 },
-                { $unwind: "$organizer" },
+                {
+                    $lookup: {
+                        from: 'event_categories',
+                        localField: 'event_categories',
+                        foreignField: '_id',
+                        as: 'event_category_details'
+                    }
+                },
+                { $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true } },
                 {
                     $project: {
                         organizer_id: 1,
@@ -962,14 +970,21 @@ const adminController = {
                         event_end_time: 1,
                         event_name: 1,
                         event_image: 1,
+                        event_images: 1,
                         event_address: 1,
                         longitude: 1,
                         latitude: 1,
                         event_price: 1,
                         event_type: 1,
+                        event_types: 1, // Array of event types (conference, workshop, etc.)
                         createdAt: 1,
                         updatedAt: 1,
                         event_category: 1,
+                        event_categories: 1,
+                        event_category_details: {
+                            _id: 1,
+                            name: 1
+                        },
                         event_for: 1,
                         is_approved: 1, // Backend: 0=Pending, 1=Approved, 2=Rejected
                         // Map is_approved to event_status for frontend compatibility
@@ -1538,11 +1553,58 @@ const adminController = {
                             // Don't fail the request if group chat creation fails
                         }
                         
-                        // Event approved
+                        // Event approved - Send email
                         await sendEventApprovalEmail(organizer.email, organizerName, event.event_name, organizerLang);
+                        
+                        // Create in-app notification for organizer
+                        try {
+                            await NotificationService.CreateService({
+                                user_id: event.organizer_id,
+                                role: 2, // Organizer role
+                                title: organizerLang === "ar" ? "تم الموافقة على فعاليتك" : "Event Approved",
+                                description: organizerLang === "ar"
+                                    ? `تم الموافقة على فعاليتك "${event.event_name}". يمكن للمستخدمين الآن حجز تذاكر لحضور فعاليتك!`
+                                    : `Your event "${event.event_name}" has been approved. Users can now book tickets to attend your event!`,
+                                isRead: false,
+                                notification_type: 1, // Event approval type
+                                data: {
+                                    event_id: event._id,
+                                    event_name: event.event_name,
+                                    status: newStatus
+                                }
+                            });
+                            console.log(`[NOTIFICATION] Created approval notification for organizer: ${event.organizer_id}`);
+                        } catch (notificationError) {
+                            console.error('[NOTIFICATION] Error creating approval notification:', notificationError);
+                            // Don't fail the request if notification creation fails
+                        }
                     } else if (oldStatus === 0 && newStatus === 2 && rejectionReason) {
-                        // Event rejected
+                        // Event rejected - Send email
                         await sendEventRejectionEmail(organizer.email, organizerName, event.event_name, rejectionReason, organizerLang);
+                        
+                        // Create in-app notification for organizer
+                        try {
+                            await NotificationService.CreateService({
+                                user_id: event.organizer_id,
+                                role: 2, // Organizer role
+                                title: organizerLang === "ar" ? "تم رفض فعاليتك" : "Event Rejected",
+                                description: organizerLang === "ar"
+                                    ? `تم رفض فعاليتك "${event.event_name}". السبب: ${rejectionReason}`
+                                    : `Your event "${event.event_name}" has been rejected. Reason: ${rejectionReason}`,
+                                isRead: false,
+                                notification_type: 3, // Event rejection type
+                                data: {
+                                    event_id: event._id,
+                                    event_name: event.event_name,
+                                    status: newStatus,
+                                    rejection_reason: rejectionReason
+                                }
+                            });
+                            console.log(`[NOTIFICATION] Created rejection notification for organizer: ${event.organizer_id}`);
+                        } catch (notificationError) {
+                            console.error('[NOTIFICATION] Error creating rejection notification:', notificationError);
+                            // Don't fail the request if notification creation fails
+                        }
                     }
                 } catch (emailError) {
                     console.error('Error sending email:', emailError);

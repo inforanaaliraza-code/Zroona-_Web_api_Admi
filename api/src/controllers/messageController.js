@@ -7,6 +7,8 @@ const EventService = require('../services/eventService.js');
 const BookEventService = require('../services/bookEventService.js');
 const resp_messages = require('../helpers/resp_messages.js');
 const mongoose = require('mongoose');
+const fs = require('fs');
+const { uploadToCloudinary } = require('../utils/cloudinary.js');
 
 const MessageController = {
     // Get all conversations for a user
@@ -16,21 +18,42 @@ const MessageController = {
             const role = req.role; // 1=User, 2=Organizer
             const { page = 1, limit = 20 } = req.query;
 
-            // Determine query based on role
-            const query = role === 1 
-                ? { user_id: userId, status: 'active' }
-                : { organizer_id: userId, status: 'active' };
+            // For one-on-one conversations, use role-based query
+            const oneOnOneQuery = role === 1 
+                ? { user_id: userId, is_group: false, status: 'active' }
+                : { organizer_id: userId, is_group: false, status: 'active' };
 
-            const conversations = await ConversationService.FindService(
-                query,
-                parseInt(page),
-                parseInt(limit)
-            );
+            // For group chats, find conversations where user is a participant
+            const groupChatQuery = {
+                is_group: true,
+                status: 'active',
+            
+                'participants.user_id': userId,
+                'participants.left_at': null // Only active participants
+            };
 
-            const total = await ConversationService.CountService(query);
+            // Get both one-on-one and group conversations
+            const [oneOnOneConversations, groupConversations] = await Promise.all([
+                ConversationService.FindService(oneOnOneQuery, parseInt(page), parseInt(limit)),
+                ConversationService.FindService(groupChatQuery, parseInt(page), parseInt(limit))
+            ]);
+      
+            // Combine and sort by last_message_at
+            const allConversations = [...oneOnOneConversations, ...groupConversations]
+                .sort((a, b) => {
+                    const dateA = new Date(a.last_message_at || a.createdAt);
+                    const dateB = new Date(b.last_message_at || b.createdAt);
+                    return dateB - dateA; // Most recent first
+                })
+                .slice(0, parseInt(limit)); // Limit combined results
+
+            // Get total count
+            const oneOnOneTotal = await ConversationService.CountService(oneOnOneQuery);
+            const groupTotal = await ConversationService.CountService(groupChatQuery);
+            const total = oneOnOneTotal + groupTotal;
 
             return Response.ok(res, {
-                conversations,
+                conversations: allConversations,
                 pagination: {
                     page: parseInt(page),
                     limit: parseInt(limit),
@@ -46,7 +69,9 @@ const MessageController = {
                 resp_messages(req.lang).internalServerError
             );
         }
+        
     },
+
 
     // Get messages for a specific conversation
     getMessages: async (req, res) => {
@@ -76,9 +101,33 @@ const MessageController = {
             }
 
             // Check if user has access to this conversation
-            const hasAccess = role === 1
-                ? conversation.user_id._id.toString() === userId.toString()
-                : conversation.organizer_id._id.toString() === userId.toString();
+            let hasAccess = false;
+            
+            if (conversation.is_group === true) {
+                // For group chats, check if user is a participant
+                // Add null checks to prevent errors
+                if (!conversation.participants || !Array.isArray(conversation.participants)) {
+                    console.error('[MESSAGE] Invalid participants array in conversation:', conversation._id);
+                    return Response.serverErrorResponse(
+                        res,
+                        'Invalid conversation data'
+                    );
+                }
+
+                hasAccess = conversation.participants.some(
+                    p => p && p.user_id && p.user_id.toString() === userId.toString() && !p.left_at
+                ) || (conversation.organizer_id && conversation.organizer_id.toString() === userId.toString());
+            } else {
+                // For one-on-one conversations, use role-based check
+                // Add null checks
+                if (role === 1) {
+                    hasAccess = conversation.user_id && 
+                        (conversation.user_id._id ? conversation.user_id._id.toString() : conversation.user_id.toString()) === userId.toString();
+                } else {
+                    hasAccess = conversation.organizer_id && 
+                        (conversation.organizer_id._id ? conversation.organizer_id._id.toString() : conversation.organizer_id.toString()) === userId.toString();
+                }
+            }
 
             if (!hasAccess) {
                 return Response.unauthorizedResponse(
@@ -225,9 +274,18 @@ const MessageController = {
                 }
 
                 // Verify user is a participant in the group
+                // Add null checks to prevent errors
+                if (!conversation.participants || !Array.isArray(conversation.participants)) {
+                    console.error('[MESSAGE] Invalid participants array in conversation:', conversation._id);
+                    return Response.serverErrorResponse(
+                        res,
+                        'Invalid conversation data'
+                    );
+                }
+
                 const isParticipant = conversation.participants.some(
-                    p => p.user_id.toString() === userId.toString() && !p.left_at
-                );
+                    p => p && p.user_id && p.user_id.toString() === userId.toString() && !p.left_at
+                ) || (conversation.organizer_id && conversation.organizer_id.toString() === userId.toString());
                 
                 if (!isParticipant) {
                     return Response.unauthorizedResponse(
@@ -437,8 +495,17 @@ const MessageController = {
             }
 
             // Verify user is a participant (organizer is always a participant)
+            // Add null checks to prevent errors
+            if (!groupChat.participants || !Array.isArray(groupChat.participants)) {
+                console.error('[GROUP-CHAT] Invalid participants array in group chat:', groupChat._id);
+                return Response.serverErrorResponse(
+                    res,
+                    'Invalid group chat data'
+                );
+            }
+
             const isParticipant = role === 2 || groupChat.participants.some(
-                p => p.user_id.toString() === userId.toString() && !p.left_at
+                p => p && p.user_id && p.user_id.toString() === userId.toString() && !p.left_at
             );
 
             if (!isParticipant) {
@@ -458,6 +525,258 @@ const MessageController = {
 
         } catch (error) {
             console.error('getGroupChat error:', error);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(req.lang).internalServerError
+            );
+        }
+    },
+
+    // Send message with attachment (image/file)
+    sendMessageWithAttachment: async (req, res) => {
+        try {
+            const userId = req.userId;
+            const role = req.role;
+            const { event_id, message, receiver_id, is_group_chat } = req.body;
+
+            // Check if file is uploaded
+            if (!req.files || !req.files.file) {
+                return Response.badRequestResponse(
+                    res,
+                    'File is required for attachment message'
+                );
+            }
+
+            const uploadedFile = req.files.file;
+            const isGroupChat = is_group_chat === true;
+
+            if (!event_id) {
+                return Response.badRequestResponse(
+                    res,
+                    'Event ID is required'
+                );
+            }
+
+            // Verify event exists
+            const event = await EventService.FindOneService({ _id: event_id });
+            if (!event) {
+                return Response.notFoundResponse(
+                    res,
+                    'Event not found'
+                );
+            }
+
+            // Determine message type based on file MIME type
+            let messageType = 'file';
+            if (uploadedFile.mimetype && uploadedFile.mimetype.startsWith('image/')) {
+                messageType = 'image';
+            }
+
+            // Upload file to Cloudinary
+            let attachmentUrl = null;
+            try {
+                // Read file data
+                let fileData;
+                let fileName;
+                
+                if (uploadedFile.tempFilePath) {
+                    // File was saved to temp directory
+                    fileData = fs.readFileSync(uploadedFile.tempFilePath);
+                    fileName = uploadedFile.name || uploadedFile.tempFilePath.split('/').pop() || `attachment-${Date.now()}`;
+                } else if (uploadedFile.data) {
+                    // File is in memory
+                    fileData = uploadedFile.data;
+                    fileName = uploadedFile.name || `attachment-${Date.now()}`;
+                } else {
+                    return Response.badRequestResponse(
+                        res,
+                        'File data not found'
+                    );
+                }
+
+                // Upload to Cloudinary in messages folder
+                const cloudinaryResult = await uploadToCloudinary(
+                    fileData,
+                    'Jeena/messages',
+                    fileName,
+                    uploadedFile.mimetype || 'application/octet-stream'
+                );
+
+                attachmentUrl = cloudinaryResult.secure_url;
+
+                // Clean up temp file if it was used
+                if (uploadedFile.tempFilePath) {
+                    try {
+                        fs.unlinkSync(uploadedFile.tempFilePath);
+                    } catch (err) {
+                        console.warn('Failed to delete temp file:', err.message);
+                    }
+                }
+            } catch (uploadError) {
+                console.error('File upload error:', uploadError);
+                return Response.serverErrorResponse(
+                    res,
+                    `Failed to upload file: ${uploadError.message}`
+                );
+            }
+
+            let conversation;
+            let user_id, organizer_id;
+            
+            // For group chats, skip user_id/organizer_id validation
+            if (!isGroupChat) {
+                // Determine user_id and organizer_id based on sender role (for one-on-one chats)
+                if (role === 1) {
+                    // Sender is user, receiver is organizer
+                    user_id = userId;
+                    organizer_id = receiver_id;
+                    
+                    // Verify receiver is the event organizer
+                    if (event.organizer_id.toString() !== receiver_id.toString()) {
+                        return Response.badRequestResponse(
+                            res,
+                            'Invalid receiver ID'
+                        );
+                    }
+                } else {
+                    // Sender is organizer, receiver is user
+                    user_id = receiver_id;
+                    organizer_id = userId;
+                    
+                    // Verify sender is the event organizer
+                    if (event.organizer_id.toString() !== userId.toString()) {
+                        return Response.unauthorizedResponse(
+                            res,
+                            'You are not authorized to message about this event'
+                        );
+                    }
+                }
+
+                if (!receiver_id) {
+                    return Response.badRequestResponse(
+                        res,
+                        'Receiver ID is required for one-on-one conversations'
+                    );
+                }
+            }
+            
+            if (isGroupChat) {
+                // Handle group chat message
+                conversation = await ConversationService.GetGroupChatByEventService(event_id);
+                
+                if (!conversation) {
+                    return Response.notFoundResponse(
+                        res,
+                        'Group chat not found for this event'
+                    );
+                }
+
+                // Check if group chat is closed
+                const isClosed = await ConversationService.IsGroupChatClosedService(conversation._id);
+                if (isClosed) {
+                    return Response.badRequestResponse(
+                        res,
+                        'This group chat has been closed. Messages can no longer be sent.'
+                    );
+                }
+
+                // Verify user is a participant in the group
+                // Add null checks to prevent errors
+                if (!conversation.participants || !Array.isArray(conversation.participants)) {
+                    console.error('[MESSAGE] Invalid participants array in conversation:', conversation._id);
+                    return Response.serverErrorResponse(
+                        res,
+                        'Invalid conversation data'
+                    );
+                }
+
+                const isParticipant = conversation.participants.some(
+                    p => p && p.user_id && p.user_id.toString() === userId.toString() && !p.left_at
+                ) || (conversation.organizer_id && conversation.organizer_id.toString() === userId.toString());
+                
+                if (!isParticipant) {
+                    return Response.unauthorizedResponse(
+                        res,
+                        'You are not a participant in this group chat'
+                    );
+                }
+            } else {
+                // Handle one-on-one conversation
+                conversation = await ConversationService.FindOrCreateService(
+                    { event_id, user_id, organizer_id },
+                    {
+                        event_id,
+                        user_id,
+                        organizer_id,
+                        last_message: message || `Sent ${messageType}`,
+                        last_message_at: new Date(),
+                        last_sender_id: userId,
+                        last_sender_role: role
+                    }
+                );
+            }
+
+            // Create message with attachment
+            const messageText = message || (messageType === 'image' ? '📷 Image' : '📎 File');
+            const newMessage = await MessageService.CreateService({
+                conversation_id: conversation._id,
+                sender_id: userId,
+                sender_role: role,
+                message: messageText,
+                message_type: messageType,
+                attachment_url: attachmentUrl
+            });
+
+            // Update conversation
+            const updateData = {
+                last_message: messageText.substring(0, 100),
+                last_message_at: new Date(),
+                last_sender_id: userId,
+                last_sender_role: role
+            };
+
+            // Check if this is a group chat (update if conversation confirms it's a group)
+            const isGroupChatFinal = isGroupChat || conversation.is_group === true;
+
+            if (isGroupChatFinal) {
+                // For group chats, increment unread count for all participants except sender
+                if (conversation.participants && conversation.participants.length > 0) {
+                    conversation.participants.forEach(participant => {
+                        if (participant.user_id.toString() !== userId.toString() && !participant.left_at) {
+                            if (participant.role === 1) {
+                                updateData.unread_count_user = (conversation.unread_count_user || 0) + 1;
+                            } else {
+                                updateData.unread_count_organizer = (conversation.unread_count_organizer || 0) + 1;
+                            }
+                        }
+                    });
+                }
+            } else {
+                // For one-on-one conversations
+                if (role === 1) {
+                    updateData.unread_count_organizer = (conversation.unread_count_organizer || 0) + 1;
+                } else {
+                    updateData.unread_count_user = (conversation.unread_count_user || 0) + 1;
+                }
+            }
+
+            await ConversationService.FindByIdAndUpdateService(
+                conversation._id,
+                updateData
+            );
+
+            // Get updated conversation with populated fields
+            const updatedConversation = await ConversationService.FindOneService({
+                _id: conversation._id
+            });
+
+            return Response.ok(res, {
+                message: newMessage,
+                conversation: updatedConversation
+            }, 200, 'Message with attachment sent successfully');
+
+        } catch (error) {
+            console.error('sendMessageWithAttachment error:', error);
             return Response.serverErrorResponse(
                 res,
                 resp_messages(req.lang).internalServerError
