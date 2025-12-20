@@ -1,0 +1,55 @@
+{
+  "pages": {
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
+    ],
+    "/adminsa111xyz/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/adminsa111xyz/page.js"
+    ],
+    "/(AfterLogin)/organizer/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/organizer/page.js"
+    ],
+    "/(AfterLogin)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/layout.js"
+    ],
+    "/(AfterLogin)/withdrawal-requests/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/withdrawal-requests/page.js"
+    ],
+    "/(AfterLogin)/wallet/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/wallet/page.js"
+    ],
+    "/(AfterLogin)/setting/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/setting/page.js"
+    ],
+    "/(AfterLogin)/cms/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/cms/page.js"
+    ],
+    "/(AfterLogin)/events/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(AfterLogin)/events/page.js"
+    ]
+  }
+}
