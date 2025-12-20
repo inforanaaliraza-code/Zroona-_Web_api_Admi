@@ -1,0 +1,81 @@
+const mongoose = require('mongoose');
+
+const UserSchema = new mongoose.Schema({
+    profile_image: {
+        type: String,
+    },
+    first_name: {
+        type: String,
+    },
+    last_name: {
+        type: String,
+    },
+    country_code: {
+        type: String,
+    },
+    phone_number: {
+        type: Number,
+    },
+    email: {
+        type: String,
+    },
+    password: {
+        type: String,
+        required: true,
+        select: false, // Don't return password in queries by default
+    },
+    gender: {
+        type: Number,
+        enum: [1, 2, 3],
+    },
+    date_of_birth: {
+        type: Date,
+    },
+    description: {
+        type: String,
+    },
+    is_delete: {
+        type: Number,
+        enum: [0, 1],
+        default: 0
+    },
+    registration_step: {
+        type: Number,
+        enum: [1, 2],
+        default: 1
+    },
+    role: {
+        type: Number,
+        default: 1,
+        enum: [1]
+    },
+    otp: {
+        type: String,
+        default: '123456'
+    },
+    is_verified: {
+        type: Boolean,
+        default: false
+    },
+    language: {
+        type: String,
+        enum: ['en', 'ar'],
+        default: 'en'
+    },
+    fcm_token: {
+        type: String,
+        default: ''
+    },
+    device_id: {
+        type: String,
+        default: ''
+    },
+    nationality: {
+        type: String,
+        default: ''
+    }
+}, { timestamps: true });
+
+const User = mongoose.model('user', UserSchema);
+
+module.exports = User;

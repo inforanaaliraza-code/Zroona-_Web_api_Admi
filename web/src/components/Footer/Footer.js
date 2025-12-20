@@ -1,0 +1,155 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import { useTranslation } from "react-i18next";
+import { IoLocationOutline, IoMailOutline, IoCallOutline, IoCloseOutline } from "react-icons/io5";
+import { FaTiktok, FaInstagram, FaSnapchatGhost } from "react-icons/fa";
+import { RiTwitterXFill } from "react-icons/ri";
+import { useRTL } from "@/utils/rtl";
+
+
+export default function Footer() {
+    const { t, i18n } = useTranslation();
+    const { textAlign } = useRTL();
+
+    return (
+        <footer className="overflow-hidden relative text-white bg-gray-900">
+            {/* Decorative elements */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme('colors.brand-orange')1a,transparent_70%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,theme('colors.brand-orange')1a,transparent_70%)]"></div>
+
+            <div className="relative px-4 py-12 mx-auto max-w-7xl sm:px-6 lg:px-8 md:py-16">
+                <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+                    {/* Brand Section */}
+                    <div className="gap-y-4">
+                        <Image
+                            src="/assets/images/main-logo.png"
+                            alt="Zuroona Logo"
+                            width={120}
+                            height={40}
+                            className="mb-6"
+                        />
+                        <p className={`max-w-sm text-sm text-gray-400 ${textAlign}`}>
+                            {t("footer.tab2")}
+                        </p>
+                        {/* Social Icons */}
+                        <div className="flex gap-4 pt-4">
+                            <a href="https://www.tiktok.com/@zuroona?_t=ZN-90tyaX4DPnS&_r=1" className="text-gray-400 hover:text-brand-orange transition-colors" target="_blank" rel="noopener noreferrer">
+                                <FaTiktok className="text-xl" />
+                            </a>
+                            <a href="https://snapchat.com/t/IQxxW6dK" className="text-gray-400 hover:text-brand-orange transition-colors" target="_blank" rel="noopener noreferrer">
+                                <FaSnapchatGhost className="text-xl" />
+                            </a>
+                            <a href="https://x.com/zuroonaksa?s=11&t=cwvlmHDPVC7mbsMLpqJFkQ" className="text-gray-400 hover:text-brand-orange transition-colors" target="_blank" rel="noopener noreferrer">
+                                <RiTwitterXFill className="text-xl" />
+                            </a>
+                            <a href="https://www.instagram.com/zuroona?igsh=MXJvN2s4ZHlvNGR3aQ%3D%3D&utm_source=qr" className="text-gray-400 hover:text-brand-orange transition-colors" target="_blank" rel="noopener noreferrer">
+                                <FaInstagram className="text-xl" />
+                            </a>
+                        </div>
+                    </div>
+
+                    {/* Legal Links */}
+                    <div className="md:col-span-2">
+                        <h3 className="text-lg font-semibold text-brand-orange mb-6">{t("footer.tab5")}</h3>
+                        <ul className="flex flex-col gap-3">
+                            <li>
+                                <a
+                                    href="/about"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-gray-400 hover:text-brand-orange transition-colors"
+                                >
+                                    {t("footer.tab6")}
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="/termsCondition"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-gray-400 hover:text-brand-orange transition-colors"
+                                >
+                                    {t("footer.tab7")}
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="/privacyPolicy"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-gray-400 hover:text-brand-orange transition-colors"
+                                >
+                                    {t("footer.tab8")}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    {/* About Zuroona Info */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-brand-orange mb-6">{t("footer.tab6")}</h3>
+                        <ul className="flex flex-col gap-4">
+                            <li className="flex gap-3 items-center">
+                                <IoLocationOutline className="text-brand-orange text-xl flex-shrink-0 mt-1" />
+                                <span className="text-sm text-gray-400">{t("footer.tab24")}</span>
+                            </li>
+                            <li className="flex gap-3 items-center">
+                                <IoCallOutline className="text-brand-orange text-xl flex-shrink-0" />
+                                <span className="text-gray-400" dir="ltr">+966 59 172 7589</span>
+                            </li>
+                            <li className="flex gap-3 items-center">
+                                <IoMailOutline className="text-brand-orange text-xl flex-shrink-0" />
+                                <span className="text-gray-400">infozuroona@gmail.com</span>
+                            </li>
+                        </ul>
+                        {/* App Store Buttons */}
+                        <div className="mt-6 flex flex-col gap-3">
+                            {/* Google Play Store */}
+                            <a
+                                href="#"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block transition-opacity duration-300 transform hover:opacity-80"
+                            >
+                                <Image
+                                    src="/assets/images/play_Final_ali.png"
+                                    alt="Get it on Google Play"
+                                    width={200}
+                                    height={60}
+                                    className="h-auto"
+                                />
+                            </a>
+                            {/* Apple App Store */}
+                            <a
+                                href="#"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-block transition-opacity duration-300 transform hover:opacity-80"
+                            >
+                                <Image
+                                    src="/assets/images/iphone_final_ali.png"
+                                    alt="Download on the App Store"
+                                    width={200}
+                                    height={60}
+                                    className="h-auto"
+                                />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Commercial License */}
+                <div className="pt-8 mt-12 border-t border-gray-800">
+                    <p className="text-sm text-center text-gray-400">
+                        {i18n.language === 'ar'
+                            ? "١٠٠٩١٠٧١٠١ شركة واحة الاستكشاف المحدودة"
+                            : "Commercial License: 1009107101, Oasis Exploration Company Limited."}
+                    </p>
+                </div>
+
+            </div>
+        </footer>
+    );
+}

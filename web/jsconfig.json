@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "typeAcquisition": {
+    "enable": true,
+    "exclude": ["cookie"]
+  }
+}
