@@ -13,6 +13,7 @@ const fileUpload = require("express-fileupload");
 const commonController = require("./controllers/commonController");
 const autoCloseGroupChats = require("./scripts/autoCloseGroupChats.js");
 const updateCompletedBookings = require("./scripts/updateCompletedBookings.js");
+const createTestUsers = require("./scripts/createTestUsers.js");
 
 dotenv.config();
 
@@ -287,6 +288,17 @@ if (process.env.ENABLE_AUTO_COMPLETE_BOOKINGS !== 'false') {
     }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
     
     console.log('[AUTO-COMPLETE] Scheduled task enabled - will run daily');
+}
+
+// Create test users on startup (for development/testing)
+if (process.env.CREATE_TEST_USERS === 'true' || process.env.NODE_ENV === 'development') {
+    setTimeout(() => {
+        createTestUsers().catch(err => {
+            console.error('[TEST-USERS] Error creating test users:', err);
+        });
+    }, 15000); // After 15 seconds to ensure DB is connected
+    
+    console.log('[TEST-USERS] Test users will be created on startup');
 }
 
 module.exports = app;

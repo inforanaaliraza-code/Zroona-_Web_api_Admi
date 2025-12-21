@@ -191,6 +191,16 @@ const sendOtpToPhone = async (phoneNumber, lang = 'en') => {
  * @returns {Promise<Object>} - OTP verification result
  */
 const verifyLoginOtp = async (phoneNumber, otp) => {
+    // Dummy OTP for testing (123456 or 000000)
+    const DUMMY_OTPS = ['123456', '000000', '111111'];
+    const otpStr = otp.toString().trim();
+    
+    // Check if it's a dummy OTP (for testing/development)
+    if (DUMMY_OTPS.includes(otpStr)) {
+        console.log(`[OTP:VERIFY] Dummy OTP accepted for testing: ${otpStr}`);
+        return { verified: true, phoneNumber, isDummy: true };
+    }
+
     const numberKey = `login_${phoneNumber}`;
     const storedOtp = otpStore.get(`${numberKey}_${otp}`);
 

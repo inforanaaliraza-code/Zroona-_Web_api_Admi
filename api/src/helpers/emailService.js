@@ -38,9 +38,22 @@ class EmailService {
      * @returns {string} - Verification URL
      */
     generateVerificationLink(token, role = 1, language = "en") {
-        const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        // Use WEB_URL for web frontend, fallback to FRONTEND_URL, then localhost
+        const baseUrl = process.env.WEB_URL || process.env.FRONTEND_URL || process.env.CLIENT_URL || "http://localhost:3000";
+        
+        // Remove any trailing slashes and ensure it's a valid URL
+        const cleanUrl = baseUrl.trim().replace(/\/+$/, '');
+        
+        // Validate URL doesn't contain bedpage or other unwanted domains
+        if (cleanUrl.includes('bedpage') || cleanUrl.includes('404')) {
+            console.warn('⚠️  Invalid FRONTEND_URL detected, using default');
+            const defaultUrl = "http://localhost:3000";
+            const roleType = role === 2 ? "host" : "guest";
+            return `${defaultUrl}/auth/verify-email?token=${encodeURIComponent(token)}&role=${roleType}&lang=${language}`;
+        }
+        
         const roleType = role === 2 ? "host" : "guest";
-        return `${baseUrl}/auth/verify-email?token=${encodeURIComponent(token)}&role=${roleType}&lang=${language}`;
+        return `${cleanUrl}/auth/verify-email?token=${encodeURIComponent(token)}&role=${roleType}&lang=${language}`;
     }
 
     /**
@@ -207,7 +220,7 @@ class EmailService {
      */
     renderHostApprovalEmail(name, language = "en") {
         const isArabic = language === "ar";
-        const loginUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        const loginUrl = process.env.WEB_URL || process.env.FRONTEND_URL || process.env.CLIENT_URL || "http://localhost:3000";
 
         if (isArabic) {
             return `
@@ -349,7 +362,7 @@ class EmailService {
      * @returns {string} - Reset URL
      */
     generatePasswordResetLink(token, role = 1, language = "en") {
-        const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        const baseUrl = process.env.WEB_URL || process.env.FRONTEND_URL || process.env.CLIENT_URL || "http://localhost:3000";
         const roleType = role === 2 ? "host" : role === 3 ? "admin" : "guest";
         return `${baseUrl}/auth/reset-password?token=${encodeURIComponent(token)}&role=${roleType}&lang=${language}`;
     }
@@ -484,7 +497,7 @@ class EmailService {
      */
     async sendEventApprovalEmail(organizerEmail, organizerName, eventName, language = "en") {
         const isArabic = language === "ar";
-        const loginUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+        const loginUrl = process.env.ADMIN_URL || process.env.FRONTEND_URL || "http://localhost:3001";
         
         let html, subject;
         
@@ -564,7 +577,7 @@ class EmailService {
      */
     async sendEventRejectionEmail(organizerEmail, organizerName, eventName, rejectionReason, language = "en") {
         const isArabic = language === "ar";
-        const loginUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+        const loginUrl = process.env.ADMIN_URL || process.env.FRONTEND_URL || "http://localhost:3001";
         
         let html, subject;
         
