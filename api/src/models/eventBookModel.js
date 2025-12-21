@@ -41,8 +41,13 @@ const bookEventSchema = new mongoose.Schema(
 		},
 		book_status: {
 			type: Number,
-			enum: [1, 2, 3, 4], // 1 pending, 2 confirmed, 3 cancelled, 4 rejected
+			enum: [1, 2, 3, 4, 5, 6], // 1 pending, 2 confirmed, 3 cancelled, 4 rejected, 5 completed, 6 refunded
 			default: 1,
+		},
+		refund_request_id: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'refund_request',
+			default: null,
 		},
 		payment_status: {
 			type: Number,

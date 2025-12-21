@@ -86,6 +86,11 @@ router.post(
 	userController.updatePaymentStatus
 );
 
+// ===== REFUND REQUESTS =====
+router.post("/refund/request", AuthenticateUser, userController.requestRefund); // Request refund
+router.get("/refund/list", AuthenticateUser, userController.getRefundRequests); // Get user refund requests
+router.get("/refund/detail", AuthenticateUser, userController.getRefundDetail); // Get refund detail
+
 // Messaging routes
 router.get("/conversations", AuthenticateUser, messageController.getConversations);
 router.get("/messages", AuthenticateUser, messageController.getMessages);

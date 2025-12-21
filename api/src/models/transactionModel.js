@@ -22,7 +22,7 @@ const transactionSchema = new mongoose.Schema({
     },
     type: {
         type: Number,
-        enum: [1, 2], // 1  credit , 2 debit  
+        enum: [1, 2, 3], // 1 credit (earning), 2 debit (withdrawal), 3 refund
         required: true
     },
     payment_id: {

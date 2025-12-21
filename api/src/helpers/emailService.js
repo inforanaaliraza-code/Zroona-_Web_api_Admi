@@ -1,63 +1,23 @@
-const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+const { sendEmail: sendEmailViaMailJS } = require("./mailJSService");
 
 /**
  * Email Service for Zuroona Platform
  * Handles all email sending operations including verification emails
+ * Uses MailJS (jsmail) API for email delivery
  */
 class EmailService {
     constructor() {
-        this.transporter = null;
-        this.initializeTransporter();
-    }
-
-    /**
-     * Initialize SMTP transporter
-     */
-    initializeTransporter() {
-        try {
-            // SMTP Configuration - Updated credentials
-            const host = process.env.SMTP_HOST || "smtp.gmail.com";
-            const port = parseInt(process.env.SMTP_PORT) || 587;
-            const user = process.env.SMTP_USER || "shanwaqarfarooq982@gmail.com";
-            const pass = process.env.SMTP_PASS || "lcwb kjti ulnu egry";
-
-            console.log("🔧 Initializing SMTP connection...");
-            console.log(`📧 Host: ${host}`);
-            console.log(`🔌 Port: ${port}`);
-            console.log(`👤 User: ${user}`);
-            console.log(`🔐 Pass: ${pass ? "***configured***" : "NOT SET"}`);
-
-            if (!user || !pass) {
-                console.error("❌ SMTP credentials not configured properly");
-                return;
-            }
-
-            this.transporter = nodemailer.createTransport({
-                host,
-                port,
-                secure: port === 465, // true for 465, false for other ports (like 587)
-                auth: {
-                    user,
-                    pass: pass.replace(/\s+/g, ""), // Remove any whitespace
-                },
-                tls: {
-                    rejectUnauthorized: false, // Accept self-signed certificates
-                },
-                debug: true,
-                logger: true,
-            });
-
-            // Verify connection
-            this.transporter.verify((error, success) => {
-                if (error) {
-                    console.error("❌ SMTP verification failed:", error);
-                } else {
-                    console.log("✅ SMTP connection verified successfully!");
-                }
-            });
-        } catch (error) {
-            console.error("❌ Error initializing SMTP transporter:", error);
+        // MailJS credentials check
+        const publicKey = process.env.MAILJS_PUBLIC_KEY || 'OSfCgupc61 dwFtXNI';
+        const privateKey = process.env.MAILJS_PRIVATE_KEY || 'fj4w33dz06Qafqvr4	6ZrK';
+        
+        if (publicKey && privateKey) {
+            console.log("✅ MailJS credentials loaded successfully");
+            console.log(`🔑 Public Key: ${publicKey.substring(0, 10)}...`);
+            console.log(`🔐 Private Key: ${privateKey.substring(0, 10)}...`);
+        } else {
+            console.warn("⚠️  MailJS credentials not configured. Please set MAILJS_PUBLIC_KEY and MAILJS_PRIVATE_KEY in environment variables.");
         }
     }
 
@@ -472,7 +432,7 @@ class EmailService {
     }
 
     /**
-     * Send email
+     * Send email via MailJS API
      * @param {string} to - Recipient email
      * @param {string} subject - Email subject
      * @param {string} html - Email HTML content
@@ -482,59 +442,34 @@ class EmailService {
         console.log(`[EMAIL] Attempting to send email to: ${to}`);
         console.log(`[EMAIL] Subject: ${subject}`);
 
-        if (!this.transporter) {
-            console.error("[EMAIL] Transporter not initialized. Attempting to initialize...");
-            this.initializeTransporter();
-            
-            if (!this.transporter) {
-                console.error("[EMAIL] Failed to initialize transporter. Cannot send email.");
-                return false;
-            }
-        }
-
         try {
             // Use configured MAIL_FROM or default
-            const fromAddress = process.env.MAIL_FROM || `"Zuroona Plateform" <shanwaqarfarooq982@gmail.com>`;
-            
-            const mailOptions = {
-                from: fromAddress,
-                to: to.trim(),
-                subject: subject.trim(),
-                html: html,
-                headers: {
-                    "X-Mailer": "Zuroona Platform",
-                    "X-Priority": "1",
-                    "Importance": "high",
-                },
-            };
+            const fromAddress = process.env.MAIL_FROM || 'Zuroona Platform <noreply@zuroona.com>';
 
-            console.log("[EMAIL] Sending email with options:", {
-                from: mailOptions.from,
-                to: mailOptions.to,
-                subject: mailOptions.subject,
-            });
+            console.log("[EMAIL] Sending email via MailJS API");
+            console.log("[EMAIL] From:", fromAddress);
+            console.log("[EMAIL] To:", to);
+            console.log("[EMAIL] Subject:", subject);
 
-            const result = await this.transporter.sendMail(mailOptions);
+            // Send email via MailJS
+            const result = await sendEmailViaMailJS(to, subject, html, fromAddress);
 
-            console.log("[EMAIL:SUCCESS] Email sent successfully!");
-            console.log("[EMAIL] Target:", to);
-            console.log("[EMAIL] Message ID:", result.messageId);
-            console.log("[EMAIL] Response:", result.response);
-
-            return true;
+            if (result.success) {
+                console.log("[EMAIL:SUCCESS] Email sent successfully via MailJS!");
+                console.log("[EMAIL] Target:", to);
+                console.log("[EMAIL] Response:", result.data);
+                return true;
+            } else {
+                console.error("[EMAIL:ERROR] MailJS returned unsuccessful response");
+                return false;
+            }
         } catch (error) {
-            console.error("[EMAIL:ERROR] Failed to send email:", error);
+            console.error("[EMAIL:ERROR] Failed to send email via MailJS:", error);
             console.error("[EMAIL] To:", to);
             console.error("[EMAIL] Subject:", subject);
             console.error("[EMAIL] Error message:", error.message);
-            console.error("[EMAIL] Error code:", error.code);
             
-            if (error.code === "EAUTH") {
-                console.error("[EMAIL] Authentication failed - check SMTP_USER and SMTP_PASS");
-            } else if (error.code === "ECONNECTION") {
-                console.error("[EMAIL] Connection failed - check SMTP_HOST and SMTP_PORT");
-            }
-
+            // Don't fail completely - log error but return false
             return false;
         }
     }

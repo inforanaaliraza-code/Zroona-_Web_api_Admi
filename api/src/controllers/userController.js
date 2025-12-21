@@ -3240,6 +3240,241 @@ const UserController = {
 			);
 		}
 	},
+
+	/**
+	 * Request refund for cancelled booking
+	 * POST /user/refund/request
+	 */
+	requestRefund: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { userId } = req;
+			const { booking_id, refund_reason } = req.body;
+
+			console.log("[REFUND:REQUEST] Refund request:", { booking_id, userId });
+
+			// Validate inputs
+			if (!booking_id) {
+				return Response.validationErrorResponse(
+					res,
+					"Booking ID is required"
+				);
+			}
+
+			if (!refund_reason || refund_reason.trim().length < 10) {
+				return Response.validationErrorResponse(
+					res,
+					"Refund reason is required and must be at least 10 characters"
+				);
+			}
+
+			// Find booking
+			const BookEventService = require("../services/bookEventService");
+			const booking = await BookEventService.FindOneService({
+				_id: booking_id,
+				user_id: userId,
+			});
+
+			if (!booking) {
+				return Response.notFoundResponse(
+					res,
+					"Booking not found or you don't have permission to request refund for this booking"
+				);
+			}
+
+			// Check if booking is cancelled (status 3)
+			if (booking.book_status !== 3) {
+				return Response.badRequestResponse(
+					res,
+					"Refund can only be requested for cancelled bookings"
+				);
+			}
+
+			// Check if payment was made
+			if (booking.payment_status !== 1) {
+				return Response.badRequestResponse(
+					res,
+					"Refund can only be requested for paid bookings"
+				);
+			}
+
+			// Check if refund already requested
+			const RefundRequestService = require("../services/refundRequestService");
+			const existingRefund = await RefundRequestService.FindOneService({
+				booking_id: booking_id,
+				user_id: userId,
+			});
+
+			if (existingRefund) {
+				return Response.badRequestResponse(
+					res,
+					existingRefund.status === 0
+						? "Refund request already submitted and pending review"
+						: existingRefund.status === 1
+						? "Refund request already approved"
+						: existingRefund.status === 2
+						? "Refund request was rejected"
+						: "Refund already processed"
+				);
+			}
+
+			// Get event details
+			const EventService = require("../services/eventService");
+			const event = await EventService.FindOneService({
+				_id: booking.event_id,
+			});
+
+			if (!event) {
+				return Response.notFoundResponse(res, "Event not found");
+			}
+
+			// Create refund request
+			const refundRequest = await RefundRequestService.CreateService({
+				booking_id: booking._id,
+				user_id: userId,
+				event_id: booking.event_id,
+				organizer_id: booking.organizer_id,
+				amount: booking.total_amount,
+				refund_reason: refund_reason.trim(),
+				status: 0, // Pending
+			});
+
+			// Update booking with refund request ID
+			await BookEventService.FindByIdAndUpdateService(booking._id, {
+				refund_request_id: refundRequest._id,
+			});
+
+			// Create notification for admin
+			const AdminService = require("../services/adminService");
+			const admins = await AdminService.FindService({ is_delete: { $ne: 1 } });
+
+			for (const admin of admins) {
+				await NotificationService.CreateService({
+					user_id: admin._id,
+					role: 3, // Admin role
+					title: lang === "ar" ? "طلب استرداد جديد" : "New Refund Request",
+					description: lang === "ar"
+						? `طلب مستخدم استرداد مبلغ ${booking.total_amount} SAR لحجز ملغي`
+						: `User requested refund of ${booking.total_amount} SAR for cancelled booking`,
+					isRead: false,
+					notification_type: 4, // Refund type
+					event_id: booking.event_id,
+					book_id: booking._id,
+				});
+			}
+
+			console.log("[REFUND:REQUEST] Refund request created:", refundRequest._id);
+
+			return Response.ok(
+				res,
+				{
+					refund_request: {
+						_id: refundRequest._id,
+						booking_id: refundRequest.booking_id,
+						amount: refundRequest.amount,
+						status: refundRequest.status,
+						refund_reason: refundRequest.refund_reason,
+						createdAt: refundRequest.createdAt,
+					},
+				},
+				201,
+				lang === "ar"
+					? "تم تقديم طلب الاسترداد بنجاح. سيتم مراجعته من قبل المسؤول."
+					: "Refund request submitted successfully. It will be reviewed by admin."
+			);
+		} catch (error) {
+			console.error("[REFUND:REQUEST] Error:", error);
+			return Response.serverErrorResponse(
+				res,
+				error.message || resp_messages(lang).internalServerError
+			);
+		}
+	},
+
+	/**
+	 * Get user's refund requests
+	 * GET /user/refund/list
+	 */
+	getRefundRequests: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { userId } = req;
+			const { page = 1, limit = 10, status } = req.query;
+
+			const skip = (Number(page) - 1) * Number(limit);
+			const query = { user_id: userId };
+
+			// Filter by status if provided
+			if (status !== undefined) {
+				query.status = parseInt(status);
+			}
+
+			const RefundRequestService = require("../services/refundRequestService");
+			const refundRequests = await RefundRequestService.FindService(
+				query,
+				Number(page),
+				Number(limit)
+			);
+
+			const count = await RefundRequestService.CountDocumentService(query);
+
+			return Response.ok(
+				res,
+				refundRequests,
+				200,
+				resp_messages(lang).fetched_data || "Fetched data",
+				count
+			);
+		} catch (error) {
+			console.error("[REFUND:LIST] Error:", error);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages(lang).internalServerError
+			);
+		}
+	},
+
+	/**
+	 * Get refund request detail
+	 * GET /user/refund/detail
+	 */
+	getRefundDetail: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { userId } = req;
+			const { refund_id } = req.query;
+
+			if (!refund_id) {
+				return Response.validationErrorResponse(res, "Refund ID is required");
+			}
+
+			const RefundRequestService = require("../services/refundRequestService");
+			const refundRequest = await RefundRequestService.FindOneService({
+				_id: refund_id,
+				user_id: userId,
+			});
+
+			if (!refundRequest) {
+				return Response.notFoundResponse(
+					res,
+					"Refund request not found or you don't have permission"
+				);
+			}
+
+			return Response.ok(
+				res,
+				refundRequest,
+				200,
+				resp_messages(lang).fetched_data || "Fetched data"
+			);
+		} catch (error) {
+			console.error("[REFUND:DETAIL] Error:", error);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages(lang).internalServerError
+			);
+		}
+	},
 };
 
 module.exports = UserController;

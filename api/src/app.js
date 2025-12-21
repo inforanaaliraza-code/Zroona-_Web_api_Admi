@@ -12,6 +12,7 @@ const os = require("os");
 const fileUpload = require("express-fileupload");
 const commonController = require("./controllers/commonController");
 const autoCloseGroupChats = require("./scripts/autoCloseGroupChats.js");
+const updateCompletedBookings = require("./scripts/updateCompletedBookings.js");
 
 dotenv.config();
 
@@ -267,6 +268,25 @@ if (process.env.ENABLE_AUTO_CLOSE_GROUP_CHATS !== 'false') {
     }, 60 * 60 * 1000); // 1 hour in milliseconds
     
     console.log('[AUTO-CLOSE] Scheduled task enabled - will run every hour');
+}
+
+// Schedule auto-update completed bookings task (runs daily)
+if (process.env.ENABLE_AUTO_COMPLETE_BOOKINGS !== 'false') {
+    // Run immediately on startup (after 60 seconds to ensure DB is connected)
+    setTimeout(() => {
+        updateCompletedBookings().catch(err => {
+            console.error('[AUTO-COMPLETE] Error in scheduled task:', err);
+        });
+    }, 60000);
+
+    // Then run every 24 hours
+    setInterval(() => {
+        updateCompletedBookings().catch(err => {
+            console.error('[AUTO-COMPLETE] Error in scheduled task:', err);
+        });
+    }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+    
+    console.log('[AUTO-COMPLETE] Scheduled task enabled - will run daily');
 }
 
 module.exports = app;

@@ -19,7 +19,15 @@ DAFTRA_API_KEY=a287194bdf648c16341ecb843cea1fbae7392962
 
 ### Moyasar Payment Gateway
 ```env
-MOYASAR_SECRET_KEY=Sk_test_@sG6LYsSoX4hixpSwCZEiaac1TSLtKXMy91Yen6B
+# Moyasar API Keys (for refund processing)
+MOYASAR_PUBLISHABLE_KEY=pk_test_GUUdMyrNufV9xb59FBSAYi9jniyhvVDa9U2524pV
+MOYASAR_SECRET_KEY=sk_test_@sG6LYsSoX4hixpSwCZEiaac1TSLtKXMy91Yen6B
+
+# Alternative variable names (for backward compatibility)
+MOYASAR_API_KEY=sk_test_@sG6LYsSoX4hixpSwCZEiaac1TSLtKXMy91Yen6B
+MOYASAR_SECRET=sk_test_@sG6LYsSoX4hixpSwCZEiaac1TSLtKXMy91Yen6B
+
+# Webhook signature secret (for payment webhook verification)
 MOYASAR_SIGNATURE_SECRET=your_webhook_secret_here
 ```
 

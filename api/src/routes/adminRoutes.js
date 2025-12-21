@@ -77,6 +77,11 @@ router.get('/organizer/withdrawalList', adminController.withdrawalList);
 
 router.put("/withdrawalStatus", adminController.withdrawalStatusUpdate);
 
+// ===== REFUND MANAGEMENT =====
+router.get("/refund/list", adminController.refundList); // Get refund requests list
+router.get("/refund/detail", adminController.refundDetail); // Get refund request detail
+router.put("/refund/update-status", adminController.refundStatusUpdate); // Update refund status
+
 // Event status change with email
 router.put("/event/changeStatus", adminController.eventStatusChange);
 

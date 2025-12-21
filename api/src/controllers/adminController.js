@@ -1494,6 +1494,348 @@ const adminController = {
 
         }
     },
+
+    /**
+     * Get refund requests list (Admin)
+     * GET /admin/refund/list
+     */
+    refundList: async (req, res) => {
+        try {
+            const lang = req.lang || req.headers["lang"] || "en";
+            const { page = 1, limit = 10, status, search } = req.query;
+            const skip = (Number(page) - 1) * Number(limit);
+
+            const RefundRequestService = require("../services/refundRequestService");
+            const query = {};
+
+            // Filter by status if provided
+            if (status !== undefined) {
+                query.status = parseInt(status);
+            }
+
+            // Search by user name, event name, or booking ID
+            if (search) {
+                query.$or = [
+                    { refund_reason: { $regex: search, $options: "i" } },
+                ];
+            }
+
+            const refundRequests = await RefundRequestService.FindService(
+                query,
+                Number(page),
+                Number(limit)
+            );
+
+            const count = await RefundRequestService.CountDocumentService(query);
+
+            return Response.ok(
+                res,
+                refundRequests,
+                200,
+                resp_messages(lang).fetched_data || "Fetched data",
+                count
+            );
+        } catch (error) {
+            console.error("[ADMIN:REFUND:LIST] Error:", error);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(req.lang).internalServerError
+            );
+        }
+    },
+
+    /**
+     * Get refund request detail (Admin)
+     * GET /admin/refund/detail
+     */
+    refundDetail: async (req, res) => {
+        try {
+            const lang = req.lang || req.headers["lang"] || "en";
+            const { refund_id } = req.query;
+
+            if (!refund_id) {
+                return Response.validationErrorResponse(
+                    res,
+                    "Refund ID is required"
+                );
+            }
+
+            const RefundRequestService = require("../services/refundRequestService");
+            const refundRequest = await RefundRequestService.FindOneService({
+                _id: refund_id,
+            });
+
+            if (!refundRequest) {
+                return Response.notFoundResponse(
+                    res,
+                    "Refund request not found"
+                );
+            }
+
+            return Response.ok(
+                res,
+                refundRequest,
+                200,
+                resp_messages(lang).fetched_data || "Fetched data"
+            );
+        } catch (error) {
+            console.error("[ADMIN:REFUND:DETAIL] Error:", error);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(req.lang).internalServerError
+            );
+        }
+    },
+
+    /**
+     * Update refund request status (Admin)
+     * PUT /admin/refund/update-status
+     */
+    refundStatusUpdate: async (req, res) => {
+        try {
+            const lang = req.lang || req.headers["lang"] || "en";
+            const { adminId } = req;
+            const { refund_id, status, admin_response, payment_refund_id } = req.body;
+
+            console.log("[ADMIN:REFUND:UPDATE] Refund status update:", {
+                refund_id,
+                status,
+                adminId,
+            });
+
+            // Validate inputs
+            if (!refund_id || status === undefined) {
+                return Response.validationErrorResponse(
+                    res,
+                    "Refund ID and status are required"
+                );
+            }
+
+            // Validate status (0 pending, 1 approved, 2 rejected, 3 processed)
+            if (![1, 2, 3].includes(parseInt(status))) {
+                return Response.validationErrorResponse(
+                    res,
+                    "Invalid status. Use 1 for approved, 2 for rejected, or 3 for processed"
+                );
+            }
+
+            const RefundRequestService = require("../services/refundRequestService");
+            const BookEventService = require("../services/bookEventService");
+            const TransactionService = require("../services/recentTransaction");
+            const WalletService = require("../services/walletService");
+            const NotificationService = require("../services/notificationService");
+
+            // Find refund request
+            const refundRequest = await RefundRequestService.FindOneService({
+                _id: refund_id,
+            });
+
+            if (!refundRequest) {
+                return Response.notFoundResponse(res, "Refund request not found");
+            }
+
+            // Check if already processed
+            if (refundRequest.status === 3) {
+                return Response.badRequestResponse(
+                    res,
+                    "Refund request already processed"
+                );
+            }
+
+            if (refundRequest.status === 1 && parseInt(status) === 1) {
+                return Response.badRequestResponse(
+                    res,
+                    "Refund request already approved"
+                );
+            }
+
+            // Get booking details
+            const booking = await BookEventService.FindOneService({
+                _id: refundRequest.booking_id,
+            });
+
+            if (!booking) {
+                return Response.notFoundResponse(res, "Booking not found");
+            }
+
+            // Get user details for notification
+            const UserService = require("../services/userService");
+            const user = await UserService.FindOneService({
+                _id: refundRequest.user_id,
+            });
+
+            // Update refund request
+            const updateData = {
+                status: parseInt(status),
+                processed_by: adminId,
+                processed_at: new Date(),
+            };
+
+            if (admin_response) {
+                updateData.admin_response = admin_response;
+            }
+
+            if (payment_refund_id) {
+                updateData.payment_refund_id = payment_refund_id;
+            }
+
+            const updatedRefund = await RefundRequestService.FindByIdAndUpdateService(
+                refund_id,
+                updateData
+            );
+
+            // Handle based on status
+            if (parseInt(status) === 1) {
+                // Approved - Process refund via Moyasar
+                const MoyasarService = require("../helpers/MoyasarService");
+                let moyasarRefundId = null;
+                let refundSuccess = false;
+                let refundError = null;
+
+                // Check if booking has payment_id (Moyasar payment ID)
+                if (booking.payment_id) {
+                    try {
+                        console.log(`[ADMIN:REFUND:MOYASAR] Processing refund for payment ${booking.payment_id}`);
+                        
+                        // Process refund via Moyasar
+                        const refundDescription = `Refund for booking ${booking.order_id || booking._id}. ${admin_response || 'Refund approved by admin'}`;
+                        const refundResult = await MoyasarService.refundPayment(
+                            booking.payment_id,
+                            refundRequest.amount,
+                            refundDescription
+                        );
+
+                        if (refundResult.success) {
+                            moyasarRefundId = refundResult.refundId || refundResult.data?.id;
+                            refundSuccess = true;
+                            console.log(`[ADMIN:REFUND:MOYASAR] Refund processed successfully. Refund ID: ${moyasarRefundId}`);
+                        } else {
+                            refundError = refundResult.message;
+                            console.error(`[ADMIN:REFUND:MOYASAR] Refund failed: ${refundError}`);
+                            // Continue with refund request approval even if Moyasar refund fails
+                            // Admin can manually process refund later
+                        }
+                    } catch (moyasarError) {
+                        refundError = moyasarError.message;
+                        console.error(`[ADMIN:REFUND:MOYASAR] Exception during refund: ${refundError}`);
+                        // Continue with refund request approval
+                    }
+                } else {
+                    console.warn(`[ADMIN:REFUND:MOYASAR] Booking ${booking._id} has no payment_id. Refund will be marked as approved but not processed via Moyasar.`);
+                    refundError = "No payment ID found for this booking";
+                }
+
+                // Update refund request with Moyasar refund ID if available
+                const refundUpdateData = {};
+                if (moyasarRefundId) {
+                    refundUpdateData.payment_refund_id = moyasarRefundId;
+                }
+                if (refundError) {
+                    refundUpdateData.refund_error = refundError;
+                }
+
+                // Create refund transaction
+                const refundTransaction = await TransactionService.CreateService({
+                    user_id: refundRequest.user_id,
+                    organizer_id: refundRequest.organizer_id,
+                    book_id: refundRequest.booking_id,
+                    amount: refundRequest.amount,
+                    currency: "SAR",
+                    type: 3, // Refund type
+                    status: refundSuccess ? 1 : 0, // 1 Success, 0 Pending if Moyasar refund failed
+                    payment_id: moyasarRefundId || payment_refund_id || null,
+                });
+
+                // Update refund request with transaction ID and Moyasar refund details
+                await RefundRequestService.FindByIdAndUpdateService(refund_id, {
+                    refund_transaction_id: refundTransaction._id,
+                    ...refundUpdateData,
+                });
+
+                // Update booking status to refunded
+                await BookEventService.FindByIdAndUpdateService(booking._id, {
+                    book_status: 6, // Refunded
+                });
+
+                // Send notification to user
+                const notificationMessage = refundSuccess
+                    ? (lang === "ar"
+                        ? `تمت الموافقة على طلب الاسترداد الخاص بك. تم إرجاع مبلغ ${refundRequest.amount} SAR إلى حسابك.${admin_response ? ` ملاحظة: ${admin_response}` : ""}`
+                        : `Your refund request has been approved. Amount ${refundRequest.amount} SAR has been refunded to your account.${admin_response ? ` Note: ${admin_response}` : ""}`)
+                    : (lang === "ar"
+                        ? `تمت الموافقة على طلب الاسترداد الخاص بك. سيتم معالجة الاسترداد قريباً.${admin_response ? ` ملاحظة: ${admin_response}` : ""}`
+                        : `Your refund request has been approved. Refund will be processed shortly.${admin_response ? ` Note: ${admin_response}` : ""}`);
+
+                await NotificationService.CreateService({
+                    user_id: refundRequest.user_id,
+                    role: 1, // User role
+                    title: lang === "ar" ? "تمت الموافقة على طلب الاسترداد" : "Refund Request Approved",
+                    description: notificationMessage,
+                    isRead: false,
+                    notification_type: 4, // Refund type
+                    event_id: refundRequest.event_id,
+                    book_id: refundRequest.booking_id,
+                });
+
+                console.log(`[ADMIN:REFUND:APPROVED] Refund approved. Moyasar refund: ${refundSuccess ? 'Success' : 'Failed'}`);
+            } else if (parseInt(status) === 2) {
+                // Rejected
+                await BookEventService.FindByIdAndUpdateService(booking._id, {
+                    book_status: 3, // Keep as cancelled
+                });
+
+                // Send notification to user
+                await NotificationService.CreateService({
+                    user_id: refundRequest.user_id,
+                    role: 1, // User role
+                    title: lang === "ar" ? "تم رفض طلب الاسترداد" : "Refund Request Rejected",
+                    description: lang === "ar"
+                        ? `تم رفض طلب الاسترداد الخاص بك.${admin_response ? ` السبب: ${admin_response}` : ""}`
+                        : `Your refund request has been rejected.${admin_response ? ` Reason: ${admin_response}` : ""}`,
+                    isRead: false,
+                    notification_type: 4, // Refund type
+                    event_id: refundRequest.event_id,
+                    book_id: refundRequest.booking_id,
+                });
+
+                console.log("[ADMIN:REFUND:REJECTED] Refund rejected");
+            } else if (parseInt(status) === 3) {
+                // Processed - Mark as completed
+                await BookEventService.FindByIdAndUpdateService(booking._id, {
+                    book_status: 6, // Refunded
+                });
+
+                // Send notification to user
+                await NotificationService.CreateService({
+                    user_id: refundRequest.user_id,
+                    role: 1, // User role
+                    title: lang === "ar" ? "تم معالجة الاسترداد" : "Refund Processed",
+                    description: lang === "ar"
+                        ? `تم معالجة استردادك بنجاح. تم إرجاع مبلغ ${refundRequest.amount} SAR إلى حسابك.`
+                        : `Your refund has been processed successfully. Amount ${refundRequest.amount} SAR has been refunded to your account.`,
+                    isRead: false,
+                    notification_type: 4, // Refund type
+                    event_id: refundRequest.event_id,
+                    book_id: refundRequest.booking_id,
+                });
+
+                console.log("[ADMIN:REFUND:PROCESSED] Refund marked as processed");
+            }
+
+            return Response.ok(
+                res,
+                updatedRefund,
+                200,
+                resp_messages(lang).update_success || "Refund status updated successfully"
+            );
+        } catch (error) {
+            console.error("[ADMIN:REFUND:UPDATE] Error:", error);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(req.lang).internalServerError
+            );
+        }
+    },
     
     // Event status change with email notification
     eventStatusChange: async (req, res) => {
