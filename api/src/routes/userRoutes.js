@@ -22,6 +22,10 @@ router.post("/login/by-email-phone", userController.userLoginByEmailPhone); // A
 router.get("/verify-email", userController.verifyEmail); // Email verification
 router.post("/resend-verification", userController.resendVerification); // Resend verification email
 
+// ===== PHONE-BASED AUTHENTICATION (Saudi Arabia Only) =====
+router.post("/login/phone/send-otp", userController.sendPhoneOTP); // Send OTP to phone number
+router.post("/login/phone/verify-otp", userController.verifyPhoneOTP); // Verify OTP and login
+
 // ===== PASSWORD RESET =====
 router.post("/forgot-password", userController.forgotPassword); // Send password reset email
 router.post("/reset-password", userController.resetPassword); // Reset password using token

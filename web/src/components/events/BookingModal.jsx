@@ -136,8 +136,7 @@ export default function BookingModal({
 				currency: "SAR",
 				callback_url: `${window.location.origin}/events/${event?._id}?booking_id=${event?.booked_event?._id}`,
 				description: `${getTranslation(t, "events.bookEvent", "Booking for")} ${event?.event_name || getTranslation(t, "events.eventDetails", "Event")}`,
-				publishable_api_key:
-					process.env.NEXT_PUBLIC_MOYASAR_KEY || "pk_test_GUUdMyrNufV9xb59FBSAYi9jniyhvVDa9U2524pV",
+				publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_KEY,
 				methods: ["creditcard"],
 				language: currentLang, // Set language for Moyasar form
 				// Optimize 3DS authentication

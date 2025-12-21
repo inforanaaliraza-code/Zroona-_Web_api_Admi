@@ -179,14 +179,31 @@ const UserController = {
 
 			// Check phone number if provided
 			if (phone_number && country_code) {
+				// Validate Saudi Arabia phone number only
+				if (country_code !== "+966") {
+					return Response.validationErrorResponse(
+						res,
+						"Only Saudi Arabia phone numbers (+966) are allowed"
+					);
+				}
+
+				// Validate phone number format (9 digits for Saudi Arabia)
+				const phoneStr = phone_number.toString().replace(/\s+/g, '');
+				if (!/^\d{9}$/.test(phoneStr)) {
+					return Response.validationErrorResponse(
+						res,
+						"Invalid Saudi Arabia phone number format. Please enter 9 digits (e.g., 501234567)"
+					);
+				}
+
 				const exist_user_phone = await UserService.FindOneService({
-					phone_number: phone_number.toString(),
+					phone_number: phoneStr,
 					country_code,
 					is_delete: { $ne: 1 },
 				});
 
 				const exist_organizer_phone = await organizerService.FindOneService({
-					phone_number: phone_number.toString(),
+					phone_number: phoneStr,
 					country_code,
 					is_delete: { $ne: 1 },
 				});
@@ -210,11 +227,12 @@ const UserController = {
 			console.log("[USER:REGISTRATION] Password hashed successfully");
 
 			// Create new user
+			const phoneStr = phone_number ? phone_number.toString().replace(/\s+/g, '') : null;
 			const userData = {
 				...req.body,
 				email: emailLower,
 				password: hashedPassword,
-				phone_number: phone_number ? phone_number.toString() : null,
+				phone_number: phoneStr,
 				role: 1, // Guest role
 				is_verified: false, // Must verify email first
 				language: lang,
@@ -225,6 +243,19 @@ const UserController = {
 
 			const user = await UserService.CreateService(userData);
 			console.log("[USER:REGISTRATION] User created:", user._id);
+
+			// Send OTP to phone number if provided (via Msegat)
+			if (phone_number && country_code && country_code === "+966") {
+				try {
+					const { sendOtpToPhone } = require("../helpers/otpSend");
+					const fullPhoneNumber = `${country_code}${phoneStr}`;
+					await sendOtpToPhone(fullPhoneNumber, lang);
+					console.log("[USER:REGISTRATION] OTP sent to phone number via Msegat");
+				} catch (otpError) {
+					console.error("[USER:REGISTRATION] Error sending OTP to phone:", otpError.message);
+					// Don't fail registration if OTP sending fails
+				}
+			}
 
 			// Generate verification token
 			const emailService = require("../helpers/emailService");
@@ -560,6 +591,240 @@ const UserController = {
 			);
 		}
 	},
+
+	/**
+	 * Send OTP to phone number for login
+	 * POST /user/login/phone/send-otp
+	 */
+	sendPhoneOTP: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { phone_number, country_code } = req.body;
+
+			console.log("[PHONE:LOGIN] OTP request for:", { phone_number, country_code });
+
+			// Validate phone number
+			if (!phone_number) {
+				return Response.validationErrorResponse(
+					res,
+					resp_messages(lang).phone_required || "Phone number is required"
+				);
+			}
+
+			// Validate country code (must be Saudi Arabia +966)
+			if (!country_code || country_code !== "+966") {
+				return Response.validationErrorResponse(
+					res,
+					"Only Saudi Arabia phone numbers (+966) are allowed"
+				);
+			}
+
+			// Validate Saudi Arabia phone number format (9 digits after +966)
+			const phoneStr = phone_number.toString().replace(/\s+/g, '');
+			if (!/^\d{9}$/.test(phoneStr)) {
+				return Response.validationErrorResponse(
+					res,
+					"Invalid Saudi Arabia phone number format. Please enter 9 digits (e.g., 501234567)"
+				);
+			}
+
+			const fullPhoneNumber = `${country_code}${phoneStr}`;
+
+			// Check if user exists with this phone number
+			const User = require("../models/userModel");
+			const Organizer = require("../models/organizerModel");
+
+			const user = await User.findOne({
+				phone_number: parseInt(phoneStr),
+				country_code: country_code,
+				is_delete: { $ne: 1 }
+			});
+
+			const organizer = await Organizer.findOne({
+				phone_number: parseInt(phoneStr),
+				country_code: country_code,
+				is_delete: { $ne: 1 }
+			});
+
+			if (!user && !organizer) {
+				return Response.notFoundResponse(
+					res,
+					"No account found with this phone number. Please register first."
+				);
+			}
+
+			// Send OTP via Msegat
+			const { sendOtpToPhone } = require("../helpers/otpSend");
+			await sendOtpToPhone(fullPhoneNumber, lang);
+
+			return Response.ok(
+				res,
+				{
+					message: "OTP sent successfully to your phone number",
+					phone_number: phoneStr // Return without country code for security
+				},
+				200,
+				lang === "ar" 
+					? "تم إرسال رمز التحقق إلى رقم هاتفك" 
+					: "OTP sent successfully to your phone number"
+			);
+		} catch (error) {
+			console.error("[PHONE:LOGIN] Error sending OTP:", error);
+			return Response.serverErrorResponse(
+				res,
+				error.message || resp_messages(lang).internalServerError
+			);
+		}
+	},
+
+	/**
+	 * Verify OTP and login with phone number
+	 * POST /user/login/phone/verify-otp
+	 */
+	verifyPhoneOTP: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { phone_number, country_code, otp } = req.body;
+
+			console.log("[PHONE:LOGIN] OTP verification for:", { phone_number, country_code });
+
+			// Validate inputs
+			if (!phone_number || !country_code || !otp) {
+				return Response.validationErrorResponse(
+					res,
+					"Phone number, country code, and OTP are required"
+				);
+			}
+
+			// Validate country code (must be Saudi Arabia +966)
+			if (country_code !== "+966") {
+				return Response.validationErrorResponse(
+					res,
+					"Only Saudi Arabia phone numbers (+966) are allowed"
+				);
+			}
+
+			// Format phone number
+			const phoneStr = phone_number.toString().replace(/\s+/g, '');
+			const fullPhoneNumber = `${country_code}${phoneStr}`;
+
+			// Verify OTP
+			const { verifyLoginOtp } = require("../helpers/otpSend");
+			await verifyLoginOtp(fullPhoneNumber, otp.toString());
+
+			// Find user by phone number
+			const User = require("../models/userModel");
+			const Organizer = require("../models/organizerModel");
+
+			let account = await User.findOne({
+				phone_number: parseInt(phoneStr),
+				country_code: country_code,
+				is_delete: { $ne: 1 }
+			});
+
+			let role = 1; // User/Guest
+
+			if (!account) {
+				account = await Organizer.findOne({
+					phone_number: parseInt(phoneStr),
+					country_code: country_code,
+					is_delete: { $ne: 1 }
+				});
+				role = 2; // Organizer/Host
+			}
+
+			if (!account) {
+				return Response.notFoundResponse(
+					res,
+					"Account not found with this phone number"
+				);
+			}
+
+			console.log("[PHONE:LOGIN] Account found:", {
+				id: account._id,
+				role: account.role,
+				is_verified: account.is_verified,
+				is_approved: account.is_approved,
+			});
+
+			// Check if email is verified (required for both)
+			if (!account.is_verified) {
+				return Response.unauthorizedResponse(
+					res,
+					lang === "ar"
+						? "يرجى التحقق من بريدك الإلكتروني أولاً"
+						: "Please verify your email address first. Check your inbox for the verification link."
+				);
+			}
+
+			// For organizers, check admin approval (COMPULSORY)
+			if (account.role === 2) {
+				if (account.is_approved === 1) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "حسابك قيد الموافقة. لا يمكنك تسجيل الدخول حتى تتم الموافقة عليه من قبل المسؤول."
+							: "Your account is pending admin approval. You cannot login until the admin approves your account."
+					);
+				}
+
+				if (account.is_approved === 3) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "تم رفض طلب حسابك. يرجى الاتصال بالدعم لمزيد من المعلومات."
+							: "Your account application was rejected. Please contact support for more information."
+					);
+				}
+
+				if (account.is_approved !== 2) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "حسابك غير معتمد بعد. يرجى الانتظار حتى تتم الموافقة عليه من قبل المسؤول."
+							: "Your account is not yet approved. Please wait for admin approval."
+					);
+				}
+			}
+
+			// Generate JWT token
+			const token = generateToken(account._id, account.role);
+
+			console.log("[PHONE:LOGIN] Login successful via phone");
+
+			// Remove password from response
+			const accountResponse = account.toObject ? account.toObject() : { ...account };
+			delete accountResponse.password;
+
+			return Response.ok(
+				res,
+				{
+					token,
+					user: {
+						_id: accountResponse._id,
+						email: accountResponse.email,
+						first_name: accountResponse.first_name,
+						last_name: accountResponse.last_name,
+						phone_number: accountResponse.phone_number,
+						country_code: accountResponse.country_code,
+						role: accountResponse.role,
+						is_verified: accountResponse.is_verified,
+						is_approved: accountResponse.is_approved || null,
+						profile_image: accountResponse.profile_image,
+					},
+				},
+				200,
+				lang === "ar" ? "تم تسجيل الدخول بنجاح" : "Login successful"
+			);
+		} catch (error) {
+			console.error("[PHONE:LOGIN] Error verifying OTP:", error);
+			return Response.serverErrorResponse(
+				res,
+				error.message || resp_messages(lang).internalServerError
+			);
+		}
+	},
+
 	// userLogin: async (req, res) => {
 	//     custom_log.success("login method called ");
 	//     const lang = req.headers['lang'] || 'en';

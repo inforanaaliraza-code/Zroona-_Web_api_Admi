@@ -229,14 +229,31 @@ const organizerController = {
 
 			// Check phone number if provided
 			if (phone_number && country_code) {
+				// Validate Saudi Arabia phone number only
+				if (country_code !== "+966") {
+					return Response.validationErrorResponse(
+						res,
+						"Only Saudi Arabia phone numbers (+966) are allowed"
+					);
+				}
+
+				// Validate phone number format (9 digits for Saudi Arabia)
+				const phoneStr = phone_number.toString().replace(/\s+/g, '');
+				if (!/^\d{9}$/.test(phoneStr)) {
+					return Response.validationErrorResponse(
+						res,
+						"Invalid Saudi Arabia phone number format. Please enter 9 digits (e.g., 501234567)"
+					);
+				}
+
 				const exist_organizer_phone = await organizerService.FindOneService({
-					phone_number: phone_number.toString(),
+					phone_number: phoneStr,
 					country_code,
 					is_delete: { $ne: 1 },
 				});
 
 				const exist_user_phone = await UserService.FindOneService({
-					phone_number: phone_number.toString(),
+					phone_number: phoneStr,
 					country_code,
 					is_delete: { $ne: 1 },
 				});
@@ -283,11 +300,12 @@ const organizerController = {
 			console.log("[ORGANIZER:REGISTRATION] Password hashed successfully");
 
 			// Create new organizer
+			const phoneStr = phone_number ? phone_number.toString().replace(/\s+/g, '') : null;
 			const organizerData = {
 				...req.body,
 				email: emailLower,
 				password: hashedPassword,
-				phone_number: phone_number ? phone_number.toString() : null,
+				phone_number: phoneStr,
 				role: 2, // Organizer role
 				is_verified: false, // Must verify email first
 				is_approved: 1, // Pending approval
@@ -300,6 +318,19 @@ const organizerController = {
 
 			const organizer = await organizerService.CreateService(organizerData);
 			console.log("[ORGANIZER:REGISTRATION] Organizer created:", organizer._id);
+
+			// Send OTP to phone number if provided (via Msegat)
+			if (phone_number && country_code && country_code === "+966") {
+				try {
+					const { sendOtpToPhone } = require("../helpers/otpSend");
+					const fullPhoneNumber = `${country_code}${phoneStr}`;
+					await sendOtpToPhone(fullPhoneNumber, lang);
+					console.log("[ORGANIZER:REGISTRATION] OTP sent to phone number via Msegat");
+				} catch (otpError) {
+					console.error("[ORGANIZER:REGISTRATION] Error sending OTP to phone:", otpError.message);
+					// Don't fail registration if OTP sending fails
+				}
+			}
 
 			// Create wallet for organizer
 			const wallet = await WalletService.CreateService({
