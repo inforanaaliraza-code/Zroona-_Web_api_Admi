@@ -17,7 +17,8 @@ const MessageService = {
             const result = await Message.find(query)
                 .sort({ createdAt: 1 }) // Oldest first for chat display
                 .skip(skip)
-                .limit(limit);
+                .limit(limit)
+                .lean(); // Use lean for better performance
             return result;
         } catch (error) {
             console.error('FindService error:', error.message);

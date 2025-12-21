@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useRTL } from "@/utils/rtl";
 import { Icon } from "@iconify/react";
+import RejectReasonModal from "@/components/Modal/RejectReasonModal";
 
 export default function MyBookings() {
   const { t } = useTranslation();
@@ -42,6 +43,8 @@ export default function MyBookings() {
   const [activePage, setActivePage] = useState(100);
   const [expandedEvents, setExpandedEvents] = useState({});
   const [processingBooking, setProcessingBooking] = useState(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedBookingForReject, setSelectedBookingForReject] = useState(null);
 
   const handlePage = (value) => {
     setPage(value);
@@ -124,14 +127,21 @@ export default function MyBookings() {
     return age;
   };
 
-  const handleAcceptReject = async (bookingId, action) => {
+  const handleAcceptReject = async (bookingId, action, rejectionReason = null) => {
     setProcessingBooking(bookingId);
     try {
       const book_status = action === "accept" ? 2 : 3; // 2 = approved, 3 = rejected
-      const response = await ChangeStatusOrganizerApi({
+      const payload = {
         book_id: bookingId,
         book_status: book_status,
-      });
+      };
+      
+      // Add rejection reason if rejecting
+      if (action === "reject" && rejectionReason) {
+        payload.rejection_reason = rejectionReason;
+      }
+      
+      const response = await ChangeStatusOrganizerApi(payload);
 
       if (response?.status === 1) {
         toast.success(
@@ -148,6 +158,11 @@ export default function MyBookings() {
             event_date: selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
           })
         );
+        // Close reject modal if open
+        if (action === "reject") {
+          setRejectModalOpen(false);
+          setSelectedBookingForReject(null);
+        }
       } else {
         toast.error(response?.message || `Failed to ${action} booking`);
       }
@@ -156,6 +171,27 @@ export default function MyBookings() {
       toast.error(`Failed to ${action} booking`);
     } finally {
       setProcessingBooking(null);
+    }
+  };
+
+  const handleRejectClick = (booking) => {
+    const userData = booking.userDetail || booking.user || {};
+    const userName = 
+      `${booking.user_first_name || userData.first_name || ""} ${booking.user_last_name || userData.last_name || ""}`.trim() || 
+      t("events.unknown") || "Unknown";
+    const eventName = booking.event_name || booking.eventDetails?.event_name || "Event";
+    
+    setSelectedBookingForReject({
+      bookingId: booking._id,
+      guestName: userName,
+      eventName: eventName,
+    });
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectConfirm = (rejectionReason) => {
+    if (selectedBookingForReject) {
+      handleAcceptReject(selectedBookingForReject.bookingId, "reject", rejectionReason);
     }
   };
 
@@ -212,58 +248,52 @@ export default function MyBookings() {
               </p>
             </div>
 
-            {/* Tabs */}
-            <div className="mb-6 bg-white rounded-xl shadow-sm p-1 inline-flex">
-              <button
-                onClick={() => setActiveTab("all")}
-                className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
-                  activeTab === "all"
-                    ? "bg-[#a797cc] text-white shadow-md"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {t("events.all", "All")}
-              </button>
-              <button
-                onClick={() => setActiveTab("pending")}
-                className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
-                  activeTab === "pending"
-                    ? "bg-[#a797cc] text-white shadow-md"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {t("events.pending", "Pending")}
-              </button>
-              <button
-                onClick={() => setActiveTab("approved")}
-                className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
-                  activeTab === "approved"
-                    ? "bg-[#a797cc] text-white shadow-md"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {t("events.approved", "Approved")}
-              </button>
-              <button
-                onClick={() => setActiveTab("rejected")}
-                className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${
-                  activeTab === "rejected"
-                    ? "bg-[#a797cc] text-white shadow-md"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {t("events.rejected", "Rejected")}
-              </button>
+            {/* Premium Tabs */}
+            <div className="mb-8 bg-white rounded-2xl shadow-lg p-2 inline-flex border border-gray-200">
+              {[
+                { key: "all", label: t("events.all", "All"), icon: "lucide:list", count: groupedEvents.reduce((sum, e) => sum + e.bookings.length, 0) },
+                { key: "pending", label: t("events.pending", "Pending"), icon: "lucide:clock", count: groupedEvents.reduce((sum, e) => sum + e.bookings.filter(b => b.book_status === 0 || b.book_status === 1).length, 0) },
+                { key: "approved", label: t("events.approved", "Approved"), icon: "lucide:check-circle", count: groupedEvents.reduce((sum, e) => sum + e.bookings.filter(b => b.book_status === 2).length, 0) },
+                { key: "rejected", label: t("events.rejected", "Rejected"), icon: "lucide:x-circle", count: groupedEvents.reduce((sum, e) => sum + e.bookings.filter(b => b.book_status === 3).length, 0) },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`relative px-6 py-3 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center gap-2 ${
+                    activeTab === tab.key
+                      ? "bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg scale-105"
+                      : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  <Icon icon={tab.icon} className="w-4 h-4" />
+                  {tab.label}
+                  {tab.count > 0 && (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                      activeTab === tab.key
+                        ? "bg-white/20 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}>
+                      {tab.count}
+                    </span>
+                  )}
+                  {activeTab === tab.key && (
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#a797cc] to-[#8ba179] opacity-20 blur-xl"></div>
+                  )}
+                </button>
+              ))}
             </div>
 
-            {/* Search */}
-            <div className="mb-6">
+            {/* Premium Search */}
+            <div className="mb-6 relative">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Icon icon="lucide:search" className="w-5 h-5 text-gray-400" />
+              </div>
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('placeholder.search') || t('events.searchEvents') || 'Search events or guests...'}
-                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#a797cc]"
+                className="w-full pl-12 pr-4 py-3.5 rounded-xl border-2 border-gray-200 bg-white text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-[#a797cc] transition-all shadow-sm hover:shadow-md"
               />
             </div>
 
@@ -292,11 +322,11 @@ export default function MyBookings() {
                     return (
                       <div
                         key={eventGroup.eventId}
-                        className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200"
+                        className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300"
                       >
-                        {/* Event Header - Expandable */}
+                        {/* Premium Event Header - Expandable */}
                         <div
-                          className={`p-6 cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between ${flexDirection}`}
+                          className={`p-6 cursor-pointer hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 flex items-center justify-between ${flexDirection} border-b border-gray-100`}
                           onClick={() => toggleEvent(eventGroup.eventId)}
                         >
                           <div className={`flex items-center gap-4 flex-1 ${flexDirection}`}>
@@ -479,15 +509,15 @@ export default function MyBookings() {
                                                 <button
                                                   onClick={() => handleAcceptReject(booking._id, "accept")}
                                                   disabled={processingBooking === booking._id}
-                                                  className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-colors"
+                                                  className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-all duration-200 shadow-md hover:shadow-lg"
                                                 >
                                                   <Check className="w-4 h-4" />
                                                   {t("accept") || "Accept"}
                                                 </button>
                                                 <button
-                                                  onClick={() => handleAcceptReject(booking._id, "reject")}
+                                                  onClick={() => handleRejectClick(booking)}
                                                   disabled={processingBooking === booking._id}
-                                                  className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-colors"
+                                                  className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-all duration-200 shadow-md hover:shadow-lg"
                                                 >
                                                   <X className="w-4 h-4" />
                                                   {t("reject") || "Reject"}
@@ -544,6 +574,21 @@ export default function MyBookings() {
           </div>
         </div>
       </section>
+
+      {/* Reject Reason Modal */}
+      {selectedBookingForReject && (
+        <RejectReasonModal
+          isOpen={rejectModalOpen}
+          onClose={() => {
+            setRejectModalOpen(false);
+            setSelectedBookingForReject(null);
+          }}
+          onConfirm={handleRejectConfirm}
+          guestName={selectedBookingForReject.guestName}
+          eventName={selectedBookingForReject.eventName}
+          isLoading={processingBooking === selectedBookingForReject.bookingId}
+        />
+      )}
     </>
   );
 }

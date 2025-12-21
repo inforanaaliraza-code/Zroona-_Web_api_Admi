@@ -305,6 +305,28 @@ export default function BookingDetails({
 						</span>
 					</div>
 				)}
+
+				{/* Rejection Reason - Show if booking is rejected */}
+				{(booking.book_status === 3 || booking.book_status === 4) && booking.rejection_reason && (
+					<div className="mt-4 pt-4 border-t-2 border-red-100">
+						<div className="bg-gradient-to-br from-red-50 via-orange-50 to-red-50 rounded-xl p-5 border-2 border-red-200 shadow-lg">
+							<div className="flex items-start gap-4">
+								<div className="p-3 bg-red-100 rounded-xl flex-shrink-0 shadow-md">
+									<Icon icon="lucide:alert-circle" className="w-6 h-6 text-red-600" />
+								</div>
+								<div className="flex-1">
+									<h3 className="text-base font-bold text-red-900 mb-2 flex items-center gap-2">
+										<Icon icon="lucide:info" className="w-5 h-5" />
+										{getTranslation(t, "rejectReason.rejectionReason", "Rejection Reason")}
+									</h3>
+									<p className="text-sm text-red-800 leading-relaxed whitespace-pre-wrap bg-white/50 p-3 rounded-lg border border-red-200">
+										{booking.rejection_reason}
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
 			</div>
 
 			{/* Action Buttons Section */}

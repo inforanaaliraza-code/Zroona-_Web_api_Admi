@@ -65,22 +65,36 @@ export default function BookingModal({
 		}
 	}, [isOpen, event?.book_status, event?.payment_status, initialStep]);
 
-	// Handle payment completion
+	// Handle payment completion (optimized)
 	const handlePaymentCompleted = useCallback(
-		(payment) => {
+		async (payment) => {
 			console.log("Payment completed:", payment);
 			if (payment && payment.status === "paid") {
-				// Call the onBookEvent callback with the payment information
-				onBookEvent?.({
-					eventId: event?._id,
-					attendees,
-					paymentId: payment.id,
-					amount: totalAmount,
-				});
-				setStep("confirmation");
+				try {
+					// Call the onBookEvent callback with the payment information
+					const result = await onBookEvent?.({
+						eventId: event?._id,
+						attendees,
+						paymentId: payment.id,
+						amount: totalAmount,
+					});
+					
+					// If callback returns a promise, wait for it
+					if (result && typeof result.then === 'function') {
+						await result;
+					}
+					
+					setStep("confirmation");
+					toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully!"));
+				} catch (error) {
+					console.error("Error in payment completion:", error);
+					toast.error(getTranslation(t, "events.paymentProcessingError", "Error processing payment. Please contact support."));
+				}
+			} else {
+				toast.error(getTranslation(t, "events.paymentFailed", "Payment was not successful. Please try again."));
 			}
 		},
-		[event?._id, attendees, totalAmount, onBookEvent]
+		[event?._id, attendees, totalAmount, onBookEvent, t]
 	);
 
 	// Function to initialize Moyasar payment form
@@ -120,13 +134,18 @@ export default function BookingModal({
 				element: moyasarFormRef.current,
 				amount: totalAmount * 100, // Convert to halala (smallest currency unit)
 				currency: "SAR",
-				// callback_url: `https://google.com`,
 				callback_url: `${window.location.origin}/events/${event?._id}?booking_id=${event?.booked_event?._id}`,
 				description: `${getTranslation(t, "events.bookEvent", "Booking for")} ${event?.event_name || getTranslation(t, "events.eventDetails", "Event")}`,
 				publishable_api_key:
 					process.env.NEXT_PUBLIC_MOYASAR_KEY || "pk_test_GUUdMyrNufV9xb59FBSAYi9jniyhvVDa9U2524pV",
 				methods: ["creditcard"],
 				language: currentLang, // Set language for Moyasar form
+				// Optimize 3DS authentication
+				three_d_secure: {
+					enabled: true,
+					// Reduce timeout for faster processing
+					timeout: 30000, // 30 seconds instead of default
+				},
 				apple_pay: {
 					country: "SA",
 					label: getTranslation(t, "events.appName", "Zuroona"),
@@ -138,13 +157,22 @@ export default function BookingModal({
 						"supportsDebit",
 					],
 				},
-				// on_failed: () => {
-				//   toast.error(" خطأ في عملية الدفع");
-				//   console.log("Payment failed");
-				// },
+				on_failed: (error) => {
+					console.error("Payment failed:", error);
+					toast.error(getTranslation(t, "events.paymentFailed", "Payment failed. Please try again."));
+					setIsLoading(false);
+				},
 				on_completed: async function (payment) {
 					console.log("Payment completed:", payment);
-					handlePaymentCompleted(payment);
+					setIsLoading(true);
+					try {
+						await handlePaymentCompleted(payment);
+					} catch (error) {
+						console.error("Error handling payment completion:", error);
+						toast.error(getTranslation(t, "events.paymentProcessingError", "Error processing payment. Please contact support."));
+					} finally {
+						setIsLoading(false);
+					}
 				},
 			});
 		} catch (error) {
@@ -154,21 +182,44 @@ export default function BookingModal({
 		}
 	}, [totalAmount, event?.event_name, t, event?.booked_event?._id, i18n.language, handlePaymentCompleted]);
 
-	// Initialize Moyasar when step changes to payment (consolidated effect)
+	// Initialize Moyasar when step changes to payment (optimized)
 	useEffect(() => {
 		if (!isOpen || step !== "payment") {
 			return;
 		}
 
-		// Add a small delay to ensure the DOM is ready
-		const timer = setTimeout(() => {
+		// Check if Moyasar is ready, if not wait for it
+		const initForm = () => {
 			if (moyasarFormRef.current && moyasarFormRef.current.parentNode) {
-				initializeMoyasarForm();
+				if (window.Moyasar || window.MoyasarReady) {
+					initializeMoyasarForm();
+				} else {
+					// Wait for Moyasar to load (max 2 seconds)
+					let attempts = 0;
+					const checkMoyasar = setInterval(() => {
+						attempts++;
+						if (window.Moyasar) {
+							clearInterval(checkMoyasar);
+							initializeMoyasarForm();
+						} else if (attempts > 20) {
+							// 2 seconds timeout (20 * 100ms)
+							clearInterval(checkMoyasar);
+							toast.error(getTranslation(t, "events.paymentInitError", "Payment gateway is taking longer than expected. Please refresh and try again."));
+						}
+					}, 100);
+					
+					return () => clearInterval(checkMoyasar);
+				}
 			}
-		}, 150);
+		};
+
+		// Use requestAnimationFrame for immediate DOM readiness check
+		const rafId = requestAnimationFrame(() => {
+			initForm();
+		});
 
 		return () => {
-			clearTimeout(timer);
+			cancelAnimationFrame(rafId);
 			// Cleanup: Clear Moyasar form if element still exists
 			if (moyasarFormRef.current && moyasarFormRef.current.parentNode) {
 				try {
@@ -179,7 +230,7 @@ export default function BookingModal({
 				}
 			}
 		};
-	}, [step, isOpen, initializeMoyasarForm]);
+	}, [step, isOpen, initializeMoyasarForm, t]);
 
 	// Check for payment result when modal is opened
 	useEffect(() => {
@@ -297,12 +348,13 @@ export default function BookingModal({
 	return (
 		<Dialog.Root open={isOpen} onOpenChange={onClose}>
 			<Dialog.Portal>
-				<Dialog.Overlay className="fixed inset-0 bg-black/30 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-				<Dialog.Content className="fixed left-[50%] top-[50%] max-h-[90vh] w-[90vw] max-w-[550px] translate-x-[-50%] translate-y-[-50%] rounded-2xl bg-white p-6 md:p-8 shadow-2xl transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] divide-y divide-gray-100 border border-gray-100">
-					<div className="pb-6">
-						<div className="flex items-start justify-between">
-							<div>
-								<Dialog.Title className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+				<Dialog.Overlay className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+				<Dialog.Content className="fixed left-[50%] top-[50%] z-50 max-h-[95vh] w-[95vw] sm:w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] rounded-2xl bg-white shadow-2xl transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] border border-gray-100 flex flex-col overflow-hidden">
+					{/* Header - Fixed */}
+					<div className="flex-shrink-0 px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 border-b border-gray-100">
+						<div className="flex items-start justify-between gap-4">
+							<div className="flex-1 min-w-0">
+								<Dialog.Title className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
 									{step === "payment" && (
 										<Icon icon="lucide:credit-card" className="w-6 h-6 text-[#a797cc]" />
 									)}
@@ -324,10 +376,17 @@ export default function BookingModal({
 										getTranslation(t, "events.bookingConfirmed", "Booking Confirmed")}
 								</Dialog.Description>
 							</div>
+							<Dialog.Close className="flex-shrink-0 p-2 rounded-full transition-colors hover:bg-gray-100">
+								<Icon
+									icon="lucide:x"
+									className="w-5 h-5 text-gray-500"
+								/>
+							</Dialog.Close>
 						</div>
 					</div>
 
-					<div className="py-6">
+					{/* Scrollable Content Area */}
+					<div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 md:px-8 py-4 sm:py-6">
 						{step === "details" && (
 							<div className="space-y-6">
 								<div className="space-y-2">
@@ -415,77 +474,128 @@ export default function BookingModal({
 						)}
 
 						{step === "payment" && (
-							<div className="space-y-6">
-								{/* Payment Summary - Improved Design */}
-								<div className="bg-gradient-to-br from-[#a797cc]/10 via-white to-orange-50/50 rounded-2xl p-6 border-2 border-[#a797cc]/20 shadow-lg">
-									<div className="flex items-center justify-between mb-4">
-										<div className="flex flex-col">
-											<span className="text-sm font-semibold text-gray-600 mb-1">
-												{getTranslation(t, "events.totalAmount", "Total Amount")}
-											</span>
-											<span className="text-3xl font-bold text-[#a797cc] tracking-tight">
-												{totalAmount.toFixed(2)} <span className="text-xl text-gray-600">SAR</span>
-											</span>
+							<div className="space-y-4 sm:space-y-6">
+								{/* Payment Summary - Premium Design */}
+								<div className="relative overflow-hidden bg-gradient-to-br from-[#a797cc]/15 via-white to-[#8ba179]/10 rounded-3xl p-4 sm:p-6 md:p-8 border-2 border-[#a797cc]/30 shadow-2xl backdrop-blur-sm">
+									{/* Decorative Background Elements */}
+									<div className="absolute top-0 right-0 w-32 h-32 bg-[#a797cc]/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+									<div className="absolute bottom-0 left-0 w-24 h-24 bg-[#8ba179]/5 rounded-full blur-2xl -ml-12 -mb-12"></div>
+									
+									<div className="relative z-10">
+										<div className="flex items-center justify-between mb-6">
+											<div className="flex flex-col space-y-2">
+												<span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+													{getTranslation(t, "events.totalAmount", "Total Amount")}
+												</span>
+												<div className="flex items-baseline gap-2">
+													<span className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-[#a797cc] to-[#8ba179] bg-clip-text text-transparent tracking-tight">
+														{totalAmount.toFixed(2)}
+													</span>
+													<span className="text-lg sm:text-xl md:text-2xl font-bold text-gray-600">SAR</span>
+												</div>
+											</div>
+											<div className="relative">
+												<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-2xl blur-lg opacity-30 animate-pulse"></div>
+												<div className="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-2xl shadow-lg transform hover:scale-110 transition-transform duration-300">
+													<Icon icon="lucide:wallet" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white" />
+												</div>
+											</div>
 										</div>
-										<div className="flex items-center justify-center w-16 h-16 bg-[#a797cc]/10 rounded-full">
-											<Icon icon="lucide:wallet" className="w-8 h-8 text-[#a797cc]" />
+										<div className="pt-6 border-t-2 border-gradient-to-r from-[#a797cc]/30 to-transparent">
+											<div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-xl px-4 py-3 border border-green-200/50">
+												<div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-md">
+													<Icon icon="lucide:shield-check" className="w-6 h-6 text-white" />
+												</div>
+												<div className="flex-1">
+													<p className="text-sm font-semibold text-gray-800">
+														{getTranslation(t, "events.securePayment", "Secure payment powered by Moyasar")}
+													</p>
+													<p className="text-xs text-gray-500 mt-0.5">256-bit SSL encryption</p>
+												</div>
+											</div>
 										</div>
-									</div>
-									<div className="pt-4 border-t border-[#a797cc]/20">
-										<p className="text-xs font-medium text-gray-600 flex items-center gap-2">
-											<Icon icon="lucide:shield-check" className="w-4 h-4 text-green-600" />
-											<span>{getTranslation(t, "events.securePayment", "Secure payment powered by Moyasar")}</span>
-										</p>
 									</div>
 								</div>
 
-								{/* Payment Form Container - Enhanced */}
+								{/* Payment Form Container - Premium Enhanced */}
 								<div className="relative">
-									<div className="mb-3">
-										<h3 className="text-lg font-semibold text-gray-800 mb-1">
-											{getTranslation(t, "events.paymentDetails", "Payment Details")}
-										</h3>
-										<p className="text-sm text-gray-500">
+									{/* Header Section */}
+									<div className="mb-4 sm:mb-5">
+										<div className="flex items-center gap-2 sm:gap-3 mb-2">
+											<div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-xl shadow-lg">
+												<Icon icon="lucide:credit-card" className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+											</div>
+											<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+												{getTranslation(t, "events.paymentDetails", "Payment Details")}
+											</h3>
+										</div>
+										<p className="text-xs sm:text-sm text-gray-500 ml-[36px] sm:ml-[52px]">
 											{getTranslation(t, "events.enterCardInfo", "Enter your card information to complete the payment")}
 										</p>
 									</div>
-									<div
-										ref={moyasarFormRef}
-										className="w-full min-h-[320px] bg-white border-2 border-gray-200 rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:border-[#a797cc]/40 focus-within:border-[#a797cc] focus-within:shadow-xl"
-									>
-										{/* Loading Placeholder - Improved */}
-										{(!moyasarFormRef.current?.innerHTML || moyasarFormRef.current.innerHTML.trim() === "") && (
-											<div className="flex flex-col justify-center items-center h-[320px] space-y-5">
-												<div className="relative">
-													<div className="absolute inset-0 bg-[#a797cc]/20 rounded-full animate-ping"></div>
-													<div className="absolute inset-0 bg-[#a797cc]/10 rounded-full animate-pulse"></div>
-													<Icon
-														icon="lucide:credit-card"
-														className="w-16 h-16 text-[#a797cc] relative z-10"
-													/>
-												</div>
-												<div className="text-center space-y-3">
-													<p className="text-base font-semibold text-gray-700">
-														{getTranslation(t, "events.loadingPaymentForm", "Loading secure payment form...")}
-													</p>
-													<div className="flex justify-center gap-2">
-														<div className="w-2.5 h-2.5 bg-[#a797cc] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-														<div className="w-2.5 h-2.5 bg-[#a797cc] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-														<div className="w-2.5 h-2.5 bg-[#a797cc] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+
+									{/* Form Container with Premium Styling */}
+									<div className="relative group">
+										{/* Glow Effect */}
+										<div className="absolute -inset-0.5 bg-gradient-to-r from-[#a797cc] via-[#8ba179] to-[#a797cc] rounded-3xl opacity-20 group-hover:opacity-30 blur-xl transition-opacity duration-300"></div>
+										
+										<div
+											ref={moyasarFormRef}
+											className="relative w-full min-h-[320px] sm:min-h-[360px] md:min-h-[380px] bg-white rounded-3xl p-4 sm:p-6 md:p-10 shadow-2xl border-2 border-gray-100 transition-all duration-500 group-hover:border-[#a797cc]/40 focus-within:border-[#a797cc] focus-within:shadow-[0_0_30px_rgba(167,151,204,0.2)]"
+										>
+											{/* Loading Placeholder - Premium */}
+											{(!moyasarFormRef.current?.innerHTML || moyasarFormRef.current.innerHTML.trim() === "") && (
+												<div className="flex flex-col justify-center items-center min-h-[320px] sm:min-h-[360px] md:min-h-[380px] space-y-4 sm:space-y-6">
+													<div className="relative">
+														{/* Animated Rings */}
+														<div className="absolute inset-0 bg-gradient-to-r from-[#a797cc] to-[#8ba179] rounded-full animate-ping opacity-20"></div>
+														<div className="absolute inset-0 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-full animate-pulse opacity-30"></div>
+														{/* Icon Container */}
+														<div className="relative z-10 flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-2xl shadow-2xl transform rotate-3 hover:rotate-6 transition-transform duration-300">
+															<Icon
+																icon="lucide:credit-card"
+																className="w-12 h-12 text-white"
+															/>
+														</div>
+													</div>
+													<div className="text-center space-y-4">
+														<p className="text-lg font-bold text-gray-800">
+															{getTranslation(t, "events.loadingPaymentForm", "Loading secure payment form...")}
+														</p>
+														<div className="flex justify-center gap-2">
+															<div className="w-3 h-3 bg-gradient-to-r from-[#a797cc] to-[#8ba179] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
+															<div className="w-3 h-3 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '150ms' }}></div>
+															<div className="w-3 h-3 bg-gradient-to-r from-[#a797cc] to-[#8ba179] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
+														</div>
+														<p className="text-xs text-gray-500">Please wait while we securely load the payment gateway</p>
 													</div>
 												</div>
-											</div>
-										)}
+											)}
+										</div>
 									</div>
 								</div>
 
-								{/* Accepted Payment Methods Info - Enhanced */}
-								<div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-									<div className="flex items-center justify-center gap-3 text-sm text-gray-600">
-										<Icon icon="lucide:lock" className="w-5 h-5 text-green-600" />
-										<span className="font-medium">
-											{getTranslation(t, "events.acceptedCards", "We accept Visa, Mastercard, Mada, and AMEX")}
-										</span>
+								{/* Accepted Payment Methods Info - Premium */}
+								<div className="relative overflow-hidden bg-gradient-to-r from-gray-50 via-white to-gray-50 rounded-2xl p-5 border-2 border-gray-200/50 shadow-lg">
+									{/* Background Pattern */}
+									<div className="absolute inset-0 opacity-5">
+										<div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSIjYWFhIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')]"></div>
+									</div>
+									<div className="relative z-10 flex items-center justify-center gap-4">
+										<div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-md">
+											<Icon icon="lucide:lock" className="w-6 h-6 text-white" />
+										</div>
+										<div className="flex-1">
+											<p className="text-sm font-bold text-gray-800 mb-1">
+												{getTranslation(t, "events.acceptedCards", "We accept Visa, Mastercard, Mada, and AMEX")}
+											</p>
+											<p className="text-xs text-gray-500">All major credit and debit cards supported</p>
+										</div>
+										{/* Card Icons */}
+										<div className="flex items-center gap-2">
+											<div className="w-10 h-6 bg-gradient-to-r from-blue-500 to-blue-700 rounded flex items-center justify-center text-white text-xs font-bold shadow-md">VISA</div>
+											<div className="w-10 h-6 bg-gradient-to-r from-red-500 to-orange-600 rounded flex items-center justify-center text-white text-xs font-bold shadow-md">MC</div>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -509,7 +619,9 @@ export default function BookingModal({
 						)}
 					</div>
 
-					<div className="flex gap-3 justify-end pt-6">
+					{/* Footer - Fixed */}
+					<div className="flex-shrink-0 px-4 sm:px-6 md:px-8 pt-4 pb-4 sm:pb-6 border-t border-gray-100 bg-white">
+						<div className="flex gap-3 justify-end">
 						{step === "details" && (
 							<Button
 								onClick={handleReservation}
@@ -557,14 +669,8 @@ export default function BookingModal({
 								{getTranslation(t, "events.close", "Close")}
 							</Button>
 						)}
+						</div>
 					</div>
-
-					<Dialog.Close className="absolute top-6 right-6 p-2 rounded-full transition-colors hover:bg-gray-100">
-						<Icon
-							icon="lucide:x"
-							className="w-5 h-5 text-gray-500"
-						/>
-					</Dialog.Close>
 				</Dialog.Content>
 			</Dialog.Portal>
 		</Dialog.Root>

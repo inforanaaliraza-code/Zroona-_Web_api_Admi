@@ -181,7 +181,7 @@
 /******/ 		// This function allow to reference async chunks
 /******/ 		__webpack_require__.miniCssF = function(chunkId) {
 /******/ 			// return url for filenames based on template
-/******/ 			return "static/css/" + chunkId + ".css";
+/******/ 			return undefined;
 /******/ 		};
 /******/ 	}();
 /******/ 	
@@ -192,7 +192,7 @@
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	!function() {
-/******/ 		__webpack_require__.h = function() { return "3f4faa58b5f1b82e"; }
+/******/ 		__webpack_require__.h = function() { return "58bd52e2d46fdd58"; }
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
@@ -785,23 +785,7 @@
 /******/ 				createStylesheet(chunkId, fullhref, resolve, reject);
 /******/ 			});
 /******/ 		}
-/******/ 		// object to store loaded CSS chunks
-/******/ 		var installedCssChunks = {
-/******/ 			"webpack": 0
-/******/ 		};
-/******/ 		
-/******/ 		__webpack_require__.f.miniCss = function(chunkId, promises) {
-/******/ 			var cssChunks = {"_app-pages-browser_src_components_TextEditor_TextEditor_jsx":1,"_app-pages-browser_src_components_TextEditorAr_TextEditorAr_jsx":1};
-/******/ 			if(installedCssChunks[chunkId]) promises.push(installedCssChunks[chunkId]);
-/******/ 			else if(installedCssChunks[chunkId] !== 0 && cssChunks[chunkId]) {
-/******/ 				promises.push(installedCssChunks[chunkId] = loadStylesheet(chunkId).then(function() {
-/******/ 					installedCssChunks[chunkId] = 0;
-/******/ 				}, function(e) {
-/******/ 					delete installedCssChunks[chunkId];
-/******/ 					throw e;
-/******/ 				}));
-/******/ 			}
-/******/ 		};
+/******/ 		// no chunk loading
 /******/ 		
 /******/ 		var oldTags = [];
 /******/ 		var newTags = [];

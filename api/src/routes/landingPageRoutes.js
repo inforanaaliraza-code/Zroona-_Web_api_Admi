@@ -6,8 +6,8 @@ const { ExtractUserIdFromToken } = require("../middleware/authenticate");
 // Route to get paginated events with optional filters
 router.get("/events", LandingPageController.getEvents);
 
-// Route to get featured events
-router.get("/featured-events", LandingPageController.getFeaturedEvents);
+// Route to get featured events - Extract userId from token if available (optional auth)
+router.get("/featured-events", ExtractUserIdFromToken, LandingPageController.getFeaturedEvents);
 
 // Route to get event details - using our new middleware
 router.get(

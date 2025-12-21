@@ -127,6 +127,31 @@ input[type="date"] {
   box-sizing: border-box !important;
 }
 
+/* Custom Scrollbar for Modal */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #a797cc, #8ba179);
+  border-radius: 10px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #8ba179, #a797cc);
+}
+
+/* Firefox scrollbar */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #a797cc #f1f1f1;
+}
+
 #mysr-form-form-el#mysr-form-form-el#mysr-form-form-el.mysr-form-moyasarForm[payment-form="true"]
   input.mysr-form-input:focus {
   border-color: theme('colors.brand-orange') !important;

@@ -49,8 +49,19 @@ const LandingPageController = {
 		const lang = req.headers["lang"] || "en";
 		try {
 			const limit = parseInt(req.query.limit) || 50; // Increased default limit
+			
+			// Get userId from middleware (ExtractUserIdFromToken) - optional, can be null
+			const userId = req.userId || null;
+			
+			if (userId) {
+				console.log("[FEATURED-EVENTS] User authenticated, will include booking status");
+			} else {
+				console.log("[FEATURED-EVENTS] No user token, showing events without booking status");
+			}
+			
 			const featuredEvents = await LandingPageService.getFeaturedEvents(
-				limit
+				limit,
+				userId
 			);
 
 			console.log("[FEATURED-EVENTS] Fetched events:", featuredEvents?.length || 0);

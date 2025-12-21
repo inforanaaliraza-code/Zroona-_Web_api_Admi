@@ -354,6 +354,34 @@ export default function MyEventsPage() {
             <p className="mt-2 text-lg text-gray-600">
               {getTranslation(t, "events.viewYourBookings", "View and manage your event bookings")}
             </p>
+            
+            {/* Booking Flow Guide */}
+            <div className="mt-6 bg-gradient-to-r from-[#a797cc]/10 to-orange-50 rounded-xl p-6 border border-[#a797cc]/20">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {getTranslation(t, "events.bookingFlow", "Booking Flow")}
+              </h3>
+              <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 text-white font-bold">1</div>
+                  <span className="text-gray-700">{getTranslation(t, "events.bookEvent", "Book Event")}</span>
+                </div>
+                <Icon icon="lucide:arrow-right" className="w-5 h-5 text-gray-400" />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-yellow-500 text-white font-bold">2</div>
+                  <span className="text-gray-700">{getTranslation(t, "events.waitApproval", "Wait for Host Approval")}</span>
+                </div>
+                <Icon icon="lucide:arrow-right" className="w-5 h-5 text-gray-400" />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500 text-white font-bold">3</div>
+                  <span className="text-gray-700">{getTranslation(t, "events.makePayment", "Make Payment")}</span>
+                </div>
+                <Icon icon="lucide:arrow-right" className="w-5 h-5 text-gray-400" />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white font-bold">4</div>
+                  <span className="text-gray-700">{getTranslation(t, "events.joinGroupChat", "Join Group Chat")}</span>
+                </div>
+              </div>
+            </div>
           </div>
 
         {/* Requirement #1: Tabs - Only Approved, Pending, Rejected */}
@@ -579,8 +607,8 @@ export default function MyEventsPage() {
                         </Link>
                       )}
                       
-                      {/* Payment Button - Show for approved bookings (status 1) that are unpaid */}
-                      {booking.status === 1 && !booking.payment_status && (
+                      {/* Payment Button - Show for approved bookings (status 2) that are unpaid */}
+                      {(booking.status === 2 || booking.status === 1) && !booking.payment_status && (
                         <Link
                           href={`/events/${booking.event?._id}?initiate_payment=true`}
                           className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:shadow-lg transition-all"

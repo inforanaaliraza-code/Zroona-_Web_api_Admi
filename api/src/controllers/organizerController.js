@@ -1710,10 +1710,14 @@ const organizerController = {
 					: []),
 				{
 					$project: {
+						_id: 1,
 						payment_status: 1,
 						createdAt: 1,
 						book_status: 1,
+						rejection_reason: 1,
 						event_id: 1,
+						no_of_attendees: 1,
+						total_amount: 1,
 						event_date: "$eventDetails.event_date",
 						event_start_time: "$eventDetails.event_start_time",
 						event_end_time: "$eventDetails.event_end_time",
@@ -1721,19 +1725,19 @@ const organizerController = {
 						event_image: "$eventDetails.event_image",
 						event_description: "$eventDetails.event_description",
 						event_address: "$eventDetails.event_address",
-						// 'no_of_attendees': '$eventDetails.no_of_attendees',
 						event_price: "$eventDetails.event_price",
 						event_type: "$eventDetails.event_type",
-						book_status: 1,
 						user_profile_image: "$user.profile_image",
 						user_first_name: "$user.first_name",
 						user_last_name: "$user.last_name",
+						user_email: "$user.email",
 						userDetail: {
 							profile_image: "$user.profile_image",
 							first_name: "$user.first_name",
 							last_name: "$user.last_name",
 							nationality: "$user.nationality",
 							date_of_birth: "$user.date_of_birth",
+							email: "$user.email",
 						},
 					},
 				},
@@ -1762,7 +1766,7 @@ const organizerController = {
 	},
 	changeBookingStatus: async (req, res) => {
 		try {
-			const { book_id, book_status } = req.body;
+			const { book_id, book_status, rejection_reason } = req.body;
 
 			const organizer = await organizerService.FindOneService({
 				_id: req.userId,
@@ -1794,7 +1798,23 @@ const organizerController = {
 				);
 			}
 
+			// Validate rejection reason if rejecting
+			if (book_status === 3 && (!rejection_reason || rejection_reason.trim().length < 10)) {
+				return Response.badRequestResponse(
+					res,
+					resp_messages(req.lang).rejection_reason_required || "Rejection reason is required (minimum 10 characters)"
+				);
+			}
+
 			booked_event.book_status = book_status;
+			
+			// Store rejection reason if provided
+			if (book_status === 3 && rejection_reason) {
+				booked_event.rejection_reason = rejection_reason.trim();
+			} else if (book_status !== 3) {
+				// Clear rejection reason if accepting
+				booked_event.rejection_reason = null;
+			}
 
 			await booked_event.save();
 
@@ -1802,10 +1822,18 @@ const organizerController = {
 				book_status == 2
 					? resp_messages(req.lang).accepted_key
 					: resp_messages(req.lang).rejected_key;
+			
+			// Build notification description
+			let notificationDescription = `${resp_messages(req.lang).eventNotification || "Your booking for"} "${event.event_name}" ${resp_messages(req.lang)[book_notification_status] || (book_status == 2 ? "has been accepted" : "has been rejected")}`;
+			
+			// Add rejection reason to notification if rejected
+			if (book_status === 3 && rejection_reason) {
+				notificationDescription += `. ${resp_messages(req.lang).rejection_reason_label || "Reason"}: ${rejection_reason}`;
+			}
+			
 			const notification_data = {
 				title: book_notification_status,
-				description: `${resp_messages(req.lang).eventNotification} "${event.event_name
-					}" ${resp_messages(req.lang)[book_notification_status]}`,
+				description: notificationDescription,
 				event_id: event._id,
 				event_type: event.event_type,
 				event_name: event.event_name,
@@ -1816,20 +1844,54 @@ const organizerController = {
 				first_name: organizer.first_name,
 				last_name: organizer.last_name,
 				profile_image: organizer.profile_image,
+				rejection_reason: book_status === 3 ? rejection_reason : null,
 			};
 
+			// Send push notification
 			await sendEventBookingAcceptNotification(
 				res,
 				booked_event.user_id,
 				notification_data
 			);
 
+			// Create in-app notification for the guest
+			try {
+				await NotificationService.CreateService({
+					user_id: booked_event.user_id,
+					role: 1, // User/Guest role
+					title: notification_data.title,
+					description: notification_data.description,
+					isRead: false,
+					notification_type: notification_data.notification_type,
+					event_id: event._id,
+					book_id: booked_event._id,
+					status: book_status,
+					profile_image: organizer.profile_image || "",
+					username: `${organizer.first_name} ${organizer.last_name}`,
+					senderId: organizer._id,
+				});
+				console.log(`[NOTIFICATION] Created in-app notification for user ${booked_event.user_id}`);
+			} catch (notificationError) {
+				console.error('[NOTIFICATION] Error creating in-app notification:', notificationError);
+				// Don't fail the request if notification fails
+			}
+
 			// If booking is approved (status 2), add guest to event's group chat
 			if (book_status === 2) {
 				try {
 					// Check if event is approved and has a group chat
 					if (event.is_approved === 1) {
-						const groupChat = await ConversationService.GetGroupChatByEventService(event._id);
+						let groupChat = await ConversationService.GetGroupChatByEventService(event._id);
+						
+						// If group chat doesn't exist, create it
+						if (!groupChat) {
+							console.log(`[GROUP-CHAT] Creating group chat for event: ${event.event_name}`);
+							groupChat = await ConversationService.CreateGroupChatService(
+								event._id,
+								event.organizer_id,
+								event.event_name
+							);
+						}
 						
 						if (groupChat) {
 							// Add approved guest to group chat
@@ -1839,7 +1901,82 @@ const organizerController = {
 								1 // Role: User/Guest
 							);
 							console.log(`[GROUP-CHAT] Added user ${booked_event.user_id} to group chat for event: ${event.event_name}`);
+							
+							// Get user details for welcome message
+							const UserService = require("../services/userService");
+							const guestUser = await UserService.FindOneService({ _id: booked_event.user_id });
+							const guestName = guestUser ? `${guestUser.first_name} ${guestUser.last_name}` : "Guest";
+							
+							// Send welcome message to group chat
+							try {
+								const MessageService = require("../services/messageService");
+								const welcomeMessage = req.lang === "ar" 
+									? `تم إضافة ${guestName} إلى محادثة المجموعة. مرحباً بك!`
+									: `${guestName} has been added to the group chat. Welcome!`;
+								
+								await MessageService.CreateService({
+									conversation_id: groupChat._id,
+									sender_id: organizer._id,
+									sender_role: 2, // Organizer
+									message: welcomeMessage,
+									message_type: "text",
+								});
+								
+								// Update conversation last message
+								await ConversationService.FindByIdAndUpdateService(groupChat._id, {
+									last_message: welcomeMessage,
+									last_message_at: new Date(),
+									last_sender_id: organizer._id,
+									last_sender_role: 2,
+								});
+								
+								// Send notification to guest about being added to group
+								try {
+									const groupChatNotification = {
+										title: req.lang === "ar" ? "تمت إضافتك إلى محادثة المجموعة" : "Added to Group Chat",
+										description: req.lang === "ar" 
+											? `تمت إضافتك إلى محادثة المجموعة لحدث "${event.event_name}". يمكنك الآن التواصل مع المشاركين الآخرين.`
+											: `You've been added to the group chat for "${event.event_name}". You can now communicate with other participants.`,
+										first_name: organizer.first_name,
+										last_name: organizer.last_name,
+										profile_image: organizer.profile_image || "",
+										userId: organizer._id,
+										event_id: event._id,
+										book_id: booked_event._id,
+										notification_type: 5, // Group chat notification type
+										status: 1,
+									};
+									
+									await NotificationService.CreateService({
+										user_id: booked_event.user_id,
+										role: 1, // User/Guest role
+										title: groupChatNotification.title,
+										description: groupChatNotification.description,
+										isRead: false,
+										notification_type: 5, // Group chat notification
+										event_id: event._id,
+										book_id: booked_event._id,
+										profile_image: organizer.profile_image || "",
+										username: `${organizer.first_name} ${organizer.last_name}`,
+										senderId: organizer._id,
+									});
+									
+									// Send push notification
+									const sendEventBookingAcceptNotification = require("../helpers/pushNotification").sendEventBookingAcceptNotification;
+									await sendEventBookingAcceptNotification(res, booked_event.user_id, groupChatNotification);
+									
+									console.log(`[NOTIFICATION] Sent group chat notification to user ${booked_event.user_id}`);
+								} catch (groupNotificationError) {
+									console.error('[NOTIFICATION] Error sending group chat notification:', groupNotificationError);
+								}
+							} catch (messageError) {
+								console.error('[GROUP-CHAT] Error sending welcome message:', messageError);
+							}
+						} else {
+							console.log(`[GROUP-CHAT] Failed to create or find group chat for event: ${event.event_name}`);
 						}
+					} else {
+						console.log(`[GROUP-CHAT] Event ${event.event_name} is not approved yet. Group chat will be created when event is approved.`);
 					}
 				} catch (groupChatError) {
 					console.error('[GROUP-CHAT] Error adding participant to group chat:', groupChatError);
@@ -1885,7 +2022,7 @@ const organizerController = {
 				},
 				{ $unwind: "$userDetail" },
 				{ $unwind: "$event" },
-				{
+					{
 					$project: {
 						userDetail: {
 							profile_image: 1,
@@ -1915,6 +2052,7 @@ const organizerController = {
 							createdAt: "$createdAt",
 							updatedAt: "$updatedAt",
 							payment_status: "$payment_status",
+							rejection_reason: "$rejection_reason",
 						},
 					},
 				},
@@ -1932,6 +2070,126 @@ const organizerController = {
 				resp_messages(req.lang).fetched_data
 			);
 		} catch (error) {
+			return Response.serverErrorResponse(
+				res,
+				resp_messages(req.lang).internalServerError
+			);
+		}
+	},
+
+	eventAnalytics: async (req, res) => {
+		try {
+			const { event_id } = req.query;
+			const { userId } = req;
+
+			if (!event_id || !mongoose.Types.ObjectId.isValid(event_id)) {
+				return Response.badRequestResponse(
+					res,
+					resp_messages(req.lang).id_required || "Event ID is required"
+				);
+			}
+
+			// Get event details
+			const event = await EventService.FindOneService({ _id: event_id });
+			if (!event) {
+				return Response.notFoundResponse(
+					res,
+					resp_messages(req.lang).eventNotFound
+				);
+			}
+
+			// Verify event belongs to this organizer
+			if (event.organizer_id.toString() !== userId.toString()) {
+				return Response.unauthorizedResponse(
+					res,
+					resp_messages(req.lang).unauthorized || "Unauthorized"
+				);
+			}
+
+			// Get all bookings for this event with user details
+			const bookings = await BookEventService.AggregateService([
+				{
+					$match: {
+						event_id: new mongoose.Types.ObjectId(event_id)
+					}
+				},
+				{
+					$lookup: {
+						from: "users",
+						localField: "user_id",
+						foreignField: "_id",
+						as: "userDetail"
+					}
+				},
+				{ $unwind: "$userDetail" },
+				{
+					$project: {
+						_id: 1,
+						book_status: 1,
+						payment_status: 1,
+						no_of_attendees: 1,
+						total_amount: 1,
+						rejection_reason: 1,
+						order_id: 1,
+						createdAt: 1,
+						updatedAt: 1,
+						userDetail: {
+							_id: "$userDetail._id",
+							first_name: "$userDetail.first_name",
+							last_name: "$userDetail.last_name",
+							profile_image: "$userDetail.profile_image",
+							email: "$userDetail.email",
+							phone_number: "$userDetail.phone_number",
+							country_code: "$userDetail.country_code",
+							nationality: "$userDetail.nationality",
+							date_of_birth: "$userDetail.date_of_birth",
+							createdAt: "$userDetail.createdAt"
+						}
+					}
+				},
+				{ $sort: { createdAt: -1 } }
+			]);
+
+			// Calculate statistics
+			const stats = {
+				total_bookings: bookings.length,
+				pending: bookings.filter(b => b.book_status === 0 || b.book_status === 1).length,
+				approved: bookings.filter(b => b.book_status === 2).length,
+				rejected: bookings.filter(b => b.book_status === 3).length,
+				paid: bookings.filter(b => b.payment_status === 1).length,
+				unpaid: bookings.filter(b => b.payment_status === 0).length,
+				total_attendees: bookings.reduce((sum, b) => sum + (b.no_of_attendees || 0), 0),
+				total_revenue: bookings
+					.filter(b => b.payment_status === 1)
+					.reduce((sum, b) => sum + (b.total_amount || 0), 0),
+				pending_revenue: bookings
+					.filter(b => b.payment_status === 0 && (b.book_status === 2))
+					.reduce((sum, b) => sum + (b.total_amount || 0), 0)
+			};
+
+			return Response.ok(
+				res,
+				{
+					event: {
+						_id: event._id,
+						event_name: event.event_name,
+						event_image: event.event_image,
+						event_date: event.event_date,
+						event_start_time: event.event_start_time,
+						event_end_time: event.event_end_time,
+						event_address: event.event_address,
+						event_price: event.event_price,
+						event_type: event.event_type,
+						no_of_attendees: event.no_of_attendees
+					},
+					bookings: bookings,
+					statistics: stats
+				},
+				200,
+				resp_messages(req.lang).fetched_data
+			);
+		} catch (error) {
+			console.error("[EVENT-ANALYTICS] Error:", error);
 			return Response.serverErrorResponse(
 				res,
 				resp_messages(req.lang).internalServerError

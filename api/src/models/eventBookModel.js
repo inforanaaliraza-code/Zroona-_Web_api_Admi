@@ -71,6 +71,10 @@ const bookEventSchema = new mongoose.Schema(
 			type: String,
 			default: null,
 		},
+		rejection_reason: {
+			type: String,
+			default: null,
+		},
 	},
 	{ timestamps: true }
 );

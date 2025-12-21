@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import ApprovalModal from "../Modal/ApprovalModal";
+import RejectReasonModal from "../Modal/RejectReasonModal";
 import { getBookingDetail } from "@/redux/slices/OrgaizerBookingDetail";
 import { ChangeStatusOrganizerApi } from "@/app/api/myBookings/apis";
 import AddBookModal from "../Modal/AddBookModal";
@@ -76,17 +77,31 @@ const BookNow = ({ props, pageType }) => {
         setIsStatusConfirmationOpen(true);  // Open the approval modal with "approve" action
     };
 
+    const [rejectModalOpen, setRejectModalOpen] = useState(false);
+    const [selectedBookingForReject, setSelectedBookingForReject] = useState(null);
+
     const handleReject = () => {
         setActionType("reject");
-        setIsStatusConfirmationOpen(true);  // Open the approval modal with "reject" action
+        // Open reject reason modal instead of simple approval modal
+        setSelectedBookingForReject({
+            bookingId: props?._id,
+            guestName: `${props?.userDetail?.first_name || ""} ${props?.userDetail?.last_name || ""}`.trim() || t("events.unknown") || "Unknown",
+            eventName: props?.event_name || "Event",
+        });
+        setRejectModalOpen(true);
     };
 
-    const ChangeStatus = (BookingListId, newStatus) => {
+    const ChangeStatus = (BookingListId, newStatus, rejectionReason = null) => {
         setLoading(true);
         const data = {
             book_id: BookingListId,
-            book_status: newStatus, // 1 for approved, 3 for rejected
+            book_status: newStatus, // 2 for approved, 3 for rejected
         };
+        
+        // Add rejection reason if rejecting
+        if (newStatus === 3 && rejectionReason) {
+            data.rejection_reason = rejectionReason;
+        }
 
         // Example API call for changing the status
         ChangeStatusOrganizerApi(data)
@@ -95,7 +110,11 @@ const BookNow = ({ props, pageType }) => {
                 if (res?.status === 1) {
                     toast.success(res?.message);
                     dispatch(getBookingDetail({ id: BookingListId })); // Refresh details after status change
-                    setStatus(newStatus === 1 ? "Approved" : "Rejected"); // Update local status state
+                    setStatus(newStatus === 2 ? "Approved" : "Rejected"); // Update local status state
+                    // Close modals
+                    setIsStatusConfirmationOpen(false);
+                    setRejectModalOpen(false);
+                    setSelectedBookingForReject(null);
                 } else {
                     toast.error(res?.message);
                 }
@@ -108,10 +127,12 @@ const BookNow = ({ props, pageType }) => {
 
     const confirmStatusChange = () => {
         setIsStatusConfirmationOpen(false);  // Close the modal after confirming
-        if (actionType === "approve") {
-            ChangeStatus(props?._id, 2); // Approve status (2 for approved)
-        } else {
-            ChangeStatus(props?._id, 3); // Reject status (3 for rejected)
+        ChangeStatus(props?._id, 2); // Approve status (2 for approved)
+    };
+
+    const handleRejectConfirm = (rejectionReason) => {
+        if (selectedBookingForReject) {
+            ChangeStatus(selectedBookingForReject.bookingId, 3, rejectionReason);
         }
     };
 
@@ -255,9 +276,24 @@ const BookNow = ({ props, pageType }) => {
                 show={isStatusConfirmationOpen}
                 onConfirm={confirmStatusChange}
                 onClose={() => setIsStatusConfirmationOpen(false)}
-                title={actionType === "approve" ? (t('approve.tab1') || 'Approve Booking') : (t('approve.tab2') || 'Reject Booking')}
-                message={actionType === "approve" ? (t('approve.tab3') || 'Are you sure you want to approve this booking?') : (t('approve.tab4') || 'Are you sure you want to reject this booking?')}
+                title={t('approve.tab1') || 'Approve Booking'}
+                message={t('approve.tab3') || 'Are you sure you want to approve this booking?'}
             />
+
+            {/* Reject Reason Modal */}
+            {selectedBookingForReject && (
+                <RejectReasonModal
+                    isOpen={rejectModalOpen}
+                    onClose={() => {
+                        setRejectModalOpen(false);
+                        setSelectedBookingForReject(null);
+                    }}
+                    onConfirm={handleRejectConfirm}
+                    guestName={selectedBookingForReject.guestName}
+                    eventName={selectedBookingForReject.eventName}
+                    isLoading={loading && selectedBookingForReject.bookingId === props?._id}
+                />
+            )}
 
             {/* Delete Event Modal */}
             <DeleteEventModal

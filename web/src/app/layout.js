@@ -24,7 +24,12 @@ export default function RootLayout({ children }) {
         />
         <Script
           src="https://cdn.moyasar.com/mpf/1.15.0/moyasar.js"
-          strategy="lazyOnload"
+          strategy="beforeInteractive"
+          onLoad={() => {
+            if (typeof window !== 'undefined') {
+              window.MoyasarReady = true;
+            }
+          }}
         />
         {/* Google Translate */}
         <Script

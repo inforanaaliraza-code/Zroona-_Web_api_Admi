@@ -32,6 +32,7 @@ router.get('/event/list', AuthenticateUser, AuthenticateOrganizer, organizerCont
 router.post('/event/cancel', AuthenticateUser, AuthenticateOrganizer, organizerController.cancelEvent);
 router.get('/event/booking/list', AuthenticateUser, AuthenticateOrganizer, organizerController.bookingList);
 router.get('/event/booking/detail', AuthenticateUser, AuthenticateOrganizer, organizerController.bookingDetails);
+router.get('/event/analytics', AuthenticateUser, AuthenticateOrganizer, organizerController.eventAnalytics);
 router.patch('/event/booking/update-status', AuthenticateUser, AuthenticateOrganizer, organizerController.changeBookingStatus);
 router.get('/event/review/list', AuthenticateUser, organizerController.reviewList);
 router.get('/earning', AuthenticateUser, AuthenticateOrganizer, organizerController.earningList);

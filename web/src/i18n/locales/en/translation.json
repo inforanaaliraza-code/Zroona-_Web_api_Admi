@@ -836,7 +836,16 @@
     "customerFeedback": "Customer Feedback",
     "allReviews": "All Reviews",
     "loginRequired": "Login Required",
-    "noDataFound": "No data found"
+    "noDataFound": "No data found",
+    "analytics": "Event Analytics",
+    "viewAnalytics": "View Analytics",
+    "backToEvent": "Back to Event",
+    "totalBookings": "Total Bookings",
+    "totalAttendees": "Total Attendees",
+    "totalRevenue": "Total Revenue",
+    "bookingDate": "Booking Date",
+    "view": "View",
+    "noBookingsFound": "No bookings found"
   },
   "tab": {
     "tab4": "Events",
@@ -865,7 +874,9 @@
     "tab12": "Welcome Events",
     "tab13": "My Reviews",
     "tab6": "My Earnings",
-    "events": "Events"
+    "events": "Events",
+    "notifications": "Notifications",
+    "payments": "Payments & Bookings"
   },
   "breadcrumb": {
     "tab1": "Home",
@@ -886,6 +897,9 @@
     "tab17": "Withdrawal"
   },
   "earning": {
+    "title": "My Earnings",
+    "subtitle": "Track your earnings and manage your finances",
+    "paymentReceived": "Payment Received",
     "tab1": "Withdraw",
     "tab2": "Recent Transactions",
     "tab3": "Available Balance",
@@ -1016,7 +1030,10 @@
     "tab1": "Approve Request",
     "tab2": "Reject Request",
     "tab3": "Are you sure you want to approve this booking request?",
-    "tab4": "Are you sure you want to reject this booking request?"
+    "tab4": "Are you sure you want to reject this booking request?",
+    "tab5": "Cancel",
+    "tab6": "Approve",
+    "tab7": "Reject"
   },
   "notificationSettings": {
     "tab5": "Phone Number"

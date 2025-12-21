@@ -83,7 +83,7 @@ const LandingPageService = {
 		}
 	},
 
-	getFeaturedEvents: async (limit = 5) => {
+	getFeaturedEvents: async (limit = 5, userId = null) => {
 		try {
 			const events = await Event.find({
 				is_delete: 0,
@@ -102,7 +102,7 @@ const LandingPageService = {
 				.limit(limit)
 				.lean();
 
-			// Get organizer ratings for featured events
+			// Get organizer ratings and user bookings for featured events
 			const eventsWithRatings = await Promise.all(
 				events.map(async (event) => {
 					try {
@@ -112,6 +112,40 @@ const LandingPageService = {
 									event.organizer_id._id,
 									"Organizer"
 								);
+						}
+						
+						// If userId is provided, check for user's booking
+						if (userId) {
+							try {
+								const BookEventService = require("./bookEventService");
+								const userBooking = await BookEventService.AggregateService([
+									{
+										$match: {
+											event_id: event._id,
+											user_id: userId,
+											book_status: { $ne: 3 }, // Not canceled bookings
+										},
+									},
+									{
+										$project: {
+											_id: 1,
+											book_status: 1,
+											payment_status: 1,
+											no_of_attendees: 1,
+											total_amount: 1,
+										},
+									},
+								]);
+								
+								if (userBooking && userBooking.length > 0) {
+									event.user_booking = userBooking[0];
+									event.book_status = userBooking[0].book_status;
+									event.payment_status = userBooking[0].payment_status;
+								}
+							} catch (bookingError) {
+								console.error("[FEATURED-EVENTS] Error fetching user booking:", bookingError);
+								// Continue without booking info
+							}
 						}
 					} catch (ratingError) {
 						console.error("[FEATURED-EVENTS] Error fetching rating:", ratingError);

@@ -48,14 +48,67 @@ export default function MessagingPage() {
 
   const isOrganizer = user?.role === 2;
 
-  // Auto-scroll to bottom when new messages arrive
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Track if user is at bottom and initial load
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const previousMessagesLengthRef = useRef(0);
+
+  // Auto-scroll to bottom only when:
+  // 1. New messages arrive (not initial load)
+  // 2. User is already at the bottom
+  const scrollToBottom = (force = false) => {
+    if (force || (isAtBottom && !isInitialLoad)) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
+  // Track scroll position
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const threshold = 100; // 100px from bottom
+      setIsAtBottom(scrollHeight - scrollTop - clientHeight < threshold);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [selectedConversation]);
+
+  // Handle message changes - only scroll if new messages added
+  useEffect(() => {
+    const currentLength = messages.length;
+    const previousLength = previousMessagesLengthRef.current;
+    const container = messagesContainerRef.current;
+    
+    // On initial load, scroll to bottom once but with delay to ensure DOM is ready
+    if (isInitialLoad && currentLength > 0 && container) {
+      const timer = setTimeout(() => {
+        // Direct scroll to bottom without smooth behavior for initial load
+        container.scrollTop = container.scrollHeight;
+        setIsInitialLoad(false);
+      }, 500); // Increased delay to ensure messages are rendered
+      return () => clearTimeout(timer);
+    } 
+    // If new messages added (not removed), scroll if at bottom
+    else if (currentLength > previousLength && !isInitialLoad && isAtBottom && container) {
+      const timer = setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+    
+    previousMessagesLengthRef.current = currentLength;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, isInitialLoad]);
+
+  // Reset initial load when conversation changes
+  useEffect(() => {
+    setIsInitialLoad(true);
+    previousMessagesLengthRef.current = 0;
+  }, [selectedConversation?._id]);
 
   // Fetch conversations
   const fetchConversations = async () => {
@@ -253,8 +306,12 @@ export default function MessagingPage() {
           )
         );
         
-        // Scroll to bottom after sending
-        setTimeout(() => scrollToBottom(), 100);
+        // Scroll to bottom after sending (force scroll)
+        setTimeout(() => {
+          if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+          }
+        }, 200);
       } else {
         toast.error(response?.message || t("messaging.failedToSend") || "Failed to send message");
       }
@@ -309,17 +366,45 @@ export default function MessagingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventIdFromUrl, conversations, isOrganizer]);
 
-  // Poll for new messages every 5 seconds
+  // Poll for new messages every 3 seconds (real-time refresh)
   useEffect(() => {
-    if (!selectedConversation?._id) return;
+    if (!selectedConversation?._id || !isAuthenticated || messagesLoading) return;
     
-    const interval = setInterval(() => {
-      fetchMessages(selectedConversation._id);
-    }, 5000);
+    const interval = setInterval(async () => {
+      try {
+        const apiCall = isOrganizer ? GetMessagesOrganizerApi : GetMessagesApi;
+        const response = await apiCall({ 
+          conversation_id: selectedConversation._id,
+          page: 1,
+          limit: 100
+        });
+        
+        if (response && (response.status === 1 || response.status === true)) {
+          const newMessages = response.data?.messages || response.messages || [];
+          
+          // Only update if messages actually changed (check by IDs or length)
+          if (Array.isArray(newMessages)) {
+            const currentMessageIds = new Set(messages.map(m => m._id?.toString()));
+            const newMessageIds = new Set(newMessages.map(m => m._id?.toString()));
+            
+            // Check if there are any new messages
+            const hasNewMessages = newMessages.some(m => !currentMessageIds.has(m._id?.toString()));
+            const hasDifferentLength = newMessages.length !== messages.length;
+            
+            if (hasNewMessages || hasDifferentLength) {
+              setMessages(newMessages);
+            }
+          }
+        }
+      } catch (error) {
+        // Silently handle errors in polling to avoid spam
+        console.error("Error polling messages:", error);
+      }
+    }, 3000); // Poll every 3 seconds
     
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedConversation?._id, isOrganizer]);
+  }, [selectedConversation?._id, isOrganizer, isAuthenticated, messagesLoading]);
 
   // Filter conversations based on search
   const filteredConversations = conversations.filter(conv => {
@@ -441,11 +526,30 @@ export default function MessagingPage() {
                       >
                         <div className="flex items-start gap-3">
                           {/* Event Image or Group Icon */}
-                          <div className="flex-shrink-0">
+                          <div className="flex-shrink-0 relative">
                             {isGroupChat ? (
-                              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#a797cc] to-orange-600 flex items-center justify-center">
-                                <Icon icon="lucide:users" className="h-6 w-6 text-white" />
-                              </div>
+                              conv.event_id?.event_image ? (
+                                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 relative">
+                                  <Image
+                                    src={conv.event_id.event_image}
+                                    alt={conv.event_id?.event_name || "Event Group"}
+                                    width={48}
+                                    height={48}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-br from-[#a797cc]/80 to-orange-600/80 flex items-center justify-center" style={{ display: 'none' }}>
+                                    <Icon icon="lucide:users" className="h-6 w-6 text-white" />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#a797cc] to-orange-600 flex items-center justify-center shadow-md">
+                                  <Icon icon="lucide:users" className="h-6 w-6 text-white" />
+                                </div>
+                              )
                             ) : (
                               <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200">
                                 <Image
@@ -519,9 +623,28 @@ export default function MessagingPage() {
                         {/* Group chat or user info */}
                         {selectedConversation.is_group ? (
                           <>
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#a797cc] to-orange-600 flex items-center justify-center">
-                              <Icon icon="lucide:users" className="h-6 w-6 text-white" />
-                            </div>
+                            {selectedConversation.event_id?.event_image ? (
+                              <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200 relative">
+                                <Image
+                                  src={selectedConversation.event_id.event_image}
+                                  alt={selectedConversation.event_id?.event_name || "Event Group"}
+                                  width={40}
+                                  height={40}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-br from-[#a797cc]/80 to-orange-600/80 flex items-center justify-center" style={{ display: 'none' }}>
+                                  <Icon icon="lucide:users" className="h-5 w-5 text-white" />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#a797cc] to-orange-600 flex items-center justify-center shadow-md">
+                                <Icon icon="lucide:users" className="h-6 w-6 text-white" />
+                              </div>
+                            )}
                             <div>
                               <div className="flex items-center gap-2">
                                 <h2 className="font-semibold text-gray-900">
@@ -598,44 +721,82 @@ export default function MessagingPage() {
                       <>
                         {messages.map((msg, index) => {
                           const isSender = (isOrganizer && msg.sender_role === 2) || (!isOrganizer && msg.sender_role === 1);
-                          const showAvatar = index === 0 || messages[index - 1].sender_id !== msg.sender_id;
+                          const showAvatar = index === 0 || 
+                            (messages[index - 1].sender_id?.toString() !== msg.sender_id?.toString() || 
+                             messages[index - 1].sender_role !== msg.sender_role);
                           const isImage = msg.message_type === 'image' && msg.attachment_url;
                           const isFile = msg.message_type === 'file' && msg.attachment_url;
                           
+                          // Get sender profile image - prioritize from message sender, fallback to conversation
+                          const getSenderProfileImage = () => {
+                            // First try to get from populated sender object (from backend API)
+                            if (msg.sender && msg.sender.profile_image) {
+                              return msg.sender.profile_image;
+                            }
+                            
+                            // For group chats, try to get from participants list
+                            if (selectedConversation.is_group && Array.isArray(selectedConversation.participants)) {
+                              const participant = selectedConversation.participants.find(
+                                p => {
+                                  const participantId = p.user_id?._id || p.user_id;
+                                  const senderId = msg.sender_id?._id || msg.sender_id;
+                                  return participantId?.toString() === senderId?.toString() && p.role === msg.sender_role;
+                                }
+                              );
+                              if (participant && participant.user_id) {
+                                const participantProfile = participant.user_id.profile_image || participant.user_id?.profile_image;
+                                if (participantProfile) return participantProfile;
+                              }
+                            }
+                            
+                            // Fallback to conversation user/organizer profile (for one-on-one chats)
+                            if (!selectedConversation.is_group) {
+                              if (msg.sender_role === 1) {
+                                return selectedConversation.user_id?.profile_image;
+                              } else if (msg.sender_role === 2) {
+                                return selectedConversation.organizer_id?.profile_image;
+                              }
+                            }
+                            
+                            return null; // Will fallback to default avatar in getImageUrl
+                          };
+
+                          const getImageUrl = (imgPath) => {
+                            if (!imgPath) return "/assets/images/user-avatar.png";
+                            if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
+                            // Handle relative paths - add API base URL
+                            if (imgPath.startsWith("/uploads/") || imgPath.startsWith("uploads/")) {
+                              const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3434";
+                              const cleanPath = imgPath.startsWith("/") ? imgPath : `/${imgPath}`;
+                              return `${apiBase}${cleanPath}`;
+                            }
+                            return "/assets/images/user-avatar.png";
+                          };
+                          
                           return (
                             <div
-                              key={msg._id}
+                              key={msg._id || index}
                               className={`flex items-end gap-2 ${isSender ? "justify-end" : "justify-start"}`}
                             >
-                                  {!isSender && (
-                                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border border-gray-300">
-                                  {showAvatar && (
-                                    <Image
-                                      src={(() => {
-                                        const getImageUrl = (imgPath) => {
-                                          if (!imgPath) return "/assets/images/user-avatar.png";
-                                          if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
-                                          if (imgPath.startsWith("/uploads/")) {
-                                            const apiBase = "http://localhost:3434";
-                                            return `${apiBase}${imgPath}`;
-                                          }
-                                          return "/assets/images/user-avatar.png";
-                                        };
-                                        const profileImg = isOrganizer
-                                          ? selectedConversation.user_id?.profile_image
-                                          : selectedConversation.organizer_id?.profile_image;
-                                        return getImageUrl(profileImg);
-                                      })()}
-                                      alt="User"
-                                      width={32}
-                                      height={32}
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        e.target.src = "/assets/images/user-avatar.png";
-                                      }}
-                                    />
+                              {!isSender && (
+                                <>
+                                  {showAvatar ? (
+                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border border-gray-300">
+                                      <Image
+                                        src={getImageUrl(getSenderProfileImage())}
+                                        alt={msg.sender?.first_name || "User"}
+                                        width={32}
+                                        height={32}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                          e.target.src = "/assets/images/user-avatar.png";
+                                        }}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div className="w-8 h-8 flex-shrink-0"></div>
                                   )}
-                                </div>
+                                </>
                               )}
                               
                               <div className={`max-w-[70%] ${isSender ? "order-first" : ""}`}>

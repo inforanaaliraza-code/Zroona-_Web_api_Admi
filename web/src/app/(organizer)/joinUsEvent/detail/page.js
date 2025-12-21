@@ -6,6 +6,7 @@ import RegistrationModal from "@/components/Modal/AddBookModal";
 import TimeSchedule from "@/components/Details/TimeSchedule";
 import ProfileDetail from "@/components/Details/ProfileDetail";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { getEventListDetail } from "@/redux/slices/EventListDetail";
 import { useTranslation } from "react-i18next";
@@ -152,6 +153,15 @@ export default function JoinUsDetail() {
                 
                 {/* Action Buttons - Professional Design */}
                 <div className={`mt-8 flex flex-wrap gap-4 ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
+                  {/* View Analytics Button */}
+                  <Link
+                    href={`/joinUsEvent/analytics?id=${EventListId}`}
+                    className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white rounded-xl hover:from-[#8ba179] hover:to-[#7a9069] transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                  >
+                    <Icon icon="lucide:bar-chart-3" className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                    <span>{t("events.viewAnalytics", "View Analytics")}</span>
+                  </Link>
+                  
                   {/* Edit Event Button */}
                   <button
                     onClick={() => setIsEditModalOpen(true)}
@@ -165,7 +175,7 @@ export default function JoinUsDetail() {
                   {detailData?.is_approved === 1 && (
                     <button
                       onClick={() => setIsCancelDialogOpen(true)}
-                      className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white rounded-xl hover:from-[#8ba179] hover:to-[#7a9069] transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                      className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
                     >
                       <Icon icon="lucide:x-circle" className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
                       <span>{t("events.cancelEvent", "Cancel Event")}</span>

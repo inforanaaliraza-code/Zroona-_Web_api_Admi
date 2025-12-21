@@ -333,14 +333,15 @@ const DropdownOrganizer = ({ profile }) => {
           <div className="p-2">
             <ul className="space-y-1">
               {[
-                { label: t('sidemenu.tab4'), path: "/myBookings", icon: "lucide:calendar-check" },
+                { label: t('sidemenu.payments'), path: "/myBookings", icon: "lucide:credit-card", highlight: true },
                 { label: t('sidemenu.tab3'), path: "/editProfile", icon: "lucide:user-cog" },
                 // Combined events entry: previously "Join Us Events" + "Welcome Events"
                 { label: t('sidemenu.events') || t('sidemenu.tab11'), path: "/joinUsEvent", icon: "lucide:users" },
                 { label: t('sidemenu.tab6'), path: "/myEarning", icon: "lucide:wallet" },
                 { label: t('sidemenu.tab13'), path: "/reviews", icon: "lucide:star" },
+                { label: t('sidemenu.notifications'), path: "/notification", icon: "lucide:bell" },
                 { label: t('sidemenu.tab8'), path: "/aboutUs", icon: "lucide:info" },
-              ].map(({ label, path, icon }) => {
+              ].map(({ label, path, icon, highlight }) => {
                 const isActive = currentRoute.startsWith(path);
                 return (
                   <li key={path}>
@@ -350,17 +351,19 @@ const DropdownOrganizer = ({ profile }) => {
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                         isActive
                           ? "bg-[#8ba179]/10 text-[#8ba179] border-l-3 border-[#8ba179]"
+                          : highlight
+                          ? "bg-gradient-to-r from-[#a797cc]/10 to-[#8ba179]/10 text-[#8ba179] hover:from-[#a797cc]/20 hover:to-[#8ba179]/20 border-l-3 border-[#8ba179]"
                           : "text-gray-700 hover:bg-gray-50 hover:text-[#a797cc]"
                       }`}
                     >
                       <div className={`flex-shrink-0 ${isActive ? "scale-110" : ""} transition-transform`}>
                         <Icon
                           icon={icon}
-                          className={`w-5 h-5 ${isActive ? "text-[#8ba179]" : "text-gray-600"}`}
+                          className={`w-5 h-5 ${isActive || highlight ? "text-[#8ba179]" : "text-gray-600"}`}
                         />
                       </div>
                       <span className="flex-1">{label}</span>
-                      {isActive && (
+                      {(isActive || highlight) && (
                         <div className="h-2 w-2 rounded-full bg-[#8ba179]"></div>
                       )}
                     </Link>

@@ -256,6 +256,11 @@ const EventsPage = () => {
 					organizer: event.organizer_id || event.organizer,
 					organizer_rating: event.organizer_rating,
 					category_name: event.category_name || event.event_category,
+					// Include booking status if available
+					book_status: event.book_status || event.user_booking?.book_status,
+					payment_status: event.payment_status || event.user_booking?.payment_status,
+					user_booking: event.user_booking,
+					booked_event: event.user_booking, // For compatibility
 				}));
 				
 				// Use API events as-is (no dummy events)
@@ -472,6 +477,70 @@ const EventsPage = () => {
 				<p className="mb-6 text-gray-600">
 					{getTranslation(t, "events.discoverEvents", "Discover and book amazing events happening in your city")}
 				</p>
+				
+				{/* Booking Flow Guide - Show for authenticated users */}
+				{isAuthenticated && (
+					<div className="mb-8 bg-gradient-to-r from-[#a797cc]/10 to-orange-50 rounded-xl p-6 border border-[#a797cc]/20">
+						<h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+							<Icon icon="lucide:info" className="w-5 h-5 text-[#a797cc]" />
+							{getTranslation(t, "events.howItWorks", "How It Works")}
+						</h3>
+						<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+							<div className="flex items-start gap-3">
+								<div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-500 text-white font-bold flex-shrink-0">
+									1
+								</div>
+								<div>
+									<h4 className="font-semibold text-gray-900 text-sm mb-1">
+										{getTranslation(t, "events.step1", "Book Event")}
+									</h4>
+									<p className="text-xs text-gray-600">
+										{getTranslation(t, "events.step1Desc", "Click 'Book Now' on any event")}
+									</p>
+								</div>
+							</div>
+							<div className="flex items-start gap-3">
+								<div className="flex items-center justify-center w-10 h-10 rounded-full bg-yellow-500 text-white font-bold flex-shrink-0">
+									2
+								</div>
+								<div>
+									<h4 className="font-semibold text-gray-900 text-sm mb-1">
+										{getTranslation(t, "events.step2", "Wait for Approval")}
+									</h4>
+									<p className="text-xs text-gray-600">
+										{getTranslation(t, "events.step2Desc", "Host will review your booking")}
+									</p>
+								</div>
+							</div>
+							<div className="flex items-start gap-3">
+								<div className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-500 text-white font-bold flex-shrink-0">
+									3
+								</div>
+								<div>
+									<h4 className="font-semibold text-gray-900 text-sm mb-1">
+										{getTranslation(t, "events.step3", "Make Payment")}
+									</h4>
+									<p className="text-xs text-gray-600">
+										{getTranslation(t, "events.step3Desc", "Pay securely after approval")}
+									</p>
+								</div>
+							</div>
+							<div className="flex items-start gap-3">
+								<div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 text-white font-bold flex-shrink-0">
+									4
+								</div>
+								<div>
+									<h4 className="font-semibold text-gray-900 text-sm mb-1">
+										{getTranslation(t, "events.step4", "Join Group Chat")}
+									</h4>
+									<p className="text-xs text-gray-600">
+										{getTranslation(t, "events.step4Desc", "Chat with host and other guests")}
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				)}
 
 				{/* Search and Filter Bar */}
 				<div className={`flex flex-col gap-4 mb-6 md:${flexDirection}`}>
@@ -955,6 +1024,33 @@ const EventsPage = () => {
 														{eventForIcon}{" "}
 														{eventForLabel}
 													</Badge>
+													
+													{/* Booking Status Badge - Show if user has booked this event */}
+													{isAuthenticated && event.book_status !== undefined && (
+														<Badge
+															className={`bg-white/95 font-medium px-3 py-1 rounded-full text-sm shadow-lg backdrop-blur-sm border border-white/20 ${
+																event.book_status === 2 && event.payment_status === 1
+																	? "bg-green-500/90 text-white"
+																	: event.book_status === 2 && event.payment_status === 0
+																	? "bg-orange-500/90 text-white"
+																	: event.book_status === 1 || event.book_status === 0
+																	? "bg-yellow-500/90 text-white"
+																	: event.book_status === 3
+																	? "bg-red-500/90 text-white"
+																	: "bg-gray-500/90 text-white"
+															}`}
+														>
+															{event.book_status === 2 && event.payment_status === 1
+																? "✓ Paid"
+																: event.book_status === 2 && event.payment_status === 0
+																? "💳 Pay Now"
+																: event.book_status === 1 || event.book_status === 0
+																? "⏳ Pending"
+																: event.book_status === 3
+																? "✗ Rejected"
+																: ""}
+														</Badge>
+													)}
 												</div>
 											</div>
 
@@ -1024,22 +1120,69 @@ const EventsPage = () => {
 													</div>
 												</div>
 												
-												{/* Book Now Button */}
+												{/* Book Now Button - Show different states based on booking status */}
 												<div className="mt-4" onClick={(e) => e.stopPropagation()}>
-													<Button
-														onClick={(e) => {
-															e.preventDefault();
-															e.stopPropagation();
-															window.location.href = `/events/${event._id}`;
-														}}
-														className={`w-full bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#7a9069] text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${flexDirection}`}
-													>
-														<Icon
-															icon="lucide:calendar-plus"
-															className="h-5 w-5"
-														/>
-														{getTranslation(t, "card.tab10", getTranslation(t, "card.tab16", "Book Now"))}
-													</Button>
+													{isAuthenticated && event.book_status !== undefined ? (
+														// User has booked this event - show status-based button
+														<Button
+															onClick={(e) => {
+																e.preventDefault();
+																e.stopPropagation();
+																if (event.book_status === 2 && event.payment_status === 0) {
+																	// Redirect to event detail page for payment
+																	window.location.href = `/events/${event._id}`;
+																} else {
+																	// Redirect to My Bookings page
+																	window.location.href = `/myEvents`;
+																}
+															}}
+															className={`w-full font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${flexDirection} ${
+																event.book_status === 2 && event.payment_status === 1
+																	? "bg-green-600 hover:bg-green-700 text-white"
+																	: event.book_status === 2 && event.payment_status === 0
+																	? "bg-orange-600 hover:bg-orange-700 text-white"
+																	: event.book_status === 1 || event.book_status === 0
+																	? "bg-yellow-600 hover:bg-yellow-700 text-white"
+																	: "bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#7a9069] text-white"
+															}`}
+														>
+															<Icon
+																icon={
+																	event.book_status === 2 && event.payment_status === 1
+																		? "lucide:check-circle-2"
+																		: event.book_status === 2 && event.payment_status === 0
+																		? "lucide:credit-card"
+																		: event.book_status === 1 || event.book_status === 0
+																		? "lucide:clock"
+																		: "lucide:calendar-plus"
+																}
+																className="h-5 w-5"
+															/>
+															{event.book_status === 2 && event.payment_status === 1
+																? getTranslation(t, "events.viewBooking", "View Booking")
+																: event.book_status === 2 && event.payment_status === 0
+																? getTranslation(t, "events.payNow", "Pay Now")
+																: event.book_status === 1 || event.book_status === 0
+																? getTranslation(t, "events.pendingApproval", "Pending Approval")
+																: getTranslation(t, "card.tab10", getTranslation(t, "card.tab16", "Book Now"))}
+														</Button>
+													) : (
+														// User hasn't booked - show Book Now button
+														<Button
+															onClick={(e) => {
+																e.preventDefault();
+																e.stopPropagation();
+																window.location.href = `/events/${event._id}`;
+															}}
+															className={`w-full bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#7a9069] text-white font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${flexDirection}`}
+														>
+															<Icon
+																icon="lucide:calendar-plus"
+																className="h-5 w-5"
+															/>
+															{getTranslation(t, "card.tab10", getTranslation(t, "card.tab16", "Book Now"))}
+														</Button>
+													)}
 												</div>
 											</div>
 										</div>

@@ -17,48 +17,6 @@
       "static/chunks/_app-pages-browser_node_modules_html2canvas_dist_html2canvas_js.js"
     ]
   },
-  "components\\CMS\\AboutUs.jsx -> @/components/TextEditor/TextEditor": {
-    "id": "components\\CMS\\AboutUs.jsx -> @/components/TextEditor/TextEditor",
-    "files": [
-      "static/css/_app-pages-browser_src_components_TextEditor_TextEditor_jsx.css",
-      "static/chunks/_app-pages-browser_src_components_TextEditor_TextEditor_jsx.js"
-    ]
-  },
-  "components\\CMS\\AboutUs.jsx -> @/components/TextEditorAr/TextEditorAr": {
-    "id": "components\\CMS\\AboutUs.jsx -> @/components/TextEditorAr/TextEditorAr",
-    "files": [
-      "static/css/_app-pages-browser_src_components_TextEditorAr_TextEditorAr_jsx.css",
-      "static/chunks/_app-pages-browser_src_components_TextEditorAr_TextEditorAr_jsx.js"
-    ]
-  },
-  "components\\CMS\\PrivacyPolicy.jsx -> @/components/TextEditor/TextEditor": {
-    "id": "components\\CMS\\PrivacyPolicy.jsx -> @/components/TextEditor/TextEditor",
-    "files": [
-      "static/css/_app-pages-browser_src_components_TextEditor_TextEditor_jsx.css",
-      "static/chunks/_app-pages-browser_src_components_TextEditor_TextEditor_jsx.js"
-    ]
-  },
-  "components\\CMS\\PrivacyPolicy.jsx -> @/components/TextEditorAr/TextEditorAr": {
-    "id": "components\\CMS\\PrivacyPolicy.jsx -> @/components/TextEditorAr/TextEditorAr",
-    "files": [
-      "static/css/_app-pages-browser_src_components_TextEditorAr_TextEditorAr_jsx.css",
-      "static/chunks/_app-pages-browser_src_components_TextEditorAr_TextEditorAr_jsx.js"
-    ]
-  },
-  "components\\CMS\\TermsConditions.jsx -> @/components/TextEditor/TextEditor": {
-    "id": "components\\CMS\\TermsConditions.jsx -> @/components/TextEditor/TextEditor",
-    "files": [
-      "static/css/_app-pages-browser_src_components_TextEditor_TextEditor_jsx.css",
-      "static/chunks/_app-pages-browser_src_components_TextEditor_TextEditor_jsx.js"
-    ]
-  },
-  "components\\CMS\\TermsConditions.jsx -> @/components/TextEditorAr/TextEditorAr": {
-    "id": "components\\CMS\\TermsConditions.jsx -> @/components/TextEditorAr/TextEditorAr",
-    "files": [
-      "static/css/_app-pages-browser_src_components_TextEditorAr_TextEditorAr_jsx.css",
-      "static/chunks/_app-pages-browser_src_components_TextEditorAr_TextEditorAr_jsx.js"
-    ]
-  },
   "utils\\exportUtils.js -> jspdf": {
     "id": "utils\\exportUtils.js -> jspdf",
     "files": [

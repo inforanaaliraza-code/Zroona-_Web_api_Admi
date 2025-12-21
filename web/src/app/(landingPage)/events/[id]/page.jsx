@@ -87,7 +87,7 @@ export default function EventDetailsPage() {
 	// Get authentication state from the store
 	const { token, isAuthenticated } = useAuthStore();
 
-	// Check for payment callback parameters
+	// Check for payment callback parameters (optimized)
 	useEffect(() => {
 		const checkForPaymentCallback = async () => {
 			// Check URL for payment callback parameters
@@ -104,34 +104,44 @@ export default function EventDetailsPage() {
 				});
 				try {
 					setIsReserving(true);
-					// Update payment status in backend
-					const response = await UpdatePaymentApi({
-						booking_id: bookingId,
-						payment_id: paymentId,
-						amount: event?.booked_event?.total_amount || 0,
-					});
+					
+					// Optimize: Run API calls in parallel where possible
+					const [paymentResponse, updatedEventData] = await Promise.allSettled([
+						// Update payment status in backend
+						UpdatePaymentApi({
+							booking_id: bookingId,
+							payment_id: paymentId,
+							amount: event?.booked_event?.total_amount || 0,
+						}),
+						// Refresh event details in parallel
+						GetEventDetails(params.id),
+					]);
 
-				if (response.status) {
-					toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully"));
-					// Refresh event details
-					const updatedEvent = await GetEventDetails(params.id);
-					setEvent(updatedEvent.data);
-				} else {
-					console.error(
-						"Payment update failed:",
-						response.message
-					);
-					toast.error(
-						response.message || getTranslation(t, "events.paymentFailed", "Payment failed. Please try again")
-					);
-				}
-			} catch (error) {
-				console.error("Error processing payment callback:", error);
-				toast.error(getTranslation(t, "events.paymentFailed", "Error processing payment. Please contact support"));
-			} finally {
+					const paymentResult = paymentResponse.status === 'fulfilled' ? paymentResponse.value : null;
+					const eventResult = updatedEventData.status === 'fulfilled' ? updatedEventData.value : null;
+
+					if (paymentResult?.status) {
+						toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully"));
+						// Update event if we got the data
+						if (eventResult?.data) {
+							setEvent(eventResult.data);
+						}
+					} else {
+						console.error(
+							"Payment update failed:",
+							paymentResult?.message || paymentResponse.reason
+						);
+						toast.error(
+							paymentResult?.message || getTranslation(t, "events.paymentFailed", "Payment failed. Please try again")
+						);
+					}
+				} catch (error) {
+					console.error("Error processing payment callback:", error);
+					toast.error(getTranslation(t, "events.paymentFailed", "Error processing payment. Please contact support"));
+				} finally {
 					setIsReserving(false);
 
-					// Clean up URL to prevent repeated processing
+					// Clean up URL immediately to prevent repeated processing
 					if (window.history && window.history.replaceState) {
 						const cleanUrl = window.location.pathname;
 						window.history.replaceState(

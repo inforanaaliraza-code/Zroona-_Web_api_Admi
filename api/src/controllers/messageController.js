@@ -137,11 +137,63 @@ const MessageController = {
             }
 
             // Get messages
-            const messages = await MessageService.FindService(
+            let messages = await MessageService.FindService(
                 { conversation_id },
                 parseInt(page),
                 parseInt(limit)
             );
+
+            // Populate sender profiles efficiently - batch lookup by role
+            const userIds = [];
+            const organizerIds = [];
+            messages.forEach(msg => {
+                if (msg.sender_role === 1 && msg.sender_id) {
+                    userIds.push(new mongoose.Types.ObjectId(msg.sender_id));
+                } else if (msg.sender_role === 2 && msg.sender_id) {
+                    organizerIds.push(new mongoose.Types.ObjectId(msg.sender_id));
+                }
+            });
+
+            // Batch fetch users and organizers
+            const User = require('../models/userModel');
+            const Organizer = require('../models/organizerModel');
+            
+            const [users, organizers] = await Promise.all([
+                userIds.length > 0 ? User.find({ _id: { $in: userIds } }).select('_id first_name last_name profile_image').lean() : [],
+                organizerIds.length > 0 ? Organizer.find({ _id: { $in: organizerIds } }).select('_id first_name last_name profile_image').lean() : []
+            ]);
+
+            // Create lookup maps
+            const userMap = new Map(users.map(u => [u._id.toString(), u]));
+            const organizerMap = new Map(organizers.map(o => [o._id.toString(), o]));
+
+            // Attach sender info to messages
+            messages = messages.map(msg => {
+                // Convert mongoose document to plain object first
+                const msgObj = msg.toObject ? msg.toObject() : JSON.parse(JSON.stringify(msg));
+                const senderIdStr = msgObj.sender_id?.toString();
+                
+                // Add sender profile based on role
+                if (msgObj.sender_role === 1 && userMap.has(senderIdStr)) {
+                    const user = userMap.get(senderIdStr);
+                    msgObj.sender = {
+                        _id: user._id,
+                        first_name: user.first_name || '',
+                        last_name: user.last_name || '',
+                        profile_image: user.profile_image || null
+                    };
+                } else if (msgObj.sender_role === 2 && organizerMap.has(senderIdStr)) {
+                    const organizer = organizerMap.get(senderIdStr);
+                    msgObj.sender = {
+                        _id: organizer._id,
+                        first_name: organizer.first_name || '',
+                        last_name: organizer.last_name || '',
+                        profile_image: organizer.profile_image || null
+                    };
+                }
+                
+                return msgObj;
+            });
 
             const total = await MessageService.CountService({ conversation_id });
 
@@ -283,11 +335,32 @@ const MessageController = {
                     );
                 }
 
-                const isParticipant = conversation.participants.some(
-                    p => p && p.user_id && p.user_id.toString() === userId.toString() && !p.left_at
-                ) || (conversation.organizer_id && conversation.organizer_id.toString() === userId.toString());
+                // Check if user is organizer (organizer is always a participant)
+                const organizerId = conversation.organizer_id?._id || conversation.organizer_id;
+                const isOrganizer = organizerId && organizerId.toString() === userId.toString();
+
+                // Check if user is in participants list
+                // Handle both populated (object with _id) and non-populated (ObjectId) user_id
+                const isParticipant = conversation.participants.some(p => {
+                    if (!p || p.left_at) return false;
+                    
+                    // Handle populated user_id (object with _id) or direct ObjectId
+                    const participantUserId = p.user_id?._id ? p.user_id._id : p.user_id;
+                    if (!participantUserId) return false;
+                    
+                    return participantUserId.toString() === userId.toString();
+                });
                 
-                if (!isParticipant) {
+                if (!isParticipant && !isOrganizer) {
+                    console.error('[MESSAGE] User not a participant:', {
+                        userId,
+                        conversationId: conversation._id,
+                        participants: conversation.participants.map(p => ({
+                            user_id: p.user_id?._id || p.user_id,
+                            left_at: p.left_at
+                        })),
+                        organizer_id: organizerId
+                    });
                     return Response.unauthorizedResponse(
                         res,
                         'You are not a participant in this group chat'
@@ -333,7 +406,13 @@ const MessageController = {
                 // For group chats, increment unread count for all participants except sender
                 if (conversation.participants && conversation.participants.length > 0) {
                     conversation.participants.forEach(participant => {
-                        if (participant.user_id.toString() !== userId.toString() && !participant.left_at) {
+                        if (!participant || participant.left_at) return;
+                        
+                        // Handle both populated (object with _id) and non-populated (ObjectId) user_id
+                        const participantUserId = participant.user_id?._id ? participant.user_id._id : participant.user_id;
+                        if (!participantUserId) return;
+                        
+                        if (participantUserId.toString() !== userId.toString()) {
                             if (participant.role === 1) {
                                 updateData.unread_count_user = (conversation.unread_count_user || 0) + 1;
                             } else {
@@ -504,11 +583,28 @@ const MessageController = {
                 );
             }
 
-            const isParticipant = role === 2 || groupChat.participants.some(
-                p => p && p.user_id && p.user_id.toString() === userId.toString() && !p.left_at
-            );
+            // Check if user is organizer (role 2) or in participants list
+            // Handle both populated (object with _id) and non-populated (ObjectId) user_id
+            const isParticipant = role === 2 || groupChat.participants.some(p => {
+                if (!p || p.left_at) return false;
+                
+                // Handle populated user_id (object with _id) or direct ObjectId
+                const participantUserId = p.user_id?._id ? p.user_id._id : p.user_id;
+                if (!participantUserId) return false;
+                
+                return participantUserId.toString() === userId.toString();
+            });
 
             if (!isParticipant) {
+                console.error('[GROUP-CHAT] User not a participant:', {
+                    userId,
+                    role,
+                    conversationId: groupChat._id,
+                    participants: groupChat.participants.map(p => ({
+                        user_id: p.user_id?._id || p.user_id,
+                        left_at: p.left_at
+                    }))
+                });
                 return Response.unauthorizedResponse(
                     res,
                     'You are not a participant in this group chat'
@@ -690,11 +786,32 @@ const MessageController = {
                     );
                 }
 
-                const isParticipant = conversation.participants.some(
-                    p => p && p.user_id && p.user_id.toString() === userId.toString() && !p.left_at
-                ) || (conversation.organizer_id && conversation.organizer_id.toString() === userId.toString());
+                // Check if user is organizer (organizer is always a participant)
+                const organizerId = conversation.organizer_id?._id || conversation.organizer_id;
+                const isOrganizer = organizerId && organizerId.toString() === userId.toString();
+
+                // Check if user is in participants list
+                // Handle both populated (object with _id) and non-populated (ObjectId) user_id
+                const isParticipant = conversation.participants.some(p => {
+                    if (!p || p.left_at) return false;
+                    
+                    // Handle populated user_id (object with _id) or direct ObjectId
+                    const participantUserId = p.user_id?._id ? p.user_id._id : p.user_id;
+                    if (!participantUserId) return false;
+                    
+                    return participantUserId.toString() === userId.toString();
+                });
                 
-                if (!isParticipant) {
+                if (!isParticipant && !isOrganizer) {
+                    console.error('[MESSAGE] User not a participant:', {
+                        userId,
+                        conversationId: conversation._id,
+                        participants: conversation.participants.map(p => ({
+                            user_id: p.user_id?._id || p.user_id,
+                            left_at: p.left_at
+                        })),
+                        organizer_id: organizerId
+                    });
                     return Response.unauthorizedResponse(
                         res,
                         'You are not a participant in this group chat'
@@ -742,7 +859,13 @@ const MessageController = {
                 // For group chats, increment unread count for all participants except sender
                 if (conversation.participants && conversation.participants.length > 0) {
                     conversation.participants.forEach(participant => {
-                        if (participant.user_id.toString() !== userId.toString() && !participant.left_at) {
+                        if (!participant || participant.left_at) return;
+                        
+                        // Handle both populated (object with _id) and non-populated (ObjectId) user_id
+                        const participantUserId = participant.user_id?._id ? participant.user_id._id : participant.user_id;
+                        if (!participantUserId) return;
+                        
+                        if (participantUserId.toString() !== userId.toString()) {
                             if (participant.role === 1) {
                                 updateData.unread_count_user = (conversation.unread_count_user || 0) + 1;
                             } else {

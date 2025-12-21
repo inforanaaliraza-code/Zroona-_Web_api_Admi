@@ -8,6 +8,7 @@ export const GetEvents = async (payload) => {
 };
 
 export const GetUpcomingEvents = async (payload) => {
+	// getData already includes token in Authorization header if available
 	return getData("landing/featured-events", payload).then((data) => {
 		return data;
 	});
