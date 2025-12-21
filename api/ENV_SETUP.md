@@ -31,6 +31,27 @@ MOYASAR_SECRET=sk_test_@sG6LYsSoX4hixpSwCZEiaac1TSLtKXMy91Yen6B
 MOYASAR_SIGNATURE_SECRET=your_webhook_secret_here
 ```
 
+### Sentry Error Tracking
+```env
+SENTRY_DSN=https://0b9a0508554c83f26e4f17fceca22a09@o4510574507851776.ingest.us.sentry.io/4510574510604288
+```
+
+### CSRF Protection
+```env
+COOKIE_SECRET=your-secret-key-min-32-chars-generate-with-crypto
+```
+
+### Career Applications
+```env
+ADMIN_EMAIL=info.rana.aliraza@gmail.com
+CAREER_EMAIL=info.rana.aliraza@gmail.com
+```
+
+### Logging
+```env
+LOG_LEVEL=info
+```
+
 ### Other Required Variables
 ```env
 MONGO_URI=your_mongodb_connection_string

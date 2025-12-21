@@ -26,6 +26,16 @@ const LandingPageService = {
 					$lte: new Date(filters.endDate),
 				};
 			}
+			
+			// Time filter (event_start_time)
+			if (filters.startTime) {
+				query.event_start_time = { $gte: filters.startTime };
+			}
+			if (filters.endTime) {
+				query.event_end_time = { $lte: filters.endTime };
+			}
+			
+			// Price filter
 			if (filters.minPrice || filters.maxPrice) {
 				query.event_price = {};
 				if (filters.minPrice) {
@@ -34,6 +44,33 @@ const LandingPageService = {
 				if (filters.maxPrice) {
 					query.event_price.$lte = parseFloat(filters.maxPrice);
 				}
+			}
+			
+			// Location filter (city or address)
+			if (filters.location || filters.city) {
+				const locationQuery = filters.location || filters.city;
+				query.$or = [
+					{ event_address: { $regex: locationQuery, $options: 'i' } },
+					{ city: { $regex: locationQuery, $options: 'i' } },
+				];
+			}
+			
+			// Geographic location filter (latitude/longitude with radius)
+			if (filters.latitude && filters.longitude && filters.radius) {
+				const radius = parseFloat(filters.radius) || 10; // Default 10km
+				const lat = parseFloat(filters.latitude);
+				const lon = parseFloat(filters.longitude);
+				
+				// MongoDB geospatial query
+				query.location = {
+					$near: {
+						$geometry: {
+							type: 'Point',
+							coordinates: [lon, lat]
+						},
+						$maxDistance: radius * 1000 // Convert km to meters
+					}
+				};
 			}
 
 			// Get total count for pagination
@@ -67,14 +104,33 @@ const LandingPageService = {
 					return event;
 				})
 			);
+			
+			// Filter by minimum rating if specified
+			let filteredEvents = eventsWithRatings;
+			if (filters.minRating) {
+				const minRating = parseFloat(filters.minRating);
+				filteredEvents = eventsWithRatings.filter(event => {
+					const rating = event.organizer_rating?.averageRating || 0;
+					return rating >= minRating;
+				});
+			}
+			
+			// Sort by rating if requested
+			if (filters.sortBy === 'rating') {
+				filteredEvents.sort((a, b) => {
+					const ratingA = a.organizer_rating?.averageRating || 0;
+					const ratingB = b.organizer_rating?.averageRating || 0;
+					return ratingB - ratingA; // Descending order
+				});
+			}
 
 			return {
-				events: eventsWithRatings,
+				events: filteredEvents,
 				pagination: {
 					currentPage: page,
-					totalPages: Math.ceil(total / limit),
-					totalEvents: total,
-					hasMore: skip + events.length < total,
+					totalPages: Math.ceil(filteredEvents.length / limit),
+					totalEvents: filteredEvents.length,
+					hasMore: skip + filteredEvents.length < filteredEvents.length,
 				},
 			};
 		} catch (error) {

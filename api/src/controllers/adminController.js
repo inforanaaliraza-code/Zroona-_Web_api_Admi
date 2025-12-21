@@ -2261,4 +2261,197 @@ const adminController = {
 
 }
 
+    /**
+     * Get all career applications (Admin)
+     * GET /admin/career/applications
+     */
+    getCareerApplications: async (req, res) => {
+        const lang = req.headers["lang"] || "en";
+        try {
+            const { page = 1, limit = 20, status, position, search } = req.query;
+            const skip = (parseInt(page) - 1) * parseInt(limit);
+
+            const CareerApplicationService = require("../services/careerApplicationService");
+            
+            // Build query
+            const query = {};
+            if (status !== undefined) {
+                query.status = parseInt(status);
+            }
+            if (position) {
+                query.position = { $regex: position, $options: 'i' };
+            }
+            if (search) {
+                query.$or = [
+                    { first_name: { $regex: search, $options: 'i' } },
+                    { last_name: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } },
+                ];
+            }
+
+            const applications = await CareerApplicationService.AggregateService([
+                { $match: query },
+                { $sort: { createdAt: -1 } },
+                { $skip: skip },
+                { $limit: parseInt(limit) },
+            ]);
+
+            const total = await CareerApplicationService.CountDocumentService(query);
+
+            return Response.ok(
+                res,
+                {
+                    applications,
+                    pagination: {
+                        currentPage: parseInt(page),
+                        totalPages: Math.ceil(total / limit),
+                        totalApplications: total,
+                        hasMore: skip + applications.length < total,
+                    },
+                },
+                200,
+                "Career applications retrieved successfully"
+            );
+        } catch (error) {
+            console.error("[ADMIN:CAREER] Error getting applications:", error);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(lang).internalServerError
+            );
+        }
+    },
+
+    /**
+     * Get career application detail (Admin)
+     * GET /admin/career/application/detail
+     */
+    getCareerApplicationDetail: async (req, res) => {
+        const lang = req.headers["lang"] || "en";
+        try {
+            const { application_id } = req.query;
+
+            if (!application_id) {
+                return Response.validationErrorResponse(
+                    res,
+                    "Application ID is required"
+                );
+            }
+
+            const CareerApplicationService = require("../services/careerApplicationService");
+            const application = await CareerApplicationService.FindByIdService(application_id);
+
+            if (!application) {
+                return Response.notFoundResponse(
+                    res,
+                    "Career application not found"
+                );
+            }
+
+            return Response.ok(
+                res,
+                application,
+                200,
+                "Career application retrieved successfully"
+            );
+        } catch (error) {
+            console.error("[ADMIN:CAREER] Error getting application detail:", error);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(lang).internalServerError
+            );
+        }
+    },
+
+    /**
+     * Update career application status (Admin)
+     * PUT /admin/career/application/update-status
+     */
+    updateCareerApplicationStatus: async (req, res) => {
+        const lang = req.headers["lang"] || "en";
+        try {
+            const { application_id, status, notes } = req.body;
+            const { userId: adminId } = req;
+
+            if (!application_id || status === undefined) {
+                return Response.validationErrorResponse(
+                    res,
+                    "Application ID and status are required"
+                );
+            }
+
+            if (![0, 1, 2, 3].includes(parseInt(status))) {
+                return Response.validationErrorResponse(
+                    res,
+                    "Invalid status. Use 0: Pending, 1: Under Review, 2: Accepted, 3: Rejected"
+                );
+            }
+
+            const CareerApplicationService = require("../services/careerApplicationService");
+            const application = await CareerApplicationService.FindByIdService(application_id);
+
+            if (!application) {
+                return Response.notFoundResponse(
+                    res,
+                    "Career application not found"
+                );
+            }
+
+            const updateData = {
+                status: parseInt(status),
+                reviewed_by: adminId,
+                reviewed_at: new Date(),
+            };
+
+            if (notes) {
+                updateData.notes = notes;
+            }
+
+            const updatedApplication = await CareerApplicationService.FindByIdAndUpdateService(
+                application_id,
+                updateData
+            );
+
+            // Send email notification to applicant
+            try {
+                const emailService = require("../helpers/emailService");
+                const statusMessages = {
+                    0: { en: "Pending", ar: "قيد الانتظار" },
+                    1: { en: "Under Review", ar: "قيد المراجعة" },
+                    2: { en: "Accepted", ar: "مقبول" },
+                    3: { en: "Rejected", ar: "مرفوض" },
+                };
+
+                const statusMessage = statusMessages[status] || statusMessages[0];
+                const emailHtml = emailService.renderCareerApplicationStatusUpdate(
+                    `${application.first_name} ${application.last_name}`,
+                    application.position,
+                    statusMessage[lang] || statusMessage.en,
+                    notes,
+                    lang
+                );
+                const subject = lang === "ar"
+                    ? `تحديث حالة طلب التوظيف - ${statusMessage.ar}`
+                    : `Application Status Update - ${statusMessage.en}`;
+
+                await emailService.send(application.email, subject, emailHtml);
+            } catch (emailError) {
+                console.error("[ADMIN:CAREER] Error sending status update email:", emailError);
+            }
+
+            return Response.ok(
+                res,
+                updatedApplication,
+                200,
+                "Career application status updated successfully"
+            );
+        } catch (error) {
+            console.error("[ADMIN:CAREER] Error updating application status:", error);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(lang).internalServerError
+            );
+        }
+    },
+};
+
 module.exports = adminController;

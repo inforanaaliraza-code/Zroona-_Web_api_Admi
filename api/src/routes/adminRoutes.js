@@ -82,6 +82,11 @@ router.get("/refund/list", adminController.refundList); // Get refund requests l
 router.get("/refund/detail", adminController.refundDetail); // Get refund request detail
 router.put("/refund/update-status", adminController.refundStatusUpdate); // Update refund status
 
+// ===== CAREER APPLICATION ROUTES =====
+router.get("/career/applications", adminController.getCareerApplications); // Get all career applications
+router.get("/career/application/detail", adminController.getCareerApplicationDetail); // Get application detail
+router.put("/career/application/update-status", adminController.updateCareerApplicationStatus); // Update application status
+
 // Event status change with email
 router.put("/event/changeStatus", adminController.eventStatusChange);
 

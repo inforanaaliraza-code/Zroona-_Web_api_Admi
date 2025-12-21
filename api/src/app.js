@@ -7,6 +7,7 @@ const morgan = require("morgan");
 const cors = require("cors");
 const Response = require("./helpers/response");
 const helmet = require("helmet");
+const cookieParser = require("cookie-parser");
 const path = require("path");
 const os = require("os");
 const fileUpload = require("express-fileupload");
@@ -14,8 +15,18 @@ const commonController = require("./controllers/commonController");
 const autoCloseGroupChats = require("./scripts/autoCloseGroupChats.js");
 const updateCompletedBookings = require("./scripts/updateCompletedBookings.js");
 const createTestUsers = require("./scripts/createTestUsers.js");
+const initSentry = require("./config/sentry.js");
+const logger = require("./helpers/logger.js");
 
 dotenv.config();
+
+// Initialize Sentry error tracking
+if (process.env.SENTRY_DSN) {
+    initSentry();
+    logger.info('Sentry error tracking initialized');
+} else {
+    logger.warn('Sentry DSN not configured. Error tracking disabled.');
+}
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -72,10 +83,17 @@ app.use(
 	})
 );
 
+// Cookie parser (required for CSRF)
+app.use(cookieParser(process.env.COOKIE_SECRET || 'zuroona-cookie-secret-key-change-in-production'));
+
 // Basic middleware
 // app.use(morgan("tiny")); // Disabled for cleaner logs
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting - Apply to all API routes
+const { apiLimiter } = require("./middleware/rateLimiter");
+app.use('/api/', apiLimiter);
 
 // Serve static files from uploads directory (for local file uploads)
 const uploadsPath = path.join(__dirname, "uploads");
@@ -109,13 +127,34 @@ app.use((req, res, next) => {
 	next();
 });
 
-// Security headers with flexible configuration for development
+// Enhanced Security headers
 app.use(
 	helmet({
-		contentSecurityPolicy: false,
-		crossOriginEmbedderPolicy: false,
-		crossOriginResourcePolicy: false,
-		crossOriginOpenerPolicy: false,
+		contentSecurityPolicy: {
+			directives: {
+				defaultSrc: ["'self'"],
+				styleSrc: ["'self'", "'unsafe-inline'"],
+				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Adjust for production
+				imgSrc: ["'self'", "data:", "https:"],
+				connectSrc: ["'self'"],
+				fontSrc: ["'self'", "data:"],
+				objectSrc: ["'none'"],
+				mediaSrc: ["'self'"],
+				frameSrc: ["'none'"],
+			},
+		},
+		crossOriginEmbedderPolicy: false, // Disable for API compatibility
+		crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow cross-origin resources
+		crossOriginOpenerPolicy: false, // Disable for API compatibility
+		hsts: {
+			maxAge: 31536000, // 1 year
+			includeSubDomains: true,
+			preload: true
+		},
+		xssFilter: true, // Enable XSS filter
+		noSniff: true, // Prevent MIME type sniffing
+		frameguard: { action: 'deny' }, // Prevent clickjacking
+		referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 	})
 );
 
@@ -240,12 +279,22 @@ const startServer = async () => {
 // Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
 	console.error("Uncaught Exception:", err);
+	// Capture exception in Sentry if initialized
+	if (process.env.SENTRY_DSN || process.env.NODE_ENV === 'production') {
+		const Sentry = require("@sentry/node");
+		Sentry.captureException(err);
+	}
 	process.exit(1);
 });
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
 	console.error("Unhandled Rejection:", err);
+	// Capture rejection in Sentry if initialized
+	if (process.env.SENTRY_DSN || process.env.NODE_ENV === 'production') {
+		const Sentry = require("@sentry/node");
+		Sentry.captureException(err);
+	}
 	process.exit(1);
 });
 

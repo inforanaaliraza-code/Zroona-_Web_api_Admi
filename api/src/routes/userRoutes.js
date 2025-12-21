@@ -13,12 +13,14 @@ const Validator = require("../middleware/validateMiddleware.js");
 // OTP validation removed - using email-based authentication only
 
 // Note: fileUpload middleware is applied globally in app.js
-router.post("/uploadFile", commonController.uploadFile);
+const { uploadLimiter } = require("../middleware/rateLimiter");
+router.post("/uploadFile", uploadLimiter, commonController.uploadFile);
 
 // ===== EMAIL-BASED AUTHENTICATION =====
-router.post("/register", userController.userRegistration); // Email verification
-router.post("/login", userController.userLoginByEmailPhone); // Email + password login (unified for guest and host)
-router.post("/login/by-email-phone", userController.userLoginByEmailPhone); // Alias for backward compatibility
+const { authLimiter } = require("../middleware/rateLimiter");
+router.post("/register", authLimiter, userController.userRegistration); // Email verification
+router.post("/login", authLimiter, userController.userLoginByEmailPhone); // Email + password login (unified for guest and host)
+router.post("/login/by-email-phone", authLimiter, userController.userLoginByEmailPhone); // Alias for backward compatibility
 router.get("/verify-email", userController.verifyEmail); // Email verification
 router.post("/resend-verification", userController.resendVerification); // Resend verification email
 
@@ -99,5 +101,10 @@ router.post("/message/send-with-attachment", AuthenticateUser, messageController
 router.get("/conversation/get-or-create", AuthenticateUser, messageController.getOrCreateConversation);
 router.get("/messages/unread-count", AuthenticateUser, messageController.getUnreadCount);
 router.get("/group-chat", AuthenticateUser, messageController.getGroupChat);
+
+// ===== CAREER ROUTES =====
+const careerController = require("../controllers/careerController");
+router.post("/career/apply", careerController.submitApplication); // Submit job application
+router.get("/career/positions", careerController.getPositions); // Get available positions
 
 module.exports = router;

@@ -651,6 +651,120 @@ class EmailService {
         
         return await this.send(organizerEmail, subject, html);
     }
+
+    /**
+     * Render career application confirmation email
+     */
+    renderCareerApplicationConfirmation(name, position, language = "en") {
+        const isArabic = language === "ar";
+        const loginUrl = process.env.WEB_URL || process.env.FRONTEND_URL || "http://localhost:3000";
+
+        if (isArabic) {
+            return `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl;">
+                    <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="margin: 0; font-size: 28px;">شكراً لتقديم طلب التوظيف</h1>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+                        <h2 style="color: #333; margin-top: 0;">مرحباً ${name}!</h2>
+                        <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                            شكراً لك على تقديم طلب التوظيف لموقع <strong>${position}</strong> في منصة Zuroona.
+                        </p>
+                        <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                           我们已经收到您的申请，我们的团队将在近期审查您的申请并与您联系。
+                        </p>
+                        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+                        <p style="color: #999; font-size: 12px; text-align: center;">
+                            إذا كان لديك أي أسئلة، يرجى التواصل معنا.
+                        </p>
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="margin: 0; font-size: 28px;">Thank You for Your Application</h1>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+                        <h2 style="color: #333; margin-top: 0;">Hello ${name}!</h2>
+                        <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                            Thank you for applying for the <strong>${position}</strong> position at Zuroona.
+                        </p>
+                        <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                            We have received your application and our team will review it shortly. We will contact you soon.
+                        </p>
+                        <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+                        <p style="color: #999; font-size: 12px; text-align: center;">
+                            If you have any questions, please feel free to contact us.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * Render career application notification email (for admin)
+     */
+    renderCareerApplicationNotification(name, email, position, coverLetter, language = "en") {
+        const isArabic = language === "ar";
+        const adminUrl = process.env.ADMIN_URL || "http://localhost:3001";
+
+        if (isArabic) {
+            return `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl;">
+                    <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="margin: 0; font-size: 28px;">طلب توظيف جديد</h1>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+                        <h2 style="color: #333; margin-top: 0;">طلب توظيف جديد</h2>
+                        <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                            تم استلام طلب توظيف جديد:
+                        </p>
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <p><strong>الاسم:</strong> ${name}</p>
+                            <p><strong>البريد الإلكتروني:</strong> ${email}</p>
+                            <p><strong>المنصب:</strong> ${position}</p>
+                            <p><strong>رسالة التقديم:</strong></p>
+                            <p style="background: #f3f4f6; padding: 15px; border-radius: 4px; white-space: pre-wrap;">${coverLetter}</p>
+                        </div>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${adminUrl}/careers" style="background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                                عرض الطلبات
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            return `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="margin: 0; font-size: 28px;">New Job Application</h1>
+                    </div>
+                    <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+                        <h2 style="color: #333; margin-top: 0;">New Job Application Received</h2>
+                        <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                            A new job application has been received:
+                        </p>
+                        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <p><strong>Name:</strong> ${name}</p>
+                            <p><strong>Email:</strong> ${email}</p>
+                            <p><strong>Position:</strong> ${position}</p>
+                            <p><strong>Cover Letter:</strong></p>
+                            <p style="background: #f3f4f6; padding: 15px; border-radius: 4px; white-space: pre-wrap;">${coverLetter}</p>
+                        </div>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="${adminUrl}/careers" style="background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                                View Applications
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
 }
 
 // Export singleton instance
