@@ -15,6 +15,7 @@ import { OrganizerSignUpApi } from "@/app/api/setting";
 import { PhoneNumberInput } from "@/components/ui/phone-input";
 import ProfileImageUpload from "../ProfileImageUpload/ProfileImageUpload";
 import Loader from "../Loader/Loader";
+import LoginModal from "../Modal/LoginModal";
 import { TOKEN_NAME } from "@/until";
 import useAuthStore from "@/store/useAuthStore";
 import axios from "axios";
@@ -27,6 +28,7 @@ export default function HostSignUpForm() {
     const [profileImage, setProfileImage] = useState(null);
     const [registrationComplete, setRegistrationComplete] = useState(false);
     const [userEmail, setUserEmail] = useState("");
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
     const validationSchema = Yup.object({
         first_name: Yup.string()
@@ -552,7 +554,7 @@ export default function HostSignUpForm() {
                     <p className="text-gray-600">
                         {t("auth.alreadyHaveAccount") || "Already have an account?"}{" "}
                         <button
-                            onClick={() => router.push("/login")}
+                            onClick={() => setIsLoginModalOpen(true)}
                             className="text-[#a797cc] hover:text-[#8ba179] font-semibold"
                         >
                             {t("auth.login") || "Login"}
@@ -569,6 +571,12 @@ export default function HostSignUpForm() {
                     </p>
                 </div>
             </div>
+
+            {/* Login Modal */}
+            <LoginModal 
+                isOpen={isLoginModalOpen} 
+                onClose={() => setIsLoginModalOpen(false)} 
+            />
         </motion.div>
     );
 }

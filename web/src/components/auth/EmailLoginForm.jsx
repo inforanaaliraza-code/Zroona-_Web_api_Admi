@@ -11,60 +11,108 @@ import Cookies from "js-cookie";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 
-import { LoginApi, PasswordLoginApi } from "@/app/api/setting";
+import { SendPhoneOTPApi, VerifyPhoneOTPApi } from "@/app/api/setting";
 import Loader from "../Loader/Loader";
+import ChangeCountryInput from "../ChangeCountryInput/ChangeCountryInput";
+import OTPInput from "react-otp-input";
 import { TOKEN_NAME } from "@/until";
 import useAuthStore from "@/store/useAuthStore";
+import { useDispatch } from "react-redux";
+import { getProfile } from "@/redux/slices/profileInfo";
+import { AnimatePresence } from "framer-motion";
 
 export default function EmailLoginForm() {
     const { t, i18n } = useTranslation();
     const router = useRouter();
+    const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
-    const [showResendLink, setShowResendLink] = useState(false);
+    const [step, setStep] = useState(1); // 1: Phone input, 2: OTP verification
+    const [seconds, setSeconds] = useState(30);
+    const [timerActive, setTimerActive] = useState(false);
     const login = useAuthStore((state) => state.login);
 
-    const validationSchema = Yup.object({
-        email: Yup.string()
-            .required(t("auth.emailRequired") || "Email is required")
-            .email(t("auth.emailInvalid") || "Invalid email address"),
-        password: Yup.string()
-            .required(t("auth.passwordRequired") || "Password is required"),
+    // Phone number form validation
+    const phoneValidationSchema = Yup.object({
+        phone_number: Yup.string()
+            .required(t("auth.phoneRequired") || "Phone number is required")
+            .min(9, t("auth.phoneMinLength") || "Phone number must be at least 9 digits"),
+        country_code: Yup.string()
+            .required(t("auth.countryCodeRequired") || "Country code is required"),
     });
 
-    const formik = useFormik({
+    const phoneFormik = useFormik({
         initialValues: {
-            email: "",
-            password: "",
+            phone_number: "",
+            country_code: "+966",
         },
-        validationSchema,
+        validationSchema: phoneValidationSchema,
         onSubmit: async (values) => {
             setLoading(true);
-            setShowResendLink(false);
 
             try {
-                const loginPayload = {
-                    email: values.email.toLowerCase().trim(),
-                    password: values.password,
+                const payload = {
+                    phone_number: values.phone_number,
+                    country_code: values.country_code,
                 };
 
-                console.log("[LOGIN] Attempting password-based login for:", loginPayload.email);
+                console.log("[LOGIN] Sending OTP to:", payload);
 
-                // Use the unified login API that handles both users and organizers
-                const response = await LoginApi(loginPayload);
+                const response = await SendPhoneOTPApi(payload);
 
-                console.log("[LOGIN] Response:", response);
+                setLoading(false);
+                if (response?.status === 1) {
+                    toast.success(response.message || "OTP sent successfully!");
+                    setStep(2); // Move to OTP verification step
+                    startTimer();
+                } else {
+                    toast.error(response.message || "Failed to send OTP");
+                }
+            } catch (error) {
+                setLoading(false);
+                console.error("[LOGIN] Error:", error);
+                const errorMessage = error?.response?.data?.message || 
+                    error?.message || 
+                    "An error occurred. Please try again.";
+                toast.error(errorMessage);
+            }
+        },
+    });
 
-                if (response?.status === 1 || response?.status === true || response?.data?.token) {
-                    const token = response?.data?.token || response?.token;
-                    const user = response?.data?.user || response?.data?.organizer || response?.data?.result;
+    // OTP verification form
+    const otpValidationSchema = Yup.object({
+        otp: Yup.string()
+            .required(t("OTP.tab7") || "OTP is required")
+            .length(6, t("OTP.tab8") || "OTP must be 6 digits"),
+    });
+
+    const otpFormik = useFormik({
+        initialValues: {
+            otp: "",
+        },
+        validationSchema: otpValidationSchema,
+        onSubmit: async (values) => {
+            setLoading(true);
+
+            try {
+                const payload = {
+                    phone_number: phoneFormik.values.phone_number,
+                    country_code: phoneFormik.values.country_code,
+                    otp: values.otp,
+                };
+
+                console.log("[LOGIN] Verifying OTP for:", payload.phone_number);
+
+                const response = await VerifyPhoneOTPApi(payload);
+
+                setLoading(false);
+                if (response?.status === 1) {
+                    const token = response?.data?.token;
+                    const user = response?.data?.user || response?.data?.organizer;
 
                     if (!user) {
                         toast.error(t("auth.loginFailed") || "Login failed. User data not found.");
                         return;
                     }
-
-                    // API handles all validation (email verification, approval status)
-                    // But store role for navigation
 
                     // Store token
                     Cookies.set(TOKEN_NAME, token, { expires: 30 });
@@ -72,124 +120,109 @@ export default function EmailLoginForm() {
                     // Store role in localStorage
                     if (user.role) {
                         localStorage.setItem("user_role", user.role.toString());
-                        console.log("[LOGIN] Role stored in localStorage:", user.role);
                     }
 
                     // Update auth store
+                    dispatch(getProfile());
                     login(token, user);
 
-                    toast.success(
-                        response.message || 
-                        t("auth.loginSuccess") || 
-                        "Login successful!"
-                    );
+                    toast.success(response.message || t("auth.loginSuccess") || "Login successful!");
 
                     // Navigate based on role
                     if (user.role === 2) {
-                        // Organizer/Host - navigate to organizer routes
+                        // Organizer/Host
                         router.push("/joinUsEvent");
                     } else if (user.role === 1) {
-                        // Guest - navigate to guest routes
+                        // Guest
                         router.push("/events");
                     } else {
-                        // Fallback
                         router.push("/events");
                     }
                 } else {
-                    // Show error from API
-                    const errorMessage = response?.message || 
-                        t("auth.loginFailed") || 
-                        "Login failed. Please try again.";
-                    
-                    toast.error(errorMessage);
-
-                    // Check if it's email verification issue
-                    if (errorMessage.toLowerCase().includes("verify") || 
-                        errorMessage.toLowerCase().includes("verification") ||
-                        errorMessage.toLowerCase().includes("not verified")) {
-                        setShowResendLink(true);
-                    } else {
-                        setShowResendLink(false);
-                    }
+                    toast.error(response?.message || "Invalid OTP. Please try again.");
                 }
             } catch (error) {
+                setLoading(false);
                 console.error("[LOGIN] Error:", error);
-                
                 const errorMessage = error?.response?.data?.message || 
                     error?.message || 
-                    t("auth.loginError") || 
                     "An error occurred. Please try again.";
-                
                 toast.error(errorMessage);
-
-                // Check if it's email verification issue
-                if (errorMessage.toLowerCase().includes("verify") || 
-                    errorMessage.toLowerCase().includes("verification") ||
-                    errorMessage.toLowerCase().includes("not verified")) {
-                    setShowResendLink(true);
-                } else if (errorMessage.toLowerCase().includes("approval") || 
-                    errorMessage.toLowerCase().includes("pending") ||
-                    errorMessage.toLowerCase().includes("rejected")) {
-                    // Don't show resend link for approval issues
-                    setShowResendLink(false);
-                } else {
-                    setShowResendLink(false);
-                }
-            } finally {
-                setLoading(false);
             }
         },
     });
 
-    const handleResendVerification = async () => {
-        if (!formik.values.email) {
-            toast.error(t("auth.enterEmailFirst") || "Please enter your email first");
-            return;
-        }
+    // Timer for OTP resend
+    const startTimer = () => {
+        setSeconds(30);
+        setTimerActive(true);
 
-        setLoading(true);
-
-        try {
-            const axios = require("axios");
-            const { BASE_API_URL } = require("@/until");
-
-            const response = await axios.post(
-                `${BASE_API_URL}user/resend-verification`,
-                {
-                    email: formik.values.email.toLowerCase().trim(),
-                },
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                        lang: i18n.language || "en",
-                    },
+        const interval = setInterval(() => {
+            setSeconds((prevSeconds) => {
+                if (prevSeconds <= 1) {
+                    clearInterval(interval);
+                    setTimerActive(false);
+                    return 0;
                 }
-            );
+                return prevSeconds - 1;
+            });
+        }, 1000);
 
-            if (response.data?.status === 1) {
-                toast.success(
-                    t("auth.verificationEmailResent") || 
-                    "Verification email sent! Please check your inbox."
-                );
-                setShowResendLink(false);
-            } else {
-                toast.error(
-                    response.data?.message || 
-                    t("auth.resendFailed") || 
-                    "Failed to resend verification email"
-                );
-            }
-        } catch (error) {
-            console.error("[RESEND] Error:", error);
-            toast.error(
-                error?.response?.data?.message || 
-                t("auth.resendError") || 
-                "An error occurred while resending verification email"
-            );
-        } finally {
-            setLoading(false);
-        }
+        return () => clearInterval(interval);
     };
+
+    // Resend OTP
+    const resendCode = () => {
+        setLoading(true);
+        SendPhoneOTPApi({
+            phone_number: phoneFormik.values.phone_number,
+            country_code: phoneFormik.values.country_code,
+        }).then((data) => {
+            setLoading(false);
+            if (data?.status === 1) {
+                toast.success(data?.message || "OTP resent successfully!");
+                startTimer();
+            } else {
+                toast.error(data?.message || "Failed to resend OTP");
+            }
+        }).catch((error) => {
+            setLoading(false);
+            toast.error("Failed to resend OTP");
+        });
+    };
+
+    // Go back to phone input step
+    const handleBackToPhone = () => {
+        setStep(1);
+        otpFormik.resetForm();
+    };
+
+    // Slide animation variants
+    const slideVariants = {
+        hidden: (direction) => ({
+            x: direction > 0 ? 300 : -300,
+            opacity: 0,
+        }),
+        visible: {
+            x: 0,
+            opacity: 1,
+            transition: {
+                type: "spring",
+                damping: 25,
+                stiffness: 300,
+            },
+        },
+        exit: (direction) => ({
+            x: direction < 0 ? 300 : -300,
+            opacity: 0,
+            transition: {
+                type: "spring",
+                damping: 25,
+                stiffness: 300,
+            },
+        }),
+    };
+
 
     return (
         <motion.div
@@ -198,182 +231,351 @@ export default function EmailLoginForm() {
             transition={{ duration: 0.5 }}
             className="max-w-md mx-auto"
         >
-            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-                {/* Logo */}
-                <div className="flex justify-center mb-6">
-                    <Image
-                        src="/assets/images/main-logo.png"
-                        alt="Zuroona"
-                        width={120}
-                        height={48}
-                        className="object-contain"
-                    />
-                </div>
-
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        {t("auth.welcomeBack") || "Welcome Back"}
-                    </h1>
-                    <p className="text-gray-600">
-                        {t("auth.loginSubtitle") || "Login to your Zuroona account"}
-                    </p>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={formik.handleSubmit} className="space-y-6">
-                    {/* Email Field */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t("auth.email") || "Email"} *
-                        </label>
+            <div className="relative bg-gradient-to-br from-white via-white to-purple-50/30 rounded-3xl shadow-2xl p-8 border border-gray-100/50 backdrop-blur-sm overflow-hidden">
+                {/* Animated background elements */}
+                <div className="absolute top-0 right-0 w-72 h-72 bg-purple-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-56 h-56 bg-orange-200/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                
+                <div className="relative z-10">
+                    {/* Logo with glow effect */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="flex justify-center mb-6"
+                    >
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Icon icon="material-symbols:mail" className="w-5 h-5 text-brand-orange" />
-                            </div>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formik.values.email}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-brand-orange focus:border-transparent ${
-                                    formik.touched.email && formik.errors.email
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
-                                placeholder={t("auth.emailPlaceholder") || "your.email@example.com"}
-                                autoComplete="email"
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/20 to-brand-orange/20 rounded-2xl blur-xl"></div>
+                            <Image
+                                src="/assets/images/main-logo.png"
+                                alt="Zuroona"
+                                width={140}
+                                height={48}
+                                className="object-contain relative z-10 drop-shadow-lg"
                             />
                         </div>
-                        {formik.touched.email && formik.errors.email && (
-                            <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
-                        )}
-                    </div>
+                    </motion.div>
 
-                    {/* Password Field */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t("auth.password") || "Password"} *
-                        </label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Icon icon="material-symbols:lock" className="w-5 h-5 text-brand-orange" />
-                            </div>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formik.values.password}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className={`w-full pl-12 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-brand-orange focus:border-transparent ${
-                                    formik.touched.password && formik.errors.password
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
-                                placeholder={t("auth.enterPassword") || "Enter your password"}
-                                autoComplete="current-password"
-                            />
-                        </div>
-                        {formik.touched.password && formik.errors.password && (
-                            <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
-                        )}
-                    </div>
+                    {/* Header with gradient text */}
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-center mb-8"
+                    >
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 via-[#a797cc] to-gray-900 bg-clip-text text-transparent mb-2">
+                            {t("auth.welcomeBack") || "Welcome Back"}
+                        </h1>
+                        <p className="text-gray-500 text-sm">
+                            {t("auth.loginSubtitle") || "Sign in to continue to your account"}
+                        </p>
+                    </motion.div>
 
-                    {/* Resend Verification Link */}
-                    {showResendLink && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            className="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
-                        >
-                            <div className="flex items-start">
-                                <Icon icon="material-symbols:info" className="w-5 h-5 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" />
-                                <div className="flex-1">
-                                    <p className="text-sm text-yellow-800 mb-2">
-                                        {t("auth.emailNotVerified") || "Your email is not verified yet."}
-                                    </p>
+                    {/* Form with Step-based Flow */}
+                    <AnimatePresence mode="wait" initial={false} custom={step === 1 ? 1 : -1}>
+                        {step === 1 ? (
+                            <motion.form
+                                key="phone"
+                                custom={1}
+                                variants={slideVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                onSubmit={phoneFormik.handleSubmit}
+                                className="space-y-6"
+                            >
+                                {/* Phone Number Field */}
+                                <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                >
+                                    <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <Icon icon="material-symbols:phone-android" className="w-4 h-4 text-[#a797cc]" />
+                                        {t("auth.phoneNumber") || "Phone Number"} *
+                                        <span className="text-xs font-normal text-gray-500">(Saudi Arabia Only)</span>
+                                    </label>
+                                    <div className="relative group">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/10 to-brand-orange/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                        <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-1 shadow-sm group-hover:border-[#a797cc]/50 transition-all duration-300">
+                                            <ChangeCountryInput
+                                                mobileNumber="phone_number"
+                                                countryCode="country_code"
+                                                formik={phoneFormik}
+                                                i18n={i18n}
+                                                disabled={loading}
+                                            />
+                                        </div>
+                                    </div>
+                                    {phoneFormik.touched.phone_number && phoneFormik.errors.phone_number && (
+                                        <motion.p
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="mt-2 text-sm text-red-500 flex items-center gap-1"
+                                        >
+                                            <Icon icon="material-symbols:error-outline" className="w-4 h-4" />
+                                            {phoneFormik.errors.phone_number}
+                                        </motion.p>
+                                    )}
+                                    {phoneFormik.touched.country_code && phoneFormik.errors.country_code && (
+                                        <motion.p
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="mt-2 text-sm text-red-500 flex items-center gap-1"
+                                        >
+                                            <Icon icon="material-symbols:error-outline" className="w-4 h-4" />
+                                            {phoneFormik.errors.country_code}
+                                        </motion.p>
+                                    )}
+                                </motion.div>
+
+                                {/* Send OTP Button */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.5 }}
+                                    className="pt-2"
+                                >
+                                    <button
+                                        type="submit"
+                                        disabled={loading || !phoneFormik.isValid}
+                                        className="group relative w-full bg-gradient-to-r from-[#a797cc] via-[#9d8bc0] to-[#a797cc] text-white py-4 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 overflow-hidden"
+                                    >
+                                        {/* Animated background */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-brand-orange/20 to-[#a797cc]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                                        
+                                        {/* Button content */}
+                                        <span className="relative z-10 flex items-center gap-2">
+                                                    {loading ? (
+                                                        <>
+                                                            <Loader />
+                                                            <span>Sending OTP...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Icon icon="material-symbols:sms" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                                            <span>Send OTP</span>
+                                                    <Icon icon="material-symbols:arrow-forward" className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                                                </>
+                                            )}
+                                        </span>
+                                    </button>
+                                </motion.div>
+                            </motion.form>
+                        ) : (
+                            <motion.form
+                                key="otp"
+                                custom={-1}
+                                variants={slideVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                onSubmit={otpFormik.handleSubmit}
+                                className="space-y-6"
+                            >
+                                {/* Back Button */}
+                                <div className="flex items-center mb-4">
                                     <button
                                         type="button"
-                                        onClick={handleResendVerification}
-                                        disabled={loading}
-                                        className="text-sm font-semibold text-yellow-700 hover:text-yellow-900 underline"
+                                        onClick={handleBackToPhone}
+                                        className="flex items-center text-gray-600 hover:text-[#a797cc] transition-colors"
                                     >
-                                        {t("auth.resendVerificationEmail") || "Resend Verification Email"}
+                                        <Icon icon="material-symbols:arrow-back" className="w-5 h-5 mr-1" />
+                                        <span className="text-sm">{t("Back") || "Back"}</span>
                                     </button>
                                 </div>
-                            </div>
-                        </motion.div>
-                    )}
 
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={loading || !formik.isValid}
-                        className="w-full py-4 px-6 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                    >
-                        {loading ? (
-                            <>
-                                <Loader />
-                                <span>{t("auth.loggingIn") || "Logging in..."}</span>
-                            </>
-                        ) : (
-                            <>
-                                <Icon icon="material-symbols:login" className="w-5 h-5" />
-                                <span>{t("auth.login") || "Login"}</span>
-                            </>
+                                {/* OTP Header */}
+                                <div className="text-center mb-6">
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                        {t("OTP.tab1") || "Enter OTP"}
+                                    </h3>
+                                    <p className="text-sm text-gray-600">
+                                        {t("OTP.tab2") || "We sent a verification code to"} <br />
+                                        <span className="font-semibold text-gray-800">
+                                            {phoneFormik.values.country_code} {phoneFormik.values.phone_number}
+                                        </span>
+                                    </p>
+                                </div>
+
+                                {/* OTP Input */}
+                                <div className="flex justify-center my-6">
+                                    <OTPInput
+                                        containerStyle="flex gap-2 md:gap-4 justify-center"
+                                        value={otpFormik.values.otp}
+                                        onChange={(val) => {
+                                            const numericVal = val.replace(/[^0-9]/g, "");
+                                            otpFormik.setFieldValue("otp", numericVal);
+                                        }}
+                                        inputStyle={{
+                                            width: "3rem",
+                                            height: "3rem",
+                                            textAlign: "center",
+                                            border: "2px solid #e5e7eb",
+                                            borderRadius: "12px",
+                                            fontSize: "1.25rem",
+                                            fontWeight: "600",
+                                            outline: "none",
+                                            color: "#a797cc",
+                                            borderColor: otpFormik.errors.otp && otpFormik.touched.otp ? "#ef4444" : "#e5e7eb",
+                                        }}
+                                        numInputs={6}
+                                        separator={<span className="mx-1"></span>}
+                                        shouldAutoFocus={true}
+                                        renderInput={(props) => (
+                                            <input
+                                                {...props}
+                                                inputMode="numeric"
+                                                onInput={(e) => {
+                                                    e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                                                }}
+                                            />
+                                        )}
+                                    />
+                                </div>
+                                {otpFormik.errors.otp && otpFormik.touched.otp && (
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="text-center text-sm text-red-500 flex items-center justify-center gap-1"
+                                    >
+                                        <Icon icon="material-symbols:error-outline" className="w-4 h-4" />
+                                        {otpFormik.errors.otp}
+                                    </motion.p>
+                                )}
+
+                                {/* Timer */}
+                                <div className="flex justify-center items-center my-4">
+                                    <span className="text-[#a797cc] text-sm font-medium">
+                                        Resend code in 00:{seconds > 9 ? seconds : `0${seconds}`}
+                                    </span>
+                                </div>
+
+                                {/* Verify OTP Button */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="pt-2"
+                                >
+                                    <button
+                                        type="submit"
+                                        disabled={loading || otpFormik.values.otp.length !== 6}
+                                        className="group relative w-full bg-gradient-to-r from-[#a797cc] via-[#9d8bc0] to-[#a797cc] text-white py-4 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 overflow-hidden"
+                                    >
+                                        {/* Animated background */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-brand-orange/20 to-[#a797cc]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                                        
+                                        {/* Button content */}
+                                        <span className="relative z-10 flex items-center gap-2">
+                                                {loading ? (
+                                                    <>
+                                                        <Loader />
+                                                        <span>Verifying...</span>
+                                                    </>
+                                                ) : (
+                                                <>
+                                                    <Icon icon="material-symbols:verified" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                                    <span>{t("OTP.tab6") || "Verify & Login"}</span>
+                                                    <Icon icon="material-symbols:arrow-forward" className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                                                </>
+                                            )}
+                                        </span>
+                                    </button>
+                                </motion.div>
+
+                                {/* Resend OTP Link */}
+                                <div className="text-center text-sm text-gray-600 mt-4">
+                                    {t("OTP.tab4") || "Didn't receive the code?"}{" "}
+                                    {!timerActive && (
+                                        <button
+                                            type="button"
+                                            onClick={resendCode}
+                                            disabled={loading}
+                                            className="text-[#a797cc] font-semibold hover:text-brand-orange underline transition-colors"
+                                        >
+                                            {t("OTP.tab5") || "Resend"}
+                                        </button>
+                                    )}
+                                </div>
+                            </motion.form>
                         )}
-                    </button>
-                </form>
+                    </AnimatePresence>
 
-                {/* Divider */}
-                <div className="my-8 flex items-center">
-                    <div className="flex-1 border-t border-gray-300"></div>
-                    <span className="px-4 text-sm text-gray-500">
-                        {t("auth.or") || "OR"}
-                    </span>
-                    <div className="flex-1 border-t border-gray-300"></div>
-                </div>
 
-                {/* Sign Up Links */}
-                <div className="space-y-3">
-                    <p className="text-center text-gray-600">
-                        {t("auth.dontHaveAccount") || "Don't have an account?"}
-                    </p>
-                    <div className="grid grid-cols-2 gap-3">
-                        <button
-                            onClick={() => router.push("/signup/guest")}
-                            className="py-3 px-4 border-2 border-brand-orange text-brand-orange hover:bg-brand-orange/10 font-semibold rounded-lg transition-colors"
-                        >
-                            {t("auth.signupAsGuest") || "Signup as Guest"}
-                        </button>
-                        <button
-                            onClick={() => router.push("/signup/host")}
-                            className="py-3 px-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors"
-                        >
-                            {t("auth.signupAsHost") || "Signup as Host"}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Help Text */}
-                <div className="mt-8 text-center">
-                    <p className="text-sm text-gray-500">
-                        {t("auth.needHelp") || "Need help?"}{" "}
-                        <a href="mailto:infozuroona@gmail.com" className="text-brand-orange hover:text-brand-orange/90 font-semibold">
-                            {t("auth.contactSupport") || "Contact Support"}
-                        </a>
-                    </p>
-                </div>
-
-                {/* Info Box */}
-                <div className="mt-6 bg-brand-light-orange-1 border border-brand-light-orange-1 rounded-lg p-4">
-                    <div className="flex items-start">
-                        <Icon icon="material-symbols:info" className="w-5 h-5 text-brand-orange mr-2 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-orange-900">
-                            {t("auth.loginInfo") || "Login with the email address you used during registration. Make sure your email is verified."}
+                    {/* Sign Up Links */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7 }}
+                        className="space-y-4 mt-8"
+                    >
+                        <p className="text-center text-gray-500 text-sm">
+                            {t("auth.dontHaveAccount") || "Don't have an account?"}
                         </p>
-                    </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => router.push("/signup/guest")}
+                                className="group py-3.5 px-4 border-2 border-brand-orange text-brand-orange hover:bg-gradient-to-r hover:from-brand-orange/10 hover:to-orange-50 font-semibold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    {t("auth.signupAsGuest") || "Guest"}
+                                    <Icon icon="material-symbols:arrow-forward" className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                                </span>
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => router.push("/signup/host")}
+                                className="group py-3.5 px-4 bg-gradient-to-r from-[#a797cc] to-[#9d8bc0] hover:from-[#9d8bc0] hover:to-[#a797cc] text-white font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    {t("auth.signupAsHost") || "Host"}
+                                    <Icon icon="material-symbols:arrow-forward" className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                                </span>
+                            </motion.button>
+                        </div>
+                    </motion.div>
+
+                    {/* Help Text */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                        className="mt-8 text-center"
+                    >
+                        <p className="text-sm text-gray-500">
+                            {t("auth.needHelp") || "Need help?"}{" "}
+                            <a
+                                href="mailto:infozuroona@gmail.com"
+                                className="text-[#a797cc] hover:text-brand-orange font-semibold transition-colors duration-300 inline-flex items-center gap-1 group"
+                            >
+                                {t("auth.contactSupport") || "Contact Support"}
+                                <Icon icon="material-symbols:mail" className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                            </a>
+                        </p>
+                    </motion.div>
+
+                    {/* Info Box */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.9 }}
+                        className="mt-6 bg-gradient-to-r from-brand-light-orange-1/50 to-orange-50/50 border-2 border-brand-light-orange-1/50 rounded-2xl p-4 backdrop-blur-sm shadow-sm"
+                    >
+                        <div className="flex items-start gap-3">
+                            <div className="p-2 bg-brand-orange/10 rounded-lg">
+                                <Icon icon="material-symbols:info" className="w-5 h-5 text-brand-orange" />
+                            </div>
+                            <p className="text-sm text-orange-900 leading-relaxed">
+                                {t("auth.loginInfo") || "Login with your Saudi Arabia phone number. We'll send you an OTP code to verify your account."}
+                            </p>
+                        </div>
+                    </motion.div>
                 </div>
             </div>
         </motion.div>

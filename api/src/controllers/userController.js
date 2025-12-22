@@ -441,16 +441,9 @@ const UserController = {
 	userLoginByEmailPhone: async (req, res) => {
 		const lang = req.headers["lang"] || "en";
 		try {
-			const { email, password } = req.body;
+			const { email, phone_number, country_code, password } = req.body;
 
-			console.log("[USER:LOGIN] Login attempt for:", email);
-
-			if (!email || !email.includes("@")) {
-				return Response.validationErrorResponse(
-					res,
-					resp_messages(lang).invalid_credentials || "Valid email is required"
-				);
-			}
+			console.log("[USER:LOGIN] Login attempt for:", email || phone_number);
 
 			// Password is required for secure login
 			if (!password) {
@@ -460,35 +453,78 @@ const UserController = {
 				);
 			}
 
-			// Clean email - remove invisible/zero-width characters, trim, and lowercase
-			const emailLower = cleanEmail(email);
+			// Must provide either email or phone_number
+			if (!email && !phone_number) {
+				return Response.validationErrorResponse(
+					res,
+					resp_messages(lang).email_or_phone_required || "Email or phone number is required"
+				);
+			}
+
+			// If email provided, validate it
+			if (email && !email.includes("@")) {
+				return Response.validationErrorResponse(
+					res,
+					resp_messages(lang).invalid_credentials || "Valid email is required"
+				);
+			}
+
+			// If phone provided, validate country code (Saudi Arabia only)
+			if (phone_number && country_code !== "+966") {
+				return Response.validationErrorResponse(
+					res,
+					resp_messages(lang).invalid_phone || "Only Saudi Arabia phone numbers are supported"
+				);
+			}
+
+			// Clean email if provided
+			const emailLower = email ? cleanEmail(email) : null;
+			// Clean phone number if provided
+			const phoneStr = phone_number ? phone_number.toString().replace(/\s+/g, '') : null;
 
 			// Try to find user (guest) first - include password field for verification
 			// Use model directly to allow .select("+password") chaining
 			const User = require("../models/userModel");
-			let user = await User.findOne({
-				email: emailLower,
-				is_delete: { $ne: 1 },
-			}).select("+password");
+			let user = null;
+			if (emailLower) {
+				user = await User.findOne({
+					email: emailLower,
+					is_delete: { $ne: 1 },
+				}).select("+password");
+			} else if (phoneStr && country_code) {
+				user = await User.findOne({
+					phone_number: phoneStr,
+					country_code: country_code,
+					is_delete: { $ne: 1 },
+				}).select("+password");
+			}
 
 			// If not found as guest, try organizer - include password field
 			// Use model directly to allow .select("+password") chaining
 			const Organizer = require("../models/organizerModel");
 			let organizer = null;
 			if (!user) {
-				organizer = await Organizer.findOne({
-					email: emailLower,
-					is_delete: { $ne: 1 },
-				}).select("+password");
+				if (emailLower) {
+					organizer = await Organizer.findOne({
+						email: emailLower,
+						is_delete: { $ne: 1 },
+					}).select("+password");
+				} else if (phoneStr && country_code) {
+					organizer = await Organizer.findOne({
+						phone_number: phoneStr,
+						country_code: country_code,
+						is_delete: { $ne: 1 },
+					}).select("+password");
+				}
 			}
 
 			const account = user || organizer;
 
 			if (!account) {
-				console.log("[USER:LOGIN] Account not found for:", emailLower);
+				console.log("[USER:LOGIN] Account not found for:", emailLower || phoneStr);
 				return Response.unauthorizedResponse(
 					res,
-					resp_messages(lang).invalid_credentials || "Invalid email or password"
+					resp_messages(lang).invalid_credentials || "Invalid email/phone or password"
 				);
 			}
 
@@ -557,7 +593,7 @@ const UserController = {
 			// Generate JWT token
 			const token = generateToken(account._id, account.role);
 
-			console.log("[USER:LOGIN] Login successful for:", emailLower);
+			console.log("[USER:LOGIN] Login successful for:", emailLower || phoneStr);
 
 			// Remove password from response - convert to plain object if needed
 			const accountResponse = account.toObject ? account.toObject() : { ...account };

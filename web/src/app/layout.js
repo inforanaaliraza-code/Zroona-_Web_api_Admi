@@ -16,8 +16,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl" className={`${ibmPlexSansArabic.variable} ${poppins.variable} ${tajawal.variable}`} suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/assets/images/main-logo.png" />
-        <link rel="apple-touch-icon" href="/assets/images/main-logo.png" />
+        <title>Zuroona - Your Event Platform</title>
+        <link rel="icon" type="image/png" href="/assets/images/main-logo.png" />
+        <link rel="shortcut icon" type="image/png" href="/assets/images/main-logo.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/main-logo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/main-logo.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/main-logo.png" />
+        <meta name="theme-color" content="#a797cc" />
+        <meta name="description" content="Zuroona - Discover and book amazing events in Saudi Arabia" />
         <link
           rel="stylesheet"
           href="https://cdn.moyasar.com/mpf/1.15.0/moyasar.css"

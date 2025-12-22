@@ -15,6 +15,7 @@ import { SignUpApi } from "@/app/api/setting";
 import { PhoneNumberInput } from "@/components/ui/phone-input";
 import ProfileImageUpload from "../ProfileImageUpload/ProfileImageUpload";
 import Loader from "../Loader/Loader";
+import LoginModal from "../Modal/LoginModal";
 import { TOKEN_NAME, BASE_API_URL } from "@/until";
 import useAuthStore from "@/store/useAuthStore";
 
@@ -90,6 +91,7 @@ export default function GuestSignUpForm() {
     const { t, i18n } = useTranslation();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [showEmailVerificationMessage, setShowEmailVerificationMessage] = useState(false);
     const [profileImage, setProfileImage] = useState(null);
 
@@ -522,7 +524,7 @@ export default function GuestSignUpForm() {
                     <p className="text-gray-600">
                         {t("auth.alreadyHaveAccount") || "Already have an account?"}{" "}
                         <button
-                            onClick={() => router.push("/login")}
+                            onClick={() => setIsLoginModalOpen(true)}
                             className="text-[#a797cc] hover:text-[#8ba179] font-semibold"
                         >
                             {t("auth.login") || "Login"}
@@ -599,6 +601,12 @@ export default function GuestSignUpForm() {
                     </motion.div>
                 </div>
             )}
+
+            {/* Login Modal */}
+            <LoginModal 
+                isOpen={isLoginModalOpen} 
+                onClose={() => setIsLoginModalOpen(false)} 
+            />
         </motion.div>
     );
 }

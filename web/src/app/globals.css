@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animated gradient background */
+@keyframes gradient-xy {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-xy {
+  background-size: 200% 200%;
+  animation: gradient-xy 15s ease infinite;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717; /* A very dark gray for good contrast */
