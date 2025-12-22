@@ -15,26 +15,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/adminsa111xyz/page.js"
-    ],
-    "/(AfterLogin)/organizer/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(AfterLogin)/organizer/page.js"
-    ],
-    "/(AfterLogin)/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(AfterLogin)/layout.js"
-    ],
-    "/(AfterLogin)/user/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(AfterLogin)/user/page.js"
-    ],
-    "/(AfterLogin)/user/detail/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(AfterLogin)/user/detail/[id]/page.js"
     ]
   }
 }

@@ -1,6 +1,4 @@
 {
-  "/adminsa111xyz/page": "app/adminsa111xyz/page.js",
-  "/(AfterLogin)/organizer/page": "app/(AfterLogin)/organizer/page.js",
-  "/(AfterLogin)/user/page": "app/(AfterLogin)/user/page.js",
-  "/(AfterLogin)/user/detail/[id]/page": "app/(AfterLogin)/user/detail/[id]/page.js"
+  "/page": "app/page.js",
+  "/adminsa111xyz/page": "app/adminsa111xyz/page.js"
 }

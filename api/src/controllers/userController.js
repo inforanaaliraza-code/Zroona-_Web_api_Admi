@@ -2919,11 +2919,6 @@ const UserController = {
 				}),
 			]);
 
-			// Generate invoice using Daftra API
-			// Check if Daftra credentials are configured before attempting invoice generation
-			const daftraSubdomain = process.env.DAFTRA_SUBDOMAIN;
-			const daftraApiKey = process.env.DAFTRA_API_KEY;
-			
 			// Generate receipt using Daftra Receipts API
 			// Use default credentials if not in env (tdb subdomain and provided API key)
 			const daftraSubdomain = process.env.DAFTRA_SUBDOMAIN || "tdb";
