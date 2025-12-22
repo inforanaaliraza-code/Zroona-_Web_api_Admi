@@ -73,6 +73,11 @@ const UserSchema = new mongoose.Schema({
     nationality: {
         type: String,
         default: ''
+    },
+    isActive: {
+        type: Number,
+        enum: [1, 2],
+        default: 1 // 1 = active, 2 = inactive
     }
 }, { timestamps: true });
 

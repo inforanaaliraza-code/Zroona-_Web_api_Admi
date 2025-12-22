@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Modal from "../common/Modal";
 import ChangeCountryInput from "../ChangeCountryInput/ChangeCountryInput";
 import Loader from "../Loader/Loader";
-import { LoginApi, OTPVerificationApi, ResendOtpApi } from "@/app/api/setting";
+import { SendPhoneOTPApi, VerifyPhoneOTPApi, ResendOtpApi } from "@/app/api/setting";
 import { getProfile } from "@/redux/slices/profileInfo";
 import { TOKEN_NAME } from "@/until";
 
@@ -27,7 +27,6 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
   // States
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Phone input, 2: OTP verification
-  const [token, setToken] = useState("");
   const [seconds, setSeconds] = useState(30);
   const [timerActive, setTimerActive] = useState(false);
 
@@ -52,11 +51,10 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
       };
 
       try {
-        const data = await LoginApi(payload);
+        const data = await SendPhoneOTPApi(payload);
         setLoading(false);
         if (data?.status === 1) {
-          toast.success(data.message);
-          setToken(data?.data?.token);
+          toast.success(data.message || "OTP sent successfully");
           if (onLogin) {
             // If onLogin prop exists, call it instead of showing the OTP step in this modal
             onClose();
@@ -67,7 +65,7 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
             startTimer();
           }
         } else {
-          toast.error(data.message);
+          toast.error(data.message || "Failed to send OTP");
         }
       } catch (error) {
         setLoading(false);
@@ -90,7 +88,12 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
       const payload = {
         otp: values.otp,
       };
-      OTPVerificationApi(payload, token)
+      const verifyPayload = {
+        phone_number: phoneFormik.values.phone_number,
+        country_code: phoneFormik.values.country_code,
+        otp: values.otp,
+      };
+      VerifyPhoneOTPApi(verifyPayload)
         .then((data) => {
           setLoading(false);
           if (data?.status === 1) {
@@ -225,7 +228,6 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
 
   return (
     <Modal isOpen={isOpen} onClose={handleModalClose} width="lg">
-      {token}
       <div className="overflow-hidden relative bg-white rounded-2xl">
         {/* Background pattern */}
         <div className="absolute inset-0 bg-gradient-to-br from-brand-orange/10 to-transparent">

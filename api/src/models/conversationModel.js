@@ -96,7 +96,6 @@ const conversationSchema = new mongoose.Schema({
 conversationSchema.index({ user_id: 1, last_message_at: -1 });
 conversationSchema.index({ organizer_id: 1, last_message_at: -1 });
 conversationSchema.index({ event_id: 1 });
-conversationSchema.index({ event_id: 1, is_group: 1 }); // For finding group chats by event
 conversationSchema.index({ 'participants.user_id': 1 }); // For finding groups by participant
 
 // Ensure unique conversation per event per user-organizer pair (only for non-group chats)
@@ -105,10 +104,11 @@ conversationSchema.index({ event_id: 1, user_id: 1, organizer_id: 1 }, {
     partialFilterExpression: { is_group: false }
 });
 
-// Ensure one group chat per event
+// Ensure one group chat per event (this also serves as an index for finding group chats by event)
 conversationSchema.index({ event_id: 1, is_group: 1 }, { 
     unique: true,
     partialFilterExpression: { is_group: true }
+    
 });
 
 const Conversation = mongoose.model('conversation', conversationSchema, 'conversations');

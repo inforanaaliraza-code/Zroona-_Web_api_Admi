@@ -26,15 +26,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(AfterLogin)/layout.js"
     ],
-    "/(AfterLogin)/events/page": [
+    "/(AfterLogin)/user/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(AfterLogin)/events/page.js"
+      "static/chunks/app/(AfterLogin)/user/page.js"
     ],
-    "/(AfterLogin)/events/detail/[id]/page": [
+    "/(AfterLogin)/user/detail/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(AfterLogin)/events/detail/[id]/page.js"
+      "static/chunks/app/(AfterLogin)/user/detail/[id]/page.js"
     ]
   }
 }

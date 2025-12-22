@@ -18,7 +18,7 @@ import { DeleteParams, getData, patchRawData } from "../index";
     });
   };
   export const ActiveInActiveUserApi = async (payload) => {
-    return patchRawData("changeStatus", payload).then((data) => {
+    return patchRawData("user/changeStatus", payload).then((data) => {
       return data;
     });
   };

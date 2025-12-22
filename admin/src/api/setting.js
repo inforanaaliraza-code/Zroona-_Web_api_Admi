@@ -165,4 +165,42 @@ import {
       return data;
     });
   };
+
+  // ===== REFUND MANAGEMENT APIs =====
+  export const GetRefundListApi = async (payload) => {
+    return getData("admin/refund/list", payload).then((data) => {
+      return data;
+    });
+  };
+
+  export const GetRefundDetailApi = async (payload) => {
+    return getData("admin/refund/detail", payload).then((data) => {
+      return data;
+    });
+  };
+
+  export const UpdateRefundStatusApi = async (payload) => {
+    return putRawData("admin/refund/update-status", payload).then((data) => {
+      return data;
+    });
+  };
+
+  // ===== CAREER APPLICATION MANAGEMENT APIs =====
+  export const GetCareerApplicationsApi = async (payload) => {
+    return getData("admin/career/applications", payload).then((data) => {
+      return data;
+    });
+  };
+
+  export const GetCareerApplicationDetailApi = async (payload) => {
+    return getData("admin/career/application/detail", payload).then((data) => {
+      return data;
+    });
+  };
+
+  export const UpdateCareerApplicationStatusApi = async (payload) => {
+    return putRawData("admin/career/application/update-status", payload).then((data) => {
+      return data;
+    });
+  };
   

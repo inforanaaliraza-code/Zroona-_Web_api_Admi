@@ -14,6 +14,8 @@ const initSentry = () => {
     }
 
     try {
+        // HTTP integration is automatically included in Sentry v10+
+        // No need to explicitly add it unless using custom configuration
         Sentry.init({
             dsn: dsn,
             environment: process.env.NODE_ENV || 'development',
@@ -21,10 +23,7 @@ const initSentry = () => {
             // Setting this option to true will send default PII data to Sentry
             // For example, automatic IP address collection on events
             sendDefaultPii: true,
-            integrations: [
-                // Enable HTTP tracing
-                new Sentry.Integrations.Http({ tracing: true }),
-            ],
+            // HTTP tracing is enabled by default in Sentry v10+
             // Capture unhandled promise rejections
             captureUnhandledRejections: true,
             // Capture uncaught exceptions

@@ -74,22 +74,32 @@ export const OrganizerForgotPasswordApi = async (payload) => {
 	});
 };
 
-// OTP verification removed - using email verification only
-// Stub functions for backward compatibility (components may still reference these)
+// Phone OTP Login APIs (Saudi Arabia Only)
+export const SendPhoneOTPApi = async (payload) => {
+	// Send OTP to phone number
+	return postRawData("user/login/phone/send-otp", payload).then((data) => {
+		return data;
+	});
+};
+
+export const VerifyPhoneOTPApi = async (payload) => {
+	// Verify OTP and login
+	return postRawData("user/login/phone/verify-otp", payload).then((data) => {
+		return data;
+	});
+};
+
+// Backward compatibility - map to new endpoints
 export const OTPVerificationApi = async (payload, token) => {
-	console.warn("OTP verification is deprecated. Please use email-based authentication.");
-	return {
-		status: 0,
-		message: "OTP verification is no longer supported. Please use email-based authentication."
-	};
+	// Use new phone OTP verification endpoint
+	// payload should contain: { phone_number, country_code, otp }
+	return VerifyPhoneOTPApi(payload);
 };
 
 export const ResendOtpApi = async (payload) => {
-	console.warn("OTP resend is deprecated. Please use email verification resend.");
-	return {
-		status: 0,
-		message: "OTP resend is no longer supported. Please use email verification resend."
-	};
+	// Use new phone OTP send endpoint
+	// payload should contain: { phone_number, country_code }
+	return SendPhoneOTPApi(payload);
 };
 
 export const ResetPasswordApi = async (payload) => {
@@ -329,3 +339,44 @@ export const GetUserBookingsApi = async () => {
 };
 
 export const GetProfileApi = ProfileDetailApi;
+
+// ===== REFUND APIs =====
+export const RequestRefundApi = async (payload) => {
+	// Request refund for a booking
+	// payload: { book_id, refund_reason }
+	return postRawData("user/refund/request", payload).then((data) => {
+		return data;
+	});
+};
+
+export const GetRefundListApi = async (payload) => {
+	// Get user's refund requests list
+	// payload: { page, limit }
+	return getData("user/refund/list", payload).then((data) => {
+		return data;
+	});
+};
+
+export const GetRefundDetailApi = async (payload) => {
+	// Get refund request detail
+	// payload: { refund_id }
+	return getData("user/refund/detail", payload).then((data) => {
+		return data;
+	});
+};
+
+// ===== CAREER APIs =====
+export const SubmitCareerApplicationApi = async (payload) => {
+	// Submit job application
+	// payload: { first_name, last_name, email, position, cover_letter, resume_url }
+	return postRawData("user/career/apply", payload).then((data) => {
+		return data;
+	});
+};
+
+export const GetCareerPositionsApi = async () => {
+	// Get available job positions
+	return getData("user/career/positions").then((data) => {
+		return data;
+	});
+};

@@ -669,6 +669,12 @@ const adminController = {
                 return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
             }
 
+            // Ensure isActive is set (default to 1 if not present for backward compatibility)
+            if (user.isActive === undefined || user.isActive === null) {
+                user.isActive = 1;
+                await user.save();
+            }
+
             const book_events = await BookEventService.AggregateService([
                 { $match: { user_id: new mongoose.Types.ObjectId(id) } },
                 {
@@ -898,6 +904,25 @@ const adminController = {
         await organizer.save();
 
         return Response.ok(res, { isActive: organizer.isActive }, 200, resp_messages(lang).update_success);
+    },
+    changeUserStatus: async (req, res) => {
+        const { lang } = req || 'en';
+        const { userId, isActive } = req.body;
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return Response.badRequestResponse(res, resp_messages(lang).id_required);
+        }
+
+        const user = await UserService.FindOneService({ _id: userId });
+
+        if (!user) {
+            return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
+        }
+
+        user.isActive = isActive ? 1 : 2; // 1 is active, 2 is inactive
+
+        await user.save();
+
+        return Response.ok(res, { isActive: user.isActive }, 200, resp_messages(lang).update_success);
     },
     eventList: async (req, res) => {
         const { lang } = req || 'en'
@@ -2257,9 +2282,7 @@ const adminController = {
             console.error('[ADMIN-NOTIFICATIONS] Error:', error);
             return Response.serverErrorResponse(res, resp_messages(lang).internalServerError);
         }
-    }
-
-}
+    },
 
     /**
      * Get all career applications (Admin)
