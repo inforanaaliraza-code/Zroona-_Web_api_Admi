@@ -45,6 +45,8 @@ router.patch('/changeOrganizerStatus', adminController.changeOrganizerStatus);
 
 router.patch('/user/changeStatus', adminController.changeUserStatus);
 
+router.delete('/user/delete', adminController.deleteUser);
+
 router.get('/cms/detail', adminController.getCms);
 
 router.get('/eventList', adminController.eventList);

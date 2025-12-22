@@ -10,9 +10,16 @@ import { GetWalletDetailsApi, GetWithdrawalRequestsApi } from "@/api/admin/apis"
 import { toast } from "react-toastify";
 
 export default function Wallet() {
-  const [walletData, setWalletData] = useState(null);
+  // Initialize with zeros to avoid showing any dummy/null data
+  const [walletData, setWalletData] = useState({
+    total_balance: 0,
+    available_balance: 0,
+    pending_balance: 0,
+    total_earnings: 0,
+    total_withdrawals: 0
+  });
   const [withdrawalRequests, setWithdrawalRequests] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start with loading true
   const [activeTab, setActiveTab] = useState("details");
   const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -22,16 +29,51 @@ export default function Wallet() {
     fetchWithdrawalRequests();
   }, [page]);
 
+  // Refresh data when tab changes to ensure real-time data
+  useEffect(() => {
+    if (activeTab === "details") {
+      fetchWalletData();
+    } else if (activeTab === "requests") {
+      fetchWithdrawalRequests();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   const fetchWalletData = async () => {
     setLoading(true);
     try {
       const res = await GetWalletDetailsApi();
-      if (res?.status === 1 || res?.code === 200) {
-        setWalletData(res?.data || res);
+      
+      // Handle different response structures
+      let data = {};
+      if (res?.status === 1 && res?.data) {
+        data = res.data;
+      } else if (res?.code === 200 && res?.data) {
+        data = res.data;
+      } else if (res && typeof res === 'object' && !res.status && !res.code) {
+        // Direct data object
+        data = res;
       }
+      
+      // Only set real numeric values, no dummy data
+      setWalletData({
+        total_balance: typeof data.total_balance === 'number' ? data.total_balance : 0,
+        available_balance: typeof data.available_balance === 'number' ? data.available_balance : 0,
+        pending_balance: typeof data.pending_balance === 'number' ? data.pending_balance : 0,
+        total_earnings: typeof data.total_earnings === 'number' ? data.total_earnings : 0,
+        total_withdrawals: typeof data.total_withdrawals === 'number' ? data.total_withdrawals : 0
+      });
     } catch (error) {
       console.error("Error fetching wallet data:", error);
       toast.error("Failed to fetch wallet data");
+      // Set to 0 on error (real-time, no dummy data)
+      setWalletData({
+        total_balance: 0,
+        available_balance: 0,
+        pending_balance: 0,
+        total_earnings: 0,
+        total_withdrawals: 0
+      });
     } finally {
       setLoading(false);
     }
@@ -128,38 +170,46 @@ export default function Wallet() {
 
         {/* Wallet Details Tab */}
         {activeTab === "details" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Total Balance</h3>
-              <p className="text-2xl font-bold text-[#f47c0c]">
-                {walletData?.total_balance?.toLocaleString() || 0} SAR
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Available Balance</h3>
-              <p className="text-2xl font-bold text-green-600">
-                {walletData?.available_balance?.toLocaleString() || 0} SAR
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Pending Balance</h3>
-              <p className="text-2xl font-bold text-yellow-600">
-                {walletData?.pending_balance?.toLocaleString() || 0} SAR
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Total Earnings</h3>
-              <p className="text-2xl font-bold text-blue-600">
-                {walletData?.total_earnings?.toLocaleString() || 0} SAR
-              </p>
-            </div>
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-sm font-medium text-gray-600 mb-2">Total Withdrawals</h3>
-              <p className="text-2xl font-bold text-gray-600">
-                {walletData?.total_withdrawals?.toLocaleString() || 0} SAR
-              </p>
-            </div>
-          </div>
+          <>
+            {loading ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-medium text-gray-600 mb-2">Total Balance</h3>
+                  <p className="text-2xl font-bold text-[#f47c0c]">
+                    {Number(walletData?.total_balance || 0).toLocaleString()} SAR
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-medium text-gray-600 mb-2">Available Balance</h3>
+                  <p className="text-2xl font-bold text-green-600">
+                    {Number(walletData?.available_balance || 0).toLocaleString()} SAR
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-medium text-gray-600 mb-2">Pending Balance</h3>
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {Number(walletData?.pending_balance || 0).toLocaleString()} SAR
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-medium text-gray-600 mb-2">Total Earnings</h3>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {Number(walletData?.total_earnings || 0).toLocaleString()} SAR
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-sm font-medium text-gray-600 mb-2">Total Withdrawals</h3>
+                  <p className="text-2xl font-bold text-gray-600">
+                    {Number(walletData?.total_withdrawals || 0).toLocaleString()} SAR
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Withdrawal Requests Tab */}

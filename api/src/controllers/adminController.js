@@ -924,6 +924,28 @@ const adminController = {
 
         return Response.ok(res, { isActive: user.isActive }, 200, resp_messages(lang).update_success);
     },
+    deleteUser: async (req, res) => {
+        const { lang } = req || 'en';
+        try {
+            const { userId } = req.query;
+            
+            if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+                return Response.badRequestResponse(res, resp_messages(lang).id_required);
+            }
+            
+            const user = await UserService.FindOneService({ _id: userId });
+            if (!user) {
+                return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
+            }
+            
+            await UserService.FindByIdAndDeleteService(userId);
+            
+            return Response.ok(res, {}, 200, "User deleted successfully");
+        } catch (error) {
+            console.error(error);
+            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError);
+        }
+    },
     eventList: async (req, res) => {
         const { lang } = req || 'en'
         try {
@@ -2153,51 +2175,77 @@ const adminController = {
     walletDetails: async (req, res) => {
         const { lang } = req || 'en';
         try {
-            // Get all wallets and calculate totals
-            const wallets = await WalletService.FindService(1, 1000, {});
+            // Use MongoDB aggregation to get accurate sums - REAL DATA ONLY, NO DUMMY
+            // This ensures we get ALL records, not limited by pagination
             
-            let total_balance = 0;
-            let pending_balance = 0;
-            let available_balance = 0;
-            let total_withdrawals = 0;
-            let total_earnings = 0;
+            // Calculate total balance from all wallets using aggregation
+            const walletTotalResult = await WalletService.AggregateService([
+                {
+                    $group: {
+                        _id: null,
+                        total_balance: { $sum: { $ifNull: ["$total_amount", 0] } }
+                    }
+                }
+            ]);
+            const total_balance = walletTotalResult.length > 0 ? (walletTotalResult[0].total_balance || 0) : 0;
             
-            // Calculate totals from wallets
-            wallets.forEach(wallet => {
-                total_balance += wallet.total_amount || 0;
-                available_balance += wallet.total_amount || 0;
-            });
+            // Calculate pending withdrawals (type = 2, status = 0) using aggregation
+            const pendingResult = await TransactionService.AggregateService([
+                {
+                    $match: { type: 2, status: 0 }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: { $ifNull: ["$amount", 0] } }
+                    }
+                }
+            ]);
+            const pending_balance = pendingResult.length > 0 ? (pendingResult[0].total || 0) : 0;
             
-            // Get pending withdrawal requests (status = 0)
-            const pendingTransactions = await TransactionService.FindService(1, 1000, { type: 2, status: 0 });
-            pendingTransactions.forEach(transaction => {
-                pending_balance += transaction.amount || 0;
-                available_balance -= transaction.amount || 0; // Subtract pending from available
-            });
+            // Calculate completed withdrawals (type = 2, status = 1) using aggregation
+            const withdrawalsResult = await TransactionService.AggregateService([
+                {
+                    $match: { type: 2, status: 1 }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: { $ifNull: ["$amount", 0] } }
+                    }
+                }
+            ]);
+            const total_withdrawals = withdrawalsResult.length > 0 ? (withdrawalsResult[0].total || 0) : 0;
             
-            // Get completed withdrawals (status = 1)
-            const completedWithdrawals = await TransactionService.FindService(1, 1000, { type: 2, status: 1 });
-            completedWithdrawals.forEach(transaction => {
-                total_withdrawals += transaction.amount || 0;
-            });
+            // Calculate total earnings (type = 1, status = 1) using aggregation
+            const earningsResult = await TransactionService.AggregateService([
+                {
+                    $match: { type: 1, status: 1 }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: { $ifNull: ["$amount", 0] } }
+                    }
+                }
+            ]);
+            const total_earnings = earningsResult.length > 0 ? (earningsResult[0].total || 0) : 0;
             
-            // Get all earnings (type = 1, status = 1)
-            const earnings = await TransactionService.FindService(1, 1000, { type: 1, status: 1 });
-            earnings.forEach(transaction => {
-                total_earnings += transaction.amount || 0;
-            });
+            // Calculate available balance (total - pending)
+            const available_balance = Math.max(0, total_balance - pending_balance);
             
+            // Round to 2 decimal places for currency display
             const walletData = {
-                total_balance,
-                pending_balance,
-                available_balance: Math.max(0, available_balance),
-                total_withdrawals,
-                total_earnings
+                total_balance: Math.round((Number(total_balance) + Number.EPSILON) * 100) / 100,
+                pending_balance: Math.round((Number(pending_balance) + Number.EPSILON) * 100) / 100,
+                available_balance: Math.round((Number(available_balance) + Number.EPSILON) * 100) / 100,
+                total_withdrawals: Math.round((Number(total_withdrawals) + Number.EPSILON) * 100) / 100,
+                total_earnings: Math.round((Number(total_earnings) + Number.EPSILON) * 100) / 100
             };
             
             return Response.ok(res, walletData, 200, resp_messages(lang).fetched_data);
         } catch (error) {
-            console.error(error);
+            console.error("Wallet Details Error:", error);
             return Response.serverErrorResponse(res, resp_messages(lang).internalServerError);
         }
     },

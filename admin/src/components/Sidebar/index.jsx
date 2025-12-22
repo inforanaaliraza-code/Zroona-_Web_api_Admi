@@ -19,7 +19,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>
       <aside
-        className={`fixed overflow-hidden left-0 top-0 z-[9999] px-6 flex h-screen w-72.5 flex-col bg-boxdark bg-[url('/assets/images/menu/menu-bg.png')] bg-cover bg-center duration-300 ease-linear dark:bg-boxdark lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed overflow-hidden left-0 top-0 z-[9999] px-6 flex h-screen w-72.5 flex-col bg-gradient-to-br from-brand-gray-purple-2 via-brand-pastel-gray-purple-1 to-brand-gray-purple-3 shadow-elevated duration-300 ease-linear lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
       >
         {/* Sidebar Header */}

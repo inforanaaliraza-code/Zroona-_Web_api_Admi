@@ -36,7 +36,7 @@ app.enable("trust proxy");
 
 // CORS configuration
 const corsOptions = {
-	origin: "*", // Allow all origins
+	origin: true, // Allow all origins (reflects the request origin)
 	methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 	allowedHeaders: [
 		"Content-Type",
