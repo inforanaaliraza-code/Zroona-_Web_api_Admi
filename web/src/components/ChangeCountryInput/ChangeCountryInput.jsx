@@ -9,6 +9,7 @@ function ChangeCountryInput(props) {
       <PhoneInput
         country={"sa"}
         countryCodeEditable={false}
+        onlyCountries={['sa']}
         inputProps={{
           name: props.mobileNumber,
           placeholder: "Mobile No.",
@@ -16,10 +17,10 @@ function ChangeCountryInput(props) {
           style: { textAlign: 'right' }
         }}
         disabled={props.disabled}
-        enableSearch
-        disableDropdown={false}
+        enableSearch={false}
+        disableDropdown={true}
         containerStyle={{ width: "100%" }}
-        dropdownStyle={{ maxHeight: "200px", overflow: "auto" }}
+        dropdownStyle={{ display: 'none' }}
         value={
           props.value
             ? props.value

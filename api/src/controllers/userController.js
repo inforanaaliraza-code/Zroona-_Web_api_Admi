@@ -2924,50 +2924,64 @@ const UserController = {
 			const daftraSubdomain = process.env.DAFTRA_SUBDOMAIN;
 			const daftraApiKey = process.env.DAFTRA_API_KEY;
 			
+			// Generate receipt using Daftra Receipts API
+			// Use default credentials if not in env (tdb subdomain and provided API key)
+			const daftraSubdomain = process.env.DAFTRA_SUBDOMAIN || "tdb";
+			const daftraApiKey = process.env.DAFTRA_API_KEY || "a287194bdf648c16341ecb843cea1fbae7392962";
+			
 			if (daftraSubdomain && daftraApiKey && daftraSubdomain.trim() !== "" && daftraApiKey.trim() !== "") {
 				try {
-					console.log("[INVOICE] Attempting to generate invoice via Daftra API");
-					const daftraResponse = await DaftraService.generateEventInvoice(
+					console.log("[RECEIPT] Attempting to generate receipt via Daftra Receipts API");
+					const daftraResponse = await DaftraService.generateEventReceipt(
 						bookingDetails,
 						event,
 						user,
-						organizer
+						organizer,
+						{
+							subdomain: daftraSubdomain,
+							apiKey: daftraApiKey
+						}
 					);
 
 					if (daftraResponse && daftraResponse.id) {
-						// Save invoice ID to booking
-						updatedBooking.invoice_id = daftraResponse.id;
+						// Save receipt ID and URL to booking
+						updatedBooking.invoice_id = daftraResponse.id; // Keep invoice_id for backward compatibility
 						updatedBooking.invoice_url =
-							daftraResponse.invoice_pdf_url || daftraResponse.pdf_url || "";
+							daftraResponse.receipt_pdf_url || 
+							daftraResponse.pdf_url || 
+							daftraResponse.invoice_pdf_url || 
+							`https://${daftraSubdomain}.daftra.com/receipts/${daftraResponse.id}/pdf`;
 						await updatedBooking.save();
 
 						console.log(
-							"[INVOICE] Invoice generated successfully:",
-							daftraResponse.id
+							"[RECEIPT] Receipt generated successfully:",
+							daftraResponse.id,
+							"PDF URL:",
+							updatedBooking.invoice_url
 						);
 					} else {
-						console.warn("[INVOICE] Daftra response received but no invoice ID found");
+						console.warn("[RECEIPT] Daftra response received but no receipt ID found");
 					}
-				} catch (invoiceError) {
+				} catch (receiptError) {
 					// Log detailed error information
 					console.error(
-						"[INVOICE] Error generating invoice:",
-						invoiceError.message
+						"[RECEIPT] Error generating receipt:",
+						receiptError.message
 					);
 					
 					// Log additional error details if available
-					if (invoiceError.response) {
-						console.error("[INVOICE] Error status:", invoiceError.response.status);
-						console.error("[INVOICE] Error data:", JSON.stringify(invoiceError.response.data));
+					if (receiptError.response) {
+						console.error("[RECEIPT] Error status:", receiptError.response.status);
+						console.error("[RECEIPT] Error data:", JSON.stringify(receiptError.response.data));
 					}
 					
-					// Continue with the process even if invoice generation fails
-					// Payment is still successful, invoice can be generated later
-					console.log("[INVOICE] Payment processed successfully. Invoice generation failed but booking is confirmed.");
+					// Continue with the process even if receipt generation fails
+					// Payment is still successful, receipt can be generated later
+					console.log("[RECEIPT] Payment processed successfully. Receipt generation failed but booking is confirmed.");
 				}
 			} else {
-				console.warn("[INVOICE] Daftra API credentials not configured. Skipping invoice generation.");
-				console.warn("[INVOICE] To enable invoice generation, set DAFTRA_SUBDOMAIN and DAFTRA_API_KEY in environment variables.");
+				console.warn("[RECEIPT] Daftra API credentials not configured. Skipping receipt generation.");
+				console.warn("[RECEIPT] To enable receipt generation, set DAFTRA_SUBDOMAIN and DAFTRA_API_KEY in environment variables.");
 			}
 
 			// Add user to group chat if event is approved and payment is successful
