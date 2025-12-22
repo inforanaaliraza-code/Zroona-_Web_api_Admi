@@ -17,26 +17,64 @@ const MessageController = {
             const userId = req.userId;
             const role = req.role; // 1=User, 2=Organizer
             const { page = 1, limit = 20 } = req.query;
+            const mongoose = require('mongoose');
 
             // For one-on-one conversations, use role-based query
             const oneOnOneQuery = role === 1 
                 ? { user_id: userId, is_group: false, status: 'active' }
                 : { organizer_id: userId, is_group: false, status: 'active' };
 
-            // For group chats, find conversations where user is a participant
-            const groupChatQuery = {
-                is_group: true,
-                status: 'active',
-            
-                'participants.user_id': userId,
-                'participants.left_at': null // Only active participants
-            };
+            // Get one-on-one conversations
+            const oneOnOneConversations = await ConversationService.FindService(oneOnOneQuery, parseInt(page), parseInt(limit));
 
-            // Get both one-on-one and group conversations
-            const [oneOnOneConversations, groupConversations] = await Promise.all([
-                ConversationService.FindService(oneOnOneQuery, parseInt(page), parseInt(limit)),
-                ConversationService.FindService(groupChatQuery, parseInt(page), parseInt(limit))
-            ]);
+            // For group chats - different logic for guests vs organizers
+            let groupConversations = [];
+            
+            if (role === 1) {
+                // GUEST: Only show group chats where booking payment_status = 1 (paid)
+                // Use aggregation to join with book_event and filter by payment_status
+                const BookEvent = require('../models/eventBookModel');
+                
+                // First, get all group chats where user is a participant
+                const allGroupChats = await ConversationService.FindService({
+                    is_group: true,
+                    status: 'active',
+                    'participants.user_id': userId,
+                    'participants.left_at': null
+                }, 1, 1000); // Get all to filter properly
+                
+                // Get event IDs from group chats
+                const eventIds = allGroupChats.map(chat => chat.event_id?._id || chat.event_id).filter(Boolean);
+                
+                if (eventIds.length > 0) {
+                    // Find paid bookings for these events by this user
+                    const paidBookings = await BookEvent.find({
+                        user_id: new mongoose.Types.ObjectId(userId),
+                        event_id: { $in: eventIds },
+                        payment_status: 1, // Only paid bookings
+                        book_status: { $in: [1, 2] } // Pending or Confirmed (not cancelled/rejected)
+                    }).select('event_id').lean();
+                    
+                    // Create set of event IDs with paid bookings
+                    const paidEventIds = new Set(
+                        paidBookings.map(booking => booking.event_id?.toString())
+                    );
+                    
+                    // Filter group chats to only those with paid bookings
+                    groupConversations = allGroupChats.filter(chat => {
+                        const eventId = (chat.event_id?._id || chat.event_id)?.toString();
+                        return paidEventIds.has(eventId);
+                    });
+                }
+            } else {
+                // ORGANIZER: Show all group chats (no payment filter)
+                const groupChatQuery = {
+                    is_group: true,
+                    status: 'active',
+                    organizer_id: userId
+                };
+                groupConversations = await ConversationService.FindService(groupChatQuery, parseInt(page), parseInt(limit));
+            }
       
             // Combine and sort by last_message_at
             const allConversations = [...oneOnOneConversations, ...groupConversations]
@@ -49,7 +87,18 @@ const MessageController = {
 
             // Get total count
             const oneOnOneTotal = await ConversationService.CountService(oneOnOneQuery);
-            const groupTotal = await ConversationService.CountService(groupChatQuery);
+            let groupTotal;
+            if (role === 1) {
+                // For guests, count only paid group chats
+                groupTotal = groupConversations.length;
+            } else {
+                // For organizers, count all group chats
+                groupTotal = await ConversationService.CountService({
+                    is_group: true,
+                    status: 'active',
+                    organizer_id: userId
+                });
+            }
             const total = oneOnOneTotal + groupTotal;
 
             return Response.ok(res, {
@@ -114,9 +163,37 @@ const MessageController = {
                     );
                 }
 
-                hasAccess = conversation.participants.some(
+                // Check if user is organizer (organizers have full access)
+                const isOrganizer = conversation.organizer_id && conversation.organizer_id.toString() === userId.toString();
+                
+                // Check if user is a participant
+                const isParticipant = conversation.participants.some(
                     p => p && p.user_id && p.user_id.toString() === userId.toString() && !p.left_at
-                ) || (conversation.organizer_id && conversation.organizer_id.toString() === userId.toString());
+                );
+
+                if (role === 1 && isParticipant && !isOrganizer) {
+                    // GUEST: Additional check - must have paid booking for this event
+                    const BookEvent = require('../models/eventBookModel');
+                    const eventId = conversation.event_id?._id || conversation.event_id;
+                    
+                    if (eventId) {
+                        const paidBooking = await BookEvent.findOne({
+                            user_id: new mongoose.Types.ObjectId(userId),
+                            event_id: eventId,
+                            payment_status: 1, // Paid
+                            book_status: { $in: [1, 2] } // Pending or Confirmed
+                        });
+                        
+                        hasAccess = !!paidBooking;
+                    } else {
+                        hasAccess = false;
+                    }
+                } else if (role === 2 || isOrganizer) {
+                    // ORGANIZER: Full access to their group chats
+                    hasAccess = true;
+                } else {
+                    hasAccess = false;
+                }
             } else {
                 // For one-on-one conversations, use role-based check
                 // Add null checks
