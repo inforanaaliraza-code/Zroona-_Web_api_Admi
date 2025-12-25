@@ -1,4 +1,4 @@
-// File: E:\chat\zuro\web & api & Admin\admin\src\app\layout.js
+// File: C:\Users\AL-REHMAN\Downloads\Zroona-_Web_api_Admi-main\Zroona-_Web_api_Admi-main\admin\src\app\layout.js
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

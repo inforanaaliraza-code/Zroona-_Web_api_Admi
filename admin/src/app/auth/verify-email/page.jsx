@@ -262,7 +262,7 @@ function VerifyEmailContent() {
                     {/* Status Icon */}
                     <div className="flex justify-center mb-6">
                         {status === "verifying" && (
-                            <div className="w-20 h-20 border-4 border-[#f47c0c] border-t-transparent rounded-full animate-spin" />
+                            <div className="w-20 h-20 border-4 border-[#a797cc] border-t-transparent rounded-full animate-spin" />
                         )}
 
                         {status === "success" && (
@@ -299,7 +299,7 @@ function VerifyEmailContent() {
                         <div className="space-y-3">
                             <button
                                 onClick={() => router.push("/")}
-                                className="w-full py-3 px-4 bg-[#f47c0c] hover:bg-[#d66a0a] text-white font-semibold rounded-lg transition-colors"
+                                className="w-full py-3 px-4 bg-[#a797cc] hover:bg-[#a08ec8] text-white font-semibold rounded-lg transition-colors"
                             >
                                 Go to Homepage
                             </button>
@@ -327,7 +327,7 @@ function VerifyEmailContent() {
                     <div className="mt-8 text-center">
                         <p className="text-sm text-gray-500">
                             Need help?{" "}
-                            <a href="mailto:infozuroona@gmail.com" className="text-[#f47c0c] hover:text-[#d66a0a] font-semibold">
+                            <a href="mailto:infozuroona@gmail.com" className="text-[#a797cc] hover:text-[#a08ec8] font-semibold">
                                 Contact Support
                             </a>
                         </p>
@@ -354,7 +354,7 @@ export default function VerifyEmailPage() {
                             />
                         </div>
                         <div className="flex justify-center mb-6">
-                            <div className="w-20 h-20 border-4 border-[#f47c0c] border-t-transparent rounded-full animate-spin" />
+                            <div className="w-20 h-20 border-4 border-[#a797cc] border-t-transparent rounded-full animate-spin" />
                         </div>
                         <h1 className="text-2xl font-bold text-center text-gray-900 mb-4">
                             Loading...

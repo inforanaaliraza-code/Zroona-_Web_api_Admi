@@ -239,7 +239,7 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 			}
 
 			// Upload to server
-			const resp = await UploadFileApi({ file: fileToUpload, dirName: "Jeena" });
+			const resp = await UploadFileApi({ file: fileToUpload, dirName: "Zuroona" });
 			
 			if (resp?.status === 1 && resp?.data?.location) {
 				const imageUrl = resp.data.location;

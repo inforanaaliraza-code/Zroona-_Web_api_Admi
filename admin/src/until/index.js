@@ -343,7 +343,7 @@ export const menuGroups = [
     menuItems: [
       {
         icon: "/assets/images/menu/event-org.png",
-        label: "Manage Event Organizer",
+        label: "Manage Hosts",
         route: "/organizer",
       },
       {
@@ -381,6 +381,11 @@ export const menuGroups = [
         icon: "/assets/images/menu/withdrawal.png",
         label: "Host Withdrawal Requests",
         route: "/withdrawal-requests",
+      },
+      {
+        icon: "/assets/images/menu/wallet.png",
+        label: "Guest Invoices",
+        route: "/guest-invoices",
       },
     ],
   },

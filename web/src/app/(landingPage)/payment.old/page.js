@@ -58,7 +58,7 @@ export default function PaymentPage() {
           },
           publishable_api_key:
             "pk_test_opk43Fh4b4rrdgR32TTUnKNe3Hd72VP35ZTHDn32",
-          callback_url: `https://jeena-website.vercel.app/myEvents?id=${BookingListId}`,
+          callback_url: `https://zuroona-website.vercel.app/myEvents?id=${BookingListId}`,
           methods: ["creditcard"],
           fixed_width: false,
         });
@@ -80,7 +80,7 @@ export default function PaymentPage() {
   return (
     <>
       <Breadcrumbs items={breadcrumbItems} />
-      <div className="bg-[#FFF0F1] py-10">
+      <div className="bg-white py-10">
         <div className="mx-auto px-4 md:px-8 xl:px-28">
           <h1 className="text-4xl font-bold mb-6">{t("breadcrumb.tab12")}</h1>
           {loadingDetail ? (

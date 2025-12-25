@@ -115,7 +115,7 @@ export default function AdminManagement() {
           <div className="w-full flex lg:justify-end gap-3 items-center mt-5 lg:mt-0">
             <button
               onClick={handleAdd}
-              className="flex items-center gap-2 bg-[#f47c0c] text-white px-4 py-2 rounded hover:bg-[#e66b00] transition"
+              className="flex items-center gap-2 bg-[#a797cc] text-white px-4 py-2 rounded hover:bg-[#a08ec8] transition"
             >
               <FaPlus /> Add Admin
             </button>
@@ -180,7 +180,7 @@ export default function AdminManagement() {
                       <td className="px-2 py-2">{admin.email || "N/A"}</td>
                       <td className="px-2 py-2">
                         <span className={`text-sm font-medium ${
-                          admin.is_main ? "text-[#f47c0c]" : "text-gray-600"
+                          admin.is_main ? "text-[#a797cc]" : "text-gray-600"
                         }`}>
                           {admin.is_main ? "Main Admin" : "Admin"}
                         </span>
@@ -189,7 +189,7 @@ export default function AdminManagement() {
                         <div className="flex gap-2 justify-center items-center">
                           <button
                             onClick={() => handleEdit(admin)}
-                            className="text-[#f47c0c] hover:text-orange-600"
+                            className="text-[#a797cc] hover:text-[#a08ec8]"
                             title="Edit"
                           >
                             <FaEdit size={18} />

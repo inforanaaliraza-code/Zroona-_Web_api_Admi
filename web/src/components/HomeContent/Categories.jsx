@@ -13,25 +13,39 @@ export default function Categories() {
     const currentCategories = eventCategories[activeSection][currentLanguage];
 
     return (
-        <section className="relative py-24 bg-gray-50">
-            <div className="relative px-4 mx-auto md:px-8 xl:px-28">
+        <section className="relative pt-40 pb-24 bg-gray-50 overflow-hidden">
+            {/* Background decorative elements */}
+            <div className="absolute inset-0 opacity-5">
+                <div className="absolute top-20 right-20 w-32 h-32">
+                    <svg viewBox="0 0 100 100" className="w-full h-full text-[#a797cc]">
+                        <path d="M10 50 L40 20 L70 50 L40 80 Z" fill="currentColor" opacity="0.3"/>
+                        <circle cx="50" cy="50" r="3" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div className="absolute bottom-32 left-16 w-24 h-24 opacity-30">
+                    <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-[#a797cc]">
+                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 2"/>
+                    </svg>
+                </div>
+            </div>
+            <div className="relative px-4 mx-auto md:px-8 xl:px-28 max-w-7xl">
                 {/* Modern Section Header */}
-                <div className="flex flex-col items-center mb-16 text-center">
+                <div className="flex flex-col items-center justify-center mb-16 text-center w-full">
                     <div className="inline-flex items-center gap-2 mb-3 text-[#a797cc] font-medium">
                         <span className="w-8 h-[2px] bg-[#a797cc]"></span>
                         <span>{t('home.discover')}</span>
                         <span className="w-8 h-[2px] bg-[#a797cc]"></span>
                     </div>
-                    <h2 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl">
+                    <h2 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl text-center">
                         {t('home.tab5')}
                     </h2>
                 </div>
                 {/* Categories Grid */}
-                <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6">
+                <div className="flex flex-wrap justify-center gap-6">
                     {currentCategories.map((category, index) => (
                         <div 
                             key={index}
-                            className="group"
+                            className="group w-[calc(50%-12px)] sm:w-[calc(33.333%-16px)] md:w-[calc(33.333%-16px)] lg:w-[180px]"
                         >
                             <div className="relative h-[200px] rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-500 overflow-hidden">
                                 {/* Card content */}

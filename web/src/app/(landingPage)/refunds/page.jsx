@@ -95,7 +95,7 @@ export default function RefundsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <Breadcrumbs items={breadcrumbItems} />
       
       <div className="container px-4 py-8 mx-auto md:px-8 lg:px-28">

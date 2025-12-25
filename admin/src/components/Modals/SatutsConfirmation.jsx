@@ -12,7 +12,7 @@ const StatusConfirmation = ({ isOpen, onClose, onConfirm, organizer }) => {
                 </p>
                 <div className="flex justify-center  space-x-3 mt-5">
                     <button onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg text-gray-900">Cancel</button>
-                    <button onClick={onConfirm} className="px-4 py-2 bg-[#f47c0c] text-white rounded-lg">{organizer.is_Active ? 'Inactive' : 'Active'}</button>
+                    <button onClick={onConfirm} className="px-4 py-2 bg-[#a797cc] text-white rounded-lg hover:bg-[#a08ec8] transition">{organizer.is_Active ? 'Inactive' : 'Active'}</button>
                 </div>
             </div>
         </div>

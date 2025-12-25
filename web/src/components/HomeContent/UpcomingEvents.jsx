@@ -10,11 +10,22 @@ import useAuthStore from "@/store/useAuthStore";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { useDispatch, useSelector } from "react-redux";
+import { getCategoryEventList } from "@/redux/slices/CategoryEventList";
 
 export default function UpcomingEvents() {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
+	const dispatch = useDispatch();
 	const [loading, setLoading] = useState(false);
 	const [filteredEvents, setFilteredEvents] = useState([]);
+
+	const { CategoryEventList } = useSelector(
+		(state) => state.CategoryEventData
+	);
+
+	useEffect(() => {
+		dispatch(getCategoryEventList({ page: 1, limit: 20 }));
+	}, [dispatch, i18n.language]);
 
 
 	const params = {
@@ -149,6 +160,7 @@ export default function UpcomingEvents() {
 								<EventCard
 									event={event}
 									showAttendees={true}
+									categories={CategoryEventList || []}
 								/>
 											</Link>
 										</div>

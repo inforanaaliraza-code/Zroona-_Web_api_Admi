@@ -71,7 +71,7 @@ const HostNavbar = () => {
   return (
     <>
       <nav 
-        className="bg-white border-b border-gray-200 shadow-sm z-[95]"
+        className="bg-[#b0a0df] border-b border-[#b0a0df]/30 shadow-sm z-[95]"
         style={{ 
           position: 'fixed',
           top: `${headerHeight}px`,
@@ -80,7 +80,7 @@ const HostNavbar = () => {
           width: '100%',
           willChange: 'transform', 
           transform: 'translateZ(0)',
-          backgroundColor: '#fff',
+          backgroundColor: '#b0a0df',
           zIndex: 95
         }}
       >
@@ -96,8 +96,8 @@ const HostNavbar = () => {
                   href={item.href}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive(item.href)
-                      ? "bg-[#a797cc] text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-white/20 text-white"
+                      : "text-white/90 hover:bg-white/10"
                   }`}
                 >
                   <Icon icon={item.icon} className="h-4 w-4" />
@@ -110,7 +110,7 @@ const HostNavbar = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100"
+            className="md:hidden p-2 rounded-lg text-white hover:bg-white/10"
           >
             <Icon icon={showMobileMenu ? "lucide:x" : "lucide:menu"} className="h-6 w-6" />
           </button>
@@ -118,7 +118,7 @@ const HostNavbar = () => {
 
         {/* Mobile Navigation */}
         {showMobileMenu && (
-          <div className="md:hidden py-4 border-t border-gray-200">
+          <div className="md:hidden py-4 border-t border-white/20">
             <div className="space-y-2">
               {navItems.map((item) => (
                 <Link
@@ -127,8 +127,8 @@ const HostNavbar = () => {
                   onClick={() => setShowMobileMenu(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                     isActive(item.href)
-                      ? "bg-[#a797cc] text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-white/20 text-white"
+                      : "text-white/90 hover:bg-white/10"
                   }`}
                 >
                   <Icon icon={item.icon} className="h-5 w-5" />

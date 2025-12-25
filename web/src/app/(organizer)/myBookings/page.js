@@ -236,7 +236,7 @@ export default function MyBookings() {
   return (
     <>
       <Breadcrumbs items={breadcrumbItems} />
-      <section className="bg-gray-50 min-h-screen py-16">
+      <section className="bg-white min-h-screen py-16">
         <div className="mx-auto px-4 md:px-8 xl:px-28">
           <div className="mx-auto">
             <div className="mb-8">

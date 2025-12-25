@@ -8,18 +8,12 @@ import Image from "next/image";
 import { FaFileExcel, FaPrint } from "react-icons/fa";
 import { GetWalletDetailsApi, GetWithdrawalRequestsApi } from "@/api/admin/apis";
 import { toast } from "react-toastify";
+import WalletStatsDashboard from "@/components/Wallet/WalletStatsDashboard";
 
 export default function Wallet() {
-  // Initialize with zeros to avoid showing any dummy/null data
-  const [walletData, setWalletData] = useState({
-    total_balance: 0,
-    available_balance: 0,
-    pending_balance: 0,
-    total_earnings: 0,
-    total_withdrawals: 0
-  });
+  const [walletData, setWalletData] = useState(null);
   const [withdrawalRequests, setWithdrawalRequests] = useState([]);
-  const [loading, setLoading] = useState(true); // Start with loading true
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -29,51 +23,16 @@ export default function Wallet() {
     fetchWithdrawalRequests();
   }, [page]);
 
-  // Refresh data when tab changes to ensure real-time data
-  useEffect(() => {
-    if (activeTab === "details") {
-      fetchWalletData();
-    } else if (activeTab === "requests") {
-      fetchWithdrawalRequests();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
-
   const fetchWalletData = async () => {
     setLoading(true);
     try {
       const res = await GetWalletDetailsApi();
-      
-      // Handle different response structures
-      let data = {};
-      if (res?.status === 1 && res?.data) {
-        data = res.data;
-      } else if (res?.code === 200 && res?.data) {
-        data = res.data;
-      } else if (res && typeof res === 'object' && !res.status && !res.code) {
-        // Direct data object
-        data = res;
+      if (res?.status === 1 || res?.code === 200) {
+        setWalletData(res?.data || res);
       }
-      
-      // Only set real numeric values, no dummy data
-      setWalletData({
-        total_balance: typeof data.total_balance === 'number' ? data.total_balance : 0,
-        available_balance: typeof data.available_balance === 'number' ? data.available_balance : 0,
-        pending_balance: typeof data.pending_balance === 'number' ? data.pending_balance : 0,
-        total_earnings: typeof data.total_earnings === 'number' ? data.total_earnings : 0,
-        total_withdrawals: typeof data.total_withdrawals === 'number' ? data.total_withdrawals : 0
-      });
     } catch (error) {
       console.error("Error fetching wallet data:", error);
       toast.error("Failed to fetch wallet data");
-      // Set to 0 on error (real-time, no dummy data)
-      setWalletData({
-        total_balance: 0,
-        available_balance: 0,
-        pending_balance: 0,
-        total_earnings: 0,
-        total_withdrawals: 0
-      });
     } finally {
       setLoading(false);
     }
@@ -118,10 +77,19 @@ export default function Wallet() {
 
   return (
     <DefaultLayout>
-      <div>
+      <div className="container mx-auto px-4 py-8 animate-fade-in">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Wallet Management</h1>
+        </div>
+
+        {/* Statistics Dashboard */}
+        <WalletStatsDashboard />
+
+        <div className="mt-8">
         <div className="flex flex-wrap justify-between py-5">
           <div className="flex lg:w-[40%] items-end mb-4 sm:mb-0">
-            <h1 className="text-xl font-bold text-black">Wallet Management</h1>
+            <h2 className="text-xl font-bold text-black">Wallet Details & Withdrawals</h2>
           </div>
 
           <div className="w-full flex lg:justify-end gap-3 items-center mt-5 lg:mt-0">
@@ -150,8 +118,8 @@ export default function Wallet() {
             onClick={() => setActiveTab("details")}
             className={`px-4 py-3 text-sm font-medium rounded-lg ${
               activeTab === "details"
-                ? "bg-[#f47c0c] text-white"
-                : "bg-white text-[#f47c0c] border-2 border-[#f47c0c]"
+                ? "bg-[#a797cc] text-white"
+                : "bg-white text-[#a797cc] border-2 border-[#a797cc]"
             }`}
           >
             Wallet Details
@@ -160,8 +128,8 @@ export default function Wallet() {
             onClick={() => setActiveTab("requests")}
             className={`px-4 py-3 text-sm font-medium rounded-lg ${
               activeTab === "requests"
-                ? "bg-[#f47c0c] text-white"
-                : "bg-white text-[#f47c0c] border-2 border-[#f47c0c]"
+                ? "bg-[#a797cc] text-white"
+                : "bg-white text-[#a797cc] border-2 border-[#a797cc]"
             }`}
           >
             Withdrawal Requests
@@ -170,66 +138,105 @@ export default function Wallet() {
 
         {/* Wallet Details Tab */}
         {activeTab === "details" && (
-          <>
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader />
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 animate-fade-in">
+            <h3 className="text-lg font-semibold text-gray-800 mb-6">Quick Overview</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-[#a797cc]/10 to-[#a797cc]/5 rounded-lg shadow-sm p-6 border border-[#a797cc]/20">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600">Total Balance</h3>
+                  <div className="w-8 h-8 bg-[#a797cc]/20 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-[#a797cc]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-[#a797cc]">
+                  {walletData?.total_balance?.toLocaleString() || 0} SAR
+                </p>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Total Balance</h3>
-                  <p className="text-2xl font-bold text-[#f47c0c]">
-                    {Number(walletData?.total_balance || 0).toLocaleString()} SAR
-                  </p>
+              <div className="bg-gradient-to-br from-green-100/80 to-green-50 rounded-lg shadow-sm p-6 border border-green-200/50">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600">Available Balance</h3>
+                  <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Available Balance</h3>
-                  <p className="text-2xl font-bold text-green-600">
-                    {Number(walletData?.available_balance || 0).toLocaleString()} SAR
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Pending Balance</h3>
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {Number(walletData?.pending_balance || 0).toLocaleString()} SAR
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Total Earnings</h3>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {Number(walletData?.total_earnings || 0).toLocaleString()} SAR
-                  </p>
-                </div>
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-sm font-medium text-gray-600 mb-2">Total Withdrawals</h3>
-                  <p className="text-2xl font-bold text-gray-600">
-                    {Number(walletData?.total_withdrawals || 0).toLocaleString()} SAR
-                  </p>
-                </div>
+                <p className="text-3xl font-bold text-green-600">
+                  {walletData?.available_balance?.toLocaleString() || 0} SAR
+                </p>
               </div>
-            )}
-          </>
+              <div className="bg-gradient-to-br from-yellow-100/80 to-yellow-50 rounded-lg shadow-sm p-6 border border-yellow-200/50">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600">Pending Balance</h3>
+                  <div className="w-8 h-8 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-yellow-600">
+                  {walletData?.pending_balance?.toLocaleString() || 0} SAR
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-100/80 to-blue-50 rounded-lg shadow-sm p-6 border border-blue-200/50">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600">Total Earnings</h3>
+                  <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-blue-600">
+                  {walletData?.total_earnings?.toLocaleString() || 0} SAR
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-gray-100 to-gray-50 rounded-lg shadow-sm p-6 border border-gray-200/50">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-600">Total Withdrawals</h3>
+                  <div className="w-8 h-8 bg-gray-400/20 rounded-full flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-gray-600">
+                  {walletData?.total_withdrawals?.toLocaleString() || 0} SAR
+                </p>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Withdrawal Requests Tab */}
         {activeTab === "requests" && (
-          <div className="bg-white rounded-lg shadow p-5">
+          <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 animate-fade-in">
+            <div className="mb-4">
+              <p className="text-gray-600 text-sm">
+                For detailed withdrawal management, visit the{" "}
+                <a href="/withdrawal-requests" className="text-[#a797cc] hover:underline font-semibold">
+                  Withdrawal Requests
+                </a>{" "}
+                page.
+              </p>
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full bg-white rounded-lg">
-                <thead className="bg-[#f3f7ff]">
-                  <tr className="text-sm">
-                    <th className="px-4 py-4 text-left font-base text-gray-600">Request ID</th>
-                    <th className="px-4 py-4 text-left font-base text-gray-600">Host</th>
-                    <th className="px-4 py-4 text-left font-base text-gray-600">Amount</th>
-                    <th className="px-4 py-4 text-left font-base text-gray-600">Date</th>
-                    <th className="px-4 py-4 text-left font-base text-gray-600">Status</th>
+                <thead className="bg-[#f3f7ff] border-b border-gray-200">
+                  <tr className="text-sm text-gray-600 uppercase">
+                    <th className="px-4 py-3 text-left font-semibold">Request ID</th>
+                    <th className="px-4 py-3 text-left font-semibold">Host</th>
+                    <th className="px-4 py-3 text-left font-semibold">Amount</th>
+                    <th className="px-4 py-3 text-left font-semibold">Date</th>
+                    <th className="px-4 py-3 text-left font-semibold">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={5} className="py-3">
+                      <td colSpan={5} className="py-10 text-center">
                         <Loader />
                       </td>
                     </tr>
@@ -237,19 +244,21 @@ export default function Wallet() {
                     withdrawalRequests.map((request) => (
                       <tr
                         key={request._id}
-                        className="border-b last:border-0 text-sm font-medium text-black"
+                        className="border-b border-gray-100 last:border-0 text-sm text-gray-800 hover:bg-gray-50 transition-colors duration-150"
                       >
-                        <td className="px-2 py-2">{request._id}</td>
-                        <td className="px-2 py-2">{request.host_name}</td>
-                        <td className="px-2 py-2">{request.amount} SAR</td>
-                        <td className="px-2 py-2">
+                        <td className="px-4 py-3 font-mono text-xs">{request._id.substring(0, 12)}...</td>
+                        <td className="px-4 py-3 font-semibold">{request.host_name || 'N/A'}</td>
+                        <td className="px-4 py-3 font-semibold text-[#a797cc]">{request.amount} SAR</td>
+                        <td className="px-4 py-3 text-gray-600">
                           {new Date(request.created_at).toLocaleDateString()}
                         </td>
-                        <td className="px-2 py-2">
-                          <span className={`text-sm font-medium ${
-                            request.status === "pending" || request.status === 0 ? "text-yellow-500" :
-                            request.status === "approved" || request.status === 1 ? "text-green-500" :
-                            "text-red-500"
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                            request.status === "pending" || request.status === 0 
+                              ? "bg-yellow-100 text-yellow-700" 
+                              : request.status === "approved" || request.status === 1 
+                              ? "bg-green-100 text-green-700" 
+                              : "bg-red-100 text-red-700"
                           }`}>
                             {(() => {
                               const status = request.status;
@@ -263,7 +272,10 @@ export default function Wallet() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-3 text-center">
+                      <td colSpan={5} className="py-10 text-center text-gray-500">
+                        <svg className="w-10 h-10 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
                         No Withdrawal Requests Available
                       </td>
                     </tr>
@@ -273,15 +285,18 @@ export default function Wallet() {
             </div>
 
             {withdrawalRequests.length > 0 && (
-              <Paginations
-                handlePage={setPage}
-                page={page}
-                total={withdrawalRequests.length}
-                itemsPerPage={itemsPerPage}
-              />
+              <div className="mt-6">
+                <Paginations
+                  handlePage={setPage}
+                  page={page}
+                  total={withdrawalRequests.length}
+                  itemsPerPage={itemsPerPage}
+                />
+              </div>
             )}
           </div>
         )}
+        </div>
       </div>
     </DefaultLayout>
   );

@@ -1,0 +1,94 @@
+{
+  "sorted_middleware": [],
+  "middleware": {
+    "/": {
+      "files": [
+        "server/edge/chunks/ssr/_8ffe42._.js",
+        "server/edge/chunks/ssr/src_e4a561._.js",
+        "server/edge/chunks/ssr/edge-wrapper_53ffa6.js",
+        "server/edge/chunks/ssr/edge-wrapper_c6e538.js"
+      ],
+      "name": "middleware",
+      "page": "/",
+      "matchers": [
+        {
+          "locale": false,
+          "originalSource": "/organizer/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/about-us"
+        },
+        {
+          "locale": false,
+          "originalSource": "/testimonial/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/blog/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/gallery/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/careers/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/enquiry"
+        },
+        {
+          "locale": false,
+          "originalSource": "/contact"
+        },
+        {
+          "locale": false,
+          "originalSource": "/cms"
+        },
+        {
+          "locale": false,
+          "originalSource": "/change-password"
+        },
+        {
+          "locale": false,
+          "originalSource": "/user/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/events/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/setting/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/admin-management/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/wallet/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/withdrawal-requests/:path*"
+        },
+        {
+          "locale": false,
+          "originalSource": "/guest-invoices/:path*"
+        }
+      ],
+      "env": {
+        "__NEXT_BUILD_ID": "development",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "4ogNpyPPyFPerV9x3IpJaFExFR/AvWjlTWKh1qRtznc=",
+        "__NEXT_PREVIEW_MODE_ID": "daf76ac1d2cdfec67bff9a644aa84939",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "e212a580171de55710babfa33f95db8fa55a29b4db53f7b7bad6694387ab9259",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "d70d831c1669f6a2b4984f85dba0b4dbb0132f1891a6dc293e87eaa8c1f355d0"
+      }
+    }
+  },
+  "instrumentation": null,
+  "functions": {}
+}

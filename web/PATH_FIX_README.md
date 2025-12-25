@@ -35,3 +35,17 @@ node .\node_modules\next\dist\bin\next start
 - The scripts work by directly calling node with the full path to the binaries
 - This is a permanent fix that will work regardless of folder name
 
+---
+
+## New Requirements / Tasks
+
+1. Change Logo to another one the Horizontal one, maybe without the Color
+
+2. Add background color for the background
+
+3. Top Categories align it to the center Move one box down
+
+4. Change upcoming Events to Events of the Week
+
+5. Change the logo to Horizontal in the footer
+

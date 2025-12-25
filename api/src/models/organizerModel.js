@@ -105,6 +105,15 @@ const OrganizerSchema = new mongoose.Schema({
         enum: [1, 2,3],/* Allowed values are :2 - approved 3 - not approved */
         default: 1
     },
+    registration_type: {
+        type: String,
+        enum: ['New', 'Re-apply'],
+        default: 'New'
+    },
+    is_suspended: {
+        type: Boolean,
+        default: false
+    },
 
 }, { timestamps: true });
 

@@ -17,6 +17,8 @@ const crypto = require("crypto");
 const TransactionService = require("../services/recentTransaction");
 const WalletService = require("../services/walletService");
 const DaftraService = require("../helpers/daftraService");
+const FatoraService = require("../helpers/fatoraService");
+const LocalInvoiceGenerator = require("../helpers/localInvoiceGenerator");
 const MoyasarService = require("../helpers/MoyasarService");
 const ConversationService = require("../services/conversationService");
 
@@ -76,16 +78,14 @@ const UserController = {
 			// Clean email - remove invisible/zero-width characters, trim, and lowercase
 			const emailLower = cleanEmail(email);
 
-			// Check for existing user by email
+			// Check for existing user by email (including deleted ones for email/phone reuse prevention)
 			const exist_user_email = await UserService.FindOneService({
 				email: emailLower,
-				is_delete: { $ne: 1 },
 			});
 
-			// Check for existing organizer by email
+			// Check for existing organizer by email (including deleted ones)
 			const exist_organizer_email = await organizerService.FindOneService({
 				email: emailLower,
-				is_delete: { $ne: 1 },
 			});
 
 			console.log("[USER:REGISTRATION] Existing checks:", {
@@ -96,6 +96,18 @@ const UserController = {
 			// If email exists
 			if (exist_user_email || exist_organizer_email) {
 				const existingAccount = exist_user_email || exist_organizer_email;
+				
+				// Check if account was deleted - prevent reuse of email/phone
+				if (existingAccount.is_delete === 1) {
+					return Response.conflictResponse(
+						res,
+						{
+							email: emailLower,
+						},
+						409,
+						"This email was previously used with a deleted account. Please use a different email address."
+					);
+				}
 				
 				// If already verified, tell them to login
 				if (existingAccount.is_verified) {
@@ -199,16 +211,28 @@ const UserController = {
 				const exist_user_phone = await UserService.FindOneService({
 					phone_number: phoneStr,
 					country_code,
-					is_delete: { $ne: 1 },
 				});
 
 				const exist_organizer_phone = await organizerService.FindOneService({
 					phone_number: phoneStr,
 					country_code,
-					is_delete: { $ne: 1 },
 				});
 
 				if (exist_user_phone || exist_organizer_phone) {
+					const existingPhoneAccount = exist_user_phone || exist_organizer_phone;
+					
+					// Prevent reuse of phone from deleted accounts
+					if (existingPhoneAccount.is_delete === 1) {
+						return Response.conflictResponse(
+							res,
+							{
+								phone_number: phone_number,
+							},
+							409,
+							"This phone number was previously used with a deleted account. Please use a different phone number."
+						);
+					}
+					
 					return Response.conflictResponse(
 						res,
 						{
@@ -1315,7 +1339,10 @@ const UserController = {
 					resp_messages(req.lang).id_required
 				);
 			}
-			const exist_user = await service.FindByIdAndDeleteService(userId);
+			// Mark as deleted instead of actually deleting to prevent email/phone reuse
+			user.is_delete = 1;
+			user.isActive = 2; // Set to inactive
+			await user.save();
 
 			return Response.ok(
 				res,
@@ -1764,10 +1791,33 @@ const UserController = {
 				);
 			}
 
-			if (no_of_attendees > exist_event.no_of_attendees) {
+			// Calculate already booked seats (only count confirmed/pending bookings, not cancelled/rejected)
+			const bookedSeatsResult = await BookEventService.AggregateService([
+				{
+					$match: {
+						event_id: new mongoose.Types.ObjectId(event_id),
+						book_status: { $in: [1, 2] }, // 1 = pending, 2 = confirmed (exclude cancelled/rejected)
+					},
+				},
+				{
+					$group: {
+						_id: null,
+						totalBooked: { $sum: "$no_of_attendees" },
+					},
+				},
+			]);
+
+			const totalBookedSeats = bookedSeatsResult.length > 0 ? (bookedSeatsResult[0].totalBooked || 0) : 0;
+			const availableSeats = exist_event.no_of_attendees - totalBookedSeats;
+
+			// Check if requested seats are available
+			if (no_of_attendees > availableSeats) {
+				const errorMessage = availableSeats > 0
+					? `${resp_messages(req.lang).book_limit_exceeded}. Only ${availableSeats} seat${availableSeats !== 1 ? 's' : ''} available.`
+					: resp_messages(req.lang).book_limit_exceeded;
 				return Response.badRequestResponse(
 					res,
-					resp_messages(req.lang).book_limit_exceeded
+					errorMessage
 				);
 			}
 
@@ -2084,7 +2134,7 @@ const UserController = {
 						payment_status: 1,
 						book_status: 1,
 						invoice_id: 1,
-						invoice_url: 1,
+						invoice_url: 1, // Include invoice URL so guests can access their receipts
 						order_id: 1,
 						event_id: "$event._id",
 						event_date: "$event.event_date",
@@ -2229,6 +2279,7 @@ const UserController = {
 				{
 					$project: {
 						user_id: 0,
+						// invoice_url is included so guests can access their receipts
 					},
 				},
 			]);
@@ -2896,14 +2947,15 @@ const UserController = {
 				updatedBooking.payment_status
 			);
 
-			// Create a transaction record
-			await TransactionService.CreateService({
+			// Create a transaction record (invoice info will be added after generation)
+			const transaction = await TransactionService.CreateService({
 				user_id: bookingDetails.user_id,
 				organizer_id: bookingDetails.organizer_id,
 				amount: amount || bookingDetails.total_amount,
 				type: 1, // Payment
 				payment_id: payment_id,
 				book_id: booking_id,
+				status: 1, // Success
 			});
 
 			// Get required data for invoice generation
@@ -2919,15 +2971,65 @@ const UserController = {
 				}),
 			]);
 
-			// Generate receipt using Daftra Receipts API
-			// Use default credentials if not in env (tdb subdomain and provided API key)
-			const daftraSubdomain = process.env.DAFTRA_SUBDOMAIN || "tdb";
-			const daftraApiKey = process.env.DAFTRA_API_KEY || "a287194bdf648c16341ecb843cea1fbae7392962";
+			// Generate receipt - Try multiple services in order: Fatora → Daftra → Local
+			let invoiceGenerated = false;
 			
-			if (daftraSubdomain && daftraApiKey && daftraSubdomain.trim() !== "" && daftraApiKey.trim() !== "") {
+			// PRIORITY 1: Try Fatora (Saudi Arabia platform)
+			const fatoraApiKey = process.env.FATORA_API_KEY;
+			const fatoraSecretKey = process.env.FATORA_SECRET_KEY || process.env.FATORA_API_SECRET;
+			
+			if (fatoraApiKey && fatoraSecretKey && fatoraApiKey.trim() !== "" && fatoraSecretKey.trim() !== "") {
 				try {
-					console.log("[RECEIPT] Attempting to generate receipt via Daftra Receipts API");
-					const daftraResponse = await DaftraService.generateEventReceipt(
+					console.log("[RECEIPT] Attempting to generate invoice via Fatora API (Saudi platform)");
+					const fatoraResponse = await FatoraService.createInvoice(
+						bookingDetails,
+						event,
+						user,
+						organizer
+					);
+
+					if (fatoraResponse && fatoraResponse.id) {
+						// Save Fatora invoice to booking record
+						updatedBooking.invoice_id = fatoraResponse.id;
+						updatedBooking.invoice_url = fatoraResponse.invoice_url || fatoraResponse.invoice_pdf_url;
+						await updatedBooking.save();
+
+						// Also store in transaction record
+						if (transaction && transaction._id) {
+							await TransactionService.FindByIdAndUpdateService(
+								transaction._id,
+								{
+									invoice_id: fatoraResponse.id,
+									invoice_url: fatoraResponse.invoice_url || fatoraResponse.invoice_pdf_url,
+									invoice_provider: 'fatora',
+								}
+							);
+						}
+
+						console.log(
+							"[RECEIPT] Fatora invoice generated successfully:",
+							fatoraResponse.id,
+							"PDF URL:",
+							fatoraResponse.invoice_url
+						);
+						
+						invoiceGenerated = true;
+					}
+				} catch (fatoraError) {
+					console.error("[RECEIPT] Fatora invoice generation failed:", fatoraError.message);
+					console.log("[RECEIPT] Falling back to Daftra...");
+				}
+			}
+
+			// PRIORITY 2: Try Daftra (if Fatora not configured or failed)
+			if (!invoiceGenerated) {
+				const daftraSubdomain = process.env.DAFTRA_SUBDOMAIN;
+				const daftraApiKey = process.env.DAFTRA_API_KEY;
+				
+				if (daftraSubdomain && daftraApiKey && daftraSubdomain.trim() !== "" && daftraApiKey.trim() !== "") {
+					try {
+						console.log("[RECEIPT] Attempting to generate receipt via Daftra Receipts API");
+						const daftraResponse = await DaftraService.generateEventReceipt(
 						bookingDetails,
 						event,
 						user,
@@ -2939,28 +3041,44 @@ const UserController = {
 					);
 
 					if (daftraResponse && daftraResponse.id) {
-						// Save receipt ID and URL to booking
-						updatedBooking.invoice_id = daftraResponse.id; // Keep invoice_id for backward compatibility
-						updatedBooking.invoice_url =
-							daftraResponse.receipt_pdf_url || 
+						// Save invoice/receipt to guest booking record so they can access it
+						const invoiceUrl = daftraResponse.receipt_pdf_url || 
 							daftraResponse.pdf_url || 
 							daftraResponse.invoice_pdf_url || 
 							`https://${daftraSubdomain}.daftra.com/receipts/${daftraResponse.id}/pdf`;
+						
+						// Save invoice to booking record (guest can access)
+						updatedBooking.invoice_id = daftraResponse.id;
+						updatedBooking.invoice_url = invoiceUrl;
 						await updatedBooking.save();
 
+						// Also store in transaction record for admin access
+						if (transaction && transaction._id) {
+							await TransactionService.FindByIdAndUpdateService(
+								transaction._id,
+								{
+									invoice_id: daftraResponse.id,
+									invoice_url: invoiceUrl,
+								}
+							);
+						}
+
 						console.log(
-							"[RECEIPT] Receipt generated successfully:",
+							"[RECEIPT] Daftra receipt generated successfully:",
 							daftraResponse.id,
 							"PDF URL:",
-							updatedBooking.invoice_url
+							invoiceUrl,
+							"Saved to booking and transaction records"
 						);
+						
+						invoiceGenerated = true;
 					} else {
 						console.warn("[RECEIPT] Daftra response received but no receipt ID found");
 					}
 				} catch (receiptError) {
 					// Log detailed error information
 					console.error(
-						"[RECEIPT] Error generating receipt:",
+						"[RECEIPT] Error generating Daftra receipt:",
 						receiptError.message
 					);
 					
@@ -2970,13 +3088,90 @@ const UserController = {
 						console.error("[RECEIPT] Error data:", JSON.stringify(receiptError.response.data));
 					}
 					
-					// Continue with the process even if receipt generation fails
-					// Payment is still successful, receipt can be generated later
-					console.log("[RECEIPT] Payment processed successfully. Receipt generation failed but booking is confirmed.");
+					// FALLBACK: Generate local invoice if Daftra fails
+					console.log("[RECEIPT] Attempting to generate local invoice as fallback...");
+					try {
+						const localInvoice = await LocalInvoiceGenerator.generateAndSaveInvoice(
+							bookingDetails,
+							event,
+							user,
+							organizer
+						);
+
+						if (localInvoice && localInvoice.id) {
+							// Save local invoice to booking record
+							updatedBooking.invoice_id = localInvoice.id;
+							updatedBooking.invoice_url = `${process.env.BASE_URL || 'http://localhost:3434'}${localInvoice.invoice_url}`;
+							await updatedBooking.save();
+
+							// Also store in transaction record
+							if (transaction && transaction._id) {
+								await TransactionService.FindByIdAndUpdateService(
+									transaction._id,
+									{
+										invoice_id: localInvoice.id,
+										invoice_url: `${process.env.BASE_URL || 'http://localhost:3434'}${localInvoice.invoice_url}`,
+									}
+								);
+							}
+
+							console.log(
+								"[RECEIPT] Local invoice generated successfully:",
+								localInvoice.id,
+								"URL:",
+								localInvoice.invoice_url
+							);
+						}
+					} catch (localInvoiceError) {
+						console.error("[RECEIPT] Failed to generate local invoice:", localInvoiceError.message);
+						console.log("[RECEIPT] Payment processed successfully but invoice generation completely failed.");
+					}
 				}
 			} else {
-				console.warn("[RECEIPT] Daftra API credentials not configured. Skipping receipt generation.");
-				console.warn("[RECEIPT] To enable receipt generation, set DAFTRA_SUBDOMAIN and DAFTRA_API_KEY in environment variables.");
+				console.warn("[RECEIPT] Daftra API credentials not configured.");
+			}
+		}
+
+			// PRIORITY 3: Use local invoice generator (if both Fatora and Daftra failed/not configured)
+			if (!invoiceGenerated) {
+				console.log("[RECEIPT] Using local invoice generator as fallback...");
+				
+				// Use local invoice generator when both Fatora and Daftra are not available
+				try {
+					const localInvoice = await LocalInvoiceGenerator.generateAndSaveInvoice(
+						bookingDetails,
+						event,
+						user,
+						organizer
+					);
+
+					if (localInvoice && localInvoice.id) {
+						// Save local invoice to booking record
+						updatedBooking.invoice_id = localInvoice.id;
+						updatedBooking.invoice_url = `${process.env.BASE_URL || 'http://localhost:3434'}${localInvoice.invoice_url}`;
+						await updatedBooking.save();
+
+						// Also store in transaction record
+						if (transaction && transaction._id) {
+							await TransactionService.FindByIdAndUpdateService(
+								transaction._id,
+								{
+									invoice_id: localInvoice.id,
+									invoice_url: `${process.env.BASE_URL || 'http://localhost:3434'}${localInvoice.invoice_url}`,
+								}
+							);
+						}
+
+						console.log(
+							"[RECEIPT] Local invoice generated successfully:",
+							localInvoice.id,
+							"URL:",
+							localInvoice.invoice_url
+						);
+					}
+				} catch (localInvoiceError) {
+					console.error("[RECEIPT] Failed to generate local invoice:", localInvoiceError.message);
+				}
 			}
 
 			// Add user to group chat if event is approved and payment is successful

@@ -11,6 +11,7 @@ import Cookies from "js-cookie";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
+import { Icon } from "@iconify/react";
 
 export default function AboutUsPage() {
   const { t } = useTranslation();
@@ -33,11 +34,19 @@ export default function AboutUsPage() {
   }, [token, dispatch]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-white">
 		<Header /> 
+		<Breadcrumbs items={breadcrumbItems} />
 		<div className="flex flex-col flex-1 gap-y-6 items-center px-4 py-8 mx-auto w-full max-w-7xl">
-			<h1 className="text-4xl font-bold">{t("about.heading")}</h1>
-			<pre className="w-full text-base font-normal text-center text-black whitespace-pre-wrap break-words font-ibm-arabic">
+			<div className="text-center mb-8">
+				<div className="flex justify-center mb-4">
+					<div className="w-20 h-20 bg-gradient-to-br from-brand-gray-purple-2 to-primary rounded-2xl flex items-center justify-center shadow-lg">
+						<Icon icon="lucide:info" className="w-10 h-10 text-white" />
+					</div>
+				</div>
+				<h1 className="text-4xl font-bold text-gray-900">{t("about.heading")}</h1>
+			</div>
+			<pre className="w-full text-base font-normal text-center text-gray-700 whitespace-pre-wrap break-words font-ibm-arabic">
 			{t("about.content")}
 			</pre>
 		</div>

@@ -245,7 +245,7 @@ export default function ManageEvents() {
             <button
               onClick={() => handleTabChange("Pending")}
               className={`px-3 py-3 sm:px-6 sm:py-4 border-2 rounded-xl text-sm font-semibold bg-white ${activeTab === "Pending"
-                ? "border-2 border-[#f47c0c] text-[#f47c0c]"
+                ? "border-2 border-[#a797cc] text-[#a797cc]"
                 : "border-2 border-transparent text-[#c8b68b]"
                 }`}
             >
@@ -254,7 +254,7 @@ export default function ManageEvents() {
             <button
               onClick={() => handleTabChange("Upcoming")}
               className={`px-3 py-3 sm:px-6 sm:py-4 border-2 rounded-xl text-sm font-semibold bg-white ${activeTab === "Upcoming"
-                ? "border-2 border-[#f47c0c] text-[#f47c0c]"
+                ? "border-2 border-[#a797cc] text-[#a797cc]"
                 : "border-2 border-transparent text-[#c8b68b]"
                 }`}
             >
@@ -263,7 +263,7 @@ export default function ManageEvents() {
             <button
               onClick={() => handleTabChange("Completed")}
               className={`px-3 py-3 sm:px-6 sm:py-4 border-2 rounded-xl text-sm font-semibold bg-white ${activeTab === "Completed"
-                ? "border-2 border-[#f47c0c] text-[#f47c0c]"
+                ? "border-2 border-[#a797cc] text-[#a797cc]"
                 : "border-2 border-transparent text-[#c8b68b]"
                 }`}
             >
@@ -272,7 +272,7 @@ export default function ManageEvents() {
             <button
               onClick={() => handleTabChange("Rejected")}
               className={`px-3 py-3 sm:px-6 sm:py-4 border-2 rounded-xl text-sm font-semibold bg-white ${activeTab === "Rejected"
-                ? "border-2 border-[#f47c0c] text-[#f47c0c]"
+                ? "border-2 border-[#a797cc] text-[#a797cc]"
                 : "border-2 border-transparent text-[#c8b68b]"
                 }`}
             >

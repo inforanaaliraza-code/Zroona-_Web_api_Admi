@@ -15,7 +15,7 @@ function ApprovalModal({ show, onClose, onConfirm, title, message }) {
             Cancel
           </button>
           <button
-            className="px-4 py-2 bg-[#f47c0c] text-white rounded-lg"
+            className="px-4 py-2 bg-[#a797cc] text-white rounded-lg hover:bg-[#a08ec8] transition"
             onClick={onConfirm} // Call onConfirm passed from ManageEventOrganizer
           >
             {title.includes("Approve") ? "Approve" : "Reject"}

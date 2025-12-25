@@ -7,13 +7,20 @@ import { IoLocationOutline, IoMailOutline, IoCallOutline, IoCloseOutline } from 
 import { FaTiktok, FaInstagram, FaSnapchatGhost } from "react-icons/fa";
 import { RiTwitterXFill } from "react-icons/ri";
 import { useRTL } from "@/utils/rtl";
+import AboutUsModal from "../Modal/AboutUsModal";
+import TermsOfServiceModal from "../Modal/TermsOfServiceModal";
+import PrivacyPolicyModal from "../Modal/PrivacyPolicyModal";
 
 
 export default function Footer() {
     const { t, i18n } = useTranslation();
     const { textAlign } = useRTL();
+    const [isAboutUsModalOpen, setIsAboutUsModalOpen] = useState(false);
+    const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+    const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
     return (
+        <>
         <footer className="overflow-hidden relative text-white bg-gray-900">
             {/* Decorative elements */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,theme('colors.brand-orange')1a,transparent_70%)]"></div>
@@ -24,13 +31,13 @@ export default function Footer() {
                     {/* Brand Section */}
                     <div className="gap-y-4">
                         <Image
-                            src="/assets/images/main-logo.png"
+                            src="/assets/images/x_F_logo.png"
                             alt="Zuroona Logo"
-                            width={120}
-                            height={40}
+                            width={200}
+                            height={60}
                             className="mb-6"
                         />
-                        <p className={`max-w-sm text-sm text-gray-400 ${textAlign}`}>
+                        <p className={`max-w-sm text-sm text-gray-400 leading-relaxed ${textAlign}`} style={{ textAlign: 'justify', textJustify: 'inter-word', hyphens: 'auto' }}>
                             {t("footer.tab2")}
                         </p>
                         {/* Social Icons */}
@@ -55,34 +62,28 @@ export default function Footer() {
                         <h3 className="text-lg font-semibold text-brand-orange mb-6">{t("footer.tab5")}</h3>
                         <ul className="flex flex-col gap-3">
                             <li>
-                                <a
-                                    href="/about"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-gray-400 hover:text-brand-orange transition-colors"
+                                <button
+                                    onClick={() => setIsAboutUsModalOpen(true)}
+                                    className="text-gray-400 hover:text-brand-orange transition-colors text-left"
                                 >
                                     {t("footer.tab6")}
-                                </a>
+                                </button>
                             </li>
                             <li>
-                                <a
-                                    href="/termsCondition"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-gray-400 hover:text-brand-orange transition-colors"
+                                <button
+                                    onClick={() => setIsTermsModalOpen(true)}
+                                    className="text-gray-400 hover:text-brand-orange transition-colors text-left"
                                 >
-                                    {t("footer.tab7")}
-                                </a>
+                                    {t("footer.tab19")}
+                                </button>
                             </li>
                             <li>
-                                <a
-                                    href="/privacyPolicy"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-gray-400 hover:text-brand-orange transition-colors"
+                                <button
+                                    onClick={() => setIsPrivacyModalOpen(true)}
+                                    className="text-gray-400 hover:text-brand-orange transition-colors text-left"
                                 >
-                                    {t("footer.tab8")}
-                                </a>
+                                    {t("footer.tab18")}
+                                </button>
                             </li>
                         </ul>
                     </div>
@@ -151,5 +152,9 @@ export default function Footer() {
 
             </div>
         </footer>
+        <AboutUsModal isOpen={isAboutUsModalOpen} onClose={() => setIsAboutUsModalOpen(false)} />
+        <TermsOfServiceModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
+        <PrivacyPolicyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
+    </>
     );
 }

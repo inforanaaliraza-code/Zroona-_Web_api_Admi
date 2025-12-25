@@ -36,7 +36,7 @@ export default function TermsCondition() {
   const { fetchCMSDetail } = useDataStore();
 
   useEffect(() => {
-    fetchCMSDetail({ type: 1 });
+    fetchCMSDetail({ type: 2 });
   }, [i18n.language, fetchCMSDetail]);
 
   return (
@@ -51,17 +51,17 @@ export default function TermsCondition() {
                 src="/assets/images/home/privact-img.png"
                 width={239}
                 height={231}
-                alt="Privacy Policy Icon"
+                alt="Terms & Conditions Icon"
               />
             </div>
-            <h1 className="text-3xl font-bold mt-4">{t('breadcrumb.tab10')}</h1>
+            <h1 className="text-3xl font-bold mt-4 text-gray-900">{t('breadcrumb.tab10')}</h1>
           </div>
           {/* Content Section */}
           <div className="space-y-8">
             {/* Section 1 */}
             <div>
               <p
-                className="text-gray-700"
+                className="text-gray-700 text-justify [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:space-y-2 [&_li]:mb-1"
                 dangerouslySetInnerHTML={{ __html: CMSDetail?.description }}
               />
             </div>

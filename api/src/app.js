@@ -6,6 +6,7 @@ const { connectWithRetry } = require("./config/database");
 const morgan = require("morgan");
 const cors = require("cors");
 const Response = require("./helpers/response");
+const { globalErrorHandler, handleNotFound } = require("./helpers/errorHandler");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -32,11 +33,13 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Trust proxy - required when behind a reverse proxy like Coolify
-app.enable("trust proxy");
+// Set to 1 to trust only the first proxy hop (prevents IP spoofing and rate limit bypass)
+// This is more secure than setting it to true, which trusts all proxies
+app.set("trust proxy", 1);
 
 // CORS configuration
 const corsOptions = {
-	origin: true, // Allow all origins (reflects the request origin)
+	origin: "*", // Allow all origins
 	methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 	allowedHeaders: [
 		"Content-Type",
@@ -90,6 +93,9 @@ app.use(cookieParser(process.env.COOKIE_SECRET || 'zuroona-cookie-secret-key-cha
 // app.use(morgan("tiny")); // Disabled for cleaner logs
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static invoice files
+app.use('/invoices', express.static(path.join(__dirname, '../invoices')));
 
 // Rate limiting - Apply to all API routes
 const { apiLimiter } = require("./middleware/rateLimiter");
@@ -222,39 +228,13 @@ app.use("/api/", allRoutes);
 app.post("/api/user/uploadFile", commonController.uploadFile);
 app.post("/api/common/user/uploadFile", commonController.uploadFile);
 
+// Handle 404 - must be before error handler
 app.all("*", (req, res) => {
-	return Response.notFoundResponse(res, "page not found");
+	return handleNotFound(req, res);
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-	// Handle Busboy/file upload errors specifically
-	if (err.message && err.message.includes('Unexpected end of form')) {
-		console.error('File upload error (Busboy):', err.message);
-		return res.status(400).json({
-			status: 0,
-			message: "File upload failed. Please try again with a smaller file or check your internet connection.",
-			error: process.env.NODE_ENV === "development" ? err.message : undefined,
-		});
-	}
-
-	// Handle file size limit errors
-	if (err.message && err.message.includes('File too large')) {
-		return res.status(413).json({
-			status: 0,
-			message: "File size exceeds the maximum limit of 50MB",
-			error: process.env.NODE_ENV === "development" ? err.message : undefined,
-		});
-	}
-
-	// General error handling
-	console.error('Server error:', err.stack);
-	res.status(err.status || 500).json({
-		status: 0,
-		message: err.message || "Something went wrong!",
-		error: process.env.NODE_ENV === "development" ? err.stack : undefined,
-	});
-});
+// Global error handling middleware - must be last
+app.use(globalErrorHandler);
 
 const startServer = async () => {
 	try {

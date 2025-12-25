@@ -72,7 +72,19 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-color: #ffffff;
+    color: #171717;
     overflow-x: hidden;
+  }
+  
+  /* Ensure headings are dark on white background */
+  h1, h2, h3, h4, h5, h6 {
+    color: #171717;
+  }
+  
+  /* Paragraphs - dark color for readability */
+  p {
+    color: #4b5563;
   }
   html {
     scroll-behavior: smooth;

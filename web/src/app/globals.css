@@ -17,27 +17,175 @@
   animation: gradient-xy 15s ease infinite;
 }
 
+/* Purple animated background for app demo image - Professional */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0.6;
+  }
+  33% {
+    transform: translateY(-8px) translateX(2px);
+    opacity: 0.8;
+  }
+  66% {
+    transform: translateY(-4px) translateX(-2px);
+    opacity: 0.7;
+  }
+}
+
+/* Purple Background Animations */
+@keyframes purpleWave {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px) scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes purplePulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes backgroundShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-purple-wave {
+  animation: purpleWave 6s ease-in-out infinite;
+}
+
+.animate-purple-pulse {
+  animation: purplePulse 4s ease-in-out infinite;
+}
+
+.animate-background-shift {
+  background-size: 200% 200%;
+  animation: backgroundShift 15s ease infinite;
+}
+
+.animate-gradient-shift {
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Modal Animations - Ultra Professional */
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
 :root {
   --background: #ffffff;
-  --foreground: #171717; /* A very dark gray for good contrast */
+  --foreground: #171717; /* Dark text for good contrast on white background */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #fff;
+    --background: #ffffff;
     --foreground: #171717;
   }
 }
 
 body {
   font-family: var(--font-poppins);
+  background-color: #ffffff;
+  color: #171717; /* Default dark text on white background */
 }
 
 [dir="rtl"] body {
   font-family: var(--font-tajawal);
 }
 
+/* Headings - Dark colors for white background */
 h1, h2, h3, h4, h5, h6 {
+  color: #171717;
+  font-weight: 700;
+}
+
+/* Paragraphs and body text */
+p {
+  color: #4b5563;
+}
+
+/* Links */
+a {
+  color: #171717;
+}
+
+a:hover {
+  color: #374151;
 }
 
 input[type="time"] {

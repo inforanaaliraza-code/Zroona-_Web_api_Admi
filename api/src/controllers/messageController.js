@@ -770,7 +770,7 @@ const MessageController = {
                 // Upload to Cloudinary in messages folder
                 const cloudinaryResult = await uploadToCloudinary(
                     fileData,
-                    'Jeena/messages',
+                    'Zuroona/messages',
                     fileName,
                     uploadedFile.mimetype || 'application/octet-stream'
                 );

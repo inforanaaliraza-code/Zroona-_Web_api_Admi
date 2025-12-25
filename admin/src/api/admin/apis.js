@@ -46,6 +46,13 @@ export const GetAdminNotificationsApi = async (payload) => {
 };
 
 // Wallet details
+// Wallet Management
+export const GetWalletStatsApi = async () => {
+  return getData("wallet/stats").then((data) => {
+    return data;
+  });
+};
+
 export const GetWalletDetailsApi = async () => {
   return getData("wallet/details", {}).then((data) => {
     return data;
@@ -54,13 +61,33 @@ export const GetWalletDetailsApi = async () => {
 
 // Withdrawal requests
 export const GetWithdrawalRequestsApi = async (payload) => {
-  return getData("organizer/withdrawalList", payload).then((data) => {
+  return getData("admin/organizer/withdrawalList", payload).then((data) => {
     return data;
   });
 };
 
 export const UpdateWithdrawalRequestApi = async (payload) => {
-  return putRawData("withdrawalStatus", payload).then((data) => {
+  return putRawData("admin/withdrawalStatus", payload).then((data) => {
+    return data;
+  });
+};
+
+export const GetWithdrawalStatsApi = async () => {
+  return getData("admin/organizer/withdrawalStats").then((data) => {
+    return data;
+  });
+};
+
+// Guest Invoices Management
+export const GetInvoiceStatsApi = async () => {
+  return getData("admin/bookings/invoices/stats").then((data) => {
+    return data;
+  });
+};
+
+// Guest invoices/receipts
+export const GetGuestInvoicesApi = async (payload) => {
+  return getData("bookings/invoices", payload).then((data) => {
     return data;
   });
 };

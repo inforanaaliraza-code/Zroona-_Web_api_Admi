@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Icon } from '@iconify/react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { TOKEN_NAME } from '@/until';
+import { TOKEN_NAME, BASE_API_URL } from '@/until';
 import Cookies from 'js-cookie';
 import LoginModal from '../Modal/LoginModal';
 import { toast } from 'react-toastify';
@@ -22,9 +22,11 @@ export default function EventCard({
     showUser,
     setModalShow,
     setActionType,
-    setSelectedOrganizer
+    setSelectedOrganizer,
+    categories = [] // Array of category objects with _id and name
 }) {
 
+    const { t, i18n } = useTranslation();
     // State to track approval status
     const [status, setStatus] = useState(
         event.book_status === 2
@@ -35,7 +37,6 @@ export default function EventCard({
                     ? t('events.noPay') || 'No Pay' // Show "No Pay" when book_status is 2 and payment_status is 0
                     : ''
     );
-    const { t, i18n } = useTranslation();
     const token = Cookies.get(TOKEN_NAME);
     const [isLoginModalOpen, setLoginModalOpen] = useState(false);
     const [isReserving, setIsReserving] = useState(false);
@@ -116,11 +117,39 @@ export default function EventCard({
                         src={(() => {
                             const getImageUrl = (imgPath) => {
                                 if (!imgPath) return "/assets/images/home/dummyImage.png";
-                                if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
+                                
+                                // If blob URL (for preview), return as is
+                                if (imgPath.startsWith("blob:")) {
+                                    return imgPath;
+                                }
+                                
+                                // If already absolute URL (http/https) - includes Cloudinary URLs
+                                if (imgPath.includes("http://") || imgPath.includes("https://")) {
+                                    return imgPath;
+                                }
+                                
+                                // If Cloudinary URL format (res.cloudinary.com)
+                                if (imgPath.includes("res.cloudinary.com")) {
+                                    return imgPath;
+                                }
+                                
+                                // If relative path (starts with /uploads/), construct absolute URL
+                                const apiBase = BASE_API_URL.replace('/api/', '');
+                                
                                 if (imgPath.startsWith("/uploads/")) {
-                                    const apiBase = "http://localhost:3434";
                                     return `${apiBase}${imgPath}`;
                                 }
+                                
+                                if (imgPath.includes("uploads/")) {
+                                    const uploadsIndex = imgPath.indexOf("uploads/");
+                                    return `${apiBase}/${imgPath.substring(uploadsIndex)}`;
+                                }
+                                
+                                if (imgPath.startsWith("/")) {
+                                    return `${apiBase}${imgPath}`;
+                                }
+                                
+                                // Default fallback
                                 return "/assets/images/home/dummyImage.png";
                             };
                             return getImageUrl(event.event_images?.[0] || event.event_image);
@@ -178,12 +207,25 @@ export default function EventCard({
                             <h2 className="text-base font-semibold mb-2 truncate max-w-full">
                                 {event.event_name}
                             </h2>
-                            <div className="flex gap-x-2 text-gray-700">
+                            <div className="flex gap-x-2 text-gray-700 mb-1.5">
                                 <div>
                                     <Icon icon="lucide:map-pin" className="w-4 h-4 text-brand-gray-purple-2" />
                                 </div>
                                 <span className="text-sm">{event.event_address}</span>
                             </div>
+                            {/* Category Display */}
+                            {event.event_category && categories.length > 0 && (() => {
+                                const category = categories.find(cat => 
+                                    cat._id === event.event_category || 
+                                    cat._id?.toString() === event.event_category?.toString()
+                                );
+                                return category ? (
+                                    <div className="flex items-center gap-x-1.5 mt-1">
+                                        <Icon icon="lucide:tag" className="w-3.5 h-3.5 text-[#a797cc]" />
+                                        <span className="text-xs text-[#a797cc] font-medium">{category.name}</span>
+                                    </div>
+                                ) : null;
+                            })()}
                         </div>
                     <div className="flex flex-col items-end">
                         <p className="text-sm text-gray-800 leading-4">Price</p>
@@ -195,47 +237,11 @@ export default function EventCard({
 
                 {
                     showBookNow && (
-                        <div className="border-t px-4 py-2">
-                            <div className="flex justify-between items-center">
-                                {/* Attendees Section */}
-                            {event?.attendees?.length > 0 ? (
-                                <div>
-                                    <h2 className="text-base font-semibold">Attendees</h2>
-                                    <div className="flex items-center">
-                                            <div className={`flex ${i18n.language === 'ar' ? '-space-x-3' : '-space-x-3'}`}>
-                                                {/* Render attendees dynamically */}
-                                                {event?.attendees.slice(0, 3).map((attendee, index) => (
-                                                    <div
-                                                        className="w-10 h-10 rounded-full border-2 border-white overflow-hidden"
-                                                        key={attendee._id + index}
-                                                    >
-                                                        <Image
-                                                            src={attendee.profile_image}
-                                                            alt={`${attendee.first_name} ${attendee.last_name}`}
-                                                            width={46}
-                                                            height={46}
-                                                            className="object-cover w-full h-full"
-                                                        />
-                                                    </div>
-                                                ))}
-
-                                                {/* Counter circle */}
-                                                {event?.attendees?.length > 3 && (
-                                                    <div className="w-8 h-8 mt-1.5 !-ml-4 rounded-full bg-[#a797cc] border-2 border-transparent flex items-center justify-center text-white text-xs font-bold">
-                                                        +{event.attendees.length - 3}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    // If no attendees, add a spacer to keep the button on the right
-                                    <div className='h-16'></div>
-                                )}
-
+                        <div className="border-t px-4 py-3">
+                            <div className="flex justify-end">
                                 {/* "Book Now" Button */}
                                 {BookNowBtn && (
-                                    <div className="flex justify-end">
+                                    <>
                                         {token ? (
                                         <button 
                                             onClick={handleReservation} 
@@ -259,7 +265,7 @@ export default function EventCard({
                                             {t('card.tab10') || 'Book Now'}
                                         </button>
                                     )}
-                                    </div>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -277,11 +283,38 @@ export default function EventCard({
                                             src={(() => {
                                                 const getImageUrl = (imgPath) => {
                                                     if (!imgPath) return "/assets/images/home/user-dummy.png";
-                                                    if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
+                                                    
+                                                    // If blob URL (for preview), return as is
+                                                    if (imgPath.startsWith("blob:")) {
+                                                        return imgPath;
+                                                    }
+                                                    
+                                                    // If already absolute URL (http/https) - includes Cloudinary URLs
+                                                    if (imgPath.includes("http://") || imgPath.includes("https://")) {
+                                                        return imgPath;
+                                                    }
+                                                    
+                                                    // If Cloudinary URL format
+                                                    if (imgPath.includes("res.cloudinary.com")) {
+                                                        return imgPath;
+                                                    }
+                                                    
+                                                    // If relative path, construct absolute URL
+                                                    const apiBase = BASE_API_URL.replace('/api/', '');
+                                                    
                                                     if (imgPath.startsWith("/uploads/")) {
-                                                        const apiBase = "http://localhost:3434";
                                                         return `${apiBase}${imgPath}`;
                                                     }
+                                                    
+                                                    if (imgPath.includes("uploads/")) {
+                                                        const uploadsIndex = imgPath.indexOf("uploads/");
+                                                        return `${apiBase}/${imgPath.substring(uploadsIndex)}`;
+                                                    }
+                                                    
+                                                    if (imgPath.startsWith("/")) {
+                                                        return `${apiBase}${imgPath}`;
+                                                    }
+                                                    
                                                     return "/assets/images/home/user-dummy.png";
                                                 };
                                                 return getImageUrl(event.user_profile_image);
@@ -342,11 +375,38 @@ export default function EventCard({
                                             src={(() => {
                                                 const getImageUrl = (imgPath) => {
                                                     if (!imgPath) return "/assets/images/home/user-dummy.png";
-                                                    if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
+                                                    
+                                                    // If blob URL (for preview), return as is
+                                                    if (imgPath.startsWith("blob:")) {
+                                                        return imgPath;
+                                                    }
+                                                    
+                                                    // If already absolute URL (http/https) - includes Cloudinary URLs
+                                                    if (imgPath.includes("http://") || imgPath.includes("https://")) {
+                                                        return imgPath;
+                                                    }
+                                                    
+                                                    // If Cloudinary URL format
+                                                    if (imgPath.includes("res.cloudinary.com")) {
+                                                        return imgPath;
+                                                    }
+                                                    
+                                                    // If relative path, construct absolute URL
+                                                    const apiBase = BASE_API_URL.replace('/api/', '');
+                                                    
                                                     if (imgPath.startsWith("/uploads/")) {
-                                                        const apiBase = "http://localhost:3434";
                                                         return `${apiBase}${imgPath}`;
                                                     }
+                                                    
+                                                    if (imgPath.includes("uploads/")) {
+                                                        const uploadsIndex = imgPath.indexOf("uploads/");
+                                                        return `${apiBase}/${imgPath.substring(uploadsIndex)}`;
+                                                    }
+                                                    
+                                                    if (imgPath.startsWith("/")) {
+                                                        return `${apiBase}${imgPath}`;
+                                                    }
+                                                    
                                                     return "/assets/images/home/user-dummy.png";
                                                 };
                                                 return getImageUrl(event.organizer_profile_image);

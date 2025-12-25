@@ -175,7 +175,7 @@ export default function ProfileImageUpload({
 			const compressedFile = await compressImage(file, 800, 0.85);
 
 			// Upload to server using local upload API
-			const resp = await UploadFileApi({ file: compressedFile, dirName: "Jeena" });
+			const resp = await UploadFileApi({ file: compressedFile, dirName: "Zuroona" });
 
 			if (resp?.status === 1 && resp?.data?.location) {
 				const imageUrl = resp.data.location;

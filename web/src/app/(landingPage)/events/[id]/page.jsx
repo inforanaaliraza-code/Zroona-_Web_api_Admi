@@ -528,7 +528,7 @@ export default function EventDetailsPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+		<div className="min-h-screen bg-white">
 			<div className="container px-4 py-8 mx-auto">
 				<div className="mx-auto max-w-7xl">
 					{/* Header Section - Professional Design */}
@@ -542,7 +542,7 @@ export default function EventDetailsPage() {
 							{event.event_name}
 						</h1>
 						<div className="flex items-center justify-center gap-2 text-gray-600">
-							<Icon icon="lucide:map-pin" className="w-5 h-5" />
+							<Icon icon="lucide:map-pin" className="w-5 h-5 text-gray-600" />
 							<span className="text-lg font-medium">{event.event_address || getTranslation(t, "events.locationTBA", "Location TBA")}</span>
 						</div>
 					</div>

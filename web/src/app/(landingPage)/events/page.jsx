@@ -472,7 +472,7 @@ const EventsPage = () => {
 		<div className="container px-4 py-8 mx-auto">
 			<div className="mx-auto max-w-7xl">
 				<h1 className="mb-2 text-3xl font-bold text-gray-900">
-					{getTranslation(t, "events.upcomingEvents", "Upcoming Events")}
+					{getTranslation(t, "events.upcomingEvents", "Events of the Week")}
 				</h1>
 				<p className="mb-6 text-gray-600">
 					{getTranslation(t, "events.discoverEvents", "Discover and book amazing events happening in your city")}

@@ -43,7 +43,7 @@ function PrivacyPolicy(props) {
       setLoading(true);
       const payload = {
         cms_type: parseInt(props.status),
-        title: "Privacy Policy",
+        title: "Zuroona Privacy Policy",
         description: values.content,
         description_ar: values.content_ar,
         id: CMSDetail?._id,
@@ -95,7 +95,7 @@ function PrivacyPolicy(props) {
       <div className="w-full flex justify-center">
         <button
           type="submit"
-          className="gap-x-2 px-48 py-3 text-white bg-[#f47c0c] rounded-md text-1xl uppercase font-semibold"
+          className="gap-x-2 px-48 py-3 text-white bg-[#a3cc69] hover:bg-[#9fb68b] transition-all duration-300 rounded-md text-1xl uppercase font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
         >
           {loading ? (
             <Loader color="#fff" />

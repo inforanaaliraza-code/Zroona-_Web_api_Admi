@@ -154,8 +154,8 @@ export default function SignUp() {
             imageUrl = `${apiBase}/${imageUrl}`;
             console.log("[EDIT-PROFILE] Constructed URL from uploads/:", imageUrl);
           } else {
-            imageUrl = `${apiBase}/uploads/Jeena/${imageUrl}`;
-            console.log("[EDIT-PROFILE] Constructed URL with Jeena folder:", imageUrl);
+            imageUrl = `${apiBase}/uploads/Zuroona/${imageUrl}`;
+            console.log("[EDIT-PROFILE] Constructed URL with Zuroona folder:", imageUrl);
           }
         } else {
           console.log("[EDIT-PROFILE] Using URL as-is (absolute/blob):", imageUrl);
@@ -179,7 +179,7 @@ export default function SignUp() {
     // Use the UploadFileApi for local uploads
     const result = await UploadFileApi({ 
       file: file, 
-      dirName: "Jeena" 
+      dirName: "Zuroona" 
     });
     
     if (result?.status === 1 && result?.data?.location) {
@@ -241,7 +241,7 @@ export default function SignUp() {
     <>
       <Header bgColor="#fff" />
       <Breadcrumbs items={breadcrumbItems} />
-      <section className="bg-[#FFF0F1] py-16 ">
+      <section className="bg-white py-16 ">
         <div className="container mx-auto px-4 md:px-8 lg:px-28">
           {loading ? (
             <div className="flex justify-center items-center">

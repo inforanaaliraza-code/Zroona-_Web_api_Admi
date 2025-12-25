@@ -138,8 +138,8 @@ export default function UserManagement() {
               <button
                 onClick={() => handleTabChange("Active")}
                 className={`px-4 py-3 text-sm w-28 font-medium rounded-s-lg ${activeTab === "Active"
-                    ? "bg-[#f47c0c] text-white"
-                    : "bg-white text-[#f47c0c] border-2 border-[#f47c0c]"
+                    ? "bg-green-600 text-white"
+                    : "bg-white text-green-600 border-2 border-green-600"
                   }`}
               >
                 Active
@@ -147,8 +147,8 @@ export default function UserManagement() {
               <button
                 onClick={() => handleTabChange("Inactive")}
                 className={`px-4 py-3 text-sm w-28 font-medium rounded-e-lg ${activeTab === "Inactive"
-                    ? "bg-[#f47c0c] text-white"
-                    : "bg-white border-2 text-[#f47c0c] border-[#f47c0c]"
+                    ? "bg-red-600 text-white"
+                    : "bg-white border-2 text-red-600 border-red-600"
                   }`}
               >
                 Inactive
@@ -242,8 +242,8 @@ export default function UserManagement() {
                       <td className="px-2 py-2">{user.address || "N/A"}</td>
                       <td className="px-2 py-2">{user.nationality || "N/A"}</td>
                       <td className="px-2 py-2">
-                        <span className={`text-sm font-medium ${
-                          user.isActive ? "text-green-500" : "text-red-500"
+                        <span className={`text-sm font-semibold px-3 py-1 rounded-full border ${
+                          user.isActive ? "bg-green-100 text-green-700 border-green-300" : "bg-red-100 text-red-700 border-red-300"
                         }`}>
                           {user.isActive ? "Active" : "Inactive"}
                         </span>
@@ -252,7 +252,7 @@ export default function UserManagement() {
                         <div className="flex gap-2 items-center justify-center">
                           <Link
                             href={`/user/detail/${user._id}`}
-                            className="text-[#f47c0c] hover:text-orange-600"
+                            className="text-[#a797cc] hover:text-[#a08ec8]"
                             title="View Details"
                           >
                             <Image

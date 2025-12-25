@@ -614,6 +614,8 @@ const adminController = {
                         is_approved: 1,
                         createdAt: 1,
                         isActive: 1,
+                        registration_type: 1,
+                        is_suspended: 1,
                         last_booking_date: 1,
                         last_ticket_date: '$last_booking_date'
                     }
@@ -864,6 +866,11 @@ const adminController = {
 
         const oldStatus = organizer.is_approved;
         organizer.is_approved = is_approved;
+        
+        // If rejecting, set registration_type to 'Re-apply' for future re-application
+        if (is_approved === 3) {
+            organizer.registration_type = 'Re-apply';
+        }
 
         await organizer.save();
 
@@ -888,7 +895,7 @@ const adminController = {
     },
     changeOrganizerStatus: async (req, res) => {
         const { lang } = req || 'en';
-        const { id, isActive } = req.body;
+        const { id, isActive, isSuspended } = req.body;
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return Response.badRequestResponse(res, resp_messages(lang).id_required);
         }
@@ -899,11 +906,22 @@ const adminController = {
             return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
         }
 
-        organizer.isActive = isActive ? 1 : 2; // Assuming 1 is active, 2 is inactive based on previous code
+        // Handle suspend/unsuspend
+        if (isSuspended !== undefined) {
+            organizer.is_suspended = isSuspended;
+        }
+        
+        // Handle active/inactive
+        if (isActive !== undefined) {
+            organizer.isActive = isActive ? 1 : 2; // Assuming 1 is active, 2 is inactive based on previous code
+        }
 
         await organizer.save();
 
-        return Response.ok(res, { isActive: organizer.isActive }, 200, resp_messages(lang).update_success);
+        return Response.ok(res, { 
+            isActive: organizer.isActive,
+            is_suspended: organizer.is_suspended 
+        }, 200, resp_messages(lang).update_success);
     },
     changeUserStatus: async (req, res) => {
         const { lang } = req || 'en';
@@ -923,28 +941,6 @@ const adminController = {
         await user.save();
 
         return Response.ok(res, { isActive: user.isActive }, 200, resp_messages(lang).update_success);
-    },
-    deleteUser: async (req, res) => {
-        const { lang } = req || 'en';
-        try {
-            const { userId } = req.query;
-            
-            if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-                return Response.badRequestResponse(res, resp_messages(lang).id_required);
-            }
-            
-            const user = await UserService.FindOneService({ _id: userId });
-            if (!user) {
-                return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
-            }
-            
-            await UserService.FindByIdAndDeleteService(userId);
-            
-            return Response.ok(res, {}, 200, "User deleted successfully");
-        } catch (error) {
-            console.error(error);
-            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError);
-        }
     },
     eventList: async (req, res) => {
         const { lang } = req || 'en'
@@ -1446,14 +1442,33 @@ const adminController = {
 
     withdrawalList: async (req, res) => {
         try {
-
-            const { page = 1, limit = 10 } = req.query;
+            const { page = 1, limit = 10, search = '', status, from_date, to_date } = req.query;
             const skip = (Number(page) - 1) * Number(limit);
 
-            const transactions = await TransactionService.AggregateService([
-                {
-                    $match: { type: 2 }
-                },
+            // Build match query
+            let matchQuery = { type: 2 }; // Withdrawal type
+
+            // Status filter
+            if (status !== undefined && status !== '' && status !== 'all') {
+                matchQuery.status = Number(status);
+            }
+
+            // Date range filter
+            if (from_date || to_date) {
+                matchQuery.createdAt = {};
+                if (from_date) {
+                    matchQuery.createdAt.$gte = new Date(from_date);
+                }
+                if (to_date) {
+                    const toDate = new Date(to_date);
+                    toDate.setHours(23, 59, 59, 999);
+                    matchQuery.createdAt.$lte = toDate;
+                }
+            }
+
+            // Build aggregation pipeline
+            const pipeline = [
+                { $match: matchQuery },
                 {
                     $lookup: {
                         from: 'organizers',
@@ -1466,79 +1481,491 @@ const adminController = {
                     $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true },
                 },
                 {
-                    $project: {
-                        amount: 1,
-                        currency: 1,
-                        type: 1,
-                        status: 1,
-                        createdAt: 1,
-                        updatedAt: 1,
-                        organizer: {
-                            first_name: 1,
-                            last_name: 1,
-                            email: 1,
-                            phone_number: 1,
-                            profile_image: 1,
-                            country_code: 1,
-                        }
+                    $lookup: {
+                        from: 'admins',
+                        localField: 'processed_by',
+                        foreignField: '_id',
+                        as: 'processor'
                     }
                 },
+                {
+                    $unwind: { path: "$processor", preserveNullAndEmptyArrays: true },
+                }
+            ];
+
+            // Search filter (applied after lookup)
+            if (search && search.trim() !== '') {
+                pipeline.push({
+                    $match: {
+                        $or: [
+                            { 'organizer.first_name': { $regex: search, $options: 'i' } },
+                            { 'organizer.last_name': { $regex: search, $options: 'i' } },
+                            { 'organizer.email': { $regex: search, $options: 'i' } },
+                            { 'organizer.phone_number': { $regex: search, $options: 'i' } }
+                        ]
+                    }
+                });
+            }
+
+            // Project fields
+            pipeline.push({
+                $project: {
+                    amount: 1,
+                    currency: 1,
+                    type: 1,
+                    status: 1,
+                    createdAt: 1,
+                    updatedAt: 1,
+                    withdrawal_method: 1,
+                    bank_details: 1,
+                    admin_notes: 1,
+                    rejection_reason: 1,
+                    processed_at: 1,
+                    transaction_reference: 1,
+                    requested_at: 1,
+                    organizer: {
+                        _id: 1,
+                        first_name: 1,
+                        last_name: 1,
+                        email: 1,
+                        phone_number: 1,
+                        profile_image: 1,
+                        country_code: 1,
+                        bank_details: 1
+                    },
+                    processor: {
+                        first_name: 1,
+                        last_name: 1,
+                        email: 1
+                    }
+                }
+            });
+
+            // Sort, skip, limit
+            pipeline.push(
                 { $sort: { createdAt: -1 } },
                 { $skip: skip },
                 { $limit: Number(limit) }
-            ]);
+            );
 
-            const count = await TransactionService.CountDocumentService({ type: 2 })
+            const transactions = await TransactionService.AggregateService(pipeline);
+
+            // Get total count with same filters
+            const countPipeline = [
+                { $match: matchQuery },
+                {
+                    $lookup: {
+                        from: 'organizers',
+                        localField: 'organizer_id',
+                        foreignField: '_id',
+                        as: 'organizer'
+                    }
+                },
+                {
+                    $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true },
+                }
+            ];
+
+            if (search && search.trim() !== '') {
+                countPipeline.push({
+                    $match: {
+                        $or: [
+                            { 'organizer.first_name': { $regex: search, $options: 'i' } },
+                            { 'organizer.last_name': { $regex: search, $options: 'i' } },
+                            { 'organizer.email': { $regex: search, $options: 'i' } },
+                            { 'organizer.phone_number': { $regex: search, $options: 'i' } }
+                        ]
+                    }
+                });
+            }
+
+            countPipeline.push({ $count: "total" });
+            const countResult = await TransactionService.AggregateService(countPipeline);
+            const count = countResult.length > 0 ? countResult[0].total : 0;
+
             return Response.ok(res, transactions, 200, resp_messages(req.lang).fetched_data, count);
         } catch (error) {
-            console.error(error.message);
+            console.error('[ADMIN:WITHDRAWAL_LIST] Error:', error.message);
             return Response.serverErrorResponse(res, resp_messages(req.lang).internalServerError);
         }
     },
     withdrawalStatusUpdate: async (req, res) => {
         try {
-            const { id, status } = req.body;
+            const { id, status, admin_notes, rejection_reason, transaction_reference } = req.body;
+            const { userId } = req; // Admin ID
+            const lang = req.headers.lang || req.lang || 'en';
 
+            if (!id || (status !== 1 && status !== 2)) {
+                return Response.badRequestResponse(res, resp_messages(lang).invalid_data);
+            }
+
+            const transaction = await TransactionService.FindOneService({ _id: id });
+
+            if (!transaction) {
+                return Response.notFoundResponse(res, resp_messages(lang).data_not_found);
+            }
+
+            if (transaction.status == 1 || transaction.status == 2) {
+                return Response.badRequestResponse(res, resp_messages(lang).request_already_processed);
+            }
+
+            // Get organizer details
+            const organizerService = require('../services/organizerService');
+            const organizer = await organizerService.FindOneService({ _id: transaction.organizer_id });
+
+            if (!organizer) {
+                return Response.notFoundResponse(res, resp_messages(lang).organizer_not_found);
+            }
 
             if (status == 1) {
-                // Approved - money is withdrawn, wallet already set to 0 when request was made
-                const transaction = await TransactionService.FindOneService({ _id: id });
-
-                if (!transaction) {
-                    return Response.notFoundResponse(res, resp_messages(req.lang).data_not_found)
+                // APPROVED - money is withdrawn, wallet already set to 0 when request was made
+                transaction.status = 1;
+                transaction.processed_by = userId;
+                transaction.processed_at = new Date();
+                
+                if (admin_notes) {
+                    transaction.admin_notes = admin_notes;
                 }
-
-                if (transaction.status == 1 || transaction.status == 2) {
-                    return Response.badRequestResponse(res, resp_messages(req.lang).request_already_processed)
+                
+                if (transaction_reference) {
+                    transaction.transaction_reference = transaction_reference;
                 }
-                transaction.status = 1
 
                 await transaction.save();
 
-                return Response.ok(res, {}, 200, resp_messages(req.lang).update_success)
+                // Send notification to organizer
+                try {
+                    const NotificationService = require('../services/notificationService');
+                    await NotificationService.CreateService({
+                        user_id: organizer._id,
+                        role: 2, // Organizer role
+                        title: lang === 'ar' ? 'تمت الموافقة على طلب السحب' : 'Withdrawal Request Approved',
+                        description: lang === 'ar' 
+                            ? `تمت الموافقة على طلب سحب مبلغ ${transaction.amount} ${transaction.currency || 'SAR'}. سيتم تحويل المبلغ قريباً.`
+                            : `Your withdrawal request of ${transaction.amount} ${transaction.currency || 'SAR'} has been approved. The amount will be transferred soon.`,
+                        isRead: false,
+                        notification_type: 4, // Withdrawal type
+                        status: 1 // Approved
+                    });
+                } catch (notifError) {
+                    console.error('[ADMIN:WITHDRAWAL_APPROVE] Notification error:', notifError);
+                }
+
+                // Send email notification
+                try {
+                    const EmailService = require('../helpers/emailService');
+                    await EmailService.sendEmail({
+                        to: organizer.email,
+                        subject: lang === 'ar' ? 'تمت الموافقة على طلب السحب' : 'Withdrawal Request Approved - Zuroona',
+                        html: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <h2 style="color: #a3cc69;">Withdrawal Approved ✓</h2>
+                                <p>Dear ${organizer.first_name} ${organizer.last_name},</p>
+                                <p>Your withdrawal request has been approved!</p>
+                                <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                                    <h3 style="margin-top: 0;">Withdrawal Details:</h3>
+                                    <p><strong>Amount:</strong> ${transaction.amount} ${transaction.currency || 'SAR'}</p>
+                                    <p><strong>Request Date:</strong> ${new Date(transaction.createdAt).toLocaleDateString()}</p>
+                                    <p><strong>Approved Date:</strong> ${new Date().toLocaleDateString()}</p>
+                                    ${transaction_reference ? `<p><strong>Transaction Reference:</strong> ${transaction_reference}</p>` : ''}
+                                    ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ''}
+                                </div>
+                                <p>The amount will be transferred to your registered bank account within 3-5 business days.</p>
+                                <p>Thank you for using Zuroona!</p>
+                                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                                <p style="color: #666; font-size: 12px;">This is an automated email from Zuroona. Please do not reply.</p>
+                            </div>
+                        `
+                    });
+                } catch (emailError) {
+                    console.error('[ADMIN:WITHDRAWAL_APPROVE] Email error:', emailError);
+                }
+
+                return Response.ok(res, transaction, 200, resp_messages(lang).withdrawal_approved || 'Withdrawal approved successfully');
+
             } else if (status == 2) {
-                // Rejected - restore wallet balance
-                const transaction = await TransactionService.FindOneService({ _id: id });
-                if (transaction.status == 2 || transaction.status == 1) {
-                    return Response.badRequestResponse(res, resp_messages(req.lang).request_already_processed)
+                // REJECTED - restore wallet balance
+                transaction.status = 2;
+                transaction.processed_by = userId;
+                transaction.processed_at = new Date();
+                
+                if (admin_notes) {
+                    transaction.admin_notes = admin_notes;
                 }
-                transaction.status = 2
+                
+                if (rejection_reason) {
+                    transaction.rejection_reason = rejection_reason;
+                }
+
                 await transaction.save();
 
-                const amount = transaction.amount
+                const amount = transaction.amount;
                 const organizer_id = transaction.organizer_id;
 
-                const wallet = await WalletService.FindOneService({ organizer_id: organizer_id });
                 // Restore the amount back to wallet
+                const wallet = await WalletService.FindOneService({ organizer_id: organizer_id });
                 wallet.total_amount = wallet.total_amount + amount;
-
                 await wallet.save();
-                return Response.ok(res, {}, 200, resp_messages(req.lang).update_success)
+
+                // Send notification to organizer
+                try {
+                    const NotificationService = require('../services/notificationService');
+                    await NotificationService.CreateService({
+                        user_id: organizer._id,
+                        role: 2, // Organizer role
+                        title: lang === 'ar' ? 'تم رفض طلب السحب' : 'Withdrawal Request Rejected',
+                        description: lang === 'ar' 
+                            ? `تم رفض طلب سحب مبلغ ${amount} ${transaction.currency || 'SAR'}. تم إرجاع المبلغ إلى محفظتك.${rejection_reason ? ` السبب: ${rejection_reason}` : ''}`
+                            : `Your withdrawal request of ${amount} ${transaction.currency || 'SAR'} has been rejected. The amount has been restored to your wallet.${rejection_reason ? ` Reason: ${rejection_reason}` : ''}`,
+                        isRead: false,
+                        notification_type: 4, // Withdrawal type
+                        status: 2 // Rejected
+                    });
+                } catch (notifError) {
+                    console.error('[ADMIN:WITHDRAWAL_REJECT] Notification error:', notifError);
+                }
+
+                // Send email notification
+                try {
+                    const EmailService = require('../helpers/emailService');
+                    await EmailService.sendEmail({
+                        to: organizer.email,
+                        subject: lang === 'ar' ? 'تم رفض طلب السحب' : 'Withdrawal Request Rejected - Zuroona',
+                        html: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                <h2 style="color: #a797cc;">Withdrawal Rejected</h2>
+                                <p>Dear ${organizer.first_name} ${organizer.last_name},</p>
+                                <p>Your withdrawal request has been rejected.</p>
+                                <div style="background-color: #fff3f3; padding: 20px; border-radius: 10px; border-left: 4px solid #a797cc; margin: 20px 0;">
+                                    <h3 style="margin-top: 0;">Withdrawal Details:</h3>
+                                    <p><strong>Amount:</strong> ${amount} ${transaction.currency || 'SAR'}</p>
+                                    <p><strong>Request Date:</strong> ${new Date(transaction.createdAt).toLocaleDateString()}</p>
+                                    <p><strong>Rejected Date:</strong> ${new Date().toLocaleDateString()}</p>
+                                    ${rejection_reason ? `<p><strong>Rejection Reason:</strong> ${rejection_reason}</p>` : ''}
+                                    ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ''}
+                                </div>
+                                <p><strong>Good News:</strong> The amount of ${amount} ${transaction.currency || 'SAR'} has been restored to your wallet balance.</p>
+                                <p>You can submit a new withdrawal request after resolving the mentioned issues.</p>
+                                <p>If you have any questions, please contact our support team.</p>
+                                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                                <p style="color: #666; font-size: 12px;">This is an automated email from Zuroona. Please do not reply.</p>
+                            </div>
+                        `
+                    });
+                } catch (emailError) {
+                    console.error('[ADMIN:WITHDRAWAL_REJECT] Email error:', emailError);
+                }
+
+                return Response.ok(res, transaction, 200, resp_messages(lang).withdrawal_rejected || 'Withdrawal rejected successfully');
             }
 
         } catch (error) {
-            return Response.serverErrorResponse(res, resp_messages(req.lang).internalServerError)
+            console.error('[ADMIN:WITHDRAWAL_STATUS_UPDATE] Error:', error);
+            return Response.serverErrorResponse(res, resp_messages(req.lang).internalServerError);
+        }
+    },
 
+    /**
+     * Get withdrawal statistics (Admin)
+     * GET /admin/organizer/withdrawalStats
+     */
+    withdrawalStats: async (req, res) => {
+        try {
+            const lang = req.headers.lang || req.lang || 'en';
+
+            // Get all withdrawal transactions
+            const allWithdrawals = await TransactionService.FindService(1, 10000, { type: 2 });
+
+            // Calculate statistics
+            const stats = {
+                total_requests: allWithdrawals.length,
+                pending_requests: 0,
+                approved_requests: 0,
+                rejected_requests: 0,
+                total_amount: 0,
+                pending_amount: 0,
+                approved_amount: 0,
+                rejected_amount: 0,
+                monthly_trend: [],
+                top_hosts: [],
+                recent_activity: []
+            };
+
+            // Calculate counts and amounts
+            allWithdrawals.forEach(withdrawal => {
+                stats.total_amount += withdrawal.amount || 0;
+
+                if (withdrawal.status === 0) {
+                    stats.pending_requests++;
+                    stats.pending_amount += withdrawal.amount || 0;
+                } else if (withdrawal.status === 1) {
+                    stats.approved_requests++;
+                    stats.approved_amount += withdrawal.amount || 0;
+                } else if (withdrawal.status === 2) {
+                    stats.rejected_requests++;
+                    stats.rejected_amount += withdrawal.amount || 0;
+                }
+            });
+
+            // Get monthly trend (last 6 months)
+            const monthlyData = await TransactionService.AggregateService([
+                {
+                    $match: {
+                        type: 2,
+                        createdAt: {
+                            $gte: new Date(new Date().setMonth(new Date().getMonth() - 6))
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            year: { $year: "$createdAt" },
+                            month: { $month: "$createdAt" }
+                        },
+                        total_requests: { $sum: 1 },
+                        total_amount: { $sum: "$amount" },
+                        approved: {
+                            $sum: { $cond: [{ $eq: ["$status", 1] }, 1, 0] }
+                        },
+                        rejected: {
+                            $sum: { $cond: [{ $eq: ["$status", 2] }, 1, 0] }
+                        },
+                        pending: {
+                            $sum: { $cond: [{ $eq: ["$status", 0] }, 1, 0] }
+                        }
+                    }
+                },
+                {
+                    $sort: { "_id.year": 1, "_id.month": 1 }
+                }
+            ]);
+
+            stats.monthly_trend = monthlyData.map(item => ({
+                month: `${item._id.year}-${String(item._id.month).padStart(2, '0')}`,
+                month_name: new Date(item._id.year, item._id.month - 1).toLocaleString('en', { month: 'short' }),
+                total_requests: item.total_requests,
+                total_amount: item.total_amount,
+                approved: item.approved,
+                rejected: item.rejected,
+                pending: item.pending
+            }));
+
+            // Get top hosts (most withdrawn)
+            const topHostsData = await TransactionService.AggregateService([
+                {
+                    $match: { type: 2, status: 1 } // Only approved withdrawals
+                },
+                {
+                    $group: {
+                        _id: "$organizer_id",
+                        total_withdrawn: { $sum: "$amount" },
+                        request_count: { $sum: 1 }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'organizers',
+                        localField: '_id',
+                        foreignField: '_id',
+                        as: 'organizer'
+                    }
+                },
+                {
+                    $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true }
+                },
+                {
+                    $project: {
+                        host_name: {
+                            $concat: [
+                                { $ifNull: ["$organizer.first_name", ""] },
+                                " ",
+                                { $ifNull: ["$organizer.last_name", ""] }
+                            ]
+                        },
+                        host_email: "$organizer.email",
+                        profile_image: "$organizer.profile_image",
+                        total_withdrawn: 1,
+                        request_count: 1
+                    }
+                },
+                { $sort: { total_withdrawn: -1 } },
+                { $limit: 10 }
+            ]);
+
+            stats.top_hosts = topHostsData;
+
+            // Get recent activity (last 10 transactions)
+            const recentActivity = await TransactionService.AggregateService([
+                { $match: { type: 2 } },
+                {
+                    $lookup: {
+                        from: 'organizers',
+                        localField: 'organizer_id',
+                        foreignField: '_id',
+                        as: 'organizer'
+                    }
+                },
+                {
+                    $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true }
+                },
+                {
+                    $project: {
+                        amount: 1,
+                        status: 1,
+                        createdAt: 1,
+                        host_name: {
+                            $concat: [
+                                { $ifNull: ["$organizer.first_name", ""] },
+                                " ",
+                                { $ifNull: ["$organizer.last_name", ""] }
+                            ]
+                        },
+                        host_image: "$organizer.profile_image"
+                    }
+                },
+                { $sort: { createdAt: -1 } },
+                { $limit: 10 }
+            ]);
+
+            stats.recent_activity = recentActivity;
+
+            // Calculate average processing time
+            const processedWithdrawals = await TransactionService.AggregateService([
+                {
+                    $match: {
+                        type: 2,
+                        status: { $in: [1, 2] },
+                        processed_at: { $exists: true }
+                    }
+                },
+                {
+                    $project: {
+                        processing_time: {
+                            $subtract: ["$processed_at", "$requested_at"]
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        avg_processing_time: { $avg: "$processing_time" }
+                    }
+                }
+            ]);
+
+            if (processedWithdrawals.length > 0) {
+                const avgTimeMs = processedWithdrawals[0].avg_processing_time;
+                const avgTimeHours = (avgTimeMs / (1000 * 60 * 60)).toFixed(1);
+                stats.avg_processing_time_hours = parseFloat(avgTimeHours);
+            } else {
+                stats.avg_processing_time_hours = 0;
+            }
+
+            return Response.ok(res, stats, 200, resp_messages(lang).fetched_data || 'Statistics fetched successfully');
+        } catch (error) {
+            console.error('[ADMIN:WITHDRAWAL_STATS] Error:', error);
+            return Response.serverErrorResponse(res, resp_messages(req.lang).internalServerError);
         }
     },
 
@@ -2172,80 +2599,262 @@ const adminController = {
     },
     
     // Wallet details endpoint
-    walletDetails: async (req, res) => {
-        const { lang } = req || 'en';
+    /**
+     * Get comprehensive wallet statistics
+     */
+    getWalletStats: async (req, res) => {
+        const lang = req.lang || req.headers["lang"] || "en";
         try {
-            // Use MongoDB aggregation to get accurate sums - REAL DATA ONLY, NO DUMMY
-            // This ensures we get ALL records, not limited by pagination
-            
-            // Calculate total balance from all wallets using aggregation
-            const walletTotalResult = await WalletService.AggregateService([
+            // Overall Statistics
+            const wallets = await WalletService.AggregateService([
                 {
                     $group: {
                         _id: null,
-                        total_balance: { $sum: { $ifNull: ["$total_amount", 0] } }
+                        total_balance: { $sum: "$total_amount" },
+                        total_wallets: { $sum: 1 },
+                        avg_balance: { $avg: "$total_amount" },
+                        max_balance: { $max: "$total_amount" },
+                        min_balance: { $min: "$total_amount" }
                     }
                 }
             ]);
-            const total_balance = walletTotalResult.length > 0 ? (walletTotalResult[0].total_balance || 0) : 0;
-            
-            // Calculate pending withdrawals (type = 2, status = 0) using aggregation
-            const pendingResult = await TransactionService.AggregateService([
+
+            // Transaction Statistics
+            const transactionStats = await TransactionService.AggregateService([
+                {
+                    $group: {
+                        _id: "$type",
+                        total_amount: { $sum: "$amount" },
+                        count: { $sum: 1 },
+                        avg_amount: { $avg: "$amount" }
+                    }
+                }
+            ]);
+
+            // Withdrawal Statistics by Status
+            const withdrawalStats = await TransactionService.AggregateService([
+                {
+                    $match: { type: 2 }
+                },
+                {
+                    $group: {
+                        _id: "$status",
+                        total_amount: { $sum: "$amount" },
+                        count: { $sum: 1 }
+                    }
+                }
+            ]);
+
+            // Monthly Trends (last 6 months)
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+            const monthlyTrends = await TransactionService.AggregateService([
+                {
+                    $match: {
+                        createdAt: { $gte: sixMonthsAgo },
+                        status: 1
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            year: { $year: "$createdAt" },
+                            month: { $month: "$createdAt" },
+                            type: "$type"
+                        },
+                        total_amount: { $sum: "$amount" },
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { "_id.year": 1, "_id.month": 1 } }
+            ]);
+
+            // Top 10 Hosts by Balance
+            const topHosts = await WalletService.AggregateService([
+                {
+                    $lookup: {
+                        from: "organizers",
+                        localField: "organizer_id",
+                        foreignField: "_id",
+                        as: "organizer"
+                    }
+                },
+                { $unwind: "$organizer" },
+                {
+                    $project: {
+                        total_amount: 1,
+                        organizer: {
+                            _id: 1,
+                            first_name: 1,
+                            last_name: 1,
+                            group_name: 1,
+                            profile_image: 1,
+                            email: 1
+                        }
+                    }
+                },
+                { $sort: { total_amount: -1 } },
+                { $limit: 10 }
+            ]);
+
+            // Top 10 Hosts by Total Earnings
+            const topEarners = await TransactionService.AggregateService([
+                {
+                    $match: { type: 1, status: 1 }
+                },
+                {
+                    $group: {
+                        _id: "$organizer_id",
+                        total_earnings: { $sum: "$amount" },
+                        transaction_count: { $sum: 1 }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "organizers",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "organizer"
+                    }
+                },
+                { $unwind: "$organizer" },
+                {
+                    $project: {
+                        total_earnings: 1,
+                        transaction_count: 1,
+                        organizer: {
+                            _id: 1,
+                            first_name: 1,
+                            last_name: 1,
+                            group_name: 1,
+                            profile_image: 1
+                        }
+                    }
+                },
+                { $sort: { total_earnings: -1 } },
+                { $limit: 10 }
+            ]);
+
+            // Recent Activity (last 7 days)
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const recentActivity = await TransactionService.CountDocumentService({
+                createdAt: { $gte: sevenDaysAgo }
+            });
+
+            // Pending Withdrawals
+            const pendingWithdrawals = await TransactionService.AggregateService([
                 {
                     $match: { type: 2, status: 0 }
                 },
                 {
                     $group: {
                         _id: null,
-                        total: { $sum: { $ifNull: ["$amount", 0] } }
+                        total_amount: { $sum: "$amount" },
+                        count: { $sum: 1 }
                     }
                 }
             ]);
-            const pending_balance = pendingResult.length > 0 ? (pendingResult[0].total || 0) : 0;
+
+            // Calculate totals
+            const earnings = transactionStats.find(s => s._id === 1) || { total_amount: 0, count: 0 };
+            const withdrawals = transactionStats.find(s => s._id === 2) || { total_amount: 0, count: 0 };
+            const refunds = transactionStats.find(s => s._id === 3) || { total_amount: 0, count: 0 };
+
+            const pendingWd = withdrawalStats.find(s => s._id === 0) || { total_amount: 0, count: 0 };
+            const approvedWd = withdrawalStats.find(s => s._id === 1) || { total_amount: 0, count: 0 };
+            const rejectedWd = withdrawalStats.find(s => s._id === 2) || { total_amount: 0, count: 0 };
+
+            const stats = {
+                // Overall Wallet Stats
+                total_balance: wallets[0]?.total_balance || 0,
+                total_wallets: wallets[0]?.total_wallets || 0,
+                avg_balance: wallets[0]?.avg_balance || 0,
+                max_balance: wallets[0]?.max_balance || 0,
+                min_balance: wallets[0]?.min_balance || 0,
+
+                // Transaction Totals
+                total_earnings: earnings.total_amount,
+                total_withdrawals: withdrawals.total_amount,
+                total_refunds: refunds.total_amount,
+                total_transactions: earnings.count + withdrawals.count + refunds.count,
+
+                // Withdrawal Status
+                pending_withdrawals: pendingWd.count,
+                pending_withdrawals_amount: pendingWd.total_amount,
+                approved_withdrawals: approvedWd.count,
+                approved_withdrawals_amount: approvedWd.total_amount,
+                rejected_withdrawals: rejectedWd.count,
+                rejected_withdrawals_amount: rejectedWd.total_amount,
+
+                // Available Balance
+                available_balance: (wallets[0]?.total_balance || 0) - (pendingWd.total_amount || 0),
+
+                // Recent Activity
+                recent_activity: recentActivity,
+
+                // Trends and Rankings
+                monthly_trends: monthlyTrends,
+                top_hosts: topHosts,
+                top_earners: topEarners
+            };
+
+            return Response.ok(res, stats, 200, resp_messages(lang).success || "Success");
+        } catch (error) {
+            console.error("Error fetching wallet stats:", error);
+            return Response.serverErrorResponse(res, error.message || resp_messages(lang).internalServerError);
+        }
+    },
+
+    walletDetails: async (req, res) => {
+        const { lang } = req || 'en';
+        try {
+            // Get all wallets and calculate totals
+            const wallets = await WalletService.FindService(1, 1000, {});
             
-            // Calculate completed withdrawals (type = 2, status = 1) using aggregation
-            const withdrawalsResult = await TransactionService.AggregateService([
-                {
-                    $match: { type: 2, status: 1 }
-                },
-                {
-                    $group: {
-                        _id: null,
-                        total: { $sum: { $ifNull: ["$amount", 0] } }
-                    }
-                }
-            ]);
-            const total_withdrawals = withdrawalsResult.length > 0 ? (withdrawalsResult[0].total || 0) : 0;
+            let total_balance = 0;
+            let pending_balance = 0;
+            let available_balance = 0;
+            let total_withdrawals = 0;
+            let total_earnings = 0;
             
-            // Calculate total earnings (type = 1, status = 1) using aggregation
-            const earningsResult = await TransactionService.AggregateService([
-                {
-                    $match: { type: 1, status: 1 }
-                },
-                {
-                    $group: {
-                        _id: null,
-                        total: { $sum: { $ifNull: ["$amount", 0] } }
-                    }
-                }
-            ]);
-            const total_earnings = earningsResult.length > 0 ? (earningsResult[0].total || 0) : 0;
+            // Calculate totals from wallets
+            wallets.forEach(wallet => {
+                total_balance += wallet.total_amount || 0;
+                available_balance += wallet.total_amount || 0;
+            });
             
-            // Calculate available balance (total - pending)
-            const available_balance = Math.max(0, total_balance - pending_balance);
+            // Get pending withdrawal requests (status = 0)
+            const pendingTransactions = await TransactionService.FindService(1, 1000, { type: 2, status: 0 });
+            pendingTransactions.forEach(transaction => {
+                pending_balance += transaction.amount || 0;
+                available_balance -= transaction.amount || 0; // Subtract pending from available
+            });
             
-            // Round to 2 decimal places for currency display
+            // Get completed withdrawals (status = 1)
+            const completedWithdrawals = await TransactionService.FindService(1, 1000, { type: 2, status: 1 });
+            completedWithdrawals.forEach(transaction => {
+                total_withdrawals += transaction.amount || 0;
+            });
+            
+            // Get all earnings (type = 1, status = 1)
+            const earnings = await TransactionService.FindService(1, 1000, { type: 1, status: 1 });
+            earnings.forEach(transaction => {
+                total_earnings += transaction.amount || 0;
+            });
+            
             const walletData = {
-                total_balance: Math.round((Number(total_balance) + Number.EPSILON) * 100) / 100,
-                pending_balance: Math.round((Number(pending_balance) + Number.EPSILON) * 100) / 100,
-                available_balance: Math.round((Number(available_balance) + Number.EPSILON) * 100) / 100,
-                total_withdrawals: Math.round((Number(total_withdrawals) + Number.EPSILON) * 100) / 100,
-                total_earnings: Math.round((Number(total_earnings) + Number.EPSILON) * 100) / 100
+                total_balance,
+                pending_balance,
+                available_balance: Math.max(0, available_balance),
+                total_withdrawals,
+                total_earnings
             };
             
             return Response.ok(res, walletData, 200, resp_messages(lang).fetched_data);
         } catch (error) {
-            console.error("Wallet Details Error:", error);
+            console.error(error);
             return Response.serverErrorResponse(res, resp_messages(lang).internalServerError);
         }
     },
@@ -2520,6 +3129,324 @@ const adminController = {
             return Response.serverErrorResponse(
                 res,
                 resp_messages(lang).internalServerError
+            );
+        }
+    },
+
+    /**
+     * Get all guest bookings with invoices
+     * GET /admin/bookings/invoices
+     */
+    /**
+     * Get invoice statistics and analytics
+     */
+    getInvoiceStats: async (req, res) => {
+        try {
+            const lang = req.lang || req.headers["lang"] || "en";
+
+            // Total invoices count by status
+            const totalInvoices = await BookEventService.CountService({ payment_status: 1, invoice_id: { $exists: true, $ne: null } });
+            const pendingInvoices = await BookEventService.CountService({ payment_status: 1, book_status: 1, invoice_id: { $exists: true, $ne: null } });
+            const confirmedInvoices = await BookEventService.CountService({ payment_status: 1, book_status: 2, invoice_id: { $exists: true, $ne: null } });
+            const completedInvoices = await BookEventService.CountService({ payment_status: 1, book_status: 5, invoice_id: { $exists: true, $ne: null } });
+            const cancelledInvoices = await BookEventService.CountService({ payment_status: 1, book_status: { $in: [3, 6] }, invoice_id: { $exists: true, $ne: null } });
+
+            // Total amount statistics
+            const amountStats = await BookEventService.AggregateService([
+                { $match: { payment_status: 1, invoice_id: { $exists: true, $ne: null } } },
+                {
+                    $group: {
+                        _id: null,
+                        total_amount: { $sum: "$total_amount" },
+                        avg_amount: { $avg: "$total_amount" },
+                        max_amount: { $max: "$total_amount" },
+                        min_amount: { $min: "$total_amount" },
+                    },
+                },
+            ]);
+
+            // Monthly trends (last 6 months)
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+            const monthlyTrends = await BookEventService.AggregateService([
+                {
+                    $match: {
+                        payment_status: 1,
+                        invoice_id: { $exists: true, $ne: null },
+                        createdAt: { $gte: sixMonthsAgo },
+                    },
+                },
+                {
+                    $group: {
+                        _id: {
+                            year: { $year: "$createdAt" },
+                            month: { $month: "$createdAt" },
+                        },
+                        total_invoices: { $sum: 1 },
+                        total_amount: { $sum: "$total_amount" },
+                        avg_amount: { $avg: "$total_amount" },
+                    },
+                },
+                { $sort: { "_id.year": 1, "_id.month": 1 } },
+            ]);
+
+            // Top events by invoice count
+            const topEvents = await BookEventService.AggregateService([
+                {
+                    $match: {
+                        payment_status: 1,
+                        invoice_id: { $exists: true, $ne: null },
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "events",
+                        localField: "event_id",
+                        foreignField: "_id",
+                        as: "event",
+                    },
+                },
+                { $unwind: "$event" },
+                {
+                    $group: {
+                        _id: "$event_id",
+                        event_name: { $first: "$event.event_name" },
+                        event_image: { $first: "$event.event_main_image" },
+                        total_invoices: { $sum: 1 },
+                        total_amount: { $sum: "$total_amount" },
+                    },
+                },
+                { $sort: { total_amount: -1 } },
+                { $limit: 5 },
+            ]);
+
+            // Payment method distribution (if available)
+            const paymentMethodStats = await BookEventService.AggregateService([
+                {
+                    $match: {
+                        payment_status: 1,
+                        invoice_id: { $exists: true, $ne: null },
+                    },
+                },
+                {
+                    $group: {
+                        _id: "$payment_method",
+                        count: { $sum: 1 },
+                        total_amount: { $sum: "$total_amount" },
+                    },
+                },
+            ]);
+
+            // Recent invoices (last 7 days)
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const recentInvoicesCount = await BookEventService.CountService({
+                payment_status: 1,
+                invoice_id: { $exists: true, $ne: null },
+                createdAt: { $gte: sevenDaysAgo },
+            });
+
+            const stats = {
+                total_invoices: totalInvoices,
+                pending_invoices: pendingInvoices,
+                confirmed_invoices: confirmedInvoices,
+                completed_invoices: completedInvoices,
+                cancelled_invoices: cancelledInvoices,
+                recent_invoices: recentInvoicesCount,
+                total_amount: amountStats[0]?.total_amount || 0,
+                avg_amount: amountStats[0]?.avg_amount || 0,
+                max_amount: amountStats[0]?.max_amount || 0,
+                min_amount: amountStats[0]?.min_amount || 0,
+                monthly_trends: monthlyTrends,
+                top_events: topEvents,
+                payment_method_stats: paymentMethodStats,
+            };
+
+            return Response.ok(res, stats, 200, resp_messages(lang).success);
+        } catch (error) {
+            console.error("Error fetching invoice stats:", error);
+            return Response.serverError(res, {}, 500, error.message);
+        }
+    },
+
+    getAllBookingsWithInvoices: async (req, res) => {
+        try {
+            const lang = req.lang || req.headers["lang"] || "en";
+            const { page = 1, limit = 10, search = "", payment_status, book_status, from_date, to_date } = req.query;
+            const skip = (parseInt(page) - 1) * parseInt(limit);
+
+            // Build match query
+            const matchQuery = {};
+
+            // Filter by payment status (only show paid bookings with invoices)
+            if (payment_status !== undefined) {
+                matchQuery.payment_status = parseInt(payment_status);
+            } else {
+                // Default: show only paid bookings
+                matchQuery.payment_status = 1;
+            }
+
+            // Filter by book status
+            if (book_status !== undefined && book_status !== "") {
+                matchQuery.book_status = parseInt(book_status);
+            }
+
+            // Date range filter
+            if (from_date || to_date) {
+                matchQuery.createdAt = {};
+                if (from_date) {
+                    matchQuery.createdAt.$gte = new Date(from_date);
+                }
+                if (to_date) {
+                    const endDate = new Date(to_date);
+                    endDate.setHours(23, 59, 59, 999); // End of day
+                    matchQuery.createdAt.$lte = endDate;
+                }
+            }
+
+            // Search by event name, user name, or invoice ID
+            if (search && search.trim() !== "") {
+                matchQuery.$or = [
+                    { invoice_id: { $regex: search, $options: "i" } },
+                    { order_id: { $regex: search, $options: "i" } },
+                ];
+            }
+
+            // Aggregate to get bookings with related data
+            const bookings = await BookEventService.AggregateService([
+                { $match: matchQuery },
+                {
+                    $lookup: {
+                        from: "events",
+                        localField: "event_id",
+                        foreignField: "_id",
+                        as: "event",
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "user_id",
+                        foreignField: "_id",
+                        as: "user",
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "organizers",
+                        localField: "organizer_id",
+                        foreignField: "_id",
+                        as: "organizer",
+                    },
+                },
+                { $unwind: "$event" },
+                { $unwind: "$user" },
+                { $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true } },
+                // Add search filter for event name and user name
+                ...(search && search.trim() !== "" ? [{
+                    $match: {
+                        $or: [
+                            { "event.event_name": { $regex: search, $options: "i" } },
+                            { "user.first_name": { $regex: search, $options: "i" } },
+                            { "user.last_name": { $regex: search, $options: "i" } },
+                            { "user.email": { $regex: search, $options: "i" } },
+                            { invoice_id: { $regex: search, $options: "i" } },
+                            { order_id: { $regex: search, $options: "i" } },
+                        ],
+                    },
+                }] : []),
+                {
+                    $project: {
+                        _id: 1,
+                        order_id: 1,
+                        invoice_id: 1,
+                        invoice_url: 1,
+                        payment_status: 1,
+                        book_status: 1,
+                        total_amount: 1,
+                        no_of_attendees: 1,
+                        payment_id: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        event: {
+                            _id: "$event._id",
+                            event_name: "$event.event_name",
+                            event_date: "$event.event_date",
+                            event_price: "$event.event_price",
+                        },
+                        user: {
+                            _id: "$user._id",
+                            first_name: "$user.first_name",
+                            last_name: "$user.last_name",
+                            email: "$user.email",
+                            phone_number: "$user.phone_number",
+                            profile_image: "$user.profile_image",
+                        },
+                        organizer: {
+                            _id: "$organizer._id",
+                            first_name: "$organizer.first_name",
+                            last_name: "$organizer.last_name",
+                            group_name: "$organizer.group_name",
+                        },
+                    },
+                },
+                { $sort: { createdAt: -1 } },
+                { $skip: skip },
+                { $limit: parseInt(limit) },
+            ]);
+
+            // Get total count
+            const countPipeline = [
+                { $match: matchQuery },
+                {
+                    $lookup: {
+                        from: "events",
+                        localField: "event_id",
+                        foreignField: "_id",
+                        as: "event",
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "user_id",
+                        foreignField: "_id",
+                        as: "user",
+                    },
+                },
+                { $unwind: "$event" },
+                { $unwind: "$user" },
+                ...(search && search.trim() !== "" ? [{
+                    $match: {
+                        $or: [
+                            { "event.event_name": { $regex: search, $options: "i" } },
+                            { "user.first_name": { $regex: search, $options: "i" } },
+                            { "user.last_name": { $regex: search, $options: "i" } },
+                            { "user.email": { $regex: search, $options: "i" } },
+                            { invoice_id: { $regex: search, $options: "i" } },
+                            { order_id: { $regex: search, $options: "i" } },
+                        ],
+                    },
+                }] : []),
+                { $count: "total" },
+            ];
+
+            const countResult = await BookEventService.AggregateService(countPipeline);
+            const totalCount = countResult.length > 0 ? countResult[0].total : 0;
+
+            return Response.ok(
+                res,
+                bookings,
+                200,
+                resp_messages(lang).fetched_data,
+                totalCount
+            );
+        } catch (error) {
+            console.error("[ADMIN:INVOICES] Error fetching bookings with invoices:", error);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(req.lang || "en").internalServerError
             );
         }
     },

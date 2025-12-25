@@ -131,9 +131,9 @@ export default function EventsNear() {
 								<div className="relative mb-6 w-20 h-20">
                                     <div className="absolute inset-0 bg-brand-orange/10 rounded-full blur-xl animate-pulse"></div>
                                     <Image
-                                        src="/assets/images/main-logo.png"
-										width={80}
-										height={80}
+                                        src="/assets/images/x_F_logo.png"
+										width={120}
+										height={40}
 										alt="No Events"
 										className="object-contain relative z-10 opacity-40"
 									/>

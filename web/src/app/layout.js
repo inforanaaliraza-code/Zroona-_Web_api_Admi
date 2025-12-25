@@ -17,11 +17,11 @@ export default function RootLayout({ children }) {
     <html lang="ar" dir="rtl" className={`${ibmPlexSansArabic.variable} ${poppins.variable} ${tajawal.variable}`} suppressHydrationWarning>
       <head>
         <title>Zuroona - Your Event Platform</title>
-        <link rel="icon" type="image/png" href="/assets/images/main-logo.png" />
-        <link rel="shortcut icon" type="image/png" href="/assets/images/main-logo.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/main-logo.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/main-logo.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/main-logo.png" />
+        <link rel="icon" type="image/png" href="/assets/images/x_F_logo.png" />
+        <link rel="shortcut icon" type="image/png" href="/assets/images/x_F_logo.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/x_F_logo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/x_F_logo.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/x_F_logo.png" />
         <meta name="theme-color" content="#a797cc" />
         <meta name="description" content="Zuroona - Discover and book amazing events in Saudi Arabia" />
         <link
@@ -45,7 +45,14 @@ export default function RootLayout({ children }) {
       </head>
       <body className="font-ibm-arabic" suppressHydrationWarning>
         <Provider store={store}>
-          <Suspense fallback={<div>Loading...</div>}>
+          <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-[#a797cc] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading...</p>
+              </div>
+            </div>
+          }>
             <I18nextProvider i18n={i18n}>
               <RTLHandler />
               <ToastContainer 

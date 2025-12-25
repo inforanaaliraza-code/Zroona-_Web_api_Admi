@@ -151,7 +151,7 @@ function AdminModal({ show, onClose, admin }) {
                   value={values.admin_name}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f47c0c]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc]"
                   placeholder="Enter admin name"
                 />
                 {errors.admin_name && touched.admin_name && (
@@ -170,7 +170,7 @@ function AdminModal({ show, onClose, admin }) {
                   value={values.username}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f47c0c]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc]"
                   placeholder="Enter username"
                 />
                 {errors.username && touched.username && (
@@ -189,7 +189,7 @@ function AdminModal({ show, onClose, admin }) {
                   value={values.mobile_number}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f47c0c]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc]"
                   placeholder="0598379373"
                 />
                 {errors.mobile_number && touched.mobile_number && (
@@ -208,7 +208,7 @@ function AdminModal({ show, onClose, admin }) {
                   value={values.email}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f47c0c]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc]"
                   placeholder="Enter email (optional)"
                 />
                 {errors.email && touched.email && (
@@ -228,7 +228,7 @@ function AdminModal({ show, onClose, admin }) {
                     value={values.password}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f47c0c]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc]"
                     placeholder="Enter password"
                   />
                   {errors.password && touched.password && (
@@ -249,7 +249,7 @@ function AdminModal({ show, onClose, admin }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-[#f47c0c] text-white rounded-lg hover:bg-[#e66b00] transition disabled:opacity-50"
+                  className="px-4 py-2 bg-[#a797cc] text-white rounded-lg hover:bg-[#a08ec8] transition disabled:opacity-50"
                 >
                   {loading ? <Loader color="#fff" /> : admin ? "Update" : "Create"}
                 </button>

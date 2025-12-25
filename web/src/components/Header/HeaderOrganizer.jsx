@@ -89,35 +89,42 @@ const HeaderOrganizer = ({ bgColor, hideLogo = false }) => {
         <>
             {/* Logo and Navigation */}
             <div className="relative z-50 pb-24 sm:pb-20 md:pb-20 lg:pb-20" style={{ backgroundColor: bgColor || '#fff' }}>
-                <div className="absolute top-0 left-0 right-0 z-10 w-full border-b border-brand-orange" style={{ backgroundColor: bgColor || '#fff' }}>
+                <div className="absolute top-0 left-0 right-0 z-10 w-full border-b border-[#b0a0df]/30 bg-[#b0a0df] shadow-md">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="p-4 md:p-0 flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0 lg:space-x-4">
+                        <div className="p-4 md:p-0 flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0 lg:space-x-4 min-h-[72px]">
 
                     {/* Logo and Search Bar */}
                     <div className=' w-full lg:w-auto flex flex-row justify-between items-center gap-y-4 gap-x-2 sm:gap-x-5'>
-                        {/* Logo */}
+                        {/* Logo - Centered Vertically, Bigger, Responsive */}
                         {!hideLogo && (
                             <>
-                                <div className="w-[165px] hidden sm:block">
-                                    <Link href="#">
+                                {/* Desktop Logo - Bigger sizes */}
+                                <div className="hidden sm:block flex items-center h-full pt-1">
+                                    <Link href="#" className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105">
                                         <Image
-                                            src="/assets/images/main-logo.png"
-                                            width={70}
-                                            height={70}
+                                            src="/assets/images/x_F_logo.png"
+                                            width={300}
+                                            height={90}
                                             alt="Logo"
-                                            className='w-full h-auto object-cover'
+                                            className='object-contain w-auto h-auto
+                                              max-h-[60px] sm:max-h-[65px] md:max-h-[75px] lg:max-h-[85px] xl:max-h-[90px]
+                                              max-w-[220px] sm:max-w-[250px] md:max-w-[280px] lg:max-w-[300px] xl:max-w-[320px]
+                                              brightness-0 invert'
                                         />
                                     </Link>
                                 </div>
 
-                                <div className="w-[60px] block sm:hidden">
-                                    <Link href="/">
+                                {/* Mobile Logo - Bigger sizes */}
+                                <div className="block sm:hidden flex items-center h-full pt-1">
+                                    <Link href="/" className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105">
                                         <Image
-                                            src="/assets/images/main-logo.png"
-                                            width={65}
-                                            height={65}
+                                            src="/assets/images/x_F_logo.png"
+                                            width={200}
+                                            height={60}
                                             alt="Logo"
-                                            className='w-full h-auto object-cover'
+                                            className='object-contain w-auto h-auto
+                                              max-h-[50px] max-w-[50px]
+                                              brightness-0 invert'
                                         />
                                     </Link>
                                 </div>
@@ -143,9 +150,9 @@ const HeaderOrganizer = ({ bgColor, hideLogo = false }) => {
                                                     e.stopPropagation();
                                                 }}
                                             >
-                                                <Icon icon="lucide:bell" className="w-[17px] h-[21px] text-brand-gray-purple-2" />
+                                                <Icon icon="lucide:bell" className="w-[12px] h-[15px] text-brand-gray-purple-2" />
                                                 {/* Notification Badge */}
-                                                <span className="absolute -top-2 -right-2 sm:-top-2 sm:-right-2 bg-gray-950 text-white text-[0.55rem] sm:text-[0.60rem] font-semibold w-4 h-4 sm:w-4 sm:h-4 rounded-full flex items-center justify-center">
+                                                <span className="absolute -top-1 -right-1 sm:-top-1 sm:-right-1 bg-gray-950 text-white text-[0.45rem] sm:text-[0.5rem] font-semibold w-3 h-3 sm:w-3 sm:h-3 rounded-full flex items-center justify-center">
                                                     {UserNotificationCount?.unreadCount > 0 ? UserNotificationCount.unreadCount : 3}
                                                 </span>
                                             </Link>
@@ -181,10 +188,10 @@ const HeaderOrganizer = ({ bgColor, hideLogo = false }) => {
                                             e.stopPropagation();
                                         }}
                                     >
-                                        <Icon icon="lucide:bell" className="w-[17px] h-[21px] text-brand-gray-purple-2" />
+                                        <Icon icon="lucide:bell" className="w-[12px] h-[15px] text-brand-gray-purple-2" />
                                         {/* Notification Badge */}
                                         {UserNotificationCount?.unreadCount > 0 && (
-                                            <span className="absolute -top-2 -right-2 sm:-top-2 sm:-right-2 bg-gray-950 text-white text-[0.55rem] sm:text-[0.60rem] font-semibold w-4 h-4 sm:w-4 sm:h-4 rounded-full flex items-center justify-center">
+                                            <span className="absolute -top-1 -right-1 sm:-top-1 sm:-right-1 bg-gray-950 text-white text-[0.45rem] sm:text-[0.5rem] font-semibold w-3 h-3 sm:w-3 sm:h-3 rounded-full flex items-center justify-center">
                                                 {UserNotificationCount?.unreadCount}
                                             </span>
                                         )}

@@ -163,12 +163,27 @@ export default function EventOrganizerDetail() {
                     </tr>
 
                     {/* Table Row - City */}
-                    <tr>
-                      <td className="flex py-2 xl:py-1 text-left text-sm font-semibold text-gray-800">
+                    <tr className="border-b border-gray-300">
+                      <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
                         City:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.address}
+                      </td>
+                    </tr>
+                    {/* Table Row - Registration Type */}
+                    <tr className="border-b border-gray-300">
+                      <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
+                        Registration Type:
+                      </td>
+                      <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          detail?.registration_type === 'Re-apply' 
+                            ? 'bg-orange-100 text-orange-700 border border-orange-300' 
+                            : 'bg-blue-100 text-blue-700 border border-blue-300'
+                        }`}>
+                          {detail?.registration_type || 'New'}
+                        </span>
                       </td>
                     </tr>
                   </tbody>
@@ -261,7 +276,7 @@ export default function EventOrganizerDetail() {
                                 </h4>
                                 <button
                                   onClick={() => handleDownload(url, index)}
-                                  className="flex items-center gap-1 px-3 py-1.5 bg-[#f47c0c] text-white rounded hover:bg-[#e66d00] transition-colors text-xs font-medium"
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-[#a797cc] text-white rounded hover:bg-[#8b7bb3] transition-colors text-xs font-medium"
                                   title="Download"
                                 >
                                   <Image
@@ -299,7 +314,7 @@ export default function EventOrganizerDetail() {
                                   </p>
                                   <button
                                     onClick={() => window.open(fullUrl, '_blank')}
-                                    className="mt-2 text-xs text-[#f47c0c] hover:underline"
+                                    className="mt-2 text-xs text-[#a797cc] hover:underline hover:text-[#a08ec8]"
                                   >
                                     View Document
                                   </button>
@@ -410,13 +425,13 @@ export default function EventOrganizerDetail() {
                 <>
                   <button
                     onClick={() => ChangeStatus(2)} // Approve
-                    className="bg-[#f47c0c] text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold hover:bg-transparent transition-colors duration-300 border border-[#f47c0c] hover:text-[#f47c0c]"
+                    className="bg-green-600 text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold hover:bg-green-700 transition-colors duration-300"
                   >
                     Accept It
                   </button>
                   <button
                     onClick={() => setShowRejectModal(true)} // Show reject modal with reason
-                    className="bg-[#e94e2e] text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold hover:bg-transparent transition-colors duration-300 border border-[#e94e2e] hover:text-[#e94e2e]"
+                    className="bg-red-600 text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold hover:bg-red-700 transition-colors duration-300"
                   >
                     Reject It
                   </button>
@@ -424,7 +439,7 @@ export default function EventOrganizerDetail() {
               )}
               {detail?.is_approved === 2 && (
                 <button
-                  className="bg-[#f47c0c] text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold"
+                  className="bg-[#a797cc] text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold hover:bg-[#a08ec8] transition"
                   disabled
                 >
                   Accepted

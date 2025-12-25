@@ -176,7 +176,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
             setPreviewUrls(prev => [...prev, previewUrl]);
 
             // Upload to server
-            const resp = await UploadFileApi({ file, dirName: "Jeena" });
+            const resp = await UploadFileApi({ file, dirName: "Zuroona" });
             
             if (resp?.status === 1 && resp?.data?.location) {
                 setEventImages(prev => [...prev, resp.data.location]);

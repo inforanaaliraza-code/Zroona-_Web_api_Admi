@@ -247,10 +247,10 @@ export default function EmailLoginForm() {
                         <div className="relative">
                             <div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/20 to-brand-orange/20 rounded-2xl blur-xl"></div>
                             <Image
-                                src="/assets/images/main-logo.png"
+                                src="/assets/images/x_F_logo.png"
                                 alt="Zuroona"
-                                width={140}
-                                height={48}
+                                width={240}
+                                height={70}
                                 className="object-contain relative z-10 drop-shadow-lg"
                             />
                         </div>

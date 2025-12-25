@@ -49,6 +49,11 @@ export default function AboutUsPage() {
         </div>
         <div className="relative mx-auto px-4 md:px-8 xl:px-28 max-w-7xl">
           <div className="text-center max-w-4xl mx-auto">
+            <div className="flex justify-center mb-6">
+              <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg border border-white/30">
+                <Icon icon="lucide:info" className="w-12 h-12 text-white" />
+              </div>
+            </div>
             <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
               {t("about.heading") || "About Zuroona"}
             </h1>

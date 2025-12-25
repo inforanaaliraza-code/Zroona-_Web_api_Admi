@@ -287,8 +287,16 @@ export default function BookingModal({
 			return;
 		}
 
-		if (attendees < 1 || attendees > (event.no_of_attendees || 1)) {
-			toast.error(getTranslation(t, "events.invalidAttendees", "Invalid number of attendees"));
+		// Note: Frontend validation is basic - backend will do the actual seat availability check
+		// This prevents obviously invalid inputs but the API will verify actual availability
+		if (attendees < 1) {
+			toast.error(getTranslation(t, "events.invalidAttendees", "Number of attendees must be at least 1"));
+			return;
+		}
+		
+		// Check against total seats (backend will check available seats)
+		if (event.no_of_attendees && attendees > event.no_of_attendees) {
+			toast.error(getTranslation(t, "events.exceedsTotalSeats", `Cannot book more than ${event.no_of_attendees} seats`));
 			return;
 		}
 
@@ -326,7 +334,18 @@ export default function BookingModal({
 			}
 		} catch (error) {
 			console.error("Reservation error:", error);
-			toast.error(error?.message || getTranslation(t, "events.reservationFailed", "Failed to make reservation"));
+			// Show user-friendly error message
+			const errorMessage = error?.message || getTranslation(t, "events.reservationFailed", "Failed to make reservation");
+			
+			// Check if it's a seat availability error
+			if (errorMessage.toLowerCase().includes("seats not available") || 
+			    errorMessage.toLowerCase().includes("seat")) {
+				toast.error(errorMessage, {
+					duration: 5000, // Show longer for important errors
+				});
+			} else {
+				toast.error(errorMessage);
+			}
 		} finally {
 			setIsLoading(false);
 		}

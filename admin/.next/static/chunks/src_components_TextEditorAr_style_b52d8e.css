@@ -1,0 +1,10 @@
+/* [project]/src/components/TextEditorAr/style.css [app-client] (css) */
+.hideTopBar .ql-toolbar {
+  display: none;
+}
+
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value]:before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value]:before {
+  content: attr(data-value) !important;
+}
+
+/*# sourceMappingURL=src_components_TextEditorAr_style_b52d8e.css.map*/

@@ -35,7 +35,7 @@ const UploadId = ({ title, buttonName, labelName }) => {
                         accessKeyId: creds.accessKeyId,
                         secretAccessKey: creds.secretAccessKey,
                         s3Url: `https://s3.${creds.region}.amazonaws.com/${creds.bucketName}`,
-                        dirName: "Jeena",
+                        dirName: "Zuroona",
                         acl: "private",
                     };
                     setS3Client(new S3(dynamicConfig));
@@ -80,7 +80,7 @@ const UploadId = ({ title, buttonName, labelName }) => {
         if (file) {
             setFileLoading(true);
             setFileName(file.name); // Set the file name
-            UploadFileApi({ file, dirName: "Jeena" })
+            UploadFileApi({ file, dirName: "Zuroona" })
                 .then((resp) => {
                     if (resp?.status === 1 && resp?.data?.location) {
                         formik.setFieldValue("govt_id", resp.data.location);

@@ -12,36 +12,56 @@ import i18n from "../lib/i18n";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({ children }) {
-  const [mounted, setMounted] = useState(false);
-  const isRTL = i18n.language === "ar";
+  const [language, setLanguage] = useState("en");
 
   useEffect(() => {
-    setMounted(true);
-    
-    // Set dir attribute based on language
+    // Get language from localStorage after mount - FAST, NO BLOCKING
     if (typeof window !== "undefined") {
+      const storedLanguage = localStorage.getItem("i18nextLng") || "en";
+      const currentLanguage = storedLanguage === "ar" ? "ar" : "en";
+      
+      // Update i18n language
+      if (i18n.language !== currentLanguage) {
+        i18n.changeLanguage(currentLanguage);
+      }
+      
+      setLanguage(currentLanguage);
+      
+      // Set dir attribute based on language
+      const isRTL = currentLanguage === "ar";
       document.documentElement.dir = isRTL ? "rtl" : "ltr";
-      document.documentElement.lang = isRTL ? "ar" : "en";
+      document.documentElement.lang = currentLanguage;
     }
-  }, [isRTL]);
+  }, []);
 
-  if (!mounted) {
-    return (
-      <html lang="en">
-        <body>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#f47c0c]"></div>
-          </div>
-        </body>
-      </html>
-    );
-  }
+  // Listen for language changes
+  useEffect(() => {
+    const handleLanguageChange = (lng) => {
+      setLanguage(lng);
+      const isRTL = lng === "ar";
+      if (typeof window !== "undefined") {
+        document.documentElement.dir = isRTL ? "rtl" : "ltr";
+        document.documentElement.lang = lng;
+      }
+    };
+
+    i18n.on("languageChanged", handleLanguageChange);
+    return () => {
+      i18n.off("languageChanged", handleLanguageChange);
+    };
+  }, []);
+
+  const isRTL = language === "ar";
 
   return (
-    <html lang={isRTL ? "ar" : "en"} dir={isRTL ? "rtl" : "ltr"}>
+    <html lang={language} dir={isRTL ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/assets/images/final_Zuroona.png" />
-        <link rel="apple-touch-icon" href="/assets/images/final_Zuroona.png" />
+        <link rel="icon" href="/assets/images/x_F_logo.png" type="image/png" />
+        <link rel="shortcut icon" href="/assets/images/x_F_logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/assets/images/x_F_logo.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/x_F_logo.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/assets/images/x_F_logo.png" />
+        <title>Zuroona Admin</title>
       </head>
       <body>
         <I18nextProvider i18n={i18n}>

@@ -31,7 +31,7 @@ function RejectEventModal({ show, onClose, onConfirm, title, message }) {
           <textarea
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#f47c0c] focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent"
             rows="4"
             placeholder="Please specify the reason for rejecting this event..."
             required

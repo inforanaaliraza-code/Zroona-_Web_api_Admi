@@ -8,7 +8,7 @@ function Loader(props) {
       <ThreeCircles
         height="30"
         width="80"
-        color={props.color ? props.color : "#f47c0c"}
+        color={props.color ? props.color : "#a797cc"}
         ariaLabel="bars-loading"
         wrapperStyle={{}}
         wrapperClass="justify-center"

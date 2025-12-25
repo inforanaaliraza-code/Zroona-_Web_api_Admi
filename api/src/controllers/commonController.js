@@ -113,7 +113,7 @@ const commonController = {
             // ==================================================
 
             // ========== CLOUDINARY UPLOAD ==========
-            const dirName = req.body.dirName || 'Jeena';
+            const dirName = req.body.dirName || 'Zuroona';
             
             // Check Cloudinary credentials
             const hasCloudinaryUrl = !!process.env.CLOUDINARY_URL;

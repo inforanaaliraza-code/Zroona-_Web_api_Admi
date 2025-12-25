@@ -23,7 +23,7 @@ function Paginations({ handlePage, page, total, itemsPerPage }) {
           onClick={() => handlePageChange(i)}
           className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
             activePage === i
-              ? "z-10 bg-[#f47c0c] text-white"
+              ? "z-10 bg-[#a797cc] text-white"
               : "text-gray-800 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50"
           } focus:z-20 focus:outline-offset-0`}
         >

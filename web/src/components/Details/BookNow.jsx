@@ -64,9 +64,9 @@ const BookNow = ({ props, pageType }) => {
     // Set the status based on book_status in props
     const [status, setStatus] = useState(
         props?.book_details?.book_status === 2
-            ? "Approved"
+            ? t("common.approved")
             : props?.book_details?.book_status === 3
-                ? "Rejected"
+                ? t("common.rejected")
                 : ""
     );
 

@@ -92,39 +92,46 @@ const Header = ({ bgColor, hideLogo = false }) => {
   return (
     <>
       <div className="h-[72px]" />
-      <header className={`fixed top-0 ${isRTL ? "left-0 right-0" : "right-0 left-0"} z-[100] border-b backdrop-blur-md backdrop-saturate-150 bg-white/95 border-gray-100/50`} style={{ willChange: 'transform', transform: 'translateZ(0)' }}>
+      <header className={`fixed top-0 ${isRTL ? "left-0 right-0" : "right-0 left-0"} z-[100] border-b border-[#b0a0df]/30 bg-[#b0a0df] shadow-md`} style={{ willChange: 'transform', transform: 'translateZ(0)' }}>
         <nav className="relative">
           <div className={`px-4 mx-auto max-w-7xl sm:px-6 lg:px-8`}>
             <div className={`flex items-center ${isRTL ? "flex-row-reverse" : "flex-row"} justify-between h-[72px]`}>
-              {/* Logo */}
+              {/* Logo - Centered Vertically, Bigger, Responsive */}
               {!hideLogo && (
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center h-full">
+                  {/* Desktop Logo - Bigger sizes */}
                   <div className="hidden sm:block">
                     <Link
                       href="/"
-                      className="block transition-transform duration-300 hover:scale-105"
+                      className="flex items-center h-full transition-transform duration-600 hover:scale-105"
                     >
                       <Image
-                        src="/assets/images/main-logo.png"
-                        width={140}
-                        height={45}
-                        alt="Logo"
-                        className="object-contain w-auto h-auto max-h-[35px] sm:max-h-[40px] md:max-h-[45px] max-w-[90px] sm:max-w-[120px] md:max-w-[140px]"
+                        src="/assets/images/x_F_logo.png"
+                        width={300}
+                        height={90}
+                        alt="Zuroona Logo"
+                        className="object-contain w-auto h-auto 
+                          max-h-[60px] sm:max-h-[65px] md:max-h-[75px] lg:max-h-[85px] xl:max-h-[90px]
+                          max-w-[220px] sm:max-w-[250px] md:max-w-[280px] lg:max-w-[300px] xl:max-w-[320px]
+                          brightness-0 invert"
                         priority
                       />
                     </Link>
                   </div>
+                  {/* Mobile Logo - Bigger sizes */}
                   <div className="block sm:hidden">
                     <Link
                       href="/"
-                      className="block transition-transform duration-300 hover:scale-105"
+                      className="flex items-center h-full transition-transform duration-300 hover:scale-105"
                     >
                       <Image
-                        src="/assets/images/main-logo.png"
-                        width={32}
-                        height={32}
-                        alt="Logo"
-                        className="object-contain w-auto h-auto max-h-[32px] max-w-[32px]"
+                        src="/assets/images/x_F_logo.png"
+                        width={200}
+                        height={60}
+                        alt="Zuroona Logo"
+                        className="object-contain w-auto h-auto 
+                          max-h-[50px] max-w-[50px]
+                          brightness-0 invert"
                         priority
                       />
                     </Link>
@@ -139,7 +146,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                   <div className="flex gap-3 items-center">
                     <button
                       onClick={openLoginModal}
-                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-700 bg-white rounded-xl border border-brand-light-orange-1 hover:bg-gray-50 transition-all duration-300"
+                      className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-white/20 rounded-xl border border-white/30 hover:bg-white/30 transition-all duration-300"
                     >
                       <Image
                         src="/assets/images/icons/lock-solid.png"
@@ -169,10 +176,10 @@ const Header = ({ bgColor, hideLogo = false }) => {
                           e.stopPropagation();
                         }}
                       >
-                        <div className="p-3 bg-gray-50 rounded-xl transition-all duration-300 hover:bg-gray-100 cursor-pointer">
-                          <Icon icon="lucide:bell" className="w-[17px] h-[21px] text-brand-gray-purple-2" />
+                        <div className="p-2 bg-white/20 rounded-xl transition-all duration-300 hover:bg-white/30 cursor-pointer">
+                          <Icon icon="lucide:bell" className="w-[12px] h-[15px] text-white" />
                           {UserNotificationCount?.unreadCount > 0 && (
-                            <span className={`absolute -top-1 ${isRTL ? "-left-1" : "-right-1"} flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-primary rounded-full`}>
+                            <span className={`absolute -top-0.5 ${isRTL ? "-left-0.5" : "-right-0.5"} flex items-center justify-center w-3.5 h-3.5 text-[0.5rem] font-medium text-white bg-primary rounded-full`}>
                               {UserNotificationCount?.unreadCount}
                             </span>
                           )}
@@ -199,7 +206,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 <svg
-                  className="w-6 h-6 text-black"
+                  className="w-6 h-6 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -246,7 +253,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                   <div className="flex flex-col gap-4">
                     <button
                       onClick={openLoginModal}
-                      className="flex justify-center items-center gap-2 px-5 py-3 text-sm font-medium text-gray-700 bg-white rounded-xl border border-[#f2dfba] hover:bg-gray-50 transition-all duration-300 w-full"
+                      className="flex justify-center items-center gap-2 px-5 py-3 text-sm font-medium text-white bg-white/20 rounded-xl border border-white/30 hover:bg-white/30 transition-all duration-300 w-full"
                     >
                       <Image
                         src="/assets/images/icons/lock-solid.png"
@@ -275,17 +282,17 @@ const Header = ({ bgColor, hideLogo = false }) => {
                           e.stopPropagation();
                           setIsMobileMenuOpen(false);
                         }}
-                        className="flex gap-2 justify-center items-center p-3 bg-gray-50 rounded-xl transition-all duration-300 hover:bg-gray-100"
+                        className="flex gap-2 justify-center items-center p-3 bg-white/20 rounded-xl transition-all duration-300 hover:bg-white/30"
                       >
                         <div className="relative">
-                          <Icon icon="lucide:bell" className="w-[17px] h-[21px] text-brand-gray-purple-2" />
+                          <Icon icon="lucide:bell" className="w-[12px] h-[15px] text-white" />
                           {UserNotificationCount?.unreadCount > 0 && (
-                            <span className={`absolute -top-1 ${isRTL ? "-left-1" : "-right-1"} flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-primary rounded-full`}>
+                            <span className={`absolute -top-0.5 ${isRTL ? "-left-0.5" : "-right-0.5"} flex items-center justify-center w-3.5 h-3.5 text-[0.5rem] font-medium text-white bg-primary rounded-full`}>
                               {UserNotificationCount?.unreadCount}
                             </span>
                           )}
                         </div>
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-white">
                           Notifications
                         </span>
                       </Link>

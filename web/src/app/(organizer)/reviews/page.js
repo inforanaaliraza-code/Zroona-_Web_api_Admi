@@ -66,7 +66,7 @@ export default function Reviews() {
   return (
     <>
       <Breadcrumbs items={breadcrumbItems} />
-      <section className="bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen py-12 md:py-16">
+      <section className="bg-white min-h-screen py-12 md:py-16">
         <div className="mx-auto px-4 md:px-8 xl:px-28 max-w-7xl">
           {loading ? (
             <div className="flex justify-center items-center w-full min-h-[400px]">

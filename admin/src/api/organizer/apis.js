@@ -31,7 +31,13 @@ export const ChangeStatusOrganizerApi = async (payload) => {
 };
 
 export const ActiveInActiveOrganizerApi = async (payload) => {
-  return patchRawData("changeOrganizerStatus", payload).then((data) => {
+  // Support both isActive and isSuspended
+  const apiPayload = {
+    id: payload.id,
+    ...(payload.isActive !== undefined && { isActive: payload.isActive }),
+    ...(payload.isSuspended !== undefined && { isSuspended: payload.isSuspended }),
+  };
+  return patchRawData("changeOrganizerStatus", apiPayload).then((data) => {
     return data;
   });
 };

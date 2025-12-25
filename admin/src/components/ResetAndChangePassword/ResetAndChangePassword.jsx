@@ -10,6 +10,7 @@ import Link from "next/link";
 import { TOKEN_NAME } from "@/until";
 import Loader from "../Loader/Loader";
 import { changePasswordApi, resetPasswordApi } from "@/api/setting";
+import { FaEye, FaEyeSlash, FaLock, FaCheckCircle } from "react-icons/fa";
 
 function ResetAndChangePassword(props) {
   const { push } = useRouter();
@@ -19,6 +20,7 @@ function ResetAndChangePassword(props) {
   const [toggleOldPassword, setToggleOldPassword] = useState(false);
   const [toggleNewPassword, setToggleNewPassword] = useState(false);
   const [toggleChangePassword, setToggleChangePassword] = useState(false);
+
   return (
     <>
       <Formik
@@ -40,8 +42,6 @@ function ResetAndChangePassword(props) {
         })}
         onSubmit={(values, action) => {
           setLoading(true);
-          // toast.success("Change Password Successfully");
-          // push("/");
           if (props.page === "change") {
             changePasswordApi({
               current_password: values.oldPassword,
@@ -84,166 +84,172 @@ function ResetAndChangePassword(props) {
           setFieldValue,
         }) => (
           <form
-            className="form-style"
+            className="form-style space-y-6"
             onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
               handleSubmit();
             }}
           >
-            <div className="grid grid-cols-1">
+            <div className="grid grid-cols-1 gap-6">
+              {/* Current Password Field */}
               {props.page === "change" && (
-                <>
-                  {" "}
-                  <div className="">
-                    <label htmlFor="oldPassword" className="block text-sm font-semibold text-gray-700">Current Password <span className="text-red-700 font-semibold">*</span></label>
-                    <div className="relative mt-3">
-                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                        <Image
-                          src="/assets/images/login/lock.png"
-                          alt="Password icon"
-                          width={16}
-                          height={16}
-                          className="object-contain"
-                        />
-                      </div>
-                      <input
-                        type={toggleOldPassword ? "text" : "password"}
-                        className="block w-full px-10 pr-20 md:px-12 py-2 md:py-4 text-gray-900 border border-gray-200 rounded-md focus:border-[#f47c0c] focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:medium md:placeholder:font-semibold placeholder:text-sm md:placeholder:text-base"
-                        placeholder="Enter Current Password"
-                        name="oldPassword"
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        value={values.oldPassword}
-                        id="oldPassword"
-                      />
-                      <span className="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-500">
-                        <button
-                          type="button"
-                          className="py-1 md:py-2 px-3 rounded-md text-sm text-white bg-[#f5ac0f]"
-                          onClick={() => setToggleOldPassword(!toggleOldPassword)}
-                        >
-                          {toggleOldPassword ? "Hide" : "Show"}
-                        </button>
-                      </span>
-                      {errors.oldPassword && touched.oldPassword && (
-                        <div className="text-[#f47c0c] mt-1 text-sm"> {errors.oldPassword}</div>
-                      )}
+                <div className="animate-fade-in">
+                  <label 
+                    htmlFor="oldPassword" 
+                    className="block text-sm font-semibold text-gray-700 mb-3"
+                  >
+                    Current Password <span className="text-[#a797cc]">*</span>
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                      <FaLock className="text-[#a3cc69] group-focus-within:text-[#a797cc] transition-colors duration-300" />
                     </div>
+                    <input
+                      type={toggleOldPassword ? "text" : "password"}
+                      className="block w-full px-12 pr-24 py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
+                      placeholder="Enter Current Password"
+                      name="oldPassword"
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      value={values.oldPassword}
+                      id="oldPassword"
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-3 flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#a797cc] hover:bg-[#a08ec8] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                      onClick={() => setToggleOldPassword(!toggleOldPassword)}
+                    >
+                      {toggleOldPassword ? (
+                        <><FaEyeSlash className="mr-1" /> Hide</>
+                      ) : (
+                        <><FaEye className="mr-1" /> Show</>
+                      )}
+                    </button>
                   </div>
-                  <div className="text-right">
+                  {errors.oldPassword && touched.oldPassword && (
+                    <div className="text-red-500 mt-2 text-sm font-medium flex items-center gap-1 animate-shake">
+                      <span>⚠️</span> {errors.oldPassword}
+                    </div>
+                  )}
+                  
+                  {/* Forgot Password Link */}
+                  <div className="text-right mt-3">
                     <Link href="/forgot-password">
-                      <span className="text-sm text-[#f47c0f] font-bold cursor-pointer">
-                        Forgot Password?
+                      <span className="text-sm text-[#a3cc69] hover:text-[#a797cc] font-semibold cursor-pointer transition-colors duration-300 flex items-center justify-end gap-1">
+                        Forgot Password? →
                       </span>
                     </Link>
                   </div>
-                </>
+                </div>
               )}
-              <div className="mb-7">
-                <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700">
-                  New Password *
+
+              {/* New Password Field */}
+              <div className="animate-fade-in" style={{animationDelay: '0.1s'}}>
+                <label 
+                  htmlFor="newPassword" 
+                  className="block text-sm font-semibold text-gray-700 mb-3"
+                >
+                  New Password <span className="text-[#a797cc]">*</span>
                 </label>
-                <div className="relative mt-3">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <Image
-                      src="/assets/images/login/lock.png"
-                      alt="Password icon"
-                      width={16}
-                      height={16}
-                      className="object-contain"
-                    />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <FaLock className="text-[#a3cc69] group-focus-within:text-[#a797cc] transition-colors duration-300" />
                   </div>
                   <input
                     id="newPassword"
                     type={toggleNewPassword ? "text" : "password"}
                     name="newPassword"
-                    className="block w-full px-10 pr-20 md:px-12 py-2 md:py-4 text-gray-900 border border-gray-200 rounded-md focus:border-[#f47c0c] focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:medium md:placeholder:font-semibold placeholder:text-sm md:placeholder:text-base"
+                    className="block w-full px-12 pr-24 py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
                     placeholder="Enter new Password"
                     onChange={handleChange}
                     onBlur={handleBlur}
                     value={values.newPassword}
                   />
-                  <span className="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-500">
-                    <button
-                      type="button"
-                      className="py-1 md:py-2 px-3 rounded-md text-sm text-white bg-[#f5ac0f]"
-                      onClick={() => setToggleNewPassword(!toggleNewPassword)}
-                    >
-                      {toggleNewPassword ? "Hide" : "Show"}
-                    </button>
-                  </span>
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#a797cc] hover:bg-[#a08ec8] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                    onClick={() => setToggleNewPassword(!toggleNewPassword)}
+                  >
+                    {toggleNewPassword ? (
+                      <><FaEyeSlash className="mr-1" /> Hide</>
+                    ) : (
+                      <><FaEye className="mr-1" /> Show</>
+                    )}
+                  </button>
                 </div>
                 {errors.newPassword && touched.newPassword && (
-                  <div className="text-[#f47c0c] mt-1 text-sm"> {errors.newPassword}</div>
+                  <div className="text-red-500 mt-2 text-sm font-medium flex items-center gap-1 animate-shake">
+                    <span>⚠️</span> {errors.newPassword}
+                  </div>
                 )}
               </div>
-              <div className="mb-7">
-                <label htmlFor="changePassword" className="block text-sm font-semibold text-gray-700">
-                  Change New Password *
+
+              {/* Confirm Password Field */}
+              <div className="animate-fade-in" style={{animationDelay: '0.2s'}}>
+                <label 
+                  htmlFor="changePassword" 
+                  className="block text-sm font-semibold text-gray-700 mb-3"
+                >
+                  Confirm New Password <span className="text-[#a797cc]">*</span>
                 </label>
-                <div className="relative mt-3">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <Image
-                      src="/assets/images/login/lock.png"
-                      alt="Password icon"
-                      width={16}
-                      height={16}
-                      className="object-contain"
-                    />
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <FaCheckCircle className={`transition-colors duration-300 ${
+                      values.changePassword && values.changePassword === values.newPassword 
+                        ? 'text-[#a3cc69]' 
+                        : 'text-gray-400'
+                    }`} />
                   </div>
                   <input
                     id="changePassword"
-                    type={toggleChangePassword? "text" : "password"}
+                    type={toggleChangePassword ? "text" : "password"}
                     name="changePassword"
-                    className="block w-full px-10 pr-20 md:px-12 py-2 md:py-4 text-gray-900 border border-gray-200 rounded-md focus:border-[#f47c0c] focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:medium md:placeholder:font-semibold placeholder:text-sm md:placeholder:text-base"
+                    className="block w-full px-12 pr-24 py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
                     placeholder="Enter confirm new Password"
                     onChange={handleChange}
                     onBlur={handleBlur}
                     value={values.changePassword}
                   />
-                  <span className="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-500">
-                    <button
-                      type="button"
-                      className="py-1 md:py-2 px-3 rounded-md text-sm text-white bg-[#f5ac0f]"
-                      onClick={() =>
-                        setToggleChangePassword(!toggleChangePassword)
-                      }
-                    >
-                      {toggleChangePassword ? "Hide" : "Show"}
-                    </button>
-                  </span>
-                  {/* <span className="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-500">
-                    <button
-                      type="button"
-                      className="py-1 md:py-2 px-3 rounded-md text-sm text-white bg-[#f5ac0f]"
-                      onClick={() => setFieldValue("toggle", !values.toggle)}
-                    >
-                      {values.toggle ? "Hide" : "Show"}
-                    </button>
-                  </span> */}
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-3 flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#a797cc] hover:bg-[#a08ec8] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                    onClick={() => setToggleChangePassword(!toggleChangePassword)}
+                  >
+                    {toggleChangePassword ? (
+                      <><FaEyeSlash className="mr-1" /> Hide</>
+                    ) : (
+                      <><FaEye className="mr-1" /> Show</>
+                    )}
+                  </button>
                 </div>
                 {errors.changePassword && touched.changePassword && (
-                  <div className="text-[#f47c0c] mt-1 text-sm"> {errors.changePassword}</div>
+                  <div className="text-red-500 mt-2 text-sm font-medium flex items-center gap-1 animate-shake">
+                    <span>⚠️</span> {errors.changePassword}
+                  </div>
+                )}
+                {!errors.changePassword && values.changePassword && values.changePassword === values.newPassword && (
+                  <div className="text-[#a3cc69] mt-2 text-sm font-medium flex items-center gap-1">
+                    <FaCheckCircle /> Passwords match!
+                  </div>
                 )}
               </div>
-              <div className="mt-5">
+
+              {/* Submit Button */}
+              <div className="mt-8 animate-fade-in" style={{animationDelay: '0.3s'}}>
                 <button
                   type="submit"
-                  className="flex justify-center items-center gap-x-2 w-full px-4 py-3 text-white bg-[#f47c0c] rounded-md text-1xl uppercase font-semibold"
-                  disabled={loading ? "disabled" : ""}
+                  className="flex justify-center items-center gap-x-3 w-full px-6 py-4 text-white bg-gradient-to-r from-[#a3cc69] to-[#a797cc] hover:from-[#9fb68b] hover:to-[#a08ec8] rounded-xl text-lg font-bold uppercase shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  disabled={loading}
                 >
                   {loading ? (
                     <Loader color="#fff" />
                   ) : (
                     <>
                       <span>Submit</span>
-                      <Image
-                        src="/assets/images/login/arrow.png"
-                        alt="Arrow"
-                        height={22}
-                        width={20}
-                      />
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
                     </>
                   )}
                 </button>
@@ -251,7 +257,42 @@ function ResetAndChangePassword(props) {
             </div>
           </form>
         )}
-      </Formik >
+      </Formik>
+
+      {/* Custom Styles */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes shake {
+          0%, 100% {
+            transform: translateX(0);
+          }
+          25% {
+            transform: translateX(-5px);
+          }
+          75% {
+            transform: translateX(5px);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out forwards;
+          opacity: 0;
+        }
+
+        .animate-shake {
+          animation: shake 0.3s ease-in-out;
+        }
+      `}</style>
     </>
   );
 }

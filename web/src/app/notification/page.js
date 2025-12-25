@@ -149,7 +149,7 @@ const NotificationList = () => {
         imageUrl = `${apiBase}/${imageUrl}`;
       } else {
         const apiBase = BASE_API_URL.replace('/api/', '');
-        imageUrl = `${apiBase}/uploads/Jeena/${imageUrl}`;
+        imageUrl = `${apiBase}/uploads/Zuroona/${imageUrl}`;
       }
     }
     

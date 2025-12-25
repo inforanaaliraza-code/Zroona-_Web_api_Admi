@@ -143,7 +143,7 @@ export default function JoinUsDetail() {
         </div>
       ) : (
         <>
-      <section className="bg-gradient-to-br from-gray-50 via-white to-gray-50 min-h-screen py-8 md:py-12">
+      <section className="bg-white min-h-screen py-8 md:py-12">
         <div className="mx-auto px-4 md:px-8 xl:px-28 max-w-7xl">
           {/* Main Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 xl:gap-8">

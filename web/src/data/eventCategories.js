@@ -1,7 +1,7 @@
 export const eventCategories = {
     joinUs: {
         en: [
-            { name: 'Cultural & Traditional Events', icon: 'material-symbols:mosque' },
+            { name: 'Entertainment & Shows', icon: 'material-symbols:theater-comedy' },
             { name: 'Outdoor & Adventure', icon: 'material-symbols:hiking' },
             { name: 'Educational & Workshops', icon: 'material-symbols:school' },
             { name: 'Sports & Fitness', icon: 'material-symbols:fitness-center' },
@@ -13,7 +13,7 @@ export const eventCategories = {
             { name: 'Wellness & Mindfulness', icon: 'material-symbols:spa' },
         ],
         ar: [
-            { name: 'الفعاليات الثقافية والتقليدية', icon: 'material-symbols:mosque' },
+            { name: 'الترفيه والعروض', icon: 'material-symbols:theater-comedy' },
             { name: 'المغامرات والأنشطة الخارجية', icon: 'material-symbols:hiking' },
             { name: 'الفعاليات التعليمية وورش العمل', icon: 'material-symbols:school' },
             { name: 'الرياضة واللياقة البدنية', icon: 'material-symbols:fitness-center' },

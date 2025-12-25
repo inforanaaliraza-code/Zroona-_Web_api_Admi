@@ -14,6 +14,7 @@ import { useRTL } from "@/utils/rtl";
 import Header from "@/components/Header/Header";
 import GuestNavbar from "@/components/Header/GuestNavbar";
 import Footer from "@/components/Footer/Footer";
+import InvoiceCard from "@/components/Invoice/InvoiceCard";
 
 // Helper function to safely get translations with fallbacks
 const getTranslation = (t, key, fallback) => {
@@ -311,7 +312,7 @@ export default function MyEventsPage() {
   // Show loading while i18n initializes
   if (!isI18nReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#a797cc]"></div>
       </div>
     );
@@ -319,7 +320,7 @@ export default function MyEventsPage() {
 
   if (!token || !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="text-center max-w-md">
           <Icon icon="lucide:lock" className="mx-auto h-16 w-16 text-gray-400" />
           <h2 className="mt-2 text-lg font-medium text-gray-900">
@@ -345,7 +346,7 @@ export default function MyEventsPage() {
     <>
       <Header bgColor="#fff" />
       <GuestNavbar search={search} setSearch={setSearch} setPage={setPage} />
-      <div className="min-h-screen bg-gray-50 pt-32 pb-8 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-white pt-32 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className={`text-center mb-8 ${textAlign}`}>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -584,6 +585,13 @@ export default function MyEventsPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Invoice Card - Show for paid bookings */}
+                  {booking.status === 2 && booking.payment_status === 1 && booking.invoice_url && (
+                    <div className="mt-4">
+                      <InvoiceCard booking={booking} />
+                    </div>
+                  )}
 
                   <div className="flex flex-col gap-2 mt-4">
                     {/* Primary Actions Row */}

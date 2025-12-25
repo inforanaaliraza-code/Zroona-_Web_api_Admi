@@ -13,7 +13,7 @@ export default function InterviewPage() {
     <>
     <Steper currentStep={3} />
 
-      <section className="py-10 min-h-screen bg-gray-100">
+      <section className="py-10 min-h-screen bg-white">
         <div className="container px-4 mx-auto md:px-8 lg:px-28">
           {/* Header */}
           <div className="mb-10 text-center">

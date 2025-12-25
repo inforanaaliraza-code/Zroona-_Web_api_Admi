@@ -237,7 +237,7 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
                 {/* Logo */}
                 <div className="flex justify-center mb-6">
                     <Image
-                        src="/assets/images/main-logo.png"
+                        src="/assets/images/x_F_logo.png"
                         alt="Zuroona"
                         width={100}
                         height={40}

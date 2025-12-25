@@ -62,7 +62,7 @@ export default function RoleSelectionPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
             {/* Language Switcher - Fixed Top Right */}
             <div className="fixed top-6 right-6 z-50">
                 <LanguageSwitcher ChangeLanguage={handleLanguageChange} />
@@ -78,9 +78,9 @@ export default function RoleSelectionPage() {
                     >
                         <div className="flex justify-center mb-6">
                             <Image
-                                src="/assets/images/main-logo.png"
+                                src="/assets/images/x_F_logo.png"
                                 alt="Zuroona"
-                                width={150}
+                                width={200}
                                 height={60}
                                 className="object-contain"
                             />

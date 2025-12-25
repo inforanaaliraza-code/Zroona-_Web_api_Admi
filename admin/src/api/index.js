@@ -188,8 +188,8 @@ export const getData = async (url = "", data = {}) => {
 
     return response.data;
   } catch (error) {
-    // Use normalizeAxiosError to handle cases where error.response is undefined
-    return normalizeAxiosError(error);
+    // toast.error(error.response.data);
+    return error.response.data;
   }
 };
 

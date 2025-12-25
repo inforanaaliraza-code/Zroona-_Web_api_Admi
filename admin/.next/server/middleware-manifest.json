@@ -1,6 +1,113 @@
 {
   "version": 3,
-  "middleware": {},
-  "functions": {},
-  "sortedMiddleware": []
+  "middleware": {
+    "/": {
+      "files": [
+        "server/edge/chunks/ssr/_8ffe42._.js",
+        "server/edge/chunks/ssr/src_e4a561._.js",
+        "server/edge/chunks/ssr/edge-wrapper_53ffa6.js",
+        "server/edge/chunks/ssr/edge-wrapper_c6e538.js"
+      ],
+      "name": "middleware",
+      "page": "/",
+      "matchers": [
+        {
+          "locale": false,
+          "originalSource": "/organizer/:path*",
+          "regexp": "^/organizer(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/about-us",
+          "regexp": "^/about-us$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/testimonial/:path*",
+          "regexp": "^/testimonial(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/blog/:path*",
+          "regexp": "^/blog(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/gallery/:path*",
+          "regexp": "^/gallery(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/careers/:path*",
+          "regexp": "^/careers(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/enquiry",
+          "regexp": "^/enquiry$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/contact",
+          "regexp": "^/contact$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/cms",
+          "regexp": "^/cms$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/change-password",
+          "regexp": "^/change-password$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/user/:path*",
+          "regexp": "^/user(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/events/:path*",
+          "regexp": "^/events(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/setting/:path*",
+          "regexp": "^/setting(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/admin-management/:path*",
+          "regexp": "^/admin-management(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/wallet/:path*",
+          "regexp": "^/wallet(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/withdrawal-requests/:path*",
+          "regexp": "^/withdrawal-requests(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        },
+        {
+          "locale": false,
+          "originalSource": "/guest-invoices/:path*",
+          "regexp": "^/guest-invoices(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?$"
+        }
+      ],
+      "env": {
+        "__NEXT_BUILD_ID": "development",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "4ogNpyPPyFPerV9x3IpJaFExFR/AvWjlTWKh1qRtznc=",
+        "__NEXT_PREVIEW_MODE_ID": "daf76ac1d2cdfec67bff9a644aa84939",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "e212a580171de55710babfa33f95db8fa55a29b4db53f7b7bad6694387ab9259",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "d70d831c1669f6a2b4984f85dba0b4dbb0132f1891a6dc293e87eaa8c1f355d0"
+      }
+    }
+  },
+  "sortedMiddleware": [
+    "/"
+  ],
+  "functions": {}
 }

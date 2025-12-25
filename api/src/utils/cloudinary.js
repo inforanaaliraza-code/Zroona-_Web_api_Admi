@@ -69,7 +69,7 @@ if (!configureCloudinary()) {
 /**
  * Upload file to Cloudinary
  * @param {Buffer} fileBuffer - File buffer data
- * @param {string} folder - Folder name in Cloudinary (e.g., 'Jeena/events', 'Jeena/profiles')
+ * @param {string} folder - Folder name in Cloudinary (e.g., 'Zuroona/events', 'Zuroona/profiles')
  * @param {string} fileName - Original file name
  * @param {string} mimeType - File MIME type
  * @returns {Promise<Object>} - Cloudinary upload result with secure_url

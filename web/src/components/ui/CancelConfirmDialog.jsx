@@ -39,12 +39,12 @@ export default function CancelConfirmDialog({
   };
 
   const title = type === "event" 
-    ? (t("eventsCancellation.cancelEventTitle") || t("events.cancelEventTitle") || "Cancel Event")
-    : (t("eventsCancellation.cancelBookingTitle") || t("events.cancelBookingTitle") || "Cancel Booking");
+    ? t("eventsCancellation.cancelEventTitle")
+    : t("eventsCancellation.cancelBookingTitle");
   
   const description = type === "event"
-    ? (t("eventsCancellation.cancelEventDescription") || t("events.cancelEventDescription") || "Are you sure you want to cancel this event?")
-    : (t("eventsCancellation.cancelBookingDescription") || t("events.cancelBookingDescription") || "Are you sure you want to cancel this booking?");
+    ? t("eventsCancellation.cancelEventDescription")
+    : t("eventsCancellation.cancelBookingDescription");
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
@@ -67,7 +67,7 @@ export default function CancelConfirmDialog({
             {showRefundWarning && type === "booking" && (
               <div className={`w-full p-3 mb-4 bg-yellow-50 border border-yellow-200 rounded-lg ${textAlign}`}>
                 <p className="text-sm text-yellow-800">
-                  {t("eventsCancellation.refundWarning") || t("events.refundWarning") || "You may not get a refund or only partial refund."}
+                  {t("eventsCancellation.refundWarning")}
                 </p>
               </div>
             )}
@@ -75,12 +75,12 @@ export default function CancelConfirmDialog({
             {showReasonInput && (
               <div className="w-full mb-4">
                 <label className={`block text-sm font-medium text-gray-700 mb-2 ${textAlign}`}>
-                  {t("eventsCancellation.cancelReason") || t("events.cancelReason") || "Reason for cancellation"} <span className="text-red-500">*</span>
+                  {t("eventsCancellation.cancelReason")} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder={t("eventsCancellation.enterCancelReason") || t("events.enterCancelReason") || "Please provide a reason for cancellation..."}
+                  placeholder={t("eventsCancellation.enterCancelReason")}
                   className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none ${textAlign}`}
                   rows={4}
                   required

@@ -106,10 +106,9 @@ const organizerController = {
 
 			const emailLower = cleanEmail(email);
 
-			// Check for existing organizer by email
+			// Check for existing organizer by email (including deleted ones for email/phone reuse prevention)
 			const exist_organizer_email = await organizerService.FindOneService({
 				email: emailLower,
-				is_delete: { $ne: 1 },
 			});
 
 			// Check for existing user by email
@@ -126,6 +125,18 @@ const organizerController = {
 			// If email exists
 			if (exist_organizer_email || exist_user_email) {
 				const existingAccount = exist_organizer_email || exist_user_email;
+				
+				// Check if account was deleted - prevent reuse of email/phone
+				if (existingAccount.is_delete === 1) {
+					return Response.conflictResponse(
+						res,
+						{
+							email: emailLower,
+						},
+						409,
+						"This email was previously used with a deleted account. Please use a different email address."
+					);
+				}
 				
 				// If already verified, tell them to login
 				if (existingAccount.is_verified) {
@@ -145,6 +156,11 @@ const organizerController = {
 				if (exist_organizer_email) {
 					console.log("[ORGANIZER:REGISTRATION] Organizer exists but not verified, updating data");
 					
+					// Determine registration type: if previously rejected, mark as Re-apply
+					const registrationType = (exist_organizer_email.is_approved === 3 || exist_organizer_email.registration_type === 'Re-apply') 
+						? 'Re-apply' 
+						: 'New';
+					
 					// Update organizer data
 					const updateData = {
 						...req.body,
@@ -153,6 +169,7 @@ const organizerController = {
 						role: 2,
 						is_verified: false,
 						is_approved: 1, // Pending approval
+						registration_type: registrationType,
 						language: lang,
 						registration_step: registration_step || 4,
 					};
@@ -249,16 +266,28 @@ const organizerController = {
 				const exist_organizer_phone = await organizerService.FindOneService({
 					phone_number: phoneStr,
 					country_code,
-					is_delete: { $ne: 1 },
 				});
 
 				const exist_user_phone = await UserService.FindOneService({
 					phone_number: phoneStr,
 					country_code,
-					is_delete: { $ne: 1 },
 				});
 
 				if (exist_organizer_phone || exist_user_phone) {
+					const existingPhoneAccount = exist_organizer_phone || exist_user_phone;
+					
+					// Prevent reuse of phone from deleted accounts
+					if (existingPhoneAccount.is_delete === 1) {
+						return Response.conflictResponse(
+							res,
+							{
+								phone_number: phone_number,
+							},
+							409,
+							"This phone number was previously used with a deleted account. Please use a different phone number."
+						);
+					}
+					
 					return Response.conflictResponse(
 						res,
 						{
@@ -301,6 +330,15 @@ const organizerController = {
 
 			// Create new organizer
 			const phoneStr = phone_number ? phone_number.toString().replace(/\s+/g, '') : null;
+			// Check if this is a re-application (check if email/phone was previously rejected)
+			const wasRejected = await organizerService.FindOneService({
+				$or: [
+					{ email: emailLower, is_approved: 3 },
+					{ phone_number: phoneStr, country_code, is_approved: 3 }
+				]
+			});
+			const registrationType = wasRejected ? 'Re-apply' : 'New';
+			
 			const organizerData = {
 				...req.body,
 				email: emailLower,
@@ -309,6 +347,7 @@ const organizerController = {
 				role: 2, // Organizer role
 				is_verified: false, // Must verify email first
 				is_approved: 1, // Pending approval
+				registration_type: registrationType,
 				language: lang,
 				registration_step: registration_step || 4,
 			};

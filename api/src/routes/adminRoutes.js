@@ -45,8 +45,6 @@ router.patch('/changeOrganizerStatus', adminController.changeOrganizerStatus);
 
 router.patch('/user/changeStatus', adminController.changeUserStatus);
 
-router.delete('/user/delete', adminController.deleteUser);
-
 router.get('/cms/detail', adminController.getCms);
 
 router.get('/eventList', adminController.eventList);
@@ -81,6 +79,8 @@ router.get('/organizer/withdrawalList', adminController.withdrawalList);
 
 router.put("/withdrawalStatus", adminController.withdrawalStatusUpdate);
 
+router.get('/organizer/withdrawalStats', adminController.withdrawalStats);
+
 // ===== REFUND MANAGEMENT =====
 router.get("/refund/list", adminController.refundList); // Get refund requests list
 router.get("/refund/detail", adminController.refundDetail); // Get refund request detail
@@ -102,6 +102,7 @@ router.put("/admin/update", adminController.adminUpdate);
 router.delete("/admin/delete", adminController.adminDelete);
 
 // Wallet details
+router.get("/wallet/stats", adminController.getWalletStats);
 router.get("/wallet/details", adminController.walletDetails);
 
 // Current admin profile
@@ -109,5 +110,9 @@ router.get("/admin/current", adminController.getCurrentAdmin);
 
 // Admin notifications
 router.get("/admin/notifications", adminController.getAdminNotifications);
+
+// Guest invoices/receipts management
+router.get("/bookings/invoices/stats", adminController.getInvoiceStats);
+router.get("/bookings/invoices", adminController.getAllBookingsWithInvoices);
 
 module.exports = router;

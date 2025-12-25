@@ -44,18 +44,18 @@ const DropdownUser = () => {
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
       <Link
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="flex items-center gap-x-2 sm:gap-x-3"
+        className="flex items-center gap-x-2 sm:gap-x-3 group hover:bg-white/50 rounded-xl px-2 py-1.5 transition-all duration-300"
         href="#"
       >
         <span className="text-right">
-          <span className="block text-[0.600rem] sm:text-xs font-medium text-black">
+          <span className="block text-[0.600rem] sm:text-xs font-medium text-gray-600 group-hover:text-brand-pastel-gray-purple-1 transition-colors duration-300">
             {getGreeting()}
           </span>
-          <h1 className="text-sm sm:text-lg leading-5 text-black">
+          <h1 className="text-sm sm:text-lg leading-5 font-semibold text-gray-800 group-hover:text-brand-gray-purple-2 transition-colors duration-300">
             {adminData?.admin_name || "Admin"}
           </h1>
         </span>
-        <span className="h-10 w-10 rounded-full border border-white overflow-hidden">
+        <span className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-brand-pastel-gray-purple-1/30 overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-brand-pastel-gray-purple-1 transition-all duration-300 group-hover:scale-105">
           <Image
             width={120}
             height={120}

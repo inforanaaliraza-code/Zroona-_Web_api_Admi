@@ -27,7 +27,7 @@ const LanguageSwitcher = () => {
 		
 		setIsOpen(false);
 		
-		// Reload page to apply direction changes properly
+		// Reload page to apply direction changes properly and prevent hydration issues
 		window.location.reload();
 	};
 
@@ -47,7 +47,7 @@ const LanguageSwitcher = () => {
 		<div className="relative" ref={dropdownRef}>
 			<button
 				onClick={() => setIsOpen(!isOpen)}
-				className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#f47c0c] focus:ring-offset-2 transition-colors"
+				className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-2 transition-colors"
 				aria-label="Change language"
 			>
 				<FaGlobe className="w-4 h-4" />
@@ -76,7 +76,7 @@ const LanguageSwitcher = () => {
 							onClick={() => changeLanguage(lang.code)}
 							className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${
 								currentLanguage.code === lang.code
-									? "bg-[#f47c0c]/10 text-[#f47c0c] font-medium"
+									? "bg-[#a797cc]/10 text-[#a797cc] font-medium"
 									: "text-gray-700"
 							}`}
 						>
@@ -87,7 +87,7 @@ const LanguageSwitcher = () => {
 							</div>
 							{currentLanguage.code === lang.code && (
 								<svg
-									className="w-4 h-4 ml-auto text-[#f47c0c]"
+									className="w-4 h-4 ml-auto text-[#a797cc]"
 									fill="currentColor"
 									viewBox="0 0 20 20"
 								>

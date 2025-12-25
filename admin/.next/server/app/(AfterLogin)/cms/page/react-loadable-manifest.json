@@ -1,0 +1,98 @@
+{
+  "src/components/CMS/TermsConditions.jsx -> @/components/TextEditor/TextEditor": {
+    "id": "src/components/CMS/TermsConditions.jsx -> @/components/TextEditor/TextEditor",
+    "files": [
+      "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_index_99aff8.js",
+      "static/chunks/node_modules_next_dist_compiled_8a0b3e._.js",
+      "static/chunks/node_modules_next_dist_build_polyfills_process_102af7.js",
+      "static/chunks/node_modules_crypto-js_1440d8._.js",
+      "static/chunks/node_modules_quill_dist_quill_71002f.js",
+      "static/chunks/node_modules_7afe39._.js",
+      "static/chunks/src_52e7bf._.js",
+      "static/chunks/_ebac13._.css",
+      "static/chunks/src_components_TextEditor_TextEditor_jsx_cd107f._.js"
+    ]
+  },
+  "src/components/CMS/AboutUs.jsx -> @/components/TextEditorAr/TextEditorAr": {
+    "id": "src/components/CMS/AboutUs.jsx -> @/components/TextEditorAr/TextEditorAr",
+    "files": [
+      "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_index_99aff8.js",
+      "static/chunks/node_modules_next_dist_compiled_8a0b3e._.js",
+      "static/chunks/node_modules_next_dist_build_polyfills_process_102af7.js",
+      "static/chunks/node_modules_crypto-js_1440d8._.js",
+      "static/chunks/node_modules_quill_dist_quill_71002f.js",
+      "static/chunks/node_modules_7afe39._.js",
+      "static/chunks/src_b703f6._.js",
+      "static/chunks/_c44232._.css",
+      "static/chunks/src_components_TextEditorAr_TextEditorAr_jsx_4ae4c0._.js"
+    ]
+  },
+  "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditor/TextEditor": {
+    "id": "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditor/TextEditor",
+    "files": [
+      "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_index_99aff8.js",
+      "static/chunks/node_modules_next_dist_compiled_8a0b3e._.js",
+      "static/chunks/node_modules_next_dist_build_polyfills_process_102af7.js",
+      "static/chunks/node_modules_crypto-js_1440d8._.js",
+      "static/chunks/node_modules_quill_dist_quill_71002f.js",
+      "static/chunks/node_modules_7afe39._.js",
+      "static/chunks/src_52e7bf._.js",
+      "static/chunks/_ebac13._.css",
+      "static/chunks/src_components_TextEditor_TextEditor_jsx_cd107f._.js"
+    ]
+  },
+  "src/components/CMS/AboutUs.jsx -> @/components/TextEditor/TextEditor": {
+    "id": "src/components/CMS/AboutUs.jsx -> @/components/TextEditor/TextEditor",
+    "files": [
+      "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_index_99aff8.js",
+      "static/chunks/node_modules_next_dist_compiled_8a0b3e._.js",
+      "static/chunks/node_modules_next_dist_build_polyfills_process_102af7.js",
+      "static/chunks/node_modules_crypto-js_1440d8._.js",
+      "static/chunks/node_modules_quill_dist_quill_71002f.js",
+      "static/chunks/node_modules_7afe39._.js",
+      "static/chunks/src_52e7bf._.js",
+      "static/chunks/_ebac13._.css",
+      "static/chunks/src_components_TextEditor_TextEditor_jsx_cd107f._.js"
+    ]
+  },
+  "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditorAr/TextEditorAr": {
+    "id": "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditorAr/TextEditorAr",
+    "files": [
+      "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_index_99aff8.js",
+      "static/chunks/node_modules_next_dist_compiled_8a0b3e._.js",
+      "static/chunks/node_modules_next_dist_build_polyfills_process_102af7.js",
+      "static/chunks/node_modules_crypto-js_1440d8._.js",
+      "static/chunks/node_modules_quill_dist_quill_71002f.js",
+      "static/chunks/node_modules_7afe39._.js",
+      "static/chunks/src_b703f6._.js",
+      "static/chunks/_c44232._.css",
+      "static/chunks/src_components_TextEditorAr_TextEditorAr_jsx_4ae4c0._.js"
+    ]
+  },
+  "src/components/CMS/TermsConditions.jsx -> @/components/TextEditorAr/TextEditorAr": {
+    "id": "src/components/CMS/TermsConditions.jsx -> @/components/TextEditorAr/TextEditorAr",
+    "files": [
+      "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_index_99aff8.js",
+      "static/chunks/node_modules_next_dist_compiled_8a0b3e._.js",
+      "static/chunks/node_modules_next_dist_build_polyfills_process_102af7.js",
+      "static/chunks/node_modules_crypto-js_1440d8._.js",
+      "static/chunks/node_modules_quill_dist_quill_71002f.js",
+      "static/chunks/node_modules_7afe39._.js",
+      "static/chunks/src_b703f6._.js",
+      "static/chunks/_c44232._.css",
+      "static/chunks/src_components_TextEditorAr_TextEditorAr_jsx_4ae4c0._.js"
+    ]
+  }
+}

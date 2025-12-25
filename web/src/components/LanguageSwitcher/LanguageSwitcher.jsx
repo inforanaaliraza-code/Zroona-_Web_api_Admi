@@ -42,27 +42,27 @@ export default function LanguageSwitcher({ChangeLanguage }) {
     return (
         <div className="relative">
             <button
-                className="group flex items-center gap-2 bg-white hover:bg-gray-50 px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-sm hover:shadow-md border border-[#8ba179]"
+                className="group flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-sm hover:shadow-md border border-white/30"
                 onClick={toggleLanguage}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
                 <div className="relative w-6 h-6 flex items-center justify-center">
                     <IoLanguageOutline 
-                        className={`absolute text-xl text-[#a797cc] transition-all duration-300 ${
+                        className={`absolute text-xl text-white transition-all duration-300 ${
                             isHovered ? 'opacity-0 rotate-180 scale-0' : 'opacity-100 rotate-0 scale-100'
                         }`}
                     />
                     <HiOutlineGlobeAlt 
-                        className={`absolute text-xl text-[#a797cc] transition-all duration-300 ${
+                        className={`absolute text-xl text-white transition-all duration-300 ${
                             isHovered ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-180 scale-0'
                         }`}
                     />
                 </div>
-                <span className="text-sm font-medium text-gray-800 group-hover:text-[#a797cc]">
+                <span className="text-sm font-medium text-white group-hover:text-white/90">
                     {!mounted ? 'العربية' : (currentLang === 'en' ? 'العربية' : 'English')}
                 </span>
-                <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-[#a797cc] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full`} />
+                <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full`} />
             </button>
         </div>
     );

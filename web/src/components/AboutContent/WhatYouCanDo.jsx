@@ -82,7 +82,7 @@ export default function WhatYouCanDo() {
                         {/* Second Stat */}
                         <div className="bg-gradient-to-b from-[#b80063] to-[#010e07] rounded-xl py-7 md:py-3 lg:py-7 pl-10 md:pl-3 lg:pl-10 flex items-center space-x-4 text-white shadow-lg">
                             <div className="">
-                                <Image src="/assets/images/main-logo.png" width={76} height={76} alt="Stat icon" className="text-green-500" />
+                                <Image src="/assets/images/x_F_logo.png" width={120} height={40} alt="Zuroona Logo" className="object-contain" />
                             </div>
                             <div className='text-left'>
                                 <h2 className=" text-3xl md:text-2xl lg:text-4xl font-bold text-white">100000+</h2>

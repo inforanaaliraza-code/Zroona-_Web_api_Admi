@@ -32,7 +32,7 @@ function ForgotPassword() {
                     />
                   </div>
                   <div className="mt-7">
-                    <h3 className="text-1xl lg:text-4xl font-semibold text-[#f47c0c]">
+                    <h3 className="text-1xl lg:text-4xl font-semibold text-[#a797cc]">
                       Forgot Password
                     </h3>
                     <p className="font-semibold text-gray-900 text-sm lg:text-base">

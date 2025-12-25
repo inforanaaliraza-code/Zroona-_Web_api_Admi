@@ -189,7 +189,7 @@ module.exports = (lang = "en") => {
         ar: "لم يتم العثور على البيانات."
     }
     const book_limit_exceeded = {
-        en: 'seats not available',
+        en: 'Seats not available',
         ar: 'عدد ال��ماكن المتوفرة'
     }
     const event_type_welcome = {

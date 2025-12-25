@@ -48,12 +48,12 @@ export default function EventDetail() {
       <Breadcrumbs items={breadcrumbItems} />
 
       {loadingDetail ? (
-        <div className="flex justify-center items-center w-full h-screen bg-[#FFF0F1]">
+        <div className="flex justify-center items-center w-full h-screen bg-white">
           <Loader />
         </div>
       ) : (
         <>
-          <section className="bg-gradient-to-b from-[#FFF0F1] to-[#fff] py-8 md:py-16">
+          <section className="bg-white py-8 md:py-16">
             <div className="mx-auto px-4 md:px-8 xl:px-28">
               {/* Main Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 xl:gap-10">

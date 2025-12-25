@@ -68,7 +68,7 @@ function OTP() {
                       />
                     </div>
                     <div>
-                      <h3 className="mt-2 text-2xl md:text-4xl font-semibold text-[#f47c0c]">
+                      <h3 className="mt-2 text-2xl md:text-4xl font-semibold text-[#a797cc]">
                         Verification Code
                       </h3>
                       <p className="font-semibold text-gray-900">
@@ -154,7 +154,7 @@ function OTP() {
                         <div className="text-center mb-3">
                           <button
                             type="submit"
-                            className="flex justify-center items-center gap-x-2 w-full px-4 py-4 text-white bg-[#f47c0c] rounded-md text-1xl uppercase font-semibold"
+                            className="flex justify-center items-center gap-x-2 w-full px-4 py-4 text-white bg-[#a797cc] rounded-md text-1xl uppercase font-semibold hover:bg-[#a08ec8] transition"
                             disabled={loading}
                           >
                             {loading ? (
@@ -176,7 +176,7 @@ function OTP() {
                         <div className="text-center">
                           {seconds === 0 && (
                             <span
-                              className="cursor-pointer text-[#f47c0c] underline"
+                              className="cursor-pointer text-[#a797cc] underline hover:text-[#a08ec8] transition"
                               onClick={() => {
                                 resendCode();
                                 setSeconds(30);

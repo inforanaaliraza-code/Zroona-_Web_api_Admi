@@ -159,7 +159,7 @@ export default function UpComingEvents() {
   return (
     <>
       <Breadcrumbs items={breadcrumbItems} />
-      <section className="bg-[#FFF0F1]   py-16 ">
+      <section className="bg-white py-16 ">
         <div className="mx-auto px-4 md:px-8 xl:px-28">
           <div className="mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-6 gap-10">
@@ -210,21 +210,6 @@ export default function UpComingEvents() {
                         <div className="text-gray-800">No categories available.</div>
                       )}
                     </div>
-                    <div className="relative mt-10 md:mt-0 lg:mt-10 w-full">
-                      <Image
-                        src="/assets/images/home/group-img.png"
-                        height={192}
-                        width={406}
-                        alt=""
-                        className="w-full h-auto"
-                      />
-                      <Link
-                        href=""
-                        className="underline absolute bottom-5 right-5 text-xs font-semibold text-blue-800"
-                      >
-                        {t("home.tab9")}
-                      </Link>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -273,6 +258,7 @@ export default function UpComingEvents() {
                         showBookNow={true}
                         BookNowBtn={true}
                         btnName={t("card.tab10") || "Book Now"}
+                        categories={CategoryEventList || []}
                       />
                     ))}
                   </div>

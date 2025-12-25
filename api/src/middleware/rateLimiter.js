@@ -6,6 +6,8 @@
 const rateLimit = require('express-rate-limit');
 
 // General API rate limiter
+// Note: Trust proxy is configured securely in app.js (set to 1 instead of true)
+// This prevents IP spoofing while still working behind reverse proxies
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs

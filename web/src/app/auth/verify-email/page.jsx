@@ -236,7 +236,7 @@ export default function VerifyEmailPage() {
     }, []); // Only run once on mount
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-brand-light-orange-1 via-white to-brand-light-orange-1 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-white flex items-center justify-center p-4">
             {/* Language Switcher - Fixed Top Right */}
             <div className="fixed top-6 right-6 z-50">
                 <LanguageSwitcher ChangeLanguage={handleLanguageChange} />
@@ -252,10 +252,10 @@ export default function VerifyEmailPage() {
                     {/* Logo */}
                     <div className="flex justify-center mb-6">
                         <Image
-                            src="/assets/images/main-logo.png"
+                            src="/assets/images/x_F_logo.png"
                             alt="Zuroona"
-                            width={120}
-                            height={48}
+                            width={180}
+                            height={50}
                             className="object-contain"
                         />
                     </div>

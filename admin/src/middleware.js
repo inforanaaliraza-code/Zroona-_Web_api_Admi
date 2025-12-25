@@ -29,5 +29,6 @@ export const config = {
     "/admin-management/:path*",
     "/wallet/:path*",
     "/withdrawal-requests/:path*",
+    "/guest-invoices/:path*",
   ],
 };

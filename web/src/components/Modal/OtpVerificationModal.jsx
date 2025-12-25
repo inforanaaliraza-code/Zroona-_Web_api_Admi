@@ -190,10 +190,10 @@ export default function OtpVerificationModal({
 					<div className="max-w-md mx-auto">
 						<div className="flex justify-center mb-6">
               <Image
-                src="/assets/images/main-logo.png"
+                src="/assets/images/x_F_logo.png"
                 alt="Zuroona Logo"
-								width={134}
-								height={45}
+								width={240}
+								height={70}
 								className="h-auto"
 							/>
 						</div>

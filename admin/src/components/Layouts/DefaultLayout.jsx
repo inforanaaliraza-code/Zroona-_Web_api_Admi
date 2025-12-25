@@ -9,23 +9,31 @@ export default function DefaultLayout({ children, title, breadcrumbs, search, se
   return (
     <>
       {/* <!-- ===== Page Wrapper Start ===== --> */}
-      <div className="flex">
+      <div className="flex min-h-screen bg-[#b0a0df] transition-all duration-300">
         {/* <!-- ===== Sidebar Start ===== --> */}
         <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         {/* <!-- ===== Sidebar End ===== --> */}
 
         {/* <!-- ===== Content Area Start ===== --> */}
-        <div className="overflow-auto relative flex flex-1 flex-col lg:ml-[15.5rem] px-6">
+        <div className="overflow-auto relative flex flex-1 flex-col lg:ml-[320px] px-4 sm:px-6 transition-all duration-300">
           {/* <!-- ===== Header Start ===== --> */}
-          <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} title={title} breadcrumbs={breadcrumbs} search={search}
+          <Header 
+            sidebarOpen={sidebarOpen} 
+            setSidebarOpen={setSidebarOpen} 
+            title={title} 
+            breadcrumbs={breadcrumbs} 
+            search={search}
             setSearch={setSearch}
-            setPage={setPage} />
+            setPage={setPage} 
+          />
           {/* <!-- ===== Header End ===== --> */}
 
           {/* <!-- ===== Main Content Start ===== --> */}
-          <main>
+          <main className="flex-1 py-6 animate-fade-in">
             <div className="mx-auto max-w-screen-2xl">
-              {children}
+              <div className="transition-all duration-300">
+                {children}
+              </div>
             </div>
           </main>
           {/* <!-- ===== Main Content End ===== --> */}

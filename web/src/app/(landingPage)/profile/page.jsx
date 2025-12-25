@@ -192,7 +192,7 @@ export default function ProfilePage() {
 
   if (!token || !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="text-center max-w-md">
           <Icon icon="lucide:lock" className="mx-auto h-16 w-16 text-gray-400" />
           <h2 className="mt-2 text-lg font-medium text-gray-900">{t("eventsMain.pleaseLogin") || "Please login"}</h2>

@@ -6,6 +6,24 @@ logger.closeByNewLine = true;
 logger.useIcons = true;
 
 /**
+ * Clean subdomain - remove https://, http://, trailing slashes, and .daftra.com
+ * @param {string} subdomain - The subdomain to clean
+ * @returns {string} - Cleaned subdomain
+ */
+function cleanSubdomain(subdomain) {
+	if (!subdomain) return subdomain;
+	let cleaned = subdomain
+		.replace(/^https?:\/\//i, '') // Remove http:// or https://
+		.replace(/\.daftra\.com.*$/i, '') // Remove .daftra.com and anything after
+		.replace(/\/$/, '') // Remove trailing slash
+		.trim();
+	
+	// Preserve case sensitivity for subdomain (Daftra subdomains are case-sensitive)
+	// Convert to lowercase for consistency, but note: some Daftra accounts may need exact case
+	return cleaned;
+}
+
+/**
  * Service for interacting with Daftra API
  */
 const DaftraService = {
@@ -17,7 +35,8 @@ const DaftraService = {
 	 */
 	async createInvoice(invoiceData, options = {}) {
 		try {
-			const subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN;
+			let subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN;
+			subdomain = cleanSubdomain(subdomain);
 			const apiKey = options.apiKey || process.env.DAFTRA_API_KEY;
 
 			if (!subdomain || !apiKey) {
@@ -37,6 +56,7 @@ const DaftraService = {
 				`Creating invoice in Daftra for ${invoiceData.Invoice?.client_first_name || "client"}`
 			);
 
+			// Daftra uses APIKEY header and /api2/ endpoints
 			const response = await axios.post(
 				`https://${subdomain}.daftra.com/api2/invoices`,
 				invoiceData,
@@ -44,8 +64,7 @@ const DaftraService = {
 					headers: {
 						Accept: "application/json",
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${apiKey}`,
-						apikey: apiKey,
+						APIKEY: apiKey,
 					},
 					timeout: 30000, // 30 second timeout
 				}
@@ -99,7 +118,8 @@ const DaftraService = {
 	 */
 	async getInvoice(invoiceId, options = {}) {
 		try {
-			const subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN;
+			let subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN;
+			subdomain = cleanSubdomain(subdomain);
 			const apiKey = options.apiKey || process.env.DAFTRA_API_KEY;
 
 			if (!subdomain || !apiKey) {
@@ -113,8 +133,7 @@ const DaftraService = {
 				{
 					headers: {
 						Accept: "application/json",
-						Authorization: `Bearer ${apiKey}`,
-						apikey: apiKey,
+						APIKEY: apiKey,
 					},
 				}
 			);
@@ -134,7 +153,8 @@ const DaftraService = {
 	 */
 	async createClient(clientData, options = {}) {
 		try {
-			const subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN;
+			let subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN;
+			subdomain = cleanSubdomain(subdomain);
 			const apiKey = options.apiKey || process.env.DAFTRA_API_KEY;
 
 			if (!subdomain || !apiKey) {
@@ -152,8 +172,7 @@ const DaftraService = {
 					headers: {
 						Accept: "application/json",
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${apiKey}`,
-						apikey: apiKey,
+						APIKEY: apiKey,
 					},
 				}
 			);
@@ -177,7 +196,8 @@ const DaftraService = {
 	 */
 	async createReceipt(receiptData, options = {}) {
 		try {
-			const subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN || "tdb";
+			let subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN || "tdb";
+			subdomain = cleanSubdomain(subdomain);
 			const apiKey = options.apiKey || process.env.DAFTRA_API_KEY || "a287194bdf648c16341ecb843cea1fbae7392962";
 
 			if (!subdomain || !apiKey) {
@@ -197,15 +217,16 @@ const DaftraService = {
 				`Creating receipt in Daftra for ${receiptData.Receipt?.client_first_name || "client"}`
 			);
 
+			// Daftra uses APIKEY header and requires client_id
+			// Note: receipts are just invoices in Daftra
 			const response = await axios.post(
-				`https://${subdomain}.daftra.com/api2/receipts`,
+				`https://${subdomain}.daftra.com/api2/invoices`,
 				receiptData,
 				{
 					headers: {
 						Accept: "application/json",
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${apiKey}`,
-						apikey: apiKey,
+						APIKEY: apiKey,
 					},
 					timeout: 30000, // 30 second timeout
 				}
@@ -256,7 +277,8 @@ const DaftraService = {
 	 */
 	async getReceipt(receiptId, options = {}) {
 		try {
-			const subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN || "tdb";
+			let subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN || "tdb";
+			subdomain = cleanSubdomain(subdomain);
 			const apiKey = options.apiKey || process.env.DAFTRA_API_KEY || "a287194bdf648c16341ecb843cea1fbae7392962";
 
 			if (!subdomain || !apiKey) {
@@ -266,12 +288,11 @@ const DaftraService = {
 			logger.info(`Getting receipt details for ID: ${receiptId}`);
 
 			const response = await axios.get(
-				`https://${subdomain}.daftra.com/api2/receipts/${receiptId}`,
+				`https://${subdomain}.daftra.com/api2/invoices/${receiptId}`,
 				{
 					headers: {
 						Accept: "application/json",
-						Authorization: `Bearer ${apiKey}`,
-						apikey: apiKey,
+						APIKEY: apiKey,
 					},
 				}
 			);
@@ -284,94 +305,128 @@ const DaftraService = {
 	},
 
 	/**
-	 * Generate a receipt for an event booking (using Receipts API)
+	 * Generate a receipt for an event booking (Create Client + Invoice)
 	 * @param {Object} booking - The booking object
 	 * @param {Object} event - The event object
 	 * @param {Object} user - The user object
 	 * @param {Object} organizer - The organizer object
 	 * @param {Object} options - API options (subdomain, apiKey)
-	 * @returns {Promise<Object>} - The created receipt with PDF URL
+	 * @returns {Promise<Object>} - The created invoice with PDF URL
 	 */
 	async generateEventReceipt(booking, event, user, organizer, options = {}) {
 		try {
-			logger.info(`Generating receipt for booking: ${booking._id || booking._id?.toString() || 'unknown'}`);
+			logger.info(`Generating invoice for booking: ${booking._id || booking._id?.toString() || 'unknown'}`);
 
 			// Validate required data
 			if (!booking || !event || !user || !organizer) {
-				throw new Error("Missing required data for receipt generation");
+				throw new Error("Missing required data for invoice generation");
 			}
 
-			// Format date for receipt
-			const receiptDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+			let subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN;
+			subdomain = cleanSubdomain(subdomain);
+			const apiKey = options.apiKey || process.env.DAFTRA_API_KEY;
 
-			// Calculate total amount
+			if (!subdomain || !apiKey) {
+				throw new Error("Daftra API credentials missing");
+			}
+
+			const headers = {
+				Accept: "application/json",
+				"Content-Type": "application/json",
+				APIKEY: apiKey, // Use APIKEY header (not Bearer)
+			};
+
+			// Step 1: Create or get client
+			logger.info(`Creating client in Daftra: ${user.first_name} ${user.last_name}`);
+			
+			const clientData = {
+				Client: {
+					first_name: user.first_name || "Guest",
+					last_name: user.last_name || "User",
+					email: user.email || `guest${Date.now()}@zuroona.com`,
+					phone: user.phone || "",
+					country_code: "SA",
+					address1: user.address || "Saudi Arabia",
+					client_type: "Individual",
+				}
+			};
+
+			let clientId;
+			try {
+				const clientResponse = await axios.post(
+					`https://${subdomain}.daftra.com/api2/clients`,
+					clientData,
+					{
+						headers,
+						timeout: 20000,
+					}
+				);
+				clientId = clientResponse.data?.id || clientResponse.data?.Client?.id;
+				logger.success(`Client created with ID: ${clientId}`);
+			} catch (clientError) {
+				logger.error(`Failed to create client: ${clientError.message}`);
+				throw new Error(`Failed to create client in Daftra: ${clientError.message}`);
+			}
+
+			// Step 2: Create invoice with client ID
+			const invoiceDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 			const totalAmount = booking.total_amount || (event.event_price * (booking.no_of_attendees || 1));
 
-			// Prepare receipt data according to Daftra Receipts API v2
-			const receiptData = {
-				Receipt: {
-					staff_id: 0,
-					store_id: 0,
-					client_id: user._id ? user._id.toString() : "",
+			const invoiceData = {
+				Invoice: {
+					client_id: clientId, // Required!
 					currency_code: "SAR",
-					client_business_name: organizer.group_name || `${organizer.first_name || ""} ${organizer.last_name || ""}`.trim() || "Zuroona Events",
-					client_first_name: user.first_name || "",
-					client_last_name: user.last_name || "",
-					client_email: user.email || "",
-					client_address1: user.address || "",
-					client_country_code: "SA",
-					date: receiptDate,
+					date: invoiceDate,
 					draft: "0",
-					notes: `Payment receipt for event: ${event.event_name || 'Event'}`,
-					html_notes: `<p>Thank you for your payment!</p><p>Event: ${event.event_name || 'Event'}</p><p>Date: ${event.event_date ? new Date(event.event_date).toLocaleDateString() : 'N/A'}</p><p>Attendees: ${booking.no_of_attendees || 1}</p>`,
+					notes: `Invoice for event: ${event.event_name || 'Event'}`,
+					html_notes: `<p>Thank you for booking with Zuroona!</p><p><strong>Event:</strong> ${event.event_name || 'Event'}</p><p><strong>Date:</strong> ${event.event_date ? new Date(event.event_date).toLocaleDateString() : 'N/A'}</p><p><strong>Attendees:</strong> ${booking.no_of_attendees || 1}</p><p><strong>Total:</strong> ${totalAmount} SAR</p>`,
 				},
-				ReceiptItem: [
+				InvoiceItem: [
 					{
 						item: event.event_name || "Event Booking",
-						description: `Booking for ${booking.no_of_attendees || 1} attendee(s) - ${event.event_name || 'Event'}`,
+						description: `Booking for ${booking.no_of_attendees || 1} attendee(s)`,
 						unit_price: event.event_price || 0,
 						quantity: booking.no_of_attendees || 1,
-						product_id: event._id ? event._id.toString() : "",
 					},
 				],
 			};
 
-			// Create the receipt
-			const receiptResponse = await this.createReceipt(receiptData, options);
+			logger.info(`Creating invoice in Daftra for client ID: ${clientId}`);
 
-			// Get receipt PDF URL
-			let receiptPdfUrl = "";
-			if (receiptResponse && receiptResponse.id) {
-				try {
-					// Try to get the receipt details to get PDF URL
-					const receiptDetails = await this.getReceipt(receiptResponse.id, options);
-					receiptPdfUrl = receiptDetails?.pdf_url || receiptDetails?.receipt_pdf_url || receiptDetails?.invoice_pdf_url || "";
-					
-					// If PDF URL is not in response, construct it
-					if (!receiptPdfUrl && receiptResponse.id) {
-						const subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN || "tdb";
-						receiptPdfUrl = `https://${subdomain}.daftra.com/receipts/${receiptResponse.id}/pdf`;
+			try {
+				const invoiceResponse = await axios.post(
+					`https://${subdomain}.daftra.com/api2/invoices`,
+					invoiceData,
+					{
+						headers,
+						timeout: 20000,
 					}
-				} catch (pdfError) {
-					logger.warn(`Could not fetch receipt PDF URL: ${pdfError.message}`);
-					// Construct PDF URL manually
-					const subdomain = options.subdomain || process.env.DAFTRA_SUBDOMAIN || "tdb";
-					receiptPdfUrl = `https://${subdomain}.daftra.com/receipts/${receiptResponse.id}/pdf`;
-				}
-			}
+				);
 
-			return {
-				...receiptResponse,
-				receipt_pdf_url: receiptPdfUrl,
-				pdf_url: receiptPdfUrl,
-			};
-		} catch (error) {
-			logger.error(`Failed to generate event receipt: ${error.message}`);
-			// Log additional context
-			if (error.response) {
-				logger.debug(`Receipt generation error status: ${error.response.status}`);
-				logger.debug(`Receipt generation error data: ${JSON.stringify(error.response.data)}`);
+				const invoiceId = invoiceResponse.data?.id || invoiceResponse.data?.Invoice?.id;
+				const invoicePdfUrl = `https://${subdomain}.daftra.com/invoices/${invoiceId}/pdf`;
+
+				logger.success(`Invoice created successfully: ${invoiceId}`);
+				logger.success(`Invoice PDF URL: ${invoicePdfUrl}`);
+
+				return {
+					id: invoiceId,
+					client_id: clientId,
+					pdf_url: invoicePdfUrl,
+					receipt_pdf_url: invoicePdfUrl,
+					invoice_url: invoicePdfUrl,
+					...invoiceResponse.data,
+				};
+			} catch (invoiceError) {
+				logger.error(`Failed to create invoice: ${invoiceError.message}`);
+				if (invoiceError.response) {
+					logger.error(`Invoice error status: ${invoiceError.response.status}`);
+					logger.error(`Invoice error data: ${JSON.stringify(invoiceError.response.data)}`);
+				}
+				throw new Error(`Failed to create invoice in Daftra: ${invoiceError.message}`);
 			}
+		} catch (error) {
+			logger.error(`Failed to generate event invoice: ${error.message}`);
 			throw error;
 		}
 	},

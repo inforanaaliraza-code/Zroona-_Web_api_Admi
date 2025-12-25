@@ -19,38 +19,45 @@ const SignupHeader = ({ bgColor = "#fff" }) => {
   return (
     <>
       <div className="h-[72px]" />
-      <header className={`fixed top-0 ${isRTL ? "left-0 right-0" : "right-0 left-0"} z-50 border-b backdrop-blur-md backdrop-saturate-150 bg-white/70 border-gray-100/50`}>
+      <header className={`fixed top-0 ${isRTL ? "left-0 right-0" : "right-0 left-0"} z-50 border-b border-[#b0a0df]/30 bg-[#b0a0df] shadow-md`}>
         <nav className="relative">
           <div className={`px-4 mx-auto max-w-7xl sm:px-6 lg:px-8`}>
             <div className={`flex items-center ${isRTL ? "flex-row-reverse" : "flex-row"} justify-between h-[72px]`}>
-              {/* Logo */}
-              <div className="flex-shrink-0">
+              {/* Logo - Centered Vertically, Bigger, Responsive */}
+              <div className="flex-shrink-0 flex items-center h-full pt-1">
+                {/* Desktop Logo - Bigger sizes */}
                 <div className="hidden sm:block">
                   <Link
                     href="/"
-                    className="block transition-transform duration-300 hover:scale-105"
+                    className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105"
                   >
                     <Image
-                      src="/assets/images/main-logo.png"
-                      width={140}
-                      height={45}
+                      src="/assets/images/x_F_logo.png"
+                      width={300}
+                      height={90}
                       alt="Logo"
-                      className="object-contain w-auto h-auto max-h-[35px] sm:max-h-[40px] md:max-h-[45px] max-w-[90px] sm:max-w-[120px] md:max-w-[140px]"
+                      className="object-contain w-auto h-auto 
+                        max-h-[60px] sm:max-h-[65px] md:max-h-[75px] lg:max-h-[85px] xl:max-h-[90px]
+                        max-w-[220px] sm:max-w-[250px] md:max-w-[280px] lg:max-w-[300px] xl:max-w-[320px]
+                        brightness-0 invert"
                       priority
                     />
                   </Link>
                 </div>
+                {/* Mobile Logo - Bigger sizes */}
                 <div className="block sm:hidden">
                   <Link
                     href="/"
-                    className="block transition-transform duration-300 hover:scale-105"
+                    className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105"
                   >
                     <Image
-                      src="/assets/images/main-logo.png"
-                      width={32}
-                      height={32}
+                      src="/assets/images/x_F_logo.png"
+                      width={200}
+                      height={60}
                       alt="Logo"
-                      className="object-contain w-auto h-auto max-h-[32px] max-w-[32px]"
+                      className="object-contain w-auto h-auto 
+                        max-h-[50px] max-w-[50px]
+                        brightness-0 invert"
                       priority
                     />
                   </Link>

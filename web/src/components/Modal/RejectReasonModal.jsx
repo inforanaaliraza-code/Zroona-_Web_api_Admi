@@ -14,10 +14,10 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
 
   // Predefined rejection reasons
   const predefinedReasons = [
-    { id: "capacity", label: t("rejectReason.capacityFull") || "Event capacity is full", icon: "lucide:users-x" },
-    { id: "requirements", label: t("rejectReason.requirementsNotMet") || "Guest requirements not met", icon: "lucide:file-x" },
-    { id: "timing", label: t("rejectReason.timingIssue") || "Timing conflict", icon: "lucide:clock-x" },
-    { id: "other", label: t("rejectReason.other") || "Other reason", icon: "lucide:more-horizontal" },
+    { id: "capacity", label: t("rejectReason.capacityFull"), icon: "lucide:users-x" },
+    { id: "requirements", label: t("rejectReason.requirementsNotMet"), icon: "lucide:file-x" },
+    { id: "timing", label: t("rejectReason.timingIssue"), icon: "lucide:clock-x" },
+    { id: "other", label: t("rejectReason.other"), icon: "lucide:more-horizontal" },
   ];
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
   const handleConfirm = () => {
     // Validate reason
     if (!reason || reason.trim().length < 10) {
-      setError(t("rejectReason.minLengthError") || "Please provide a reason with at least 10 characters");
+      setError(t("rejectReason.minLengthError"));
       return;
     }
 
@@ -66,10 +66,10 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-white">
-                  {t("rejectReason.title") || "Reject Booking Request"}
+                  {t("rejectReason.title")}
                 </h3>
                 <p className="text-white/90 text-sm mt-1">
-                  {t("rejectReason.subtitle") || "Please provide a reason for rejection"}
+                  {t("rejectReason.subtitle")}
                 </p>
               </div>
             </div>
@@ -93,7 +93,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-600 mb-1">
-                  {t("rejectReason.guest") || "Guest"}
+                  {t("rejectReason.guest")}
                 </p>
                 <p className="font-semibold text-gray-900">{guestName}</p>
               </div>
@@ -104,7 +104,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
               </div>
               <div className="flex-1">
                 <p className="text-sm text-gray-600 mb-1">
-                  {t("rejectReason.event") || "Event"}
+                  {t("rejectReason.event")}
                 </p>
                 <p className="font-semibold text-gray-900">{eventName}</p>
               </div>
@@ -114,7 +114,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
           {/* Predefined Reasons */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3">
-              {t("rejectReason.selectReason") || "Select a reason (optional)"}
+              {t("rejectReason.selectReason")}
             </label>
             <div className="grid grid-cols-2 gap-3">
               {predefinedReasons.map((predefined) => (
@@ -152,7 +152,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
           {/* Custom Reason Textarea */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              {t("rejectReason.reasonLabel") || "Rejection Reason"} <span className="text-red-500">*</span>
+              {t("rejectReason.reasonLabel")} <span className="text-red-500">*</span>
             </label>
             <textarea
               value={reason}
@@ -162,7 +162,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
               }}
               disabled={isLoading}
               rows={5}
-              placeholder={t("rejectReason.placeholder") || "Please provide a detailed reason for rejecting this booking request (minimum 10 characters)..."}
+              placeholder={t("rejectReason.placeholder")}
               className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-200 resize-none focus:outline-none focus:ring-2 ${
                 error
                   ? "border-red-500 focus:ring-red-500/20"
@@ -177,7 +177,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
                 </p>
               )}
               <p className={`text-xs ml-auto ${reason.length < 10 ? "text-gray-500" : "text-green-600"}`}>
-                {reason.length}/10 {t("rejectReason.characters") || "characters"}
+                {reason.length}/10 {t("rejectReason.characters")}
               </p>
             </div>
           </div>
@@ -187,10 +187,10 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
             <Icon icon="lucide:info" className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-orange-900">
-                {t("rejectReason.warningTitle") || "Important"}
+                {t("rejectReason.warningTitle")}
               </p>
               <p className="text-xs text-orange-700 mt-1">
-                {t("rejectReason.warningMessage") || "The guest will receive this reason in their notification. Please be professional and clear."}
+                {t("rejectReason.warningMessage")}
               </p>
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
             disabled={isLoading}
             className="px-6 py-2.5 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {t("rejectReason.cancel") || "Cancel"}
+            {t("rejectReason.cancel")}
           </button>
           <button
             onClick={handleConfirm}
@@ -213,12 +213,12 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
             {isLoading ? (
               <>
                 <Icon icon="lucide:loader-2" className="w-5 h-5 animate-spin" />
-                {t("rejectReason.processing") || "Processing..."}
+                {t("rejectReason.processing")}
               </>
             ) : (
               <>
                 <Icon icon="lucide:x-circle" className="w-5 h-5" />
-                {t("rejectReason.confirmReject") || "Confirm Rejection"}
+                {t("rejectReason.confirmReject")}
               </>
             )}
           </button>
@@ -227,12 +227,6 @@ export default function RejectReasonModal({ isOpen, onClose, onConfirm, guestNam
     </div>
   );
 }
-
-
-
-
-
-
 
 
 

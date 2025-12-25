@@ -72,7 +72,7 @@ export default function OrganizerSignUpForm({ title, buttonText }) {
         // Use UploadFileApi which now returns Cloudinary URL
         const result = await UploadFileApi({ 
             file: file, 
-            dirName: "Jeena" 
+            dirName: "Zuroona" 
         });
         
         if (result?.status === 1 && result?.data?.location) {

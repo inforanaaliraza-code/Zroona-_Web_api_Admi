@@ -7,6 +7,7 @@ import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import Link from "next/link";
+import { Mail, Lock, Phone } from "lucide-react";
 import { TOKEN_NAME } from "@/until";
 import Loader from "../Loader/Loader";
 import { forgotPasswordApi, LoginApi } from "@/api/setting";
@@ -103,19 +104,17 @@ function LoginForm(props) {
                 </label>
                 <div className="relative mt-3">
                   <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <Image
-                      src={props.page === "forgot" ? "/assets/images/login/phone.png" : "/assets/images/login/email.png"}
-                      alt={props.page === "forgot" ? "Phone icon" : "Email icon"}
-                      width={24}
-                      height={24}
-                      className="object-contain"
-                    />
+                    {props.page === "forgot" ? (
+                      <Phone className="w-6 h-6 text-[#a797cc]" />
+                    ) : (
+                      <Mail className="w-6 h-6 text-[#a797cc]" />
+                    )}
                   </div>
                   <input
                     type={props.page === "forgot" ? "tel" : "email"}
                     id={props.page === "forgot" ? "mobile_number" : "email"}
                     name={props.page === "forgot" ? "mobile_number" : "email"}
-                    className="block w-full px-3 pl-12 py-2 md:py-4 text-gray-900 border border-gray-300 rounded-md shadow-sm focus:border-[#f47c0c] focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold"
+                    className="block w-full px-3 pl-12 py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc]/20 focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold transition-all duration-200"
                     placeholder={props.page === "forgot" ? "Enter mobile number" : "Enter email id"}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -125,7 +124,7 @@ function LoginForm(props) {
                 </div>
                 {((props.page === "forgot" && errors.mobile_number && touched.mobile_number) || 
                   (props.page !== "forgot" && errors.email && touched.email)) && (
-                  <div className="text-[#f47c0c] mt-1 text-sm">
+                  <div className="text-[#a797cc] mt-1 text-sm">
                     {props.page === "forgot" ? errors.mobile_number : errors.email}
                   </div>
                 )}
@@ -138,19 +137,13 @@ function LoginForm(props) {
                   </label>
                   <div className="relative mt-1">
                     <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                      <Image
-                        src="/assets/images/login/lock.png"
-                        alt="Password icon"
-                        width={16}
-                        height={16}
-                        className="object-contain"
-                      />
+                      <Lock className="w-4 h-4 text-[#a797cc]" />
                     </div>
                     <input
                       id="password-field"
                       type={values.toggle ? "text" : "password"}
                       name="password"
-                      className="block w-full px-3 pl-12 py-2 md:py-4 text-gray-900 border border-gray-300 rounded-md shadow-sm focus:border-[#f47c0c] focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold"
+                      className="block w-full px-3 pl-12 py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc]/20 focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold transition-all duration-200"
                       placeholder="Enter Password"
                       onChange={handleChange}
                       onBlur={handleBlur}
@@ -159,7 +152,7 @@ function LoginForm(props) {
                     <span className="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-500">
                       <button
                         type="button"
-                        className="py-1 md:py-2 px-3 rounded-md text-sm text-white bg-[#f5ac0f]"
+                        className="py-1 md:py-2 px-3 md:px-4 rounded-lg text-sm text-white bg-gradient-to-r from-[#a797cc] to-[#8b7bb3] hover:from-[#8b7bb3] hover:to-[#6d5a9a] transition-all duration-200 shadow-md"
                         onClick={() => setFieldValue("toggle", !values.toggle)}
                       >
                         {values.toggle ? "Hide" : "Show"}
@@ -167,7 +160,7 @@ function LoginForm(props) {
                     </span>
                   </div>
                   {errors.password && touched.password && (
-                    <div className="text-[#f47c0c] mt-1 text-sm"> {errors.password}</div>
+                    <div className="text-[#a797cc] mt-1 text-sm"> {errors.password}</div>
                   )}
                 </div>
               )}
@@ -175,7 +168,7 @@ function LoginForm(props) {
               {props.page !== "forgot" && (
                 <div className="text-right mb-10">
                   <Link href="/forgot-password">
-                    <span className="text-sm text-[#f47c0f] font-bold cursor-pointer">
+                    <span className="text-sm text-[#a797cc] font-bold cursor-pointer hover:text-[#8b7bb3] transition-colors">
                       Forgot Password?
                     </span>
                   </Link>
@@ -186,7 +179,7 @@ function LoginForm(props) {
               <div className="text-center mt-3">
                 <button
                   type="submit"
-                  className="flex justify-center items-center gap-x-2 w-full px-4 py-3 text-white bg-[#f47c0c] rounded-md text-1xl uppercase font-semibold"
+                  className="flex justify-center items-center gap-x-2 w-full px-4 py-3 md:py-4 text-white bg-gradient-to-r from-[#a797cc] to-[#8b7bb3] rounded-lg text-base md:text-lg uppercase font-semibold hover:from-[#8b7bb3] hover:to-[#6d5a9a] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? (

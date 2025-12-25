@@ -8,11 +8,13 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { ActiveInActiveUserApi, DeleteUserApi } from "@/api/user/apis";
 import { FaStar, FaTrash, FaBan, FaCheckCircle } from "react-icons/fa";
+import SuspendUserModal from "@/components/Modals/SuspendUserModal";
 
 export default function UserDetail() {
   const { id } = useParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const detail = useDataStore((store) => store.UserDetail);
   const { fetchUserDetail } = useDataStore();
 
@@ -29,13 +31,17 @@ export default function UserDetail() {
   }, [id, fetchUserDetail]);
 
   const handleSuspend = () => {
-    if (!confirm("Are you sure you want to suspend this account?")) return;
+    setSuspendModalOpen(true);
+  };
+
+  const handleConfirmSuspend = () => {
     setLoading(true);
     ActiveInActiveUserApi({ userId: detail?.user?._id, isActive: false })
       .then((res) => {
         if (res?.status === 1) {
           toast.success(res?.message || "Account suspended successfully");
           fetchUserDetail({ id: id });
+          setSuspendModalOpen(false);
         } else {
           toast.error(res?.message || "Failed to suspend account");
         }
@@ -43,7 +49,10 @@ export default function UserDetail() {
       .catch((err) => {
         toast.error("Failed to suspend account");
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setSuspendModalOpen(false);
+      });
   };
 
   const handleActivate = () => {
@@ -433,6 +442,13 @@ export default function UserDetail() {
           </div>
         </div>
       </div>
+
+      <SuspendUserModal
+        isOpen={suspendModalOpen}
+        onClose={() => setSuspendModalOpen(false)}
+        onConfirm={handleConfirmSuspend}
+        user={detail?.user}
+      />
     </DefaultLayout>
   );
 }

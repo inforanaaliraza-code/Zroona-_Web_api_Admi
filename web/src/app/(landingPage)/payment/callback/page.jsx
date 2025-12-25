@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { GetUserBookingsApi } from "@/app/api/setting";
 
 export default function PaymentCallback() {
@@ -13,7 +12,6 @@ export default function PaymentCallback() {
   const id = searchParams.get("id");
   const status = searchParams.get("status");
   const message = searchParams.get("message");
-  const redirect = searchParams.get("redirect") || "/";
   const [receiptUrl, setReceiptUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bookingId, setBookingId] = useState(null);
@@ -73,7 +71,7 @@ export default function PaymentCallback() {
               } finally {
                 setLoading(false);
               }
-            }, 2000); // Wait 2 seconds for receipt generation
+            }, 3000); // Wait 3 seconds for receipt generation
           } catch (error) {
             console.error("Error updating payment:", error);
             setLoading(false);
@@ -89,18 +87,12 @@ export default function PaymentCallback() {
     }
   }, [id, status, message, searchParams]);
 
-  const handleViewReceipt = () => {
-    if (receiptUrl) {
-      window.open(receiptUrl, "_blank");
-    }
-  };
-
   const handleGoToBookings = () => {
     router.push("/myEvents");
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50/30 p-4">
+    <div className="flex justify-center items-center min-h-screen bg-white p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -170,10 +162,10 @@ export default function PaymentCallback() {
             ) : receiptUrl ? (
               <div className="space-y-3">
                 <p className="text-sm text-gray-600">
-                  Your receipt has been generated successfully!
+                  Your payment has been processed successfully! Your receipt is ready.
                 </p>
                 <button
-                  onClick={handleViewReceipt}
+                  onClick={() => window.open(receiptUrl, "_blank")}
                   className="w-full bg-gradient-to-r from-[#a797cc] via-[#9d8bc0] to-[#a797cc] text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 group"
                 >
                   <Icon
@@ -184,8 +176,8 @@ export default function PaymentCallback() {
                 </button>
               </div>
             ) : (
-              <p className="text-sm text-gray-500">
-                Receipt will be available in your bookings
+              <p className="text-sm text-gray-600">
+                Your payment has been processed successfully! Your receipt will be available in your bookings.
               </p>
             )}
 

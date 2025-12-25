@@ -184,7 +184,7 @@ export default function EventDetail() {
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-[#f47c0c] transition-colors mb-4"
+            className="flex items-center gap-2 text-gray-600 hover:text-[#a797cc] transition-colors mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="text-sm font-medium">Back to Events</span>
@@ -209,7 +209,7 @@ export default function EventDetail() {
         {loading && !detail?._id ? (
           <div className="flex justify-center items-center min-h-[500px] bg-white rounded-lg shadow-sm">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#f47c0c] border-t-transparent mx-auto"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#a797cc] border-t-transparent mx-auto"></div>
               <p className="mt-6 text-gray-600 font-medium">Loading event details...</p>
             </div>
           </div>
@@ -382,7 +382,7 @@ export default function EventDetail() {
                               onClick={() => setCurrentImageIndex(idx)}
                               className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                                 idx === currentImageIndex
-                                  ? "border-[#f47c0c] ring-2 ring-[#f47c0c]/20"
+                                  ? "border-[#a797cc] ring-2 ring-[#a797cc]/20"
                                   : "border-gray-200 hover:border-gray-300"
                               }`}
                             >
@@ -406,7 +406,7 @@ export default function EventDetail() {
                 {/* About Event */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <FileText className="w-5 h-5 text-[#f47c0c]" />
+                    <FileText className="w-5 h-5 text-[#a797cc]" />
                     <h3 className="text-xl font-bold text-gray-900">About This Event</h3>
                   </div>
                   <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -422,7 +422,7 @@ export default function EventDetail() {
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Event Information</h3>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <Calendar className="w-5 h-5 text-[#f47c0c] mt-0.5 flex-shrink-0" />
+                      <Calendar className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-xs font-medium text-gray-500">Date</p>
                         <p className="text-sm font-semibold text-gray-900">
@@ -437,7 +437,7 @@ export default function EventDetail() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Clock className="w-5 h-5 text-[#f47c0c] mt-0.5 flex-shrink-0" />
+                      <Clock className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-xs font-medium text-gray-500">Time</p>
                         <p className="text-sm font-semibold text-gray-900">
@@ -449,7 +449,7 @@ export default function EventDetail() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <MapPin className="w-5 h-5 text-[#f47c0c] mt-0.5 flex-shrink-0" />
+                      <MapPin className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-xs font-medium text-gray-500">Location</p>
                         <p className="text-sm font-semibold text-gray-900">
@@ -459,7 +459,7 @@ export default function EventDetail() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <DollarSign className="w-5 h-5 text-[#f47c0c] mt-0.5 flex-shrink-0" />
+                      <DollarSign className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-xs font-medium text-gray-500">Price Per Person</p>
                         <p className="text-sm font-semibold text-gray-900">
@@ -469,7 +469,7 @@ export default function EventDetail() {
                     </div>
 
                     <div className="flex items-start gap-3">
-                      <Users className="w-5 h-5 text-[#f47c0c] mt-0.5 flex-shrink-0" />
+                      <Users className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-xs font-medium text-gray-500">Capacity</p>
                         <p className="text-sm font-semibold text-gray-900">
@@ -517,7 +517,7 @@ export default function EventDetail() {
                   <button
                     onClick={() => ChangeEventStatus(2)}
                     disabled={loading}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#f47c0c] hover:bg-[#e66d00] text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#a797cc] hover:bg-[#a08ec8] text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
                   >
                     {loading ? (
                       <>
@@ -576,7 +576,7 @@ export default function EventDetail() {
             <p className="text-gray-600 mb-6">The event you're looking for doesn't exist or has been removed.</p>
             <button
               onClick={() => router.push("/events")}
-              className="inline-flex items-center gap-2 bg-[#f47c0c] hover:bg-[#e66d00] text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              className="inline-flex items-center gap-2 bg-[#a797cc] hover:bg-[#a08ec8] text-white px-6 py-2 rounded-lg font-medium transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Events

@@ -167,7 +167,7 @@ export default function EventAnalytics() {
   return (
     <>
       <Breadcrumbs items={breadcrumbItems} />
-      <section className="bg-gradient-to-br from-gray-50 via-white to-gray-50 py-8 md:py-12 min-h-screen">
+      <section className="bg-white py-8 md:py-12 min-h-screen">
         <div className="mx-auto px-4 md:px-8 xl:px-28">
           {/* Header */}
           <div className="mb-8">

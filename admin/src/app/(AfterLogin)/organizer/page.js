@@ -10,6 +10,7 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import ApprovalModal from "@/components/Modals/ApprovalModal";
 import StatusConfirmation from "@/components/Modals/SatutsConfirmation";
+import SuspendHostModal from "@/components/Modals/SuspendHostModal";
 import Paginations from "@/components/Paginations/Pagination";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
 import Image from "next/image";
@@ -30,8 +31,10 @@ export default function ManageEventOrganizer() {
   // Modal state
   const [modalShow, setModalShow] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
   const [selectedOrganizer, setSelectedOrganizer] = useState(null);
   const [selectedOrganierEvent, setSelectedOrganierEvent] = useState(null);
+  const [selectedOrganizerForSuspend, setSelectedOrganizerForSuspend] = useState(null);
   const [actionType, setActionType] = useState(""); // "approve" or "reject"
 
   const handleTabChange = (tab) => {
@@ -98,6 +101,43 @@ export default function ManageEventOrganizer() {
         toast.error("Error updating organizer status");
         setIsModalOpen(false);
         setSelectedOrganierEvent(null);
+      });
+  };
+
+  const handleSuspendClick = (organizer) => {
+    setSelectedOrganizerForSuspend(organizer);
+    setSuspendModalOpen(true);
+  };
+
+  const handleConfirmSuspend = () => {
+    if (!selectedOrganizerForSuspend || !selectedOrganizerForSuspend._id) {
+      toast.error("Invalid organizer ID");
+      return;
+    }
+
+    setLoading(true);
+    const isSuspended = !selectedOrganizerForSuspend.is_suspended;
+
+    ActiveInActiveOrganizerApi({
+      id: selectedOrganizerForSuspend._id,
+      isSuspended: isSuspended,
+    })
+      .then((res) => {
+        setLoading(false);
+        if (res?.status === 1) {
+          toast.success(res?.message || (isSuspended ? "Host suspended successfully" : "Host unsuspended successfully"));
+          fetchGetAllOrganizer(params);
+        } else {
+          toast.error(res?.message || "Failed to update suspend status");
+        }
+        setSuspendModalOpen(false);
+        setSelectedOrganizerForSuspend(null);
+      })
+      .catch((error) => {
+        setLoading(false);
+        toast.error("Error updating suspend status");
+        setSuspendModalOpen(false);
+        setSelectedOrganizerForSuspend(null);
       });
   };
   // Handle change of status (approve/reject)
@@ -172,48 +212,57 @@ export default function ManageEventOrganizer() {
           {/* Header */}
           <div className="flex lg:w-[40%] items-end mb-4 sm:mb-0">
             <h1 className="text-xl font-bold text-black">
-              Manage Event Organizer
+              Manage Hosts
             </h1>
           </div>
 
           {/* Actions & Tabs */}
           <div className="w-full flex lg:justify-end gap-3 items-center mt-5 lg:mt-0">
             {/* Export Buttons */}
-            <button onClick={exportToCSV} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition">
+            <button 
+              onClick={exportToCSV} 
+              className="flex items-center gap-2 bg-gradient-to-r from-brand-green to-brand-gray-green-2 text-white px-4 py-2.5 rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 font-semibold text-sm"
+            >
               <FaFileExcel /> Export CSV
             </button>
-            <button onClick={handlePrint} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition">
+            <button 
+              onClick={handlePrint} 
+              className="flex items-center gap-2 bg-gradient-to-r from-brand-pastel-gray-purple-1 to-brand-gray-purple-2 text-white px-4 py-2.5 rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 font-semibold text-sm"
+            >
               <FaPrint /> Print/PDF
             </button>
           </div>
 
           <div className="flex justify-between w-full mt-5">
             {/* Approvel Tabs */}
-            <div className="flex">
+            <div className="flex gap-1">
               <button
                 onClick={() => handleTabChange("Pending")}
-                className={`px-4 py-3 text-sm w-28 font-medium rounded-l-lg ${approvedTab === "Pending"
-                  ? "bg-[#f47c0c] text-white"
-                  : "bg-white text-[#f47c0c] border-2 border-[#f47c0c]"
-                  }`}
+                className={`px-4 py-3 text-sm w-28 font-semibold rounded-l-xl transition-all duration-300 ${
+                  approvedTab === "Pending"
+                    ? "bg-gradient-to-r from-brand-pastel-gray-purple-1 to-brand-gray-purple-2 text-white shadow-lg shadow-brand-pastel-gray-purple-1/30 scale-105"
+                    : "bg-white text-brand-pastel-gray-purple-1 border-2 border-brand-pastel-gray-purple-1/30 hover:border-brand-pastel-gray-purple-1 hover:bg-brand-pastel-gray-purple-1/5"
+                }`}
               >
                 Pending
               </button>
               <button
                 onClick={() => handleTabChange("Approved")}
-                className={`px-4 py-3 text-sm w-28 font-medium ${approvedTab === "Approved"
-                  ? "bg-[#f47c0c] text-white"
-                  : "bg-white text-[#f47c0c] border-t-2 border-b-2 border-[#f47c0c]"
-                  }`}
+                className={`px-4 py-3 text-sm w-28 font-semibold transition-all duration-300 ${
+                  approvedTab === "Approved"
+                    ? "bg-gradient-to-r from-brand-pastel-gray-purple-1 to-brand-gray-purple-2 text-white shadow-lg shadow-brand-pastel-gray-purple-1/30 scale-105"
+                    : "bg-white text-brand-pastel-gray-purple-1 border-t-2 border-b-2 border-brand-pastel-gray-purple-1/30 hover:border-brand-pastel-gray-purple-1 hover:bg-brand-pastel-gray-purple-1/5"
+                }`}
               >
                 Approved
               </button>
               <button
                 onClick={() => handleTabChange("Rejected")}
-                className={`px-4 py-3 text-sm w-28 font-medium rounded-r-lg ${approvedTab === "Rejected"
-                  ? "bg-[#f47c0c] text-white"
-                  : "bg-white border-2 text-[#f47c0c] border-[#f47c0c]"
-                  }`}
+                className={`px-4 py-3 text-sm w-28 font-semibold rounded-r-xl transition-all duration-300 ${
+                  approvedTab === "Rejected"
+                    ? "bg-gradient-to-r from-brand-pastel-gray-purple-1 to-brand-gray-purple-2 text-white shadow-lg shadow-brand-pastel-gray-purple-1/30 scale-105"
+                    : "bg-white border-2 text-brand-pastel-gray-purple-1 border-brand-pastel-gray-purple-1/30 hover:border-brand-pastel-gray-purple-1 hover:bg-brand-pastel-gray-purple-1/5"
+                }`}
               >
                 Rejected
               </button>
@@ -221,16 +270,17 @@ export default function ManageEventOrganizer() {
 
             {/* Active Tabs (only visible in "Approved" tab) */}
             {approvedTab === "Approved" && (
-              <div className="flex">
+              <div className="flex gap-1">
                 <button
                   onClick={() => {
                     setStatus("1"); // Active
                     setPage(1);
                   }}
-                  className={`px-4 py-3 text-sm w-28 font-medium rounded-s-lg ${status === "1"
-                    ? "bg-[#f47c0c] text-white"
-                    : "bg-white text-[#f47c0c] border-2 border-[#f47c0c]"
-                    }`}
+                  className={`px-4 py-3 text-sm w-28 font-semibold rounded-l-xl transition-all duration-300 ${
+                    status === "1"
+                      ? "bg-green-600 text-white shadow-lg shadow-green-600/30 scale-105"
+                      : "bg-white text-green-600 border-2 border-green-600/30 hover:border-green-600 hover:bg-green-600/5"
+                  }`}
                 >
                   Active
                 </button>
@@ -239,10 +289,11 @@ export default function ManageEventOrganizer() {
                     setStatus("2"); // Inactive
                     setPage(1);
                   }}
-                  className={`px-4 py-3 text-sm w-28 font-medium rounded-e-lg ${status === "2"
-                    ? "bg-[#f47c0c] text-white"
-                    : "bg-white border-2 text-[#f47c0c] border-[#f47c0c]"
-                    }`}
+                  className={`px-4 py-3 text-sm w-28 font-semibold rounded-r-xl transition-all duration-300 ${
+                    status === "2"
+                      ? "bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105"
+                      : "bg-white border-2 text-red-600 border-red-600/30 hover:border-red-600 hover:bg-red-600/5"
+                  }`}
                 >
                   Inactive
                 </button>
@@ -251,37 +302,40 @@ export default function ManageEventOrganizer() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-5 mb-5">
+        <div className="bg-white rounded-2xl shadow-lg border border-brand-pastel-gray-purple-1/20 p-5 mb-5 hover:shadow-xl transition-shadow duration-300">
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white rounded-lg">
-              <thead className="bg-[#f3f7ff]">
+              <thead className="bg-gradient-to-r from-brand-pastel-gray-purple-1/10 to-brand-gray-purple-2/10">
                 <tr className="text-sm">
-                  <th className="px-4 py-4 text-left font-base text-gray-600">
+                  <th className="px-4 py-4 text-left font-semibold text-gray-700">
                     Organizer ID
                   </th>
-                  <th className="px-4 py-4 text-left font-base text-gray-600">
+                  <th className="px-4 py-4 text-left font-semibold text-gray-700">
                     Name
                   </th>
-                  <th className="px-4 py-4 text-left font-base text-gray-600">
+                  <th className="px-4 py-4 text-left font-semibold text-gray-700">
                     Mobile No.
                   </th>
-                  <th className="px-4 py-4 text-left font-base text-gray-600">
+                  <th className="px-4 py-4 text-left font-semibold text-gray-700">
                     Gender
                   </th>
-                  <th className="px-4 py-4 text-left font-base text-gray-600">
+                  <th className="px-4 py-4 text-left font-semibold text-gray-700">
                     Email ID
                   </th>
-                  <th className="px-4 py-4 text-left font-base text-gray-600">
+                  <th className="px-4 py-4 text-left font-semibold text-gray-700">
                     Date of Birth
                   </th>
-                    <th className="px-4 py-4 text-left font-base text-gray-600">
+                    <th className="px-4 py-4 text-left font-semibold text-gray-700">
                     City
                   </th>
-                  <th className="px-4 py-4 text-left font-base text-gray-600">
+                  <th className="px-4 py-4 text-left font-semibold text-gray-700">
+                    Registration Type
+                  </th>
+                  <th className="px-4 py-4 text-left font-semibold text-gray-700">
                     Status
                   </th>
-                  <th className="px-4 py-4 text-center font-base text-gray-600">
+                  <th className="px-4 py-4 text-center font-semibold text-gray-700">
                     Action
                   </th>
                 </tr>
@@ -289,7 +343,7 @@ export default function ManageEventOrganizer() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="py-3">
+                    <td colSpan={11} className="py-3">
                       <Loader />
                     </td>
                   </tr>
@@ -347,16 +401,29 @@ export default function ManageEventOrganizer() {
                       </td>
                       <td className="px-2 py-2">{organizer.address || "N/A"}</td>
                       <td className="px-2 py-2">
+                        <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                          organizer.registration_type === 'Re-apply' 
+                            ? 'bg-orange-100 text-orange-700 border border-orange-300' 
+                            : 'bg-blue-100 text-blue-700 border border-blue-300'
+                        }`}>
+                          {organizer.registration_type || 'New'}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2">
                         <div className="flex items-center gap-2">
                           {approvedTab === "Pending" && (
-                            <span className="text-sm font-medium text-yellow-500">
+                            <span className="text-sm font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-300">
                               Pending
                             </span>
                           )}
                           {approvedTab === "Approved" && (
                             <span
-                              className={`text-sm font-medium ${
+                              className={`text-sm font-semibold px-3 py-1 rounded-full border ${
                                 (() => {
+                                  // Check if suspended
+                                  if (organizer.is_suspended) {
+                                    return "bg-purple-100 text-purple-700 border-purple-300";
+                                  }
                                   // Check if last ticket purchase is more than 1 month ago
                                   if (organizer.last_booking_date || organizer.last_ticket_date) {
                                     const lastBookingDate = new Date(organizer.last_booking_date || organizer.last_ticket_date);
@@ -365,15 +432,19 @@ export default function ManageEventOrganizer() {
                                     
                                     // If last booking is more than 1 month ago, show inactive
                                     if (lastBookingDate < oneMonthAgo) {
-                                      return "text-red-500";
+                                      return "bg-red-100 text-red-700 border-red-300";
                                     }
                                   }
                                   // Default to organizer's isActive status
-                                  return organizer.isActive === 1 ? "text-green-500" : "text-red-500";
+                                  return organizer.isActive === 1 ? "bg-green-100 text-green-700 border-green-300" : "bg-red-100 text-red-700 border-red-300";
                                 })()
                               }`}
                             >
                               {(() => {
+                                // Check if suspended
+                                if (organizer.is_suspended) {
+                                  return "Suspended";
+                                }
                                 // Check if last ticket purchase is more than 1 month ago
                                 if (organizer.last_booking_date || organizer.last_ticket_date) {
                                   const lastBookingDate = new Date(organizer.last_booking_date || organizer.last_ticket_date);
@@ -392,7 +463,7 @@ export default function ManageEventOrganizer() {
                             </span>
                           )}
                           {approvedTab === "Rejected" && (
-                            <span className="text-sm font-medium text-red-500">
+                            <span className="text-sm font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700 border border-red-300">
                               Rejected
                             </span>
                           )}
@@ -402,22 +473,36 @@ export default function ManageEventOrganizer() {
                         <div className="flex gap-2 justify-center items-center">
                           <Link
                             href={`/organizer/detail/${organizer._id}`}
-                            className="text-[#f47c0c] hover:text-orange-600"
+                            className="text-brand-pastel-gray-purple-1 hover:text-brand-gray-purple-2 transition-colors duration-300 p-2 rounded-lg hover:bg-brand-pastel-gray-purple-1/10"
                           >
                             <Image
                               src="/assets/images/home/eye-outline.png"
                               alt="View"
                               height={20}
                               width={20}
+                              className="transition-transform duration-300 hover:scale-110"
                             />
                           </Link>
                           {/* Check button for approval */}
                           {/* For Pending tab, only show view button - accept/reject moved to detail page */}
                           {approvedTab === "Approved" && (
-                            <ToggleSwitch
-                              isOn={organizer.isActive === 1}
-                              handleToggle={() => handleToggleClick(organizer)}
-                            />
+                            <>
+                              <ToggleSwitch
+                                isOn={organizer.isActive === 1}
+                                handleToggle={() => handleToggleClick(organizer)}
+                              />
+                              <button
+                                onClick={() => handleSuspendClick(organizer)}
+                                className={`p-2 rounded-lg transition-colors ${
+                                  organizer.is_suspended 
+                                    ? 'bg-green-500 hover:bg-green-600 text-white' 
+                                    : 'bg-purple-500 hover:bg-purple-600 text-white'
+                                }`}
+                                title={organizer.is_suspended ? "Unsuspend Host" : "Suspend Host"}
+                              >
+                                {organizer.is_suspended ? '✓' : '⏸'}
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -425,7 +510,7 @@ export default function ManageEventOrganizer() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="py-3 text-center">
+                    <td colSpan={11} className="py-3 text-center">
                       No Data Available
                     </td>
                   </tr>
@@ -464,6 +549,15 @@ export default function ManageEventOrganizer() {
           onClose={() => setIsModalOpen(false)}
           onConfirm={handleConfirmToggle}
           organizer={selectedOrganierEvent}
+        />
+        <SuspendHostModal
+          isOpen={suspendModalOpen}
+          onClose={() => {
+            setSuspendModalOpen(false);
+            setSelectedOrganizerForSuspend(null);
+          }}
+          onConfirm={handleConfirmSuspend}
+          organizer={selectedOrganizerForSuspend}
         />
       </div>
     </DefaultLayout>
