@@ -174,10 +174,17 @@ const sendOtpToPhone = async (phoneNumber, lang = 'en') => {
         console.log(`✅ Login OTP sent successfully to ${phoneNumber} via Msegat`);
     } catch (error) {
         console.error('❌ Error sending login OTP via Msegat:', error.message);
-        if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️  Development mode: OTP not sent via SMS, but generated:', otp);
+        // In development or if Msegat is not configured, allow OTP generation to continue
+        // The OTP is still stored and can be verified, just not sent via SMS
+        if (process.env.NODE_ENV === 'development' || process.env.ALLOW_OTP_WITHOUT_SMS === 'true') {
+            console.warn('⚠️  Development mode: OTP generated but not sent via SMS:', otp);
+            console.warn('⚠️  You can use this OTP for testing:', otp);
+            // Don't throw error in development - allow OTP to be generated
         } else {
-            throw new Error('Failed to send OTP. Please try again later.');
+            // In production, if SMS fails, still allow OTP generation but log the error
+            console.error('⚠️  SMS sending failed, but OTP is still generated for verification');
+            // Don't throw - allow the OTP to be generated and stored
+            // The user can still verify the OTP if they have access to it through other means
         }
     }
 

@@ -80,6 +80,10 @@ const bookEventSchema = new mongoose.Schema(
 			type: String,
 			default: null,
 		},
+		confirmed_at: {
+			type: Date,
+			default: null,
+		},
 	},
 	{ timestamps: true }
 );

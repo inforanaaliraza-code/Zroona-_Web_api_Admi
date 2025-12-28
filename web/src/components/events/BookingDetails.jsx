@@ -76,13 +76,13 @@ const getBookingStatusDescription = (status, t) => {
 		case 0:
 			return getTranslation(t, "events.pendingDescription", "Your booking is pending approval from the organizer.");
 		case 1:
-			return getTranslation(t, "events.approvedDescription", "Your booking has been approved. Please proceed to payment.");
+			return getTranslation(t, "events.pendingHostApproval", "Your booking request is pending. Waiting for the host to review and approve your request. You will be notified once the host makes a decision.");
 		case 2:
-			return getTranslation(t, "events.confirmedDescription", "Your booking is confirmed. Payment completed.");
+			return getTranslation(t, "events.approvedDescription", "Your booking has been approved by the host. You can now proceed with payment.");
 		case 3:
 			return getTranslation(t, "events.cancelledDescription", "Your booking has been cancelled.");
 		case 4:
-			return getTranslation(t, "events.rejectedDescription", "Your booking request was rejected.");
+			return getTranslation(t, "events.rejectedDescription", "Your booking request was rejected by the host. You cannot book this event.");
 		default:
 			return "";
 	}
@@ -132,14 +132,15 @@ export default function BookingDetails({
 
 	if (!booking) return null;
 
-	// Check if payment button should be shown (only for approved status=1 or confirmed=2, not paid yet)
-	// Status mapping: 0=Pending, 1=Approved, 2=Confirmed, 3=Cancelled, 4=Rejected
+	// Check if payment button should be shown (only for approved status=2, not paid yet)
+	// Status mapping: 1=Pending, 2=Approved/Confirmed, 3=Cancelled, 4=Rejected
+	// CRITICAL: Payment button only shows when host has approved (book_status = 2) AND payment not done yet
 	const showPaymentButton =
-		(booking.book_status === 1 || booking.book_status === 2) &&
+		booking.book_status === 2 &&
 		(booking.payment_status === 0 || booking.payment_status === undefined);
 
-	// Check if cancel button should be shown (only for approved (1) or confirmed (2) bookings)
-	const showCancelButton = (booking.book_status === 1 || booking.book_status === 2) && booking.book_status !== 3;
+	// Check if cancel button should be shown (only for approved (2) bookings, not pending (1))
+	const showCancelButton = booking.book_status === 2 && booking.book_status !== 3;
 
 	// Check if invoice is available (paid bookings with invoice_url)
 	const showInvoiceButton =

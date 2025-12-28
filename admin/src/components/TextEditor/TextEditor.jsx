@@ -1,38 +1,56 @@
 "use client";
+import { useMemo, useRef, memo, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import S3 from "react-aws-s3";
 import { uid } from "uid";
-import ReactQuill, { Quill } from "react-quill";
-import "react-quill/dist/quill.snow.css";
-import "./style.css";
-import ImageResize from "quill-image-resize-module-react";
-import { useMemo, useRef } from "react";
 import { config } from "@/until";
 
-Quill.register("modules/imageResize", ImageResize);
+// Dynamically import ReactQuill to reduce initial bundle
+const ReactQuill = dynamic(() => import("react-quill"), {
+  ssr: false,
+  loading: () => <div className="h-32 bg-gray-100 rounded animate-pulse" />
+});
 
-var Size = Quill.import("attributors/style/size");
-Size.whitelist = [
-  "10px",
-  "11px",
-  "12px",
-  "13px",
-  "14px",
-  "16px",
-  "18px",
-  "20px",
-  "22px",
-  "24px",
-];
-Quill.register(Size, true);
+// Import CSS normally (Next.js handles CSS imports)
+import "react-quill/dist/quill.snow.css";
+import "./style.css";
 
-function TextEditor(props) {
-  // console.log(quillRef, "quillRef");
+// Lazy register Quill modules
+let quillInitialized = false;
+let QuillInstance = null;
+let SizeInstance = null;
 
-  const QID = uid();
+const initializeQuill = async () => {
+  if (typeof window !== "undefined" && !quillInitialized) {
+    const [{ Quill }, ImageResize] = await Promise.all([
+      import("react-quill").then(mod => ({ Quill: mod.Quill || mod.default?.Quill })),
+      import("quill-image-resize-module-react")
+    ]);
+    
+    if (Quill) {
+      QuillInstance = Quill;
+      Quill.register("modules/imageResize", ImageResize.default || ImageResize);
+      
+      SizeInstance = Quill.import("attributors/style/size");
+      SizeInstance.whitelist = ["10px", "11px", "12px", "13px", "14px", "16px", "18px", "20px", "22px", "24px"];
+      Quill.register(SizeInstance, true);
+      
+      quillInitialized = true;
+    }
+  }
+};
 
-  const ReactS3Client = new S3(config);
-
+const TextEditor = memo(function TextEditor(props) {
+  const quillRef = useRef(null);
+  const [quillReady, setQuillReady] = useState(false);
+  const QID = useMemo(() => uid(), []);
+  
+  const ReactS3Client = useMemo(() => new S3(config), []);
   const newFileName = QID;
+
+  useEffect(() => {
+    initializeQuill().then(() => setQuillReady(true));
+  }, []);
 
   const ImageUpload = (formData) => {
     var url = ReactS3Client.uploadFile(formData, newFileName).then((data) => {
@@ -75,7 +93,7 @@ function TextEditor(props) {
         container: [
           [{ header: [1, 2, 3, 4, 5, 6, false] }],
           ["bold", "italic", "underline", "strike"],
-          [{ size: Size.whitelist }],
+          [{ size: SizeInstance?.whitelist || ["10px", "11px", "12px", "13px", "14px", "16px", "18px", "20px", "22px", "24px"] }],
           [
             { list: "ordered" },
             { list: "bullet" },
@@ -92,12 +110,16 @@ function TextEditor(props) {
         },
       },
       imageResize: {
-        parchment: Quill.import("parchment"),
+        parchment: QuillInstance?.import("parchment"),
         modules: ["Resize", "DisplaySize"],
       },
     }),
     []
   );
+
+  if (!quillReady) {
+    return <div className="h-32 bg-gray-100 rounded animate-pulse" />;
+  }
 
   return (
     <>
@@ -118,5 +140,8 @@ function TextEditor(props) {
       />
     </>
   );
-}
+});
+
+TextEditor.displayName = 'TextEditor';
+
 export default TextEditor;

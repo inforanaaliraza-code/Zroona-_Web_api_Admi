@@ -184,7 +184,7 @@ export default function WithdrawalRequests() {
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#a3cc69] to-[#a797cc] bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold text-black">
               Host Withdrawal Requests
             </h1>
             <p className="text-gray-600 mt-1">Manage and process withdrawal requests</p>

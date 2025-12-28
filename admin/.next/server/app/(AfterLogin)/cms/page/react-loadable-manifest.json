@@ -1,6 +1,6 @@
 {
-  "src/components/CMS/TermsConditions.jsx -> @/components/TextEditor/TextEditor": {
-    "id": "src/components/CMS/TermsConditions.jsx -> @/components/TextEditor/TextEditor",
+  "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditorAr/TextEditorAr": {
+    "id": "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditorAr/TextEditorAr",
     "files": [
       "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
       "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
@@ -10,9 +10,22 @@
       "static/chunks/node_modules_crypto-js_1440d8._.js",
       "static/chunks/node_modules_quill_dist_quill_71002f.js",
       "static/chunks/node_modules_7afe39._.js",
-      "static/chunks/src_52e7bf._.js",
-      "static/chunks/_ebac13._.css",
-      "static/chunks/src_components_TextEditor_TextEditor_jsx_cd107f._.js"
+      "static/chunks/src_b703f6._.js",
+      "static/chunks/_c44232._.css",
+      "static/chunks/src_components_TextEditorAr_TextEditorAr_jsx_4ae4c0._.js"
+    ]
+  },
+  "src/app/(AfterLogin)/cms/page.js -> @/components/CMS/AboutUs": {
+    "id": "src/app/(AfterLogin)/cms/page.js -> @/components/CMS/AboutUs",
+    "files": [
+      "static/chunks/node_modules_next_dist_a83e17._.js",
+      "static/chunks/node_modules_axios_lib_999991._.js",
+      "static/chunks/node_modules_react-loader-spinner_dist_module_6fc83f.js",
+      "static/chunks/node_modules_lodash-es_7674a6._.js",
+      "static/chunks/node_modules_c70418._.js",
+      "static/chunks/src_dde3b2._.js",
+      "static/chunks/src_components_eea562._.js",
+      "static/chunks/src_components_CMS_AboutUs_jsx_5b2708._.js"
     ]
   },
   "src/components/CMS/AboutUs.jsx -> @/components/TextEditorAr/TextEditorAr": {
@@ -31,52 +44,37 @@
       "static/chunks/src_components_TextEditorAr_TextEditorAr_jsx_4ae4c0._.js"
     ]
   },
-  "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditor/TextEditor": {
-    "id": "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditor/TextEditor",
+  "src/components/TextEditor/TextEditor.jsx -> react-quill": {
+    "id": "src/components/TextEditor/TextEditor.jsx -> react-quill",
     "files": [
-      "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
+      "static/chunks/node_modules_next_dist_compiled_react_71459a._.js",
       "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
       "static/chunks/node_modules_next_dist_compiled_react-dom_index_99aff8.js",
-      "static/chunks/node_modules_next_dist_compiled_8a0b3e._.js",
+      "static/chunks/node_modules_next_dist_compiled_992721._.js",
       "static/chunks/node_modules_next_dist_build_polyfills_process_102af7.js",
-      "static/chunks/node_modules_crypto-js_1440d8._.js",
       "static/chunks/node_modules_quill_dist_quill_71002f.js",
-      "static/chunks/node_modules_7afe39._.js",
-      "static/chunks/src_52e7bf._.js",
-      "static/chunks/_ebac13._.css",
-      "static/chunks/src_components_TextEditor_TextEditor_jsx_cd107f._.js"
+      "static/chunks/node_modules_ae88d2._.js",
+      "static/chunks/node_modules_react-quill_lib_index_836186.js"
     ]
   },
   "src/components/CMS/AboutUs.jsx -> @/components/TextEditor/TextEditor": {
     "id": "src/components/CMS/AboutUs.jsx -> @/components/TextEditor/TextEditor",
     "files": [
-      "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
-      "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
-      "static/chunks/node_modules_next_dist_compiled_react-dom_index_99aff8.js",
-      "static/chunks/node_modules_next_dist_compiled_8a0b3e._.js",
-      "static/chunks/node_modules_next_dist_build_polyfills_process_102af7.js",
-      "static/chunks/node_modules_crypto-js_1440d8._.js",
-      "static/chunks/node_modules_quill_dist_quill_71002f.js",
-      "static/chunks/node_modules_7afe39._.js",
+      "static/chunks/node_modules_b4da96._.js",
       "static/chunks/src_52e7bf._.js",
       "static/chunks/_ebac13._.css",
-      "static/chunks/src_components_TextEditor_TextEditor_jsx_cd107f._.js"
+      "static/chunks/node_modules_672ec0._.js",
+      "static/chunks/src_components_TextEditor_TextEditor_jsx_0a7633._.js"
     ]
   },
-  "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditorAr/TextEditorAr": {
-    "id": "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditorAr/TextEditorAr",
+  "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditor/TextEditor": {
+    "id": "src/components/CMS/PrivacyPolicy.jsx -> @/components/TextEditor/TextEditor",
     "files": [
-      "static/chunks/node_modules_next_dist_compiled_react_9f2580._.js",
-      "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
-      "static/chunks/node_modules_next_dist_compiled_react-dom_index_99aff8.js",
-      "static/chunks/node_modules_next_dist_compiled_8a0b3e._.js",
-      "static/chunks/node_modules_next_dist_build_polyfills_process_102af7.js",
-      "static/chunks/node_modules_crypto-js_1440d8._.js",
-      "static/chunks/node_modules_quill_dist_quill_71002f.js",
-      "static/chunks/node_modules_7afe39._.js",
-      "static/chunks/src_b703f6._.js",
-      "static/chunks/_c44232._.css",
-      "static/chunks/src_components_TextEditorAr_TextEditorAr_jsx_4ae4c0._.js"
+      "static/chunks/node_modules_b4da96._.js",
+      "static/chunks/src_52e7bf._.js",
+      "static/chunks/_ebac13._.css",
+      "static/chunks/node_modules_672ec0._.js",
+      "static/chunks/src_components_TextEditor_TextEditor_jsx_0a7633._.js"
     ]
   },
   "src/components/CMS/TermsConditions.jsx -> @/components/TextEditorAr/TextEditorAr": {
@@ -93,6 +91,42 @@
       "static/chunks/src_b703f6._.js",
       "static/chunks/_c44232._.css",
       "static/chunks/src_components_TextEditorAr_TextEditorAr_jsx_4ae4c0._.js"
+    ]
+  },
+  "src/app/(AfterLogin)/cms/page.js -> @/components/CMS/PrivacyPolicy": {
+    "id": "src/app/(AfterLogin)/cms/page.js -> @/components/CMS/PrivacyPolicy",
+    "files": [
+      "static/chunks/node_modules_next_dist_a83e17._.js",
+      "static/chunks/node_modules_axios_lib_999991._.js",
+      "static/chunks/node_modules_react-loader-spinner_dist_module_6fc83f.js",
+      "static/chunks/node_modules_lodash-es_7674a6._.js",
+      "static/chunks/node_modules_c70418._.js",
+      "static/chunks/src_4df518._.js",
+      "static/chunks/src_components_b760c2._.js",
+      "static/chunks/src_components_CMS_PrivacyPolicy_jsx_c9656b._.js"
+    ]
+  },
+  "src/app/(AfterLogin)/cms/page.js -> @/components/CMS/TermsConditions": {
+    "id": "src/app/(AfterLogin)/cms/page.js -> @/components/CMS/TermsConditions",
+    "files": [
+      "static/chunks/node_modules_next_dist_a83e17._.js",
+      "static/chunks/node_modules_axios_lib_999991._.js",
+      "static/chunks/node_modules_react-loader-spinner_dist_module_6fc83f.js",
+      "static/chunks/node_modules_lodash-es_7674a6._.js",
+      "static/chunks/node_modules_c70418._.js",
+      "static/chunks/src_2f1043._.js",
+      "static/chunks/src_components_048d72._.js",
+      "static/chunks/src_components_CMS_TermsConditions_jsx_05d228._.js"
+    ]
+  },
+  "src/components/CMS/TermsConditions.jsx -> @/components/TextEditor/TextEditor": {
+    "id": "src/components/CMS/TermsConditions.jsx -> @/components/TextEditor/TextEditor",
+    "files": [
+      "static/chunks/node_modules_b4da96._.js",
+      "static/chunks/src_52e7bf._.js",
+      "static/chunks/_ebac13._.css",
+      "static/chunks/node_modules_672ec0._.js",
+      "static/chunks/src_components_TextEditor_TextEditor_jsx_0a7633._.js"
     ]
   }
 }

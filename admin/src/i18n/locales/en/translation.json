@@ -42,7 +42,8 @@
     "noData": "No data available",
     "itemsPerPage": "Items per page",
     "showingResults": "Showing {{from}} to {{to}} of {{total}} results",
-    "required": "Required"
+    "required": "Required",
+    "close": "Close"
   },
   "auth": {
     "login": "Login",
@@ -271,6 +272,53 @@
     "arabic": "Arabic",
     "selectLanguage": "Select Language",
     "changeLanguage": "Change Language"
+  },
+  "invoice": {
+    "stats": {
+      "fetchError": "Failed to fetch invoice statistics",
+      "noData": "No invoice data available",
+      "totalInvoices": "Total Invoices",
+      "pendingInvoices": "Pending Invoices",
+      "confirmedInvoices": "Confirmed Invoices",
+      "completedInvoices": "Completed Invoices",
+      "totalRevenue": "Total Revenue",
+      "avgInvoiceAmount": "Average Invoice Amount",
+      "maxInvoiceAmount": "Max Invoice Amount",
+      "cancelledInvoices": "Cancelled Invoices",
+      "revenue": "Revenue",
+      "invoiceCount": "Invoice Count",
+      "monthlyTrendTitle": "Monthly Revenue & Invoice Trends",
+      "topEvents": "Top Events by Revenue",
+      "invoices": "invoices",
+      "noTopEvents": "No top events data available",
+      "lastSevenDays": "in last 7 days"
+    },
+    "modal": {
+      "title": "Invoice Details",
+      "guestInfo": "Guest Information",
+      "eventInfo": "Event Information",
+      "organizerInfo": "Organizer Information",
+      "paymentInfo": "Payment Information",
+      "amount": "Amount",
+      "paymentId": "Payment ID",
+      "date": "Date",
+      "attendees": "attendees",
+      "downloadInvoice": "Download Invoice"
+    },
+    "payment": {
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    },
+    "status": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "rejected": "Rejected",
+      "completed": "Completed",
+      "refunded": "Refunded",
+      "unknown": "Unknown"
+    }
   }
 }
 

@@ -1038,7 +1038,25 @@ const getData = async (url = "", data = {})=>{
         return response.data;
     } catch (error) {
         // toast.error(error.response.data);
-        return error.response.data;
+        if (error.response) {
+            return error.response.data;
+        } else if (error.request) {
+            // Network error - server not reachable
+            return {
+                status: 0,
+                code: 500,
+                message: "Network error: Unable to reach server",
+                error: "Network error"
+            };
+        } else {
+            // Request setup error
+            return {
+                status: 0,
+                code: 500,
+                message: error.message || "An error occurred",
+                error: error.message
+            };
+        }
     }
 };
 const getDataStringify = async (url = "", data = {})=>{
@@ -1420,7 +1438,7 @@ const GetWithdrawalStatsApi = async ()=>{
 };
 _c11 = GetWithdrawalStatsApi;
 const GetInvoiceStatsApi = async ()=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getData"])("admin/bookings/invoices/stats").then((data)=>{
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getData"])("bookings/invoices/stats").then((data)=>{
         return data;
     });
 };
@@ -4323,7 +4341,7 @@ function WithdrawalRequests() {
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                                    className: "text-3xl font-bold bg-gradient-to-r from-[#a3cc69] to-[#a797cc] bg-clip-text text-transparent",
+                                    className: "text-3xl font-bold text-black",
                                     children: "Host Withdrawal Requests"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",

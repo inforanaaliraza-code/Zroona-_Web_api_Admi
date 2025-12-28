@@ -1038,7 +1038,25 @@ const getData = async (url = "", data = {})=>{
         return response.data;
     } catch (error) {
         // toast.error(error.response.data);
-        return error.response.data;
+        if (error.response) {
+            return error.response.data;
+        } else if (error.request) {
+            // Network error - server not reachable
+            return {
+                status: 0,
+                code: 500,
+                message: "Network error: Unable to reach server",
+                error: "Network error"
+            };
+        } else {
+            // Request setup error
+            return {
+                status: 0,
+                code: 500,
+                message: error.message || "An error occurred",
+                error: error.message
+            };
+        }
     }
 };
 const getDataStringify = async (url = "", data = {})=>{
@@ -1420,7 +1438,7 @@ const GetWithdrawalStatsApi = async ()=>{
 };
 _c11 = GetWithdrawalStatsApi;
 const GetInvoiceStatsApi = async ()=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getData"])("admin/bookings/invoices/stats").then((data)=>{
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getData"])("bookings/invoices/stats").then((data)=>{
         return data;
     });
 };
@@ -2820,16 +2838,31 @@ const InvoiceStatsDashboard = ()=>{
         setError(null);
         try {
             const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$admin$2f$apis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GetInvoiceStatsApi"])();
-            if (res?.status === 1 || res?.code === 200) {
-                setStats(res.data);
+            console.log("Invoice Stats API Response:", res);
+            // Check if response exists and has valid data
+            if (res && (res.status === 1 || res.code === 200)) {
+                if (res.data) {
+                    setStats(res.data);
+                } else {
+                    // Response is successful but no data
+                    setError(t('invoice.stats.noData'));
+                    __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].warning(t('invoice.stats.noData'));
+                }
+            } else if (res) {
+                // Response exists but indicates error
+                const errorMsg = res.message || res.error || t('invoice.stats.fetchError');
+                setError(errorMsg);
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(errorMsg);
             } else {
-                setError(res?.message || t('invoice.stats.fetchError'));
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(res?.message || t('invoice.stats.fetchError'));
+                // No response at all
+                setError(t('invoice.stats.fetchError'));
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(t('invoice.stats.fetchError'));
             }
         } catch (err) {
             console.error("Error fetching invoice stats:", err);
-            setError(t('invoice.stats.fetchError'));
-            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(t('invoice.stats.fetchError'));
+            const errorMsg = err?.response?.data?.message || err?.message || t('invoice.stats.fetchError');
+            setError(errorMsg);
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(errorMsg);
         } finally{
             setLoading(false);
         }
@@ -2839,12 +2872,12 @@ const InvoiceStatsDashboard = ()=>{
             className: "flex justify-center items-center py-10",
             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Loader$2f$Loader$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                lineNumber: 47,
+                lineNumber: 63,
                 columnNumber: 17
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-            lineNumber: 46,
+            lineNumber: 62,
             columnNumber: 13
         }, this);
     }
@@ -2857,14 +2890,14 @@ const InvoiceStatsDashboard = ()=>{
                     className: "w-10 h-10 mx-auto mb-3"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                    lineNumber: 55,
+                    lineNumber: 71,
                     columnNumber: 17
                 }, this),
                 error
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-            lineNumber: 54,
+            lineNumber: 70,
             columnNumber: 13
         }, this);
     }
@@ -2877,14 +2910,14 @@ const InvoiceStatsDashboard = ()=>{
                     className: "w-10 h-10 mx-auto mb-3"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                    lineNumber: 64,
+                    lineNumber: 80,
                     columnNumber: 17
                 }, this),
                 t('invoice.stats.noData')
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-            lineNumber: 63,
+            lineNumber: 79,
             columnNumber: 13
         }, this);
     }
@@ -3015,7 +3048,7 @@ const InvoiceStatsDashboard = ()=>{
                             children: title
                         }, void 0, false, {
                             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                            lineNumber: 172,
+                            lineNumber: 188,
                             columnNumber: 17
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3023,7 +3056,7 @@ const InvoiceStatsDashboard = ()=>{
                             children: value
                         }, void 0, false, {
                             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                            lineNumber: 173,
+                            lineNumber: 189,
                             columnNumber: 17
                         }, this),
                         subValue && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3031,13 +3064,13 @@ const InvoiceStatsDashboard = ()=>{
                             children: subValue
                         }, void 0, false, {
                             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                            lineNumber: 174,
+                            lineNumber: 190,
                             columnNumber: 30
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                    lineNumber: 171,
+                    lineNumber: 187,
                     columnNumber: 13
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$iconify$2f$react$2f$dist$2f$iconify$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Icon"], {
@@ -3045,13 +3078,13 @@ const InvoiceStatsDashboard = ()=>{
                     className: `w-10 h-10 ${color} opacity-30`
                 }, void 0, false, {
                     fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                    lineNumber: 176,
+                    lineNumber: 192,
                     columnNumber: 13
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-            lineNumber: 170,
+            lineNumber: 186,
             columnNumber: 9
         }, this);
     const SecondaryStatCard = ({ title, value, icon, color })=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3065,7 +3098,7 @@ const InvoiceStatsDashboard = ()=>{
                     className: `w-7 h-7 ${color}`
                 }, void 0, false, {
                     fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                    lineNumber: 182,
+                    lineNumber: 198,
                     columnNumber: 13
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3075,7 +3108,7 @@ const InvoiceStatsDashboard = ()=>{
                             children: title
                         }, void 0, false, {
                             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                            lineNumber: 184,
+                            lineNumber: 200,
                             columnNumber: 17
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3083,19 +3116,19 @@ const InvoiceStatsDashboard = ()=>{
                             children: value
                         }, void 0, false, {
                             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                            lineNumber: 185,
+                            lineNumber: 201,
                             columnNumber: 17
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                    lineNumber: 183,
+                    lineNumber: 199,
                     columnNumber: 13
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-            lineNumber: 181,
+            lineNumber: 197,
             columnNumber: 9
         }, this);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3112,7 +3145,7 @@ const InvoiceStatsDashboard = ()=>{
                         subValue: `${stats.recent_invoices} ${t('invoice.stats.lastSevenDays')}`
                     }, void 0, false, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 194,
+                        lineNumber: 210,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatCard, {
@@ -3122,7 +3155,7 @@ const InvoiceStatsDashboard = ()=>{
                         color: "text-yellow-500"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 201,
+                        lineNumber: 217,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatCard, {
@@ -3132,7 +3165,7 @@ const InvoiceStatsDashboard = ()=>{
                         color: "text-green-500"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 207,
+                        lineNumber: 223,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StatCard, {
@@ -3142,13 +3175,13 @@ const InvoiceStatsDashboard = ()=>{
                         color: "text-blue-500"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 213,
+                        lineNumber: 229,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                lineNumber: 193,
+                lineNumber: 209,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3161,7 +3194,7 @@ const InvoiceStatsDashboard = ()=>{
                         color: "text-[#a797cc]"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 223,
+                        lineNumber: 239,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SecondaryStatCard, {
@@ -3171,7 +3204,7 @@ const InvoiceStatsDashboard = ()=>{
                         color: "text-blue-500"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 229,
+                        lineNumber: 245,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SecondaryStatCard, {
@@ -3181,7 +3214,7 @@ const InvoiceStatsDashboard = ()=>{
                         color: "text-green-600"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 235,
+                        lineNumber: 251,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SecondaryStatCard, {
@@ -3191,13 +3224,13 @@ const InvoiceStatsDashboard = ()=>{
                         color: "text-red-500"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 241,
+                        lineNumber: 257,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                lineNumber: 222,
+                lineNumber: 238,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3214,7 +3247,7 @@ const InvoiceStatsDashboard = ()=>{
                                 children: t('invoice.stats.monthlyTrendTitle')
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                lineNumber: 252,
+                                lineNumber: 268,
                                 columnNumber: 21
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3224,18 +3257,18 @@ const InvoiceStatsDashboard = ()=>{
                                     options: chartOptions
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                    lineNumber: 254,
+                                    lineNumber: 270,
                                     columnNumber: 25
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                lineNumber: 253,
+                                lineNumber: 269,
                                 columnNumber: 21
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 251,
+                        lineNumber: 267,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3249,7 +3282,7 @@ const InvoiceStatsDashboard = ()=>{
                                 children: t('invoice.stats.topEvents')
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                lineNumber: 259,
+                                lineNumber: 275,
                                 columnNumber: 21
                             }, this),
                             stats.top_events.length > 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
@@ -3268,7 +3301,7 @@ const InvoiceStatsDashboard = ()=>{
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                                        lineNumber: 265,
+                                                        lineNumber: 281,
                                                         columnNumber: 41
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3281,12 +3314,12 @@ const InvoiceStatsDashboard = ()=>{
                                                             className: "object-cover w-full h-full"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                                            lineNumber: 267,
+                                                            lineNumber: 283,
                                                             columnNumber: 45
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                                        lineNumber: 266,
+                                                        lineNumber: 282,
                                                         columnNumber: 41
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3296,7 +3329,7 @@ const InvoiceStatsDashboard = ()=>{
                                                                 children: event.event_name
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                                                lineNumber: 276,
+                                                                lineNumber: 292,
                                                                 columnNumber: 45
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3308,19 +3341,19 @@ const InvoiceStatsDashboard = ()=>{
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                                                lineNumber: 277,
+                                                                lineNumber: 293,
                                                                 columnNumber: 45
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                                        lineNumber: 275,
+                                                        lineNumber: 291,
                                                         columnNumber: 41
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                                lineNumber: 264,
+                                                lineNumber: 280,
                                                 columnNumber: 37
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3331,43 +3364,43 @@ const InvoiceStatsDashboard = ()=>{
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                                lineNumber: 280,
+                                                lineNumber: 296,
                                                 columnNumber: 37
                                             }, this)
                                         ]
                                     }, event._id, true, {
                                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                        lineNumber: 263,
+                                        lineNumber: 279,
                                         columnNumber: 33
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                lineNumber: 261,
+                                lineNumber: 277,
                                 columnNumber: 25
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                 className: "text-gray-500 text-sm",
                                 children: t('invoice.stats.noTopEvents')
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                                lineNumber: 285,
+                                lineNumber: 301,
                                 columnNumber: 25
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                        lineNumber: 258,
+                        lineNumber: 274,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-                lineNumber: 250,
+                lineNumber: 266,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/Invoice/InvoiceStatsDashboard.jsx",
-        lineNumber: 191,
+        lineNumber: 207,
         columnNumber: 9
     }, this);
 };
@@ -4612,7 +4645,7 @@ function GuestInvoices() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-4 py-3 text-center font-semibold",
-                                                children: "Actions"
+                                                children: "Details"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/guest-invoices/page.js",
                                                 lineNumber: 282,

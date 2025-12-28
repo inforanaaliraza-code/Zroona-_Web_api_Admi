@@ -7,7 +7,7 @@ import Autocomplete from "react-google-autocomplete";
 import { toast } from "react-toastify";
 
 const GroupLocationForm = ({ handleFormSubmit, showStepImage, shwoSubmitButton }) => {
-    const YOUR_GOOGLE_MAPS_API_KEY = "AIzaSyBOsw8h9LFNKaZpmGAeoIkv9OcgMsaPuK0";
+    const YOUR_GOOGLE_MAPS_API_KEY = "AIzaSyC6cKp791aygkeF6blRdhoWR0EEl8WwLTk";
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 

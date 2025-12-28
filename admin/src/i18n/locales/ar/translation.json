@@ -42,7 +42,8 @@
     "noData": "لا توجد بيانات متاحة",
     "itemsPerPage": "العناصر لكل صفحة",
     "showingResults": "عرض {{from}} إلى {{to}} من أصل {{total}} نتيجة",
-    "required": "مطلوب"
+    "required": "مطلوب",
+    "close": "إغلاق"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -271,6 +272,53 @@
     "arabic": "العربية",
     "selectLanguage": "اختر اللغة",
     "changeLanguage": "تغيير اللغة"
+  },
+  "invoice": {
+    "stats": {
+      "fetchError": "فشل في جلب إحصائيات الفواتير",
+      "noData": "لا توجد بيانات فواتير متاحة",
+      "totalInvoices": "إجمالي الفواتير",
+      "pendingInvoices": "الفواتير المعلقة",
+      "confirmedInvoices": "الفواتير المؤكدة",
+      "completedInvoices": "الفواتير المكتملة",
+      "totalRevenue": "إجمالي الإيرادات",
+      "avgInvoiceAmount": "متوسط مبلغ الفاتورة",
+      "maxInvoiceAmount": "أقصى مبلغ فاتورة",
+      "cancelledInvoices": "الفواتير الملغاة",
+      "revenue": "الإيرادات",
+      "invoiceCount": "عدد الفواتير",
+      "monthlyTrendTitle": "اتجاهات الإيرادات والفواتير الشهرية",
+      "topEvents": "أفضل الأحداث حسب الإيرادات",
+      "invoices": "فواتير",
+      "noTopEvents": "لا توجد بيانات أحداث متاحة",
+      "lastSevenDays": "في آخر 7 أيام"
+    },
+    "modal": {
+      "title": "تفاصيل الفاتورة",
+      "guestInfo": "معلومات الضيف",
+      "eventInfo": "معلومات الفعالية",
+      "organizerInfo": "معلومات المنظم",
+      "paymentInfo": "معلومات الدفع",
+      "amount": "المبلغ",
+      "paymentId": "معرف الدفع",
+      "date": "التاريخ",
+      "attendees": "حضور",
+      "downloadInvoice": "تحميل الفاتورة"
+    },
+    "payment": {
+      "paid": "مدفوع",
+      "unpaid": "غير مدفوع"
+    },
+    "status": {
+      "pending": "قيد الانتظار",
+      "approved": "موافق عليه",
+      "confirmed": "مؤكد",
+      "cancelled": "ملغى",
+      "rejected": "مرفوض",
+      "completed": "مكتمل",
+      "refunded": "مسترد",
+      "unknown": "غير معروف"
+    }
   }
 }
 

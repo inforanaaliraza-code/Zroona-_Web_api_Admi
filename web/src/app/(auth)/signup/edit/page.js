@@ -5,7 +5,7 @@ import { useDataStore } from "@/app/api/store/store";
 import Breadcrumbs from "@/components/Breadcrumbs/Breadcrumbs";
 import Footer from "@/components/Footer/Footer";
 import Header from "@/components/Header/Header";
-import MobileInput from "@/components/MobileInput/MobileInput";
+import { NumberInput } from "@/components/ui/number-input";
 import { useFormik } from "formik";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -431,17 +431,10 @@ export default function SignUp() {
                       {t("signup.tab4")}
                     </label>
                     <div className="mt-1">
-                      <MobileInput
-                        mobileNumber="phone_number"
-                        countryCode="country_code"
+                      <NumberInput
                         formik={formik}
-                        i18n={i18n}
-                        inputClass="form-control block w-full text-sm outline-none p-2 h-10 rounded-lg border-2 placeholder:text-sm placeholder:text-black"
-                        value={
-                          formik.values.country_code && formik.values.phone_number
-                            ? `${formik.values.country_code} ${formik.values.phone_number}`
-                            : formik.values.country_code || ""
-                        }
+                        mobileNumberField="phone_number"
+                        countryCodeField="country_code"
                       />
                     </div>
                   </div>
@@ -477,7 +470,7 @@ export default function SignUp() {
                     </div>
                   </div>
 
-                  {/* Gender Selection */}
+                  {/* Gender Selection - Read Only */}
                   <div className="mb-4 relative z-10">
                     <label className="block text-gray-700 text-sm font-semibold mb-2">
                       {t("signup.tab6")}
@@ -505,32 +498,20 @@ export default function SignUp() {
                         const iconSize = iconName === "lucide:users" ? "w-5 h-5" : "w-4 h-4";
 
                         return (
-                          <button
+                          <div
                             key={`gender-${genderValue}-${gender}`}
-                            type="button"
-                            className={`relative z-10 flex-1 gap-x-2 flex items-center justify-center py-3 px-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl hover:bg-gray-50 hover:border-[#a797cc]/40 text-gray-700 font-semibold text-sm transition-all duration-200 cursor-pointer active:scale-[0.98] ${
+                            className={`relative z-10 flex-1 gap-x-2 flex items-center justify-center py-3 px-4 border bg-gray-100 border-gray-300 rounded-xl text-gray-700 font-semibold text-sm ${
                               isSelected 
-                                ? "bg-[#a797cc]/10 border-[#a797cc] text-[#a797cc] shadow-sm" 
-                                : "hover:shadow-sm"
-                            }`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log("[GENDER BUTTON] Clicked:", genderValue, "Current:", currentGender);
-                              handleGenderSelect(genderValue);
-                            }}
-                            style={{ 
-                              WebkitTapHighlightColor: 'transparent',
-                              touchAction: 'manipulation',
-                              userSelect: 'none'
-                            }}
+                                ? "bg-[#a797cc]/10 border-[#a797cc] text-[#a797cc]" 
+                                : "opacity-60"
+                            } cursor-not-allowed`}
                           >
                             <Icon
                               icon={iconName}
-                              className={`${iconSize} ${isSelected ? "text-[#a797cc]" : "text-[#a797cc]"} pointer-events-none select-none`}
+                              className={`${iconSize} ${isSelected ? "text-[#a797cc]" : "text-gray-500"} pointer-events-none select-none`}
                             />
                             <span className="ml-2 pointer-events-none select-none">{gender}</span>
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
@@ -557,17 +538,17 @@ export default function SignUp() {
                         />
                       </span>
 
-                      {/* Date Input */}
+                      {/* Date Input - Read Only */}
                       <input
-                        type="date"
+                        type="text"
                         placeholder="Date of birth"
                         name="date_of_birth"
-                        value={formik.values.date_of_birth}
-                        onChange={formik.handleChange}
+                        value={formik.values.date_of_birth ? new Date(formik.values.date_of_birth).toLocaleDateString() : ""}
+                        readOnly
+                        disabled
                         className={`w-full ${
                           i18n.language === "ar" ? "pl-5 pr-3" : "pl-10 pr-3"
-                        } py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm`}
-                        max={new Date().toISOString().split("T")[0]}
+                        } py-4 border bg-gray-100 border-gray-300 rounded-xl text-black placeholder:text-sm cursor-not-allowed`}
                       />
                     </div>
                   </div>

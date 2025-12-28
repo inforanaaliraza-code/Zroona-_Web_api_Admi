@@ -22,3 +22,9 @@ import { DeleteParams, getData, patchRawData } from "../index";
       return data;
     });
   };
+
+  export const UpdateUserApi = async (payload) => {
+    return putRawData("user/update", payload).then((data) => {
+      return data;
+    });
+  };

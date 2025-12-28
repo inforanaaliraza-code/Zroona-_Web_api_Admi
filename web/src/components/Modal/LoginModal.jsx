@@ -14,7 +14,7 @@ import { motion } from "framer-motion";
 
 import Modal from "../common/Modal";
 import Loader from "../Loader/Loader";
-import ChangeCountryInput from "../ChangeCountryInput/ChangeCountryInput";
+import { NumberInput } from "@/components/ui/number-input";
 import OTPInput from "react-otp-input";
 import { SendPhoneOTPApi, VerifyPhoneOTPApi } from "@/app/api/setting";
 import { TOKEN_NAME } from "@/until";
@@ -318,35 +318,14 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 										<div className="relative group">
 											<div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/10 to-brand-orange/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 											<div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-1 shadow-sm group-hover:border-[#a797cc]/50 transition-all duration-300">
-												<ChangeCountryInput
-													mobileNumber="phone_number"
-													countryCode="country_code"
+												<NumberInput
 													formik={phoneFormik}
-													i18n={i18n}
+													mobileNumberField="phone_number"
+													countryCodeField="country_code"
 													disabled={loading}
 												/>
 											</div>
 										</div>
-										{phoneFormik.touched.phone_number && phoneFormik.errors.phone_number && (
-											<motion.p
-												initial={{ opacity: 0 }}
-												animate={{ opacity: 1 }}
-												className="mt-2 text-sm text-red-500 flex items-center gap-1"
-											>
-												<Icon icon="material-symbols:error-outline" className="w-4 h-4" />
-												{phoneFormik.errors.phone_number}
-											</motion.p>
-										)}
-										{phoneFormik.touched.country_code && phoneFormik.errors.country_code && (
-											<motion.p
-												initial={{ opacity: 0 }}
-												animate={{ opacity: 1 }}
-												className="mt-2 text-sm text-red-500 flex items-center gap-1"
-											>
-												<Icon icon="material-symbols:error-outline" className="w-4 h-4" />
-												{phoneFormik.errors.country_code}
-											</motion.p>
-										)}
 									</motion.div>
 
 									{/* Send OTP Button */}

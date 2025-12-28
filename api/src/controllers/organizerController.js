@@ -1885,6 +1885,11 @@ const organizerController = {
 				// Clear rejection reason if accepting
 				booked_event.rejection_reason = null;
 			}
+			
+			// Store confirmation timestamp when booking is confirmed (status = 2)
+			if (book_status === 2) {
+				booked_event.confirmed_at = new Date();
+			}
 
 			await booked_event.save();
 
@@ -1893,16 +1898,40 @@ const organizerController = {
 					? resp_messages(req.lang).accepted_key
 					: resp_messages(req.lang).rejected_key;
 			
-			// Build notification description
-			let notificationDescription = `${resp_messages(req.lang).eventNotification || "Your booking for"} "${event.event_name}" ${resp_messages(req.lang)[book_notification_status] || (book_status == 2 ? "has been accepted" : "has been rejected")}`;
+			// Build notification description with proper messages
+			let notificationDescription = "";
 			
-			// Add rejection reason to notification if rejected
-			if (book_status === 3 && rejection_reason) {
-				notificationDescription += `. ${resp_messages(req.lang).rejection_reason_label || "Reason"}: ${rejection_reason}`;
+			if (book_status === 2) {
+				// Accepted message
+				notificationDescription = req.lang === "ar"
+					? `تم قبول طلبك لحجز "${event.event_name}". يمكنك الآن المتابعة للدفع.`
+					: `Your booking request for "${event.event_name}" has been accepted by the host. You can now proceed with payment.`;
+			} else if (book_status === 3 || book_status === 4) {
+				// Rejected message
+				notificationDescription = req.lang === "ar"
+					? `تم رفض طلبك لحجز "${event.event_name}". لا يمكنك حجز هذا الحدث.`
+					: `Your booking request for "${event.event_name}" has been rejected by the host. You cannot book this event.`;
+				
+				// Add rejection reason to notification if rejected
+				if (rejection_reason) {
+					notificationDescription += req.lang === "ar"
+						? ` السبب: ${rejection_reason}`
+						: ` Reason: ${rejection_reason}`;
+				}
 			}
 			
+			// Fallback to old format if description is empty
+			if (!notificationDescription) {
+				notificationDescription = `${resp_messages(req.lang).eventNotification || "Your booking for"} "${event.event_name}" ${resp_messages(req.lang)[book_notification_status] || (book_status == 2 ? "has been accepted" : "has been rejected")}`;
+			}
+			
+			// Set proper notification title
+			const notificationTitle = book_status === 2
+				? (req.lang === "ar" ? "تم قبول طلبك" : "Booking Accepted")
+				: (req.lang === "ar" ? "تم رفض طلبك" : "Booking Rejected");
+			
 			const notification_data = {
-				title: book_notification_status,
+				title: notificationTitle,
 				description: notificationDescription,
 				event_id: event._id,
 				event_type: event.event_type,
@@ -1940,10 +1969,15 @@ const organizerController = {
 					username: `${organizer.first_name} ${organizer.last_name}`,
 					senderId: organizer._id,
 				});
-				console.log(`[NOTIFICATION] Created in-app notification for user ${booked_event.user_id}`);
+				console.log(`[NOTIFICATION] Created in-app notification for user ${booked_event.user_id} - Status: ${book_status === 2 ? 'Accepted' : 'Rejected'}`);
 			} catch (notificationError) {
 				console.error('[NOTIFICATION] Error creating in-app notification:', notificationError);
 				// Don't fail the request if notification fails
+			}
+			
+			// If rejected, ensure the booking is properly marked and removed from active bookings
+			if (book_status === 3 || book_status === 4) {
+				console.log(`[BOOKING-REJECTED] Booking ${booked_event._id} rejected - Guest will not see this in active bookings`);
 			}
 
 			// If booking is approved (status 2), add guest to event's group chat

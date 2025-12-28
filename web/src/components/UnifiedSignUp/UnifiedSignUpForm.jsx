@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { TOKEN_NAME } from "@/until";
 import { SignUpApi, OrganizerSignUpApi } from "@/app/api/setting";
-import { PhoneNumberInput } from "@/components/ui/phone-input";
+import { NumberInput } from "@/components/ui/number-input";
 import ProfileImageUpload from "../ProfileImageUpload/ProfileImageUpload";
 import OtpVerificationModal from "../Modal/OtpVerificationModal";
 import Loader from "../Loader/Loader";
@@ -648,34 +648,10 @@ export default function UnifiedSignUpForm({
 								<label className={labelClasses}>
 									{t("signup.tab4")}
 								</label>
-								<PhoneNumberInput
-									value={
-										formik.values.phone_number
-											? `${formik.values.country_code}${formik.values.phone_number}`
-											: formik.values.country_code
-									}
-									onChange={(value, country) => {
-										if (country) {
-											const countryCode = `+${country.dialCode}`;
-											const number = value.substring(
-												country.dialCode.length
-											);
-											formik.setFieldValue(
-												"country_code",
-												countryCode
-											);
-											formik.setFieldValue(
-												"phone_number",
-												number
-											);
-										}
-									}}
-									error={
-										formik.touched.phone_number &&
-										formik.errors.phone_number
-											? formik.errors.phone_number
-											: null
-									}
+								<NumberInput
+									formik={formik}
+									mobileNumberField="phone_number"
+									countryCodeField="country_code"
 								/>
 							</div>
 							)}

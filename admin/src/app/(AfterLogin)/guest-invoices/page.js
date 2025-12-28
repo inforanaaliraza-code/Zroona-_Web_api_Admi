@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
@@ -10,10 +10,24 @@ import { GetGuestInvoicesApi } from "@/api/admin/apis";
 import { format } from "date-fns";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
-import InvoiceStatsDashboard from "@/components/Invoice/InvoiceStatsDashboard";
-import InvoiceDetailModal from "@/components/Modals/InvoiceDetailModal";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import dynamic from "next/dynamic";
+const InvoiceStatsDashboard = dynamic(() => import("@/components/Invoice/InvoiceStatsDashboard"), {
+  ssr: false,
+  loading: () => <div className="flex justify-center items-center py-10">Loading statistics...</div>
+});
+const InvoiceDetailModal = dynamic(() => import("@/components/Modals/InvoiceDetailModal"), {
+  ssr: false,
+  loading: () => null
+});
+const DatePicker = dynamic(() => import("react-datepicker"), {
+  ssr: false,
+  loading: () => <div className="h-10 w-full bg-gray-100 rounded animate-pulse" />
+});
+
+// Lazy load CSS
+if (typeof window !== "undefined") {
+  import("react-datepicker/dist/react-datepicker.css");
+}
 
 export default function GuestInvoices() {
   const [invoices, setInvoices] = useState([]);
@@ -167,7 +181,7 @@ export default function GuestInvoices() {
       <div className="container mx-auto px-4 py-8 animate-fade-in">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Guest Invoices & Receipts</h1>
+          <h1 className="text-3xl font-bold text-black">Guest Invoices & Receipts</h1>
         </div>
 
         {/* Statistics Dashboard */}
@@ -279,7 +293,7 @@ export default function GuestInvoices() {
                   <th className="px-4 py-3 text-left font-semibold">Amount</th>
                   <th className="px-4 py-3 text-left font-semibold">Status</th>
                   <th className="px-4 py-3 text-left font-semibold">Date</th>
-                  <th className="px-4 py-3 text-center font-semibold">Actions</th>
+                  <th className="px-4 py-3 text-center font-semibold">Details</th>
                 </tr>
               </thead>
               <tbody>

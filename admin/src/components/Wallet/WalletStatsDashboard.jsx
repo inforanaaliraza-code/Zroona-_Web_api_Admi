@@ -1,21 +1,41 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, memo } from 'react';
 import { Icon } from '@iconify/react';
 import { GetWalletStatsApi } from '@/api/admin/apis';
 import Loader from '../Loader/Loader';
 import { toast } from 'react-toastify';
-import { Bar, Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
+// Dynamically import Chart.js to reduce initial bundle size
+const Bar = dynamic(() => import('react-chartjs-2').then(mod => mod.Bar), {
+  ssr: false,
+  loading: () => <div className="h-80 flex items-center justify-center">Loading chart...</div>
+});
 
-const WalletStatsDashboard = () => {
+const Line = dynamic(() => import('react-chartjs-2').then(mod => mod.Line), {
+  ssr: false,
+  loading: () => <div className="h-80 flex items-center justify-center">Loading chart...</div>
+});
+
+// Lazy register Chart.js components
+let chartRegistered = false;
+const registerChart = () => {
+  if (typeof window !== 'undefined' && !chartRegistered) {
+    import('chart.js').then(({ Chart: ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend }) => {
+      ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
+      chartRegistered = true;
+    });
+  }
+};
+
+const WalletStatsDashboard = memo(() => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        registerChart();
         fetchStats();
     }, []);
 
@@ -39,79 +59,57 @@ const WalletStatsDashboard = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center py-10">
-                <Loader />
-            </div>
-        );
-    }
+    // Memoize chart data to prevent unnecessary recalculations
+    // IMPORTANT: All hooks must be called before any conditional returns
+    const chartData = useMemo(() => {
+        if (!stats?.monthly_trends) return null;
+        
+        const monthlyLabels = [];
+        const earningsData = [];
+        const withdrawalsData = [];
 
-    if (error) {
-        return (
-            <div className="text-center py-10 text-red-500 font-semibold">
-                <Icon icon="mdi:alert-circle-outline" className="w-10 h-10 mx-auto mb-3" />
-                {error}
-            </div>
-        );
-    }
+        const monthlyMap = {};
+        stats.monthly_trends.forEach(trend => {
+            const key = `${trend._id.year}-${trend._id.month}`;
+            if (!monthlyMap[key]) {
+                monthlyMap[key] = { earnings: 0, withdrawals: 0 };
+            }
+            if (trend._id.type === 1) {
+                monthlyMap[key].earnings = trend.total_amount;
+            } else if (trend._id.type === 2) {
+                monthlyMap[key].withdrawals = trend.total_amount;
+            }
+        });
 
-    if (!stats) {
-        return (
-            <div className="text-center py-10 text-gray-500">
-                <Icon icon="mdi:information-outline" className="w-10 h-10 mx-auto mb-3" />
-                No wallet data available
-            </div>
-        );
-    }
+        Object.keys(monthlyMap).sort().forEach(key => {
+            const [year, month] = key.split('-');
+            monthlyLabels.push(new Date(year, month - 1).toLocaleString('default', { month: 'short', year: 'numeric' }));
+            earningsData.push(monthlyMap[key].earnings);
+            withdrawalsData.push(monthlyMap[key].withdrawals);
+        });
 
-    // Prepare monthly trends data
-    const monthlyLabels = [];
-    const earningsData = [];
-    const withdrawalsData = [];
+        return {
+            labels: monthlyLabels,
+            datasets: [
+                {
+                    label: 'Earnings',
+                    data: earningsData,
+                    backgroundColor: 'rgba(163, 204, 105, 0.8)',
+                    borderColor: 'rgba(163, 204, 105, 1)',
+                    borderWidth: 1,
+                },
+                {
+                    label: 'Withdrawals',
+                    data: withdrawalsData,
+                    backgroundColor: 'rgba(244, 124, 12, 0.8)',
+                    borderColor: 'rgba(244, 124, 12, 1)',
+                    borderWidth: 1,
+                },
+            ],
+        };
+    }, [stats?.monthly_trends]);
 
-    // Group monthly trends by month
-    const monthlyMap = {};
-    stats.monthly_trends.forEach(trend => {
-        const key = `${trend._id.year}-${trend._id.month}`;
-        if (!monthlyMap[key]) {
-            monthlyMap[key] = { earnings: 0, withdrawals: 0 };
-        }
-        if (trend._id.type === 1) {
-            monthlyMap[key].earnings = trend.total_amount;
-        } else if (trend._id.type === 2) {
-            monthlyMap[key].withdrawals = trend.total_amount;
-        }
-    });
-
-    Object.keys(monthlyMap).sort().forEach(key => {
-        const [year, month] = key.split('-');
-        monthlyLabels.push(new Date(year, month - 1).toLocaleString('default', { month: 'short', year: 'numeric' }));
-        earningsData.push(monthlyMap[key].earnings);
-        withdrawalsData.push(monthlyMap[key].withdrawals);
-    });
-
-    const chartData = {
-        labels: monthlyLabels,
-        datasets: [
-            {
-                label: 'Earnings',
-                data: earningsData,
-                backgroundColor: 'rgba(163, 204, 105, 0.8)',
-                borderColor: 'rgba(163, 204, 105, 1)',
-                borderWidth: 1,
-            },
-            {
-                label: 'Withdrawals',
-                data: withdrawalsData,
-                backgroundColor: 'rgba(244, 124, 12, 0.8)',
-                borderColor: 'rgba(244, 124, 12, 1)',
-                borderWidth: 1,
-            },
-        ],
-    };
-
-    const chartOptions = {
+    const chartOptions = useMemo(() => ({
         responsive: true,
         plugins: {
             legend: {
@@ -154,7 +152,34 @@ const WalletStatsDashboard = () => {
                 grid: { color: 'rgba(0,0,0,0.05)' }
             }
         }
-    };
+    }), []);
+
+    // Early returns AFTER all hooks
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center py-10">
+                <Loader />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="text-center py-10 text-red-500 font-semibold">
+                <Icon icon="mdi:alert-circle-outline" className="w-10 h-10 mx-auto mb-3" />
+                {error}
+            </div>
+        );
+    }
+
+    if (!stats) {
+        return (
+            <div className="text-center py-10 text-gray-500">
+                <Icon icon="mdi:information-outline" className="w-10 h-10 mx-auto mb-3" />
+                No wallet data available
+            </div>
+        );
+    }
 
     const StatCard = ({ title, value, icon, color, subValue }) => (
         <div className={`bg-white rounded-xl shadow-md p-5 flex items-center justify-between border border-gray-100 animate-fade-in hover:shadow-lg transition-shadow duration-300`} style={{ animationDelay: '0.1s' }}>
@@ -316,7 +341,9 @@ const WalletStatsDashboard = () => {
             </div>
         </div>
     );
-};
+});
+
+WalletStatsDashboard.displayName = 'WalletStatsDashboard';
 
 export default WalletStatsDashboard;
 

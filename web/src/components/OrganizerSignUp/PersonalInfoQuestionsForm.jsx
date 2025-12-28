@@ -8,7 +8,7 @@ import { OrganizerUpdateProfileApi, OrganizerSignUpApi } from "@/app/api/setting
 import { useTranslation } from "react-i18next";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { PhoneNumberInput } from "@/components/ui/phone-input";
+// PhoneNumberInput import removed - not used in this component (phone is read-only display)
 import ProfileImageUpload from "@/components/ProfileImageUpload/ProfileImageUpload";
 import Loader from "@/components/Loader/Loader";
 import { useEffect } from "react";

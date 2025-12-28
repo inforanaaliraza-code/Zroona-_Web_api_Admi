@@ -23,4 +23,10 @@ router.get(
 	LandingPageController.getSimilarEvents
 );
 
+// Route to get organizer/host details (public)
+router.get(
+	"/organizer/:organizerId",
+	LandingPageController.getOrganizerDetails
+);
+
 module.exports = router;

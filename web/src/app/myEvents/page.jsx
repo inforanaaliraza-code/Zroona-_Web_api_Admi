@@ -197,10 +197,12 @@ export default function MyEventsPage() {
 
     if (activeTab === "approved") {
       // Requirement #2: For approved, show both upcoming and past (merged)
-      // Status 1 = Approved, Status 2 = Confirmed (both are approved)
+      // Status 1 = Pending (waiting for host approval), Status 2 = Approved/Confirmed (host approved)
+      // Only show bookings that are approved (status 2) or pending (status 1)
+      // Exclude rejected bookings (status 3 or 4) from approved tab
       filtered = bookings.filter(booking => {
         const status = booking.status;
-        return status === 1 || status === 2;
+        return status === 1 || status === 2; // Only pending and approved/confirmed
       });
       // Sort: upcoming first, then past
       filtered.sort((a, b) => {

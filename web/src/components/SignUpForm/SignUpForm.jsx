@@ -9,7 +9,7 @@ import { SignUpApi } from "@/app/api/setting";
 import { toast } from "react-toastify";
 import OtpVerificationModal from "../Modal/OtpVerificationModal";
 import ProfileImageUpload from "../ProfileImageUpload/ProfileImageUpload";
-import { PhoneNumberInput } from "@/components/ui/phone-input";
+import { NumberInput } from "@/components/ui/number-input";
 import Loader from "../Loader/Loader";
 import S3 from "react-aws-s3";
 import { config } from "@/until";
@@ -190,17 +190,10 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                                 <label className={labelClasses}>
                                     {t("signup.tab4")}
                                 </label>
-                                <PhoneNumberInput
-                                    value={formik.values.phone ? `${formik.values.country_code}${formik.values.phone}` : formik.values.country_code}
-                                    onChange={(value, country) => {
-                                        if (country) {
-                                            const countryCode = `+${country.dialCode}`;
-                                            const number = value.substring(country.dialCode.length);
-                                            formik.setFieldValue("country_code", countryCode);
-                                            formik.setFieldValue("phone", number);
-                                        }
-                                    }}
-                                    error={formik.touched.phone && formik.errors.phone ? formik.errors.phone : null}
+                                <NumberInput
+                                    formik={formik}
+                                    mobileNumberField="phone"
+                                    countryCodeField="country_code"
                                 />
                             </div>
 

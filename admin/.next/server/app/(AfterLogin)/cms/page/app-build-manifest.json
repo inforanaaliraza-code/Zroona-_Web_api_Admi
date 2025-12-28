@@ -2,21 +2,20 @@
   "pages": {
     "/(AfterLogin)/cms/page": [
       "static/chunks/[root of the server]__998e76._.css",
-      "static/chunks/node_modules_9c35a6._.js",
+      "static/chunks/node_modules_3a6209._.js",
       "static/chunks/[root of the server]__92012c._.js",
-      "static/chunks/src_app_layout_1e5df9.js",
+      "static/chunks/node_modules_react-toastify_dist_react-toastify_esm_mjs_55cb01._.js",
+      "static/chunks/src_app_layout_1f9415.js",
       "static/chunks/src_app_(AfterLogin)_layout_522c50.js",
       "static/chunks/src_app_(AfterLogin)_layout_b7a8e7.js",
-      "static/chunks/src_6c4236._.js",
-      "static/chunks/node_modules_next_195a1a._.js",
+      "static/chunks/src_b110e0._.js",
+      "static/chunks/node_modules_next_f2701c._.js",
       "static/chunks/node_modules_axios_lib_999991._.js",
-      "static/chunks/node_modules_react-loader-spinner_dist_module_6fc83f.js",
-      "static/chunks/node_modules_lodash-es_7674a6._.js",
       "static/chunks/node_modules_react-icons_fa_index_mjs_d2e2d7._.js",
       "static/chunks/node_modules_react-icons_lib_74ccc9._.js",
-      "static/chunks/node_modules_f2d0ee._.js",
-      "static/chunks/src_components_ff7cd1._.js",
-      "static/chunks/src_app_(AfterLogin)_cms_page_3973b3.js",
+      "static/chunks/node_modules_81eac6._.js",
+      "static/chunks/src_components_CMS_730f7f._.js",
+      "static/chunks/src_app_(AfterLogin)_cms_page_95d2a8.js",
       "static/chunks/node_modules_next_dist_compiled_react_a1d82d._.js",
       "static/chunks/node_modules_next_dist_compiled_react-dom_cjs_react-dom_development_c9a189.js",
       "static/chunks/node_modules_next_dist_compiled_react-dom_87a050._.js",
@@ -25,8 +24,8 @@
       "static/chunks/node_modules_next_dist_091837._.js",
       "static/chunks/node_modules_@swc_helpers_cjs_00636a._.js",
       "static/chunks/[turbopack]_dev_client_hmr-client_ts_679dd5._.js",
-      "static/chunks/node_modules_next_dist_esm_build_templates_app-page_4fa788.js",
-      "static/chunks/node_modules_next_dist_esm_build_templates_app-page_ded577.js"
+      "static/chunks/node_modules_next_dist_esm_build_templates_app-page_7226c0.js",
+      "static/chunks/node_modules_next_dist_esm_build_templates_app-page_0307ee.js"
     ]
   }
 }

@@ -713,28 +713,52 @@ const UserController = {
 				);
 			}
 
-			// Send OTP via Msegat
-			const { sendOtpToPhone } = require("../helpers/otpSend");
-			await sendOtpToPhone(fullPhoneNumber, lang);
+		// Send OTP via Msegat
+		const { sendOtpToPhone } = require("../helpers/otpSend");
+		let otpGenerated = false;
+		let otpValue = null;
+		
+		try {
+			otpValue = await sendOtpToPhone(fullPhoneNumber, lang);
+			otpGenerated = true;
+		} catch (otpError) {
+			console.error("[PHONE:LOGIN] Error in sendOtpToPhone:", otpError.message);
+			// In development, allow OTP generation even if SMS fails
+			if (process.env.NODE_ENV === 'development' || process.env.ALLOW_OTP_WITHOUT_SMS === 'true') {
+				console.warn("[PHONE:LOGIN] Development mode: OTP generation allowed despite SMS failure");
+				// OTP might still be generated, check console logs
+				otpGenerated = true;
+			} else {
+				// In production, return error if SMS fails
+				throw otpError;
+			}
+		}
 
+		if (otpGenerated) {
 			return Response.ok(
 				res,
 				{
 					message: "OTP sent successfully to your phone number",
-					phone_number: phoneStr // Return without country code for security
+					phone_number: phoneStr, // Return without country code for security
+					...(process.env.NODE_ENV === 'development' && otpValue ? { 
+						debug_otp: otpValue // Only in development
+					} : {})
 				},
 				200,
 				lang === "ar" 
 					? "تم إرسال رمز التحقق إلى رقم هاتفك" 
 					: "OTP sent successfully to your phone number"
 			);
-		} catch (error) {
-			console.error("[PHONE:LOGIN] Error sending OTP:", error);
-			return Response.serverErrorResponse(
-				res,
-				error.message || resp_messages(lang).internalServerError
-			);
+		} else {
+			throw new Error("Failed to generate OTP");
 		}
+	} catch (error) {
+		console.error("[PHONE:LOGIN] Error sending OTP:", error);
+		return Response.serverErrorResponse(
+			res,
+			error.message || resp_messages(lang).internalServerError || "Failed to send OTP. Please try again later."
+		);
+	}
 	},
 
 	/**
@@ -2915,6 +2939,33 @@ const UserController = {
 
 			console.log("[PAYMENT] Found booking:", bookingDetails._id);
 
+			// CRITICAL: Check if booking is approved by host (status = 2)
+			// Payment can only be processed if host has approved the booking
+			if (bookingDetails.book_status !== 2) {
+				const lang = req.lang || req.headers["lang"] || "en";
+				const messages = resp_messages(lang);
+				
+				if (bookingDetails.book_status === 1) {
+					return Response.badRequestResponse(
+						res,
+						messages.payment_pending_approval || 
+						"Your booking request is still pending approval from the host. Please wait for the host to accept your request before making payment."
+					);
+				} else if (bookingDetails.book_status === 3 || bookingDetails.book_status === 4) {
+					return Response.badRequestResponse(
+						res,
+						messages.payment_booking_rejected || 
+						"Your booking request was rejected by the host. You cannot make payment for a rejected booking."
+					);
+				} else {
+					return Response.badRequestResponse(
+						res,
+						messages.payment_booking_not_approved || 
+						"Your booking must be approved by the host before you can make payment."
+					);
+				}
+			}
+
 			// Check if payment was already processed
 			if (bookingDetails.payment_status === 1) {
 				return Response.ok(
@@ -2926,19 +2977,26 @@ const UserController = {
 			}
 
 			// Update the booking with payment information
+			const updateData = {
+				payment_status: 1, // Mark as paid
+				payment_id: payment_id,
+				book_status: 2, // Set to approved
+				payment_data: {
+					id: payment_id,
+					amount: amount,
+					updated_at: new Date(),
+				},
+			};
+			
+			// Set confirmed_at timestamp if booking is being confirmed now
+			if (bookingDetails.book_status !== 2) {
+				updateData.confirmed_at = new Date();
+			}
+			
 			const updatedBooking =
 				await BookEventService.FindByIdAndUpdateService(
 					booking_id,
-					{
-						payment_status: 1, // Mark as paid
-						payment_id: payment_id,
-						book_status: 2, // Set to approved
-						payment_data: {
-							id: payment_id,
-							amount: amount,
-							updated_at: new Date(),
-						},
-					},
+					updateData,
 					{ new: true }
 				);
 

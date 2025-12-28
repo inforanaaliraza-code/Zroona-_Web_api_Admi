@@ -609,7 +609,25 @@ const getData = async (url = "", data = {})=>{
         return response.data;
     } catch (error) {
         // toast.error(error.response.data);
-        return error.response.data;
+        if (error.response) {
+            return error.response.data;
+        } else if (error.request) {
+            // Network error - server not reachable
+            return {
+                status: 0,
+                code: 500,
+                message: "Network error: Unable to reach server",
+                error: "Network error"
+            };
+        } else {
+            // Request setup error
+            return {
+                status: 0,
+                code: 500,
+                message: error.message || "An error occurred",
+                error: error.message
+            };
+        }
     }
 };
 const getDataStringify = async (url = "", data = {})=>{
@@ -957,6 +975,7 @@ __turbopack_esm__({
     "ActiveInActiveUserApi": ()=>ActiveInActiveUserApi,
     "DeleteUserApi": ()=>DeleteUserApi,
     "GetAllUserApi": ()=>GetAllUserApi,
+    "UpdateUserApi": ()=>UpdateUserApi,
     "UserDetailApi": ()=>UserDetailApi
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/api/index.js [app-ssr] (ecmascript)");
@@ -979,6 +998,11 @@ const DeleteUserApi = async (payload)=>{
 };
 const ActiveInActiveUserApi = async (payload)=>{
     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["patchRawData"])("user/changeStatus", payload).then((data)=>{
+        return data;
+    });
+};
+const UpdateUserApi = async (payload)=>{
+    return putRawData("user/update", payload).then((data)=>{
         return data;
     });
 };
@@ -1806,7 +1830,7 @@ const GetWithdrawalStatsApi = async ()=>{
     });
 };
 const GetInvoiceStatsApi = async ()=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getData"])("admin/bookings/invoices/stats").then((data)=>{
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getData"])("bookings/invoices/stats").then((data)=>{
         return data;
     });
 };
@@ -3786,8 +3810,8 @@ const exportOrganizersToPDF = (data)=>{
 };
 const exportToPDF = (data, headers, filename, title)=>{
     // Dynamic import for jsPDF
-    __turbopack_require__("[project]/node_modules/jspdf/dist/jspdf.node.min.js [app-ssr] (ecmascript, async loader)")(__turbopack_import__).then((jsPDFModule)=>{
-        __turbopack_require__("[project]/node_modules/jspdf-autotable/dist/jspdf.plugin.autotable.mjs [app-ssr] (ecmascript, async loader)")(__turbopack_import__).then((autoTableModule)=>{
+    Promise.resolve().then(()=>__turbopack_external_require__('jspdf', true)).then((jsPDFModule)=>{
+        Promise.resolve().then(()=>__turbopack_external_require__('jspdf-autotable', true)).then((autoTableModule)=>{
             // Handle both default and named exports for jsPDF v2.x
             const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF || jsPDFModule;
             const JSPDF = jsPDF.jsPDF || jsPDF;

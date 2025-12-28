@@ -59,39 +59,67 @@ const sendSMS = async (phoneNumber, message) => {
             timeout: 10000, // 10 seconds timeout
         });
 
-        console.log(`✅ [MSEGAT] SMS sent successfully. Response:`, response.data);
+        console.log(`📥 [MSEGAT] API Response:`, response.data);
 
         // Msegat returns different response formats
-        // Check if SMS was sent successfully
-        if (response.data && typeof response.data === 'string') {
-            // Sometimes Msegat returns string response
-            if (response.data.toLowerCase().includes('success') || 
-                response.data.toLowerCase().includes('sent') ||
-                response.data === '1') {
-                return {
-                    success: true,
-                    message: 'SMS sent successfully',
-                    data: response.data
-                };
+        // Check for error codes first
+        if (response.data) {
+            // Check if response has error code
+            if (response.data.code && response.data.code !== '1' && response.data.code !== 'M0000') {
+                const errorMessage = response.data.message || `Error code: ${response.data.code}`;
+                console.error(`❌ [MSEGAT] SMS failed. Code: ${response.data.code}, Message: ${errorMessage}`);
+                throw new Error(`Msegat API Error: ${errorMessage}`);
+            }
+
+            // Check for error in string response
+            if (typeof response.data === 'string') {
+                const lowerResponse = response.data.toLowerCase();
+                // Check for error indicators
+                if (lowerResponse.includes('error') || 
+                    lowerResponse.includes('invalid') || 
+                    lowerResponse.includes('failed') ||
+                    lowerResponse.includes('m0002') ||
+                    lowerResponse.includes('m0001')) {
+                    console.error(`❌ [MSEGAT] SMS failed. Response: ${response.data}`);
+                    throw new Error(`Msegat API Error: ${response.data}`);
+                }
+                
+                // Check for success indicators
+                if (lowerResponse.includes('success') || 
+                    lowerResponse.includes('sent') ||
+                    response.data === '1') {
+                    console.log(`✅ [MSEGAT] SMS sent successfully. Response:`, response.data);
+                    return {
+                        success: true,
+                        message: 'SMS sent successfully',
+                        data: response.data
+                    };
+                }
+            }
+
+            // Check for success in object response
+            if (typeof response.data === 'object') {
+                if (response.data.code === '1' || response.data.code === 'M0000' || response.data.status === 'success') {
+                    console.log(`✅ [MSEGAT] SMS sent successfully. Response:`, response.data);
+                    return {
+                        success: true,
+                        message: 'SMS sent successfully',
+                        data: response.data
+                    };
+                }
             }
         }
 
-        if (response.data && response.data.code === '1' || response.data.status === 'success') {
-            return {
-                success: true,
-                message: 'SMS sent successfully',
-                data: response.data
-            };
-        }
-
-        // If we get here, check the response structure
-        return {
-            success: true,
-            message: 'SMS request processed',
-            data: response.data
-        };
+        // If we can't determine success/failure, log warning and throw error
+        console.error(`❌ [MSEGAT] Unable to determine SMS status. Response:`, response.data);
+        throw new Error(`Msegat API returned unexpected response: ${JSON.stringify(response.data)}`);
 
     } catch (error) {
+        // If error was already thrown by us (has our error prefix), rethrow as-is
+        if (error.message && error.message.includes('Msegat API Error:')) {
+            throw error;
+        }
+        
         console.error('❌ [MSEGAT] Error sending SMS:', error.message);
         
         if (error.response) {
@@ -101,7 +129,8 @@ const sendSMS = async (phoneNumber, message) => {
             console.error('❌ [MSEGAT] No response received from API');
             throw new Error('Msegat API request failed - no response received');
         } else {
-            throw new Error(`Msegat SMS Error: ${error.message}`);
+            // If it's already our formatted error, rethrow; otherwise wrap it
+            throw error.message.includes('Msegat') ? error : new Error(`Msegat SMS Error: ${error.message}`);
         }
     }
 };

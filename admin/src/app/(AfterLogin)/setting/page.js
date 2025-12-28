@@ -16,7 +16,7 @@ export default function Setting() {
               <FaShieldAlt className="text-3xl text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#a3cc69] to-[#a797cc] bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-black">
                 Change Password
               </h1>
               <p className="text-gray-600 mt-1">Secure your account with a new password</p>
@@ -49,7 +49,7 @@ export default function Setting() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#a3cc69] to-[#a797cc] bg-clip-text text-transparent">
+                    <h3 className="text-2xl md:text-3xl font-bold text-black">
                       Change Password
                     </h3>
                     <p className="font-medium text-gray-600 mt-1">

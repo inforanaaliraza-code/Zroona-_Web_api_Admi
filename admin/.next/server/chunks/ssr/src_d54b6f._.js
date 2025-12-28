@@ -1374,7 +1374,7 @@ const GetWithdrawalStatsApi = async ()=>{
     });
 };
 const GetInvoiceStatsApi = async ()=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getData"])("admin/bookings/invoices/stats").then((data)=>{
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getData"])("bookings/invoices/stats").then((data)=>{
         return data;
     });
 };

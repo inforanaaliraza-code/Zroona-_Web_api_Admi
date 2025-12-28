@@ -638,8 +638,8 @@ const EventsPage = () => {
 										</div>
 									)}
 
-									{/* Alert for authenticated users with no gender set */}
-									{isAuthenticated && user && !userGender && (
+									{/* Alert for authenticated users with no gender set - Only show for guests, not hosts */}
+									{isAuthenticated && user && !userGender && user.role !== 2 && (
 										<div className="p-2 mb-2 border border-red-200 rounded-md bg-red-50">
 											<div className={`flex items-start ${flexDirection}`}>
 												<Icon

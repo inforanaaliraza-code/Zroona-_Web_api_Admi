@@ -179,9 +179,19 @@ export default function EventDetailsPage() {
 				setEvent(response.data);
 				setLoading(false);
 
-				// Fetch attendees
-				const attendeesData = await fetchEventAttendees(params.id);
-				setAttendees(attendeesData);
+				// Extract attendees from event data
+				if (response.data?.attendees_info && Array.isArray(response.data.attendees_info)) {
+					const attendeesData = response.data.attendees_info.map((attendee) => ({
+						id: attendee._id || attendee.id,
+						name: `${attendee.first_name || ''} ${attendee.last_name || ''}`.trim() || 'Unknown',
+						avatar: attendee.profile_image || null,
+						first_name: attendee.first_name,
+						last_name: attendee.last_name,
+					}));
+					setAttendees(attendeesData);
+				} else {
+					setAttendees([]);
+				}
 
 				// Fetch similar events
 				setLoadingSimilarEvents(true);
@@ -337,7 +347,7 @@ export default function EventDetailsPage() {
 		if (response.status) {
 			toast.success(getTranslation(t, "events.reservationRequested", "Booking request sent! Waiting for approval"));
 			setReservationStatus("pending");
-			event.book_status = 1;
+			event.book_status = 1; // Set to pending (1) initially
 		} else {
 			toast.error(response.message || getTranslation(t, "events.reservationFailed", "Failed to book event. Please try again"));
 		}
@@ -359,6 +369,34 @@ export default function EventDetailsPage() {
 
 		if (!event.booked_event || !event.booked_event._id) {
 			toast.error(getTranslation(t, "events.noBookingFound", "No booking found to process payment"));
+			return;
+		}
+
+		// CRITICAL: Check if booking is approved by host (status = 2)
+		// Payment can only be initiated if host has approved the booking
+		if (event.booked_event.book_status !== 2) {
+			if (event.booked_event.book_status === 1) {
+				toast.error(
+					getTranslation(t, "events.paymentPendingApproval", 
+						"Your booking request is still pending approval from the host. Please wait for the host to accept your request before making payment.")
+				);
+			} else if (event.booked_event.book_status === 3 || event.booked_event.book_status === 4) {
+				toast.error(
+					getTranslation(t, "events.paymentBookingRejected", 
+						"Your booking request was rejected by the host. You cannot make payment for a rejected booking.")
+				);
+			} else {
+				toast.error(
+					getTranslation(t, "events.paymentBookingNotApproved", 
+						"Your booking must be approved by the host before you can make payment.")
+				);
+			}
+			return;
+		}
+
+		// Check if payment already completed
+		if (event.booked_event.payment_status === 1) {
+			toast.info(getTranslation(t, "events.paymentAlreadyCompleted", "Payment has already been completed for this booking."));
 			return;
 		}
 
@@ -422,7 +460,17 @@ export default function EventDetailsPage() {
 					bookingDetails.paymentId
 				);
 
-				// Update payment status
+				// Validate booking status before processing payment
+			if (event.booked_event.book_status !== 2) {
+				toast.error(
+					getTranslation(t, "events.paymentBookingNotApproved", 
+						"Your booking must be approved by the host before you can make payment.")
+				);
+				setIsReserving(false);
+				return;
+			}
+
+			// Update payment status
 				const response = await UpdatePaymentApi({
 					booking_id: event.booked_event._id,
 					payment_id: bookingDetails.paymentId,
@@ -512,19 +560,25 @@ export default function EventDetailsPage() {
 		return colors[index];
 	}
 
-	// Helper function to fetch attendees (mock data for now)
+	// Helper function to fetch attendees from API
 	async function fetchEventAttendees(eventId) {
-		// This would be replaced with your actual API call
-		return [
-			{ id: 1, name: "John Doe" },
-			{ id: 2, name: "Jane Smith" },
-			{ id: 3, name: "Ahmed Ali" },
-			{ id: 4, name: "Sarah Johnson" },
-			{ id: 5, name: "Mohammed Hassan" },
-			{ id: 6, name: "Fatima Khan" },
-			{ id: 7, name: "David Wilson" },
-			{ id: 8, name: "Aisha Mohammed" },
-		];
+		try {
+			// The event details already include attendees from the API
+			// Extract attendees from event data if available
+			if (event?.attendees_info && Array.isArray(event.attendees_info)) {
+				return event.attendees_info.map((attendee) => ({
+					id: attendee._id || attendee.id,
+					name: `${attendee.first_name || ''} ${attendee.last_name || ''}`.trim() || 'Unknown',
+					avatar: attendee.profile_image || null,
+					first_name: attendee.first_name,
+					last_name: attendee.last_name,
+				}));
+			}
+			return [];
+		} catch (error) {
+			console.error("Error fetching attendees:", error);
+			return [];
+		}
 	}
 
 	return (
@@ -909,7 +963,7 @@ export default function EventDetailsPage() {
 													if (!imgPath) return "/assets/images/home/user-dummy.png";
 													if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
 													if (imgPath.startsWith("/uploads/")) {
-														const apiBase = "http://localhost:3434";
+														const apiBase = BASE_API_URL.replace('/api/', '');
 														return `${apiBase}${imgPath}`;
 													}
 													return "/assets/images/home/user-dummy.png";
@@ -927,10 +981,10 @@ export default function EventDetailsPage() {
 									</div>
 									<div className="flex-1">
 										<h3 className="text-lg font-bold text-gray-900 mb-1">
-											{event.organizer?.first_name}{" "}
-											{event.organizer?.last_name}
+											{event.organizer?.first_name || "Demo"}{" "}
+											{event.organizer?.last_name || "User"}
 										</h3>
-										<div className="flex items-center gap-2">
+										<div className="flex items-center gap-2 mb-3">
 											<div className="flex items-center gap-1 bg-[#a797cc]/10 px-2 py-1 rounded-lg">
 												<Icon
 													icon="lucide:star"
@@ -952,74 +1006,127 @@ export default function EventDetailsPage() {
 												Reviews)
 											</span>
 										</div>
+										{/* Only show View Host Profile link if organizer ID exists and is valid */}
+										{(() => {
+											const organizerId = event.organizer?._id || event.organizer?.id;
+											// Convert to string and validate
+											const organizerIdStr = organizerId ? 
+												(typeof organizerId === 'string' ? organizerId : organizerId.toString()) : 
+												null;
+											const isValidId = organizerIdStr && organizerIdStr.length === 24;
+											
+											console.log("[EVENT-DETAILS] Organizer ID check:", {
+												organizerId,
+												organizerIdStr,
+												isValidId,
+												organizer: event.organizer
+											});
+											
+											if (isValidId) {
+												return (
+													<Link
+														href={`/host/${organizerIdStr}`}
+														className="inline-flex items-center gap-2 text-[#a797cc] hover:text-[#8ba179] font-semibold text-sm transition-colors"
+													>
+														{getTranslation(t, "events.viewHostProfile", "View Host Profile")}
+														<Icon icon="lucide:arrow-right" className="w-4 h-4" />
+													</Link>
+												);
+											} else {
+												console.warn("[EVENT-DETAILS] Organizer ID is invalid or missing:", {
+													organizerId,
+													organizerIdStr,
+													organizer: event.organizer
+												});
+												return null; // Don't show link if ID is invalid
+											}
+										})()}
 									</div>
 								</div>
 							</div>
 						)}
 
-						{/* Attendees Section */}
-						<div className="overflow-hidden bg-white shadow-lg rounded-xl">
-							<div className="p-6">
-								<div className="flex justify-between items-center mb-4">
-									<h3 className="text-xl font-semibold">
-										{getTranslation(t, "events.attendees", "Attendees")}
-									</h3>
-									{event?.attendees?.length > 0 && (
-										<button
-											onClick={() =>
-												setShowAttendeesModal(true)
-											}
-											className="text-sm text-[#a797cc] hover:underline"
-										>
-											{getTranslation(t, "events.viewAll", "View All")}
-										</button>
+						{/* Attendees Section - New Card */}
+						<div className="p-8 bg-white shadow-xl rounded-2xl border border-gray-100">
+							<div className="flex items-center gap-3 mb-6">
+								<div className="w-12 h-12 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-xl flex items-center justify-center shadow-lg">
+									<Icon icon="lucide:users" className="w-6 h-6 text-white" />
+								</div>
+								<h2 className="text-2xl font-bold text-gray-900">
+									{getTranslation(t, "events.attendees", "Attendees")}
+								</h2>
+							</div>
+							
+							{attendees.length > 0 ? (
+								<div className="space-y-4">
+									<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+										{attendees.map((attendee, index) => (
+											<div
+												key={attendee.id || index}
+												className="flex flex-col items-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100 hover:shadow-md transition-all"
+											>
+												<div className="relative w-16 h-16 rounded-full overflow-hidden mb-3 ring-2 ring-[#a797cc]/20">
+													{attendee.avatar ? (
+														<Image
+															src={(() => {
+																const getImageUrl = (imgPath) => {
+																	if (!imgPath) return "/assets/images/home/user-dummy.png";
+																	if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
+																	if (imgPath.startsWith("/uploads/")) {
+																		const apiBase = BASE_API_URL.replace('/api/', '');
+																		return `${apiBase}${imgPath}`;
+																	}
+																	return "/assets/images/home/user-dummy.png";
+																};
+																return getImageUrl(attendee.avatar);
+															})()}
+															alt={attendee.name}
+															width={64}
+															height={64}
+															className="object-cover w-full h-full"
+															onError={(e) => {
+																e.target.src = "/assets/images/home/user-dummy.png";
+															}}
+														/>
+													) : (
+														<div
+															className="flex items-center justify-center w-full h-full font-semibold text-white text-lg"
+															style={{
+																backgroundColor: getAvatarColor(attendee.name),
+															}}
+														>
+															{getInitials(attendee.name)}
+														</div>
+													)}
+												</div>
+												<p className="text-sm font-semibold text-gray-900 text-center">
+													{attendee.name}
+												</p>
+											</div>
+										))}
+									</div>
+									{attendees.length > 8 && (
+										<div className="text-center pt-4">
+											<button
+												onClick={() => setShowAttendeesModal(true)}
+												className="text-[#a797cc] hover:text-[#8ba179] font-semibold text-sm underline"
+											>
+												{getTranslation(t, "events.viewAllAttendees", "View All Attendees")} ({attendees.length})
+											</button>
+										</div>
 									)}
 								</div>
-
-								{event?.attendees?.length > 0 ? (
-									<div>
-										<div className="flex -space-x-2 overflow-hidden">
-											{event.attendees
-												.slice(0, 5)
-												.map((attendee, index) => (
-														<div
-															key={index}
-															className="inline-block h-10 w-10 rounded-full ring-2 ring-white overflow-hidden"
-														>
-															<img
-																src={
-																	attendee.avatar ||
-																	"/assets/images/default-avatar.png"
-																}
-																alt={
-																	attendee.name
-																}
-																className="h-full w-full object-cover"
-															/>
-														</div>
-													))}
-												{event.attendees.length > 5 && (
-													<div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-xs font-medium text-gray-800 ring-2 ring-white">
-														+
-														{event.attendees
-															.length - 5}
-													</div>
-												)}
-										</div>
-										<p className="text-sm text-gray-500 mt-2">
-											{event.attendees.length}{" "}
-											{event.attendees.length === 1 
-												? getTranslation(t, "events.personAttending", "person attending")
-												: getTranslation(t, "events.peopleAttending", "people attending")}
-										</p>
-									</div>
-								) : (
-									<p className="text-gray-500 text-center">
+							) : (
+								<div className="text-center py-8">
+									<Icon
+										icon="lucide:users"
+										className="w-16 h-16 mx-auto mb-4 text-gray-300"
+									/>
+									<p className="text-gray-500 text-lg">
 										{getTranslation(t, "events.noAttendeesYet", "No attendees yet")}
 									</p>
-								)}
 								</div>
-							</div>
+							)}
 						</div>
 					</div>
 				</div>
@@ -1045,8 +1152,8 @@ export default function EventDetailsPage() {
 				showRefundWarning={true}
 			/>
 
-		{/* Similar Events Section */}
-		<div className="container px-4 mx-auto mt-12 mb-16">
+			{/* Similar Events Section */}
+			<div className="container px-4 mx-auto mt-12 mb-16">
 			<div className="flex items-center justify-between mb-8">
 				<h3 className="text-2xl font-semibold">
 					{getTranslation(t, "events.similarEvents", "Similar Events")}
@@ -1194,6 +1301,7 @@ export default function EventDetailsPage() {
 				onClose={() => setIsLoginModalOpen(false)}
 				returnUrl={`/events/${params.id}`}
 			/>
+			</div>
 		</div>
 	);
 }

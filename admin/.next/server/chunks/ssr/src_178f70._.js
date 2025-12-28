@@ -1007,7 +1007,25 @@ const getData = async (url = "", data = {})=>{
         return response.data;
     } catch (error) {
         // toast.error(error.response.data);
-        return error.response.data;
+        if (error.response) {
+            return error.response.data;
+        } else if (error.request) {
+            // Network error - server not reachable
+            return {
+                status: 0,
+                code: 500,
+                message: "Network error: Unable to reach server",
+                error: "Network error"
+            };
+        } else {
+            // Request setup error
+            return {
+                status: 0,
+                code: 500,
+                message: error.message || "An error occurred",
+                error: error.message
+            };
+        }
     }
 };
 const getDataStringify = async (url = "", data = {})=>{
@@ -1374,7 +1392,7 @@ const GetWithdrawalStatsApi = async ()=>{
     });
 };
 const GetInvoiceStatsApi = async ()=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getData"])("admin/bookings/invoices/stats").then((data)=>{
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getData"])("bookings/invoices/stats").then((data)=>{
         return data;
     });
 };
@@ -3361,7 +3379,7 @@ function Setting() {
                                     className: "jsx-e7f3b7f31bb4e32e",
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
-                                            className: "jsx-e7f3b7f31bb4e32e" + " " + "text-3xl font-bold bg-gradient-to-r from-[#a3cc69] to-[#a797cc] bg-clip-text text-transparent",
+                                            className: "jsx-e7f3b7f31bb4e32e" + " " + "text-3xl font-bold text-black",
                                             children: "Change Password"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/setting/page.js",
@@ -3454,7 +3472,7 @@ function Setting() {
                                                             className: "jsx-e7f3b7f31bb4e32e",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                                                    className: "jsx-e7f3b7f31bb4e32e" + " " + "text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#a3cc69] to-[#a797cc] bg-clip-text text-transparent",
+                                                                    className: "jsx-e7f3b7f31bb4e32e" + " " + "text-2xl md:text-3xl font-bold text-black",
                                                                     children: "Change Password"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/setting/page.js",

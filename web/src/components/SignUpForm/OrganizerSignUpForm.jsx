@@ -15,7 +15,7 @@ import Link from "next/link";
 import LoginModal from "../Modal/LoginModal";
 import Cookies from "js-cookie";
 import { useTranslation } from "react-i18next";
-import { PhoneNumberInput } from "@/components/ui/phone-input";
+import { NumberInput } from "@/components/ui/number-input";
 
 export default function OrganizerSignUpForm({ title, buttonText, showDeactiveButton }) {
     const { t, i18n } = useTranslation();
@@ -162,17 +162,10 @@ export default function OrganizerSignUpForm({ title, buttonText, showDeactiveBut
                     {/* Phone Input */}
                     <div className="mb-4">
                         <label className="block text-sm font-semibold text-gray-700">{t('signup.tab4')}</label>
-                        <PhoneNumberInput
-                            value={formik.values.phone_number ? `${formik.values.country_code}${formik.values.phone_number}` : formik.values.country_code}
-                            onChange={(value, country) => {
-                                if (country) {
-                                    const countryCode = `+${country.dialCode}`;
-                                    const number = value.substring(country.dialCode.length);
-                                    formik.setFieldValue("country_code", countryCode);
-                                    formik.setFieldValue("phone_number", number);
-                                }
-                            }}
-                            error={formik.touched.phone_number && formik.errors.phone_number ? formik.errors.phone_number : null}
+                        <NumberInput
+                            formik={formik}
+                            mobileNumberField="phone_number"
+                            countryCodeField="country_code"
                         />
                     </div>
 

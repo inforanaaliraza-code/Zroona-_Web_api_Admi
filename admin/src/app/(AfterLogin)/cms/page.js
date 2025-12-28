@@ -1,13 +1,22 @@
 "use client";
 
-import PrivacyPolicy from "@/components/CMS/PrivacyPolicy";
-import TermsConditions from "@/components/CMS/TermsConditions";
-import AboutUs from "@/components/CMS/AboutUs";
+import dynamic from "next/dynamic";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { FaShieldAlt, FaFileContract, FaInfoCircle, FaEdit, FaSave } from "react-icons/fa";
 
-export default function ManageCms() {
+// Dynamically import CMS components to reduce initial bundle
+const PrivacyPolicy = dynamic(() => import("@/components/CMS/PrivacyPolicy"), {
+  loading: () => <div className="h-64 bg-gray-100 rounded animate-pulse" />
+});
+const TermsConditions = dynamic(() => import("@/components/CMS/TermsConditions"), {
+  loading: () => <div className="h-64 bg-gray-100 rounded animate-pulse" />
+});
+const AboutUs = dynamic(() => import("@/components/CMS/AboutUs"), {
+  loading: () => <div className="h-64 bg-gray-100 rounded animate-pulse" />
+});
+
+const ManageCms = memo(function ManageCms() {
   const [status, setStatus] = useState("2");
   
   const tabs = [
@@ -45,7 +54,7 @@ export default function ManageCms() {
                 <FaEdit className="text-3xl text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#a3cc69] to-[#a797cc] bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold text-black">
                   Manage CMS
                 </h1>
                 <p className="text-gray-600 mt-1">Update your website content & policies</p>
@@ -166,4 +175,8 @@ export default function ManageCms() {
       </DefaultLayout>
     </>
   );
-}
+});
+
+ManageCms.displayName = 'ManageCms';
+
+export default ManageCms;

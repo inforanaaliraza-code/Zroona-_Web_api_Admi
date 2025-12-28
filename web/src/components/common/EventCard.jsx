@@ -332,21 +332,26 @@ export default function EventCard({
                                     </div>
                                 </div>
                                 {/* Show status or action buttons based on book_status */}
-                                {status || event.book_status === 2 || event.book_status === 3 ? (
+                                {status || event.book_status === 1 || event.book_status === 2 || event.book_status === 3 ? (
                                     <div
-                                        className={`text-xs p-2 rounded-md font-semibold ${status === 'Approved' || event.book_status === 2
-                                            ? 'bg-[#d5fae3] text-green-600'
-                                            : 'bg-[#ff00002e] text-red-500'
+                                        className={`text-xs p-2 rounded-md font-semibold ${
+                                            event.book_status === 1
+                                                ? 'bg-yellow-100 text-yellow-700'
+                                                : status === 'Approved' || event.book_status === 2
+                                                ? 'bg-[#d5fae3] text-green-600'
+                                                : 'bg-[#ff00002e] text-red-500'
                                         }`}
                                     >
                                         {status ||
-                                            (event.book_status === 2
-                                                ? event.payment_status === 0
-                                                    ? t('events.noPay') || "No Pay"
-                                                    : t('eventsMain.approved') || "Approved"
-                                                : event.book_status === 3
-                                                    ? t('eventsMain.rejected') || "Rejected"
-                                                    : t('eventsMain.pending') || "Pending")}
+                                            (event.book_status === 1
+                                                ? t('eventsMain.pending') || "Pending"
+                                                : event.book_status === 2
+                                                    ? event.payment_status === 0
+                                                        ? t('events.noPay') || "No Pay"
+                                                        : t('eventsMain.approved') || "Approved"
+                                                    : event.book_status === 3
+                                                        ? t('eventsMain.rejected') || "Rejected"
+                                                        : t('eventsMain.pending') || "Pending")}
                                     </div>
                                 ) : (
                                     <div className="flex space-x-4">

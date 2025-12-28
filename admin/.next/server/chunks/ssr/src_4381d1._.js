@@ -1173,6 +1173,7 @@ __turbopack_esm__({
     "ActiveInActiveUserApi": ()=>ActiveInActiveUserApi,
     "DeleteUserApi": ()=>DeleteUserApi,
     "GetAllUserApi": ()=>GetAllUserApi,
+    "UpdateUserApi": ()=>UpdateUserApi,
     "UserDetailApi": ()=>UserDetailApi
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/api/index.js [app-ssr] (ecmascript)");
@@ -1195,6 +1196,11 @@ const DeleteUserApi = async (payload)=>{
 };
 const ActiveInActiveUserApi = async (payload)=>{
     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["patchRawData"])("user/changeStatus", payload).then((data)=>{
+        return data;
+    });
+};
+const UpdateUserApi = async (payload)=>{
+    return putRawData("user/update", payload).then((data)=>{
         return data;
     });
 };
@@ -2416,7 +2422,7 @@ const GetWithdrawalStatsApi = async ()=>{
     });
 };
 const GetInvoiceStatsApi = async ()=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getData"])("admin/bookings/invoices/stats").then((data)=>{
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getData"])("bookings/invoices/stats").then((data)=>{
         return data;
     });
 };

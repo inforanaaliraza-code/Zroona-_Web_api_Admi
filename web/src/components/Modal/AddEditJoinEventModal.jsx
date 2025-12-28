@@ -46,6 +46,9 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
     const [page, setPage] = useState(1);
     const [loading, setLoding] = useState(false);
     const { CategoryEventList = [] } = useSelector((state) => state.CategoryEventData || {});
+    const [map, setMap] = useState(null);
+    const [marker, setMarker] = useState(null);
+    const GOOGLE_MAPS_API_KEY = "AIzaSyC6cKp791aygkeF6blRdhoWR0EEl8WwLTk";
     
     // Debug: Log category list
     useEffect(() => {
@@ -65,6 +68,123 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             dispatch(getEventListDetail({ id: eventId }));
         }
     }, [eventId, dispatch]);
+
+    // Initialize Google Maps when location section is active
+    useEffect(() => {
+        if (activeSection === 'location' && !map && isOpen) {
+            const loadGoogleMaps = () => {
+                if (window.google && window.google.maps) {
+                    initializeMap();
+                } else {
+                    const script = document.createElement('script');
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+                    script.async = true;
+                    script.defer = true;
+                    script.onload = initializeMap;
+                    document.head.appendChild(script);
+                }
+            };
+
+            const initializeMap = () => {
+                const mapContainer = document.getElementById('map-container');
+                if (!mapContainer) return;
+
+                const defaultCenter = formik.values.latitude && formik.values.longitude
+                    ? { lat: parseFloat(formik.values.latitude), lng: parseFloat(formik.values.longitude) }
+                    : { lat: 24.7136, lng: 46.6753 }; // Default to Riyadh
+
+                const mapInstance = new window.google.maps.Map(mapContainer, {
+                    center: defaultCenter,
+                    zoom: 13,
+                    mapTypeControl: true,
+                });
+
+                let markerInstance = null;
+
+                // Add existing marker if coordinates exist
+                if (formik.values.latitude && formik.values.longitude) {
+                    markerInstance = new window.google.maps.Marker({
+                        position: defaultCenter,
+                        map: mapInstance,
+                        draggable: true,
+                    });
+                }
+
+                // Add click listener to drop pin
+                mapInstance.addListener('click', (e) => {
+                    const lat = e.latLng.lat();
+                    const lng = e.latLng.lng();
+
+                    formik.setFieldValue('latitude', lat.toFixed(6));
+                    formik.setFieldValue('longitude', lng.toFixed(6));
+
+                    if (markerInstance) {
+                        markerInstance.setPosition({ lat, lng });
+                    } else {
+                        markerInstance = new window.google.maps.Marker({
+                            position: { lat, lng },
+                            map: mapInstance,
+                            draggable: true,
+                        });
+                    }
+
+                    // Get neighborhood/address
+                    const geocoder = new window.google.maps.Geocoder();
+                    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                        if (status === 'OK' && results[0]) {
+                            const address = results[0].formatted_address;
+                            formik.setFieldValue('event_address', address);
+
+                            // Extract neighborhood
+                            let neighborhood = '';
+                            results[0].address_components.forEach(component => {
+                                if (component.types.includes('neighborhood') || component.types.includes('sublocality')) {
+                                    neighborhood = component.long_name;
+                                } else if (component.types.includes('locality') && !neighborhood) {
+                                    neighborhood = component.long_name;
+                                }
+                            });
+                            formik.setFieldValue('neighborhood', neighborhood || address);
+                        }
+                    });
+                });
+
+                // Make marker draggable
+                if (markerInstance) {
+                    markerInstance.addListener('dragend', (e) => {
+                        const lat = e.latLng.lat();
+                        const lng = e.latLng.lng();
+                        formik.setFieldValue('latitude', lat.toFixed(6));
+                        formik.setFieldValue('longitude', lng.toFixed(6));
+
+                        const geocoder = new window.google.maps.Geocoder();
+                        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                            if (status === 'OK' && results[0]) {
+                                const address = results[0].formatted_address;
+                                formik.setFieldValue('event_address', address);
+
+                                let neighborhood = '';
+                                results[0].address_components.forEach(component => {
+                                    if (component.types.includes('neighborhood') || component.types.includes('sublocality')) {
+                                        neighborhood = component.long_name;
+                                    } else if (component.types.includes('locality') && !neighborhood) {
+                                        neighborhood = component.long_name;
+                                    }
+                                });
+                                formik.setFieldValue('neighborhood', neighborhood || address);
+                            }
+                        });
+                    });
+                }
+
+                setMap(mapInstance);
+                setMarker(markerInstance);
+            };
+
+            // Small delay to ensure DOM is ready
+            setTimeout(loadGoogleMaps, 100);
+        }
+    }, [activeSection, isOpen]);
 
     useEffect(() => {
         dispatch(getCategoryEventList({ page: page, limit: 20 }));
@@ -172,6 +292,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             do_not_instruction: EventListId ? EventListdetails?.do_not_instruction || "" : "",
             latitude: EventListId ? (EventListdetails?.location?.coordinates?.[1] || "") : "",
             longitude: EventListId ? (EventListdetails?.location?.coordinates?.[0] || "") : "",
+            neighborhood: EventListId ? (EventListdetails?.neighborhood || "") : "",
         },
         validationSchema: Yup.object({
             event_date: Yup.string()
@@ -1202,13 +1323,13 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             <h3 className="text-lg font-semibold text-gray-900">Event Location</h3>
                         </div>
 
-                        {/* Event Address */}
+                        {/* Event Address with Google Maps */}
                         <div>
                             <label className="block text-gray-700 text-sm font-semibold mb-2">
                                 {t('add.tab7') || 'Event Address'} <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <div className="relative mb-3">
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
                                     <Image
                                         src="/assets/images/icons/location-pin.png"
                                         height={20}
@@ -1218,11 +1339,47 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                 </span>
                                 <input
                                     type="text"
-                                    placeholder={t('add.tab7') || 'Enter event address'}
-                                    {...formik.getFieldProps('event_address')}
+                                    id="event-address-autocomplete"
+                                    placeholder={t('add.tab7') || 'Search and select location on map'}
+                                    value={formik.values.event_address || ''}
+                                    onChange={(e) => {
+                                        formik.setFieldValue('event_address', e.target.value);
+                                    }}
                                     className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all"
                                 />
                             </div>
+                            
+                            {/* Google Maps Container */}
+                            <div className="mb-3">
+                                <label className="block text-gray-700 text-xs font-medium mb-2">
+                                    {t('add.selectLocationOnMap') || 'Select location by dropping a pin on the map'}
+                                </label>
+                                <div 
+                                    id="map-container" 
+                                    className="w-full h-64 border border-gray-300 rounded-lg overflow-hidden bg-gray-100"
+                                    style={{ minHeight: '256px' }}
+                                >
+                                    <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
+                                        {t('add.mapLoading') || 'Map will load here. Click to drop a pin.'}
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    {t('add.mapInstructions') || 'Click on the map to drop a pin and select your event location. The neighborhood will be displayed below.'}
+                                </p>
+                            </div>
+
+                            {/* Neighborhood Display */}
+                            {formik.values.neighborhood && (
+                                <div className="mb-3 p-3 bg-[#a797cc]/10 border border-[#a797cc]/20 rounded-lg">
+                                    <p className="text-xs font-semibold text-gray-700 mb-1">
+                                        {t('add.neighborhood') || 'Neighborhood:'}
+                                    </p>
+                                    <p className="text-sm text-[#a797cc] font-medium">
+                                        {formik.values.neighborhood}
+                                    </p>
+                                </div>
+                            )}
+
                             {formik.touched.event_address && formik.errors.event_address ? (
                                 <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

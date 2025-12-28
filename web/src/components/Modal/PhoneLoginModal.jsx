@@ -13,7 +13,7 @@ import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 
 import Modal from "../common/Modal";
-import ChangeCountryInput from "../ChangeCountryInput/ChangeCountryInput";
+import { NumberInput } from "@/components/ui/number-input";
 import Loader from "../Loader/Loader";
 import { SendPhoneOTPApi, VerifyPhoneOTPApi, ResendOtpApi } from "@/app/api/setting";
 import { getProfile } from "@/redux/slices/profileInfo";
@@ -286,11 +286,10 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
                         {t("login.tab5")}
                       </label>
                       <div className="w-full">
-                        <ChangeCountryInput
-                          mobileNumber="phone_number"
-                          countryCode="country_code"
+                        <NumberInput
                           formik={phoneFormik}
-                          i18n={i18n}
+                          mobileNumberField="phone_number"
+                          countryCodeField="country_code"
                           disabled={loading}
                         />
                       </div>

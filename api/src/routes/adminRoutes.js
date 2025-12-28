@@ -44,6 +44,7 @@ router.put('/changeStatus', adminController.changeStatus);
 router.patch('/changeOrganizerStatus', adminController.changeOrganizerStatus);
 
 router.patch('/user/changeStatus', adminController.changeUserStatus);
+router.put('/user/update', adminController.updateUser);
 
 router.get('/cms/detail', adminController.getCms);
 

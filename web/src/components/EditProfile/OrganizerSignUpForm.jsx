@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
-import MobileInput from "../MobileInput/MobileInput";
+import { NumberInput } from "@/components/ui/number-input";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -207,13 +207,10 @@ export default function OrganizerSignUpForm({ title, buttonText }) {
                 {/* Phone Input */}
                 <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-semibold">{t('signup.tab4')}</label>
-                    <MobileInput
-                        mobileNumber="phone_number"
-                        countryCode="country_code"
+                    <NumberInput
                         formik={formik}
-                        i18n={i18n}
-                        inputClass="form-control"
-                        value={`${formik.values.country_code} ${formik.values.phone_number}`}
+                        mobileNumberField="phone_number"
+                        countryCodeField="country_code"
                     />
                 </div>
 

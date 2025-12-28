@@ -212,7 +212,7 @@ const BookNow = ({ props, pageType }) => {
                             </div>
                         </div>
 
-                        <div className={`sm:w-full flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
+                        <div className={`w-full sm:w-auto flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
                             {/* Conditionally render buttons based on the pageType */}
                             {pageType === 'book' && (
                                 <button
@@ -220,7 +220,7 @@ const BookNow = ({ props, pageType }) => {
                                         setEventId(props?._id);
                                         setIsBookOpenModal(true);
                                     }}
-                                    className="bg-primary text-white py-3 px-24 lg:px-36 rounded-xl text-base font-semibold transition duration-300"
+                                    className="w-full sm:w-auto bg-primary text-white py-3 px-24 lg:px-36 rounded-xl text-base font-semibold transition duration-300"
                                 >
                                     {t('detail.tab51')}
                                 </button>

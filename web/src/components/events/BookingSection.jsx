@@ -31,12 +31,12 @@ export default function BookingSection({
 
       <Button
         className={`w-full text-white text-lg font-bold h-14 rounded-xl shadow-lg transition-all duration-300 ${
-          isReserving || bookStatus === 1
+          isReserving || bookStatus === 1 || (bookStatus !== 2 && bookStatus !== undefined)
             ? "bg-gray-400 cursor-not-allowed"
             : "bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#a797cc] hover:shadow-xl transform hover:-translate-y-0.5"
         }`}
         onClick={onBookNowClick}
-        disabled={isReserving || bookStatus === 1}
+        disabled={isReserving || bookStatus === 1 || (bookStatus !== 2 && bookStatus !== undefined)}
       >
         {isReserving ? (
           <span className="flex items-center gap-2">
@@ -46,12 +46,17 @@ export default function BookingSection({
         ) : bookStatus === 1 ? (
           <span className="flex items-center gap-2">
             <Icon icon="lucide:clock" className="w-5 h-5" />
-            {t("eventsMain.pending") || "Pending"}
+            {t("eventsMain.pending") || "Pending - Waiting for host approval"}
           </span>
         ) : bookStatus === 2 && paymentStatus === 0 ? (
           <span className="flex items-center gap-2">
             <Icon icon="lucide:credit-card" className="w-5 h-5" />
             {t("eventsMain.proceedToPayment") || "Proceed to Payment"}
+          </span>
+        ) : bookStatus === 3 || bookStatus === 4 ? (
+          <span className="flex items-center gap-2">
+            <Icon icon="lucide:x-circle" className="w-5 h-5" />
+            {t("eventsMain.rejected") || "Rejected"}
           </span>
         ) : (
           <span className="flex items-center gap-2">

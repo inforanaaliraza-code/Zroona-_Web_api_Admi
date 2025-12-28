@@ -13,7 +13,7 @@ import Cookies from "js-cookie";
 
 import Modal from "../common/Modal";
 import Loader from "../Loader/Loader";
-import ChangeCountryInput from "../ChangeCountryInput/ChangeCountryInput";
+import { NumberInput } from "@/components/ui/number-input";
 import OTPInput from "react-otp-input";
 import { SendPhoneOTPApi, VerifyPhoneOTPApi } from "@/app/api/setting";
 import { TOKEN_NAME } from "@/until";
@@ -273,19 +273,12 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     {t("auth.phoneNumber") || "Phone Number"} * (Saudi Arabia Only)
                                 </label>
-                                <ChangeCountryInput
-                                    mobileNumber="phone_number"
-                                    countryCode="country_code"
+                                <NumberInput
                                     formik={phoneFormik}
-                                    i18n={i18n}
+                                    mobileNumberField="phone_number"
+                                    countryCodeField="country_code"
                                     disabled={loading}
                                 />
-                                {phoneFormik.touched.phone_number && phoneFormik.errors.phone_number && (
-                                    <p className="mt-1 text-sm text-red-600">{phoneFormik.errors.phone_number}</p>
-                                )}
-                                {phoneFormik.touched.country_code && phoneFormik.errors.country_code && (
-                                    <p className="mt-1 text-sm text-red-600">{phoneFormik.errors.country_code}</p>
-                                )}
                             </div>
 
                             {/* Send OTP Button */}

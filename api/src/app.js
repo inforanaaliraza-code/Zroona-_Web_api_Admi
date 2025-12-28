@@ -15,6 +15,7 @@ const fileUpload = require("express-fileupload");
 const commonController = require("./controllers/commonController");
 const autoCloseGroupChats = require("./scripts/autoCloseGroupChats.js");
 const updateCompletedBookings = require("./scripts/updateCompletedBookings.js");
+const autoCancelUnpaidBookings = require("./scripts/autoCancelUnpaidBookings.js");
 const createTestUsers = require("./scripts/createTestUsers.js");
 const initSentry = require("./config/sentry.js");
 const logger = require("./helpers/logger.js");
@@ -38,29 +39,55 @@ const port = process.env.PORT || 3000;
 app.set("trust proxy", 1);
 
 // CORS configuration
+const allowedOrigins = [
+	"http://localhost:3000",
+	"http://localhost:3001",
+	"http://127.0.0.1:3000",
+	"http://127.0.0.1:3001",
+	process.env.FRONTEND_URL,
+	process.env.ADMIN_URL,
+].filter(Boolean); // Remove undefined values
+
 const corsOptions = {
-	origin: "*", // Allow all origins
+	origin: function (origin, callback) {
+		// Allow requests with no origin (like mobile apps, Postman, or curl)
+		if (!origin) return callback(null, true);
+		
+		// Allow all origins in development, or check against allowed list
+		if (process.env.NODE_ENV === 'development' || allowedOrigins.length === 0) {
+			return callback(null, true);
+		}
+		
+		if (allowedOrigins.indexOf(origin) !== -1) {
+			callback(null, true);
+		} else {
+			// In development, allow all origins
+			if (process.env.NODE_ENV === 'development') {
+				callback(null, true);
+			} else {
+				callback(new Error('Not allowed by CORS'));
+			}
+		}
+	},
 	methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 	allowedHeaders: [
 		"Content-Type",
 		"Authorization",
 		"lang",
 		"x-requested-with",
+		"Accept",
+		"Origin",
+		"X-Requested-With",
 	],
 	credentials: true,
 	optionsSuccessStatus: 200,
+	preflightContinue: false,
 };
 
 app.use(cors(corsOptions));
 
-// Handle OPTIONS requests explicitly
-app.options("*", (req, res) => {
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header(
-		"Access-Control-Allow-Methods",
-		"GET, POST, PUT, DELETE, OPTIONS"
-	);
-	res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+// Handle OPTIONS requests explicitly (preflight)
+app.options("*", cors(corsOptions), (req, res) => {
 	res.sendStatus(200);
 });
 
@@ -317,6 +344,25 @@ if (process.env.ENABLE_AUTO_COMPLETE_BOOKINGS !== 'false') {
     }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
     
     console.log('[AUTO-COMPLETE] Scheduled task enabled - will run daily');
+}
+
+// Schedule auto-cancel unpaid bookings task (runs every hour)
+if (process.env.ENABLE_AUTO_CANCEL_UNPAID_BOOKINGS !== 'false') {
+    // Run immediately on startup (after 90 seconds to ensure DB is connected)
+    setTimeout(() => {
+        autoCancelUnpaidBookings().catch(err => {
+            console.error('[AUTO-CANCEL-UNPAID] Error in scheduled task:', err);
+        });
+    }, 90000);
+
+    // Then run every hour
+    setInterval(() => {
+        autoCancelUnpaidBookings().catch(err => {
+            console.error('[AUTO-CANCEL-UNPAID] Error in scheduled task:', err);
+        });
+    }, 60 * 60 * 1000); // 1 hour in milliseconds
+    
+    console.log('[AUTO-CANCEL-UNPAID] Scheduled task enabled - will run every hour');
 }
 
 // Create test users on startup (for development/testing)

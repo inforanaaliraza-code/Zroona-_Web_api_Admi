@@ -12,7 +12,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 
 import { OrganizerSignUpApi } from "@/app/api/setting";
-import { PhoneNumberInput } from "@/components/ui/phone-input";
+import { NumberInput } from "@/components/ui/number-input";
 import ProfileImageUpload from "../ProfileImageUpload/ProfileImageUpload";
 import Loader from "../Loader/Loader";
 import LoginModal from "../Modal/LoginModal";
@@ -447,17 +447,12 @@ export default function HostSignUpForm() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t("auth.phoneNumber") || "Phone Number"} *
                         </label>
-                        <PhoneNumberInput
-                            value={formik.values.phone_number}
-                            onChange={(value, country_code) => {
-                                formik.setFieldValue("phone_number", value);
-                                formik.setFieldValue("country_code", country_code);
-                            }}
+                        <NumberInput
+                            formik={formik}
+                            mobileNumberField="phone_number"
+                            countryCodeField="country_code"
                         />
-                        {formik.touched.phone_number && formik.errors.phone_number && (
-                            <p className="mt-1 text-sm text-red-600">{formik.errors.phone_number}</p>
-                        )}
-                            </div>
+                    </div>
 
                     {/* Gender & DOB */}
                     <div className="grid md:grid-cols-2 gap-6">

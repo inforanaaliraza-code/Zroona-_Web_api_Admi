@@ -7,11 +7,10 @@ __turbopack_esm__({
     "default": ()=>__TURBOPACK__default__export__
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/shared/lib/app-dynamic.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$aws$2d$s3$2f$dist$2f$react$2d$aws$2d$s3$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-aws-s3/dist/react-aws-s3.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$uid$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/uid/dist/index.mjs [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$quill$2f$lib$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-quill/lib/index.js [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$quill$2d$image$2d$resize$2d$module$2d$react$2f$image$2d$resize$2e$min$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/quill-image-resize-module-react/image-resize.min.js [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/until/index.js [app-ssr] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 "use client";
@@ -21,29 +20,66 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js_
 ;
 ;
 ;
+// Dynamically import ReactQuill to reduce initial bundle
+const ReactQuill = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/node_modules/react-quill/lib/index.js [app-ssr] (ecmascript, async loader)")(__turbopack_import__), {
+    loadableGenerated: {
+        modules: [
+            "src/components/TextEditor/TextEditor.jsx -> " + "react-quill"
+        ]
+    },
+    ssr: false,
+    loading: ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "h-32 bg-gray-100 rounded animate-pulse"
+        }, void 0, false, {
+            fileName: "[project]/src/components/TextEditor/TextEditor.jsx",
+            lineNumber: 11,
+            columnNumber: 18
+        }, this)
+});
 ;
 ;
-;
-__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$quill$2f$lib$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Quill"].register("modules/imageResize", __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$quill$2d$image$2d$resize$2d$module$2d$react$2f$image$2d$resize$2e$min$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"]);
-var Size = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$quill$2f$lib$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Quill"].import("attributors/style/size");
-Size.whitelist = [
-    "10px",
-    "11px",
-    "12px",
-    "13px",
-    "14px",
-    "16px",
-    "18px",
-    "20px",
-    "22px",
-    "24px"
-];
-__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$quill$2f$lib$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Quill"].register(Size, true);
-function TextEditor(props) {
-    // console.log(quillRef, "quillRef");
-    const QID = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$uid$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["uid"])();
-    const ReactS3Client = new __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$aws$2d$s3$2f$dist$2f$react$2d$aws$2d$s3$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"](__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["config"]);
+// Lazy register Quill modules
+let quillInitialized = false;
+let QuillInstance = null;
+let SizeInstance = null;
+const initializeQuill = async ()=>{
+    if (typeof window !== "undefined" && !quillInitialized) {
+        const [{ Quill }, ImageResize] = await Promise.all([
+            __turbopack_require__("[project]/node_modules/react-quill/lib/index.js [app-ssr] (ecmascript, async loader)")(__turbopack_import__).then((mod)=>({
+                    Quill: mod.Quill || mod.default?.Quill
+                })),
+            __turbopack_require__("[project]/node_modules/quill-image-resize-module-react/image-resize.min.js [app-ssr] (ecmascript, async loader)")(__turbopack_import__)
+        ]);
+        if (Quill) {
+            QuillInstance = Quill;
+            Quill.register("modules/imageResize", ImageResize.default || ImageResize);
+            SizeInstance = Quill.import("attributors/style/size");
+            SizeInstance.whitelist = [
+                "10px",
+                "11px",
+                "12px",
+                "13px",
+                "14px",
+                "16px",
+                "18px",
+                "20px",
+                "22px",
+                "24px"
+            ];
+            Quill.register(SizeInstance, true);
+            quillInitialized = true;
+        }
+    }
+};
+const TextEditor = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["memo"])(function TextEditor(props) {
+    const quillRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const [quillReady, setQuillReady] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const QID = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$uid$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["uid"])(), []);
+    const ReactS3Client = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>new __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$aws$2d$s3$2f$dist$2f$react$2d$aws$2d$s3$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"](__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["config"]), []);
     const newFileName = QID;
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        initializeQuill().then(()=>setQuillReady(true));
+    }, []);
     const ImageUpload = (formData)=>{
         var url = ReactS3Client.uploadFile(formData, newFileName).then((data)=>{
             return data.location;
@@ -100,7 +136,18 @@ function TextEditor(props) {
                     ],
                     [
                         {
-                            size: Size.whitelist
+                            size: SizeInstance?.whitelist || [
+                                "10px",
+                                "11px",
+                                "12px",
+                                "13px",
+                                "14px",
+                                "16px",
+                                "18px",
+                                "20px",
+                                "22px",
+                                "24px"
+                            ]
                         }
                     ],
                     [
@@ -144,15 +191,24 @@ function TextEditor(props) {
                 }
             },
             imageResize: {
-                parchment: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$quill$2f$lib$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Quill"].import("parchment"),
+                parchment: QuillInstance?.import("parchment"),
                 modules: [
                     "Resize",
                     "DisplaySize"
                 ]
             }
         }), []);
+    if (!quillReady) {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "h-32 bg-gray-100 rounded animate-pulse"
+        }, void 0, false, {
+            fileName: "[project]/src/components/TextEditor/TextEditor.jsx",
+            lineNumber: 121,
+            columnNumber: 12
+        }, this);
+    }
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
-        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$quill$2f$lib$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ReactQuill, {
             theme: "snow",
             className: `textarea-control border-0 p-0  ${props.disabled ? "hideTopBar" : "shadow"}`,
             style: {
@@ -168,11 +224,12 @@ function TextEditor(props) {
             readOnly: props.disabled && props.disabled
         }, void 0, false, {
             fileName: "[project]/src/components/TextEditor/TextEditor.jsx",
-            lineNumber: 104,
+            lineNumber: 126,
             columnNumber: 7
         }, this)
     }, void 0, false);
-}
+});
+TextEditor.displayName = 'TextEditor';
 const __TURBOPACK__default__export__ = TextEditor;
 
 })()),

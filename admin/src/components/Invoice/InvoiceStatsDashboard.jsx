@@ -1,23 +1,38 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, memo } from 'react';
 import { Icon } from '@iconify/react';
 import { GetInvoiceStatsApi } from '@/api/admin/apis';
 import Loader from '../Loader/Loader';
 import { toast } from 'react-toastify';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+// Dynamically import Chart.js to reduce initial bundle size
+const Bar = dynamic(() => import('react-chartjs-2').then(mod => mod.Bar), {
+  ssr: false,
+  loading: () => <div className="h-80 flex items-center justify-center">Loading chart...</div>
+});
 
-const InvoiceStatsDashboard = () => {
+// Lazy register Chart.js components
+let chartRegistered = false;
+const registerChart = () => {
+  if (typeof window !== 'undefined' && !chartRegistered) {
+    import('chart.js').then(({ Chart: ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend }) => {
+      ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+      chartRegistered = true;
+    });
+  }
+};
+
+const InvoiceStatsDashboard = memo(() => {
     const { t } = useTranslation();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
+        registerChart();
         fetchStats();
     }, []);
 
@@ -26,74 +41,70 @@ const InvoiceStatsDashboard = () => {
         setError(null);
         try {
             const res = await GetInvoiceStatsApi();
-            if (res?.status === 1 || res?.code === 200) {
-                setStats(res.data);
+            console.log("Invoice Stats API Response:", res);
+            
+            // Check if response exists and has valid data
+            if (res && (res.status === 1 || res.code === 200)) {
+                if (res.data) {
+                    setStats(res.data);
+                } else {
+                    // Response is successful but no data
+                    setError(t('invoice.stats.noData'));
+                    toast.warning(t('invoice.stats.noData'));
+                }
+            } else if (res) {
+                // Response exists but indicates error
+                const errorMsg = res.message || res.error || t('invoice.stats.fetchError');
+                setError(errorMsg);
+                toast.error(errorMsg);
             } else {
-                setError(res?.message || t('invoice.stats.fetchError'));
-                toast.error(res?.message || t('invoice.stats.fetchError'));
+                // No response at all
+                setError(t('invoice.stats.fetchError'));
+                toast.error(t('invoice.stats.fetchError'));
             }
         } catch (err) {
             console.error("Error fetching invoice stats:", err);
-            setError(t('invoice.stats.fetchError'));
-            toast.error(t('invoice.stats.fetchError'));
+            const errorMsg = err?.response?.data?.message || err?.message || t('invoice.stats.fetchError');
+            setError(errorMsg);
+            toast.error(errorMsg);
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center py-10">
-                <Loader />
-            </div>
-        );
-    }
+    // Memoize chart data to prevent unnecessary recalculations
+    // IMPORTANT: All hooks must be called before any conditional returns
+    const chartData = useMemo(() => {
+        if (!stats?.monthly_trends) return null;
+        
+        const monthlyData = stats.monthly_trends.map(m => m.total_amount);
+        const monthlyLabels = stats.monthly_trends.map(m => new Date(m._id.year, m._id.month - 1).toLocaleString('default', { month: 'short', year: 'numeric' }));
+        const monthlyInvoiceCount = stats.monthly_trends.map(m => m.total_invoices);
 
-    if (error) {
-        return (
-            <div className="text-center py-10 text-red-500 font-semibold">
-                <Icon icon="mdi:alert-circle-outline" className="w-10 h-10 mx-auto mb-3" />
-                {error}
-            </div>
-        );
-    }
+        return {
+            labels: monthlyLabels,
+            datasets: [
+                {
+                    label: t('invoice.stats.revenue'),
+                    data: monthlyData,
+                    backgroundColor: 'rgba(167, 151, 204, 0.8)', // Purple
+                    borderColor: 'rgba(167, 151, 204, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y',
+                },
+                {
+                    label: t('invoice.stats.invoiceCount'),
+                    data: monthlyInvoiceCount,
+                    backgroundColor: 'rgba(163, 204, 105, 0.8)', // Green
+                    borderColor: 'rgba(163, 204, 105, 1)',
+                    borderWidth: 1,
+                    yAxisID: 'y1',
+                },
+            ],
+        };
+    }, [stats?.monthly_trends, t]);
 
-    if (!stats) {
-        return (
-            <div className="text-center py-10 text-gray-500">
-                <Icon icon="mdi:information-outline" className="w-10 h-10 mx-auto mb-3" />
-                {t('invoice.stats.noData')}
-            </div>
-        );
-    }
-
-    const monthlyData = stats.monthly_trends.map(m => m.total_amount);
-    const monthlyLabels = stats.monthly_trends.map(m => new Date(m._id.year, m._id.month - 1).toLocaleString('default', { month: 'short', year: 'numeric' }));
-    const monthlyInvoiceCount = stats.monthly_trends.map(m => m.total_invoices);
-
-    const chartData = {
-        labels: monthlyLabels,
-        datasets: [
-            {
-                label: t('invoice.stats.revenue'),
-                data: monthlyData,
-                backgroundColor: 'rgba(167, 151, 204, 0.8)', // Purple
-                borderColor: 'rgba(167, 151, 204, 1)',
-                borderWidth: 1,
-                yAxisID: 'y',
-            },
-            {
-                label: t('invoice.stats.invoiceCount'),
-                data: monthlyInvoiceCount,
-                backgroundColor: 'rgba(163, 204, 105, 0.8)', // Green
-                borderColor: 'rgba(163, 204, 105, 1)',
-                borderWidth: 1,
-                yAxisID: 'y1',
-            },
-        ],
-    };
-
-    const chartOptions = {
+    const chartOptions = useMemo(() => ({
         responsive: true,
         interaction: {
             mode: 'index',
@@ -164,7 +175,34 @@ const InvoiceStatsDashboard = () => {
                 }
             },
         }
-    };
+    }), [t]);
+
+    // Early returns AFTER all hooks
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center py-10">
+                <Loader />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="text-center py-10 text-red-500 font-semibold">
+                <Icon icon="mdi:alert-circle-outline" className="w-10 h-10 mx-auto mb-3" />
+                {error}
+            </div>
+        );
+    }
+
+    if (!stats) {
+        return (
+            <div className="text-center py-10 text-gray-500">
+                <Icon icon="mdi:information-outline" className="w-10 h-10 mx-auto mb-3" />
+                {t('invoice.stats.noData')}
+            </div>
+        );
+    }
 
     const StatCard = ({ title, value, icon, color, bgColor, subValue }) => (
         <div className={`bg-white rounded-xl shadow-md p-5 flex items-center justify-between border border-gray-100 animate-fade-in hover:shadow-lg transition-shadow duration-300`} style={{ animationDelay: '0.1s' }}>
@@ -288,7 +326,9 @@ const InvoiceStatsDashboard = () => {
             </div>
         </div>
     );
-};
+});
+
+InvoiceStatsDashboard.displayName = 'InvoiceStatsDashboard';
 
 export default InvoiceStatsDashboard;
 

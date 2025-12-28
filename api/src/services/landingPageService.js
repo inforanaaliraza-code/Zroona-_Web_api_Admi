@@ -1,4 +1,5 @@
 const Event = require("../models/eventModel.js");
+const Organizer = require("../models/organizerModel.js");
 const UserReviewService = require("./userReviewService.js");
 const mongoose = require("mongoose");
 const BookEventService = require("./bookEventService.js");
@@ -233,7 +234,7 @@ const LandingPageService = {
 			})
 				.populate({
 					path: "organizer_id",
-					select: "first_name last_name profile_image",
+					select: "first_name last_name profile_image _id",
 					model: "organizer",
 				})
 				.lean();
@@ -251,8 +252,12 @@ const LandingPageService = {
 						"Organizer"
 					);
 
-				// Rename organizer_id to organizer
-				event.organizer = event.organizer_id;
+				// Rename organizer_id to organizer and ensure _id is included
+				event.organizer = {
+					...event.organizer_id,
+					_id: event.organizer_id._id, // Ensure _id is explicitly included
+					id: event.organizer_id._id.toString(), // Also include as string for compatibility
+				};
 				delete event.organizer_id;
 			}
 
@@ -393,6 +398,52 @@ const LandingPageService = {
 		} catch (error) {
 			console.error("Similar events service error:", error.message);
 			throw new Error("Could not fetch similar events");
+		}
+	},
+
+	getOrganizerDetails: async (organizerId) => {
+		try {
+			if (!mongoose.Types.ObjectId.isValid(organizerId)) {
+				throw new Error("Invalid organizer ID format");
+			}
+
+			console.log("[ORGANIZER-DETAILS] Fetching organizer with ID:", organizerId);
+
+			// Query organizer - Organizer schema doesn't have is_delete field, so we don't filter by it
+			const organizer = await Organizer.findOne({
+				_id: new mongoose.Types.ObjectId(organizerId)
+			})
+				.select("first_name last_name profile_image bio email phone_number country_code _id")
+				.lean();
+
+			if (!organizer) {
+				console.log("[ORGANIZER-DETAILS] Organizer not found in database");
+				throw new Error("Organizer not found");
+			}
+
+			console.log("[ORGANIZER-DETAILS] Organizer found:", {
+				id: organizer._id,
+				name: `${organizer.first_name} ${organizer.last_name}`,
+				hasBio: !!organizer.bio
+			});
+
+			// Get organizer rating
+			organizer.rating = await UserReviewService.GetUserOverallRating(
+				organizer._id,
+				"Organizer"
+			);
+
+			console.log("[ORGANIZER-DETAILS] Organizer rating:", organizer.rating);
+
+			return organizer;
+		} catch (error) {
+			console.error("[ORGANIZER-DETAILS] Service error:", error.message);
+			console.error("[ORGANIZER-DETAILS] Error stack:", error.stack);
+			throw new Error(
+				error.message === "Organizer not found"
+					? error.message
+					: "Could not fetch organizer details"
+			);
 		}
 	},
 };

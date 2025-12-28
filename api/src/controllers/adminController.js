@@ -942,6 +942,44 @@ const adminController = {
 
         return Response.ok(res, { isActive: user.isActive }, 200, resp_messages(lang).update_success);
     },
+    
+    updateUser: async (req, res) => {
+        const { lang } = req || 'en';
+        try {
+            const { userId, phone_number, country_code, email } = req.body;
+            
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                return Response.badRequestResponse(res, resp_messages(lang).id_required || "User ID is required");
+            }
+            
+            const user = await UserService.FindOneService({ _id: userId });
+            if (!user) {
+                return Response.notFoundResponse(res, resp_messages(lang).user_not_found || "User not found");
+            }
+            
+            // Update phone number if provided
+            if (phone_number !== undefined) {
+                user.phone_number = phone_number;
+            }
+            
+            // Update country code if provided
+            if (country_code !== undefined) {
+                user.country_code = country_code;
+            }
+            
+            // Update email if provided
+            if (email !== undefined && email !== null && email !== '') {
+                user.email = email;
+            }
+            
+            await user.save();
+            
+            return Response.ok(res, user, 200, resp_messages(lang).update_success || "User updated successfully");
+        } catch (error) {
+            console.error("[ADMIN:UPDATE_USER] Error:", error);
+            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError || "Internal server error");
+        }
+    },
     eventList: async (req, res) => {
         const { lang } = req || 'en'
         try {
@@ -3145,11 +3183,11 @@ const adminController = {
             const lang = req.lang || req.headers["lang"] || "en";
 
             // Total invoices count by status
-            const totalInvoices = await BookEventService.CountService({ payment_status: 1, invoice_id: { $exists: true, $ne: null } });
-            const pendingInvoices = await BookEventService.CountService({ payment_status: 1, book_status: 1, invoice_id: { $exists: true, $ne: null } });
-            const confirmedInvoices = await BookEventService.CountService({ payment_status: 1, book_status: 2, invoice_id: { $exists: true, $ne: null } });
-            const completedInvoices = await BookEventService.CountService({ payment_status: 1, book_status: 5, invoice_id: { $exists: true, $ne: null } });
-            const cancelledInvoices = await BookEventService.CountService({ payment_status: 1, book_status: { $in: [3, 6] }, invoice_id: { $exists: true, $ne: null } });
+            const totalInvoices = await BookEventService.CountDocumentService({ payment_status: 1, invoice_id: { $exists: true, $ne: null } });
+            const pendingInvoices = await BookEventService.CountDocumentService({ payment_status: 1, book_status: 1, invoice_id: { $exists: true, $ne: null } });
+            const confirmedInvoices = await BookEventService.CountDocumentService({ payment_status: 1, book_status: 2, invoice_id: { $exists: true, $ne: null } });
+            const completedInvoices = await BookEventService.CountDocumentService({ payment_status: 1, book_status: 5, invoice_id: { $exists: true, $ne: null } });
+            const cancelledInvoices = await BookEventService.CountDocumentService({ payment_status: 1, book_status: { $in: [3, 6] }, invoice_id: { $exists: true, $ne: null } });
 
             // Total amount statistics
             const amountStats = await BookEventService.AggregateService([
@@ -3241,7 +3279,7 @@ const adminController = {
             // Recent invoices (last 7 days)
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            const recentInvoicesCount = await BookEventService.CountService({
+            const recentInvoicesCount = await BookEventService.CountDocumentService({
                 payment_status: 1,
                 invoice_id: { $exists: true, $ne: null },
                 createdAt: { $gte: sevenDaysAgo },
@@ -3266,7 +3304,7 @@ const adminController = {
             return Response.ok(res, stats, 200, resp_messages(lang).success);
         } catch (error) {
             console.error("Error fetching invoice stats:", error);
-            return Response.serverError(res, {}, 500, error.message);
+            return Response.serverErrorResponse(res, error.message || "Internal server error", {}, 500);
         }
     },
 

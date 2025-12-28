@@ -80,7 +80,7 @@ export const GetWithdrawalStatsApi = async () => {
 
 // Guest Invoices Management
 export const GetInvoiceStatsApi = async () => {
-  return getData("admin/bookings/invoices/stats").then((data) => {
+  return getData("bookings/invoices/stats").then((data) => {
     return data;
   });
 };

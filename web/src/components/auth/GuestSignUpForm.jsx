@@ -12,7 +12,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 
 import { SignUpApi } from "@/app/api/setting";
-import { PhoneNumberInput } from "@/components/ui/phone-input";
+import { NumberInput } from "@/components/ui/number-input";
 import ProfileImageUpload from "../ProfileImageUpload/ProfileImageUpload";
 import Loader from "../Loader/Loader";
 import LoginModal from "../Modal/LoginModal";
@@ -133,6 +133,10 @@ export default function GuestSignUpForm() {
             .max(new Date(), t("auth.dobFuture") || "Date of birth cannot be in the future"),
         nationality: Yup.string()
             .required(t("auth.nationalityRequired") || "Nationality is required"),
+        acceptPrivacy: Yup.boolean()
+            .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
+        acceptTerms: Yup.boolean()
+            .oneOf([true], t("auth.termsRequired") || "You must accept the terms and conditions"),
     });
 
     const formik = useFormik({
@@ -147,6 +151,8 @@ export default function GuestSignUpForm() {
             gender: "", // Empty string for select dropdown
             date_of_birth: "", // Keep as string for date input
             nationality: "SA", // Default to Saudi Arabia
+            acceptPrivacy: false,
+            acceptTerms: false,
         },
         validationSchema,
         validateOnChange: true,
@@ -377,29 +383,11 @@ export default function GuestSignUpForm() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t("auth.phoneNumber") || "Phone Number"} *
                         </label>
-                        <PhoneNumberInput
-                            value={
-                                formik.values.phone_number
-                                    ? `${formik.values.country_code}${formik.values.phone_number}`
-                                    : formik.values.country_code
-                            }
-                            onChange={(phoneValue, country) => {
-                                if (country) {
-                                    // Extract dial code from country object
-                                    const countryCode = `+${country.dialCode}`;
-                                    // Remove dial code from phone value to get just the number
-                                    const phoneNumber = phoneValue.substring(country.dialCode.length);
-                                    formik.setFieldValue("country_code", countryCode);
-                                    formik.setFieldValue("phone_number", phoneNumber);
-                                } else {
-                                    // Fallback if country object is not available
-                                    formik.setFieldValue("phone_number", phoneValue);
-                                }
-                            }}
+                        <NumberInput
+                            formik={formik}
+                            mobileNumberField="phone_number"
+                            countryCodeField="country_code"
                         />
-                        {formik.touched.phone_number && formik.errors.phone_number && (
-                            <p className="mt-1 text-sm text-red-600">{formik.errors.phone_number}</p>
-                        )}
                     </div>
 
                     {/* Gender & DOB */}
@@ -482,6 +470,53 @@ export default function GuestSignUpForm() {
                         </select>
                         {formik.touched.nationality && formik.errors.nationality && (
                             <p className="mt-1 text-sm text-red-600">{formik.errors.nationality}</p>
+                        )}
+                    </div>
+
+                    {/* Privacy and Terms Checkboxes */}
+                    <div className="space-y-4">
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                name="acceptPrivacy"
+                                id="acceptPrivacy"
+                                checked={formik.values.acceptPrivacy}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                className="mt-1 w-5 h-5 text-[#a797cc] border-gray-300 rounded focus:ring-[#a797cc] cursor-pointer"
+                            />
+                            <label htmlFor="acceptPrivacy" className="text-sm text-gray-700 cursor-pointer">
+                                {t("auth.acceptPrivacy") || "I accept the"}{" "}
+                                <a href="/privacy-policy" target="_blank" className="text-[#a797cc] hover:text-[#8ba179] underline font-semibold">
+                                    {t("auth.privacyPolicy") || "Privacy Policy"}
+                                </a>
+                                {" *"}
+                            </label>
+                        </div>
+                        {formik.touched.acceptPrivacy && formik.errors.acceptPrivacy && (
+                            <p className="mt-1 text-sm text-red-600 ml-8">{formik.errors.acceptPrivacy}</p>
+                        )}
+
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                name="acceptTerms"
+                                id="acceptTerms"
+                                checked={formik.values.acceptTerms}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                className="mt-1 w-5 h-5 text-[#a797cc] border-gray-300 rounded focus:ring-[#a797cc] cursor-pointer"
+                            />
+                            <label htmlFor="acceptTerms" className="text-sm text-gray-700 cursor-pointer">
+                                {t("auth.acceptTerms") || "I accept the"}{" "}
+                                <a href="/terms-and-conditions" target="_blank" className="text-[#a797cc] hover:text-[#8ba179] underline font-semibold">
+                                    {t("auth.termsAndConditions") || "Terms and Conditions"}
+                                </a>
+                                {" *"}
+                            </label>
+                        </div>
+                        {formik.touched.acceptTerms && formik.errors.acceptTerms && (
+                            <p className="mt-1 text-sm text-red-600 ml-8">{formik.errors.acceptTerms}</p>
                         )}
                     </div>
 

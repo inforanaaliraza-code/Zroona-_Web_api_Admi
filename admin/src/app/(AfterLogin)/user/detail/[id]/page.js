@@ -7,14 +7,16 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { ActiveInActiveUserApi, DeleteUserApi } from "@/api/user/apis";
-import { FaStar, FaTrash, FaBan, FaCheckCircle } from "react-icons/fa";
+import { FaStar, FaTrash, FaBan, FaCheckCircle, FaEdit } from "react-icons/fa";
 import SuspendUserModal from "@/components/Modals/SuspendUserModal";
+import EditUserModal from "@/components/Modals/EditUserModal";
 
 export default function UserDetail() {
   const { id } = useParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const detail = useDataStore((store) => store.UserDetail);
   const { fetchUserDetail } = useDataStore();
 
@@ -227,6 +229,13 @@ export default function UserDetail() {
                 <div className="flex flex-wrap gap-3 items-center justify-between">
                   <h2 className="font-bold text-lg text-gray-900">Account Actions</h2>
                   <div className="flex flex-wrap gap-3">
+                    {/* Edit User Button */}
+                    <button
+                      onClick={() => setEditModalOpen(true)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+                    >
+                      <FaEdit /> Edit User
+                    </button>
                     {/* View Rating Button */}
                     <button
                       onClick={() => {
@@ -448,6 +457,15 @@ export default function UserDetail() {
         onClose={() => setSuspendModalOpen(false)}
         onConfirm={handleConfirmSuspend}
         user={detail?.user}
+      />
+
+      <EditUserModal
+        show={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        user={detail?.user}
+        onSuccess={() => {
+          fetchUserDetail({ id: id });
+        }}
       />
     </DefaultLayout>
   );

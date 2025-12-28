@@ -1248,6 +1248,7 @@ __turbopack_esm__({
     "ActiveInActiveUserApi": ()=>ActiveInActiveUserApi,
     "DeleteUserApi": ()=>DeleteUserApi,
     "GetAllUserApi": ()=>GetAllUserApi,
+    "UpdateUserApi": ()=>UpdateUserApi,
     "UserDetailApi": ()=>UserDetailApi
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/api/index.js [app-client] (ecmascript)");
@@ -1277,11 +1278,18 @@ const ActiveInActiveUserApi = async (payload)=>{
     });
 };
 _c3 = ActiveInActiveUserApi;
-var _c, _c1, _c2, _c3;
+const UpdateUserApi = async (payload)=>{
+    return putRawData("user/update", payload).then((data)=>{
+        return data;
+    });
+};
+_c4 = UpdateUserApi;
+var _c, _c1, _c2, _c3, _c4;
 __turbopack_refresh__.register(_c, "GetAllUserApi");
 __turbopack_refresh__.register(_c1, "UserDetailApi");
 __turbopack_refresh__.register(_c2, "DeleteUserApi");
 __turbopack_refresh__.register(_c3, "ActiveInActiveUserApi");
+__turbopack_refresh__.register(_c4, "UpdateUserApi");
 
 })()),
 "[project]/src/api/events/apis.js [app-client] (ecmascript)": (({ r: __turbopack_require__, f: __turbopack_module_context__, i: __turbopack_import__, s: __turbopack_esm__, v: __turbopack_export_value__, n: __turbopack_export_namespace__, c: __turbopack_cache__, M: __turbopack_modules__, l: __turbopack_load__, j: __turbopack_dynamic__, P: __turbopack_resolve_absolute_path__, U: __turbopack_relative_url__, R: __turbopack_resolve_module_id_path__, g: global, __dirname, k: __turbopack_refresh__ }) => (() => {
@@ -2603,7 +2611,7 @@ const GetWithdrawalStatsApi = async ()=>{
 };
 _c11 = GetWithdrawalStatsApi;
 const GetInvoiceStatsApi = async ()=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getData"])("admin/bookings/invoices/stats").then((data)=>{
+    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getData"])("bookings/invoices/stats").then((data)=>{
         return data;
     });
 };

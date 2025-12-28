@@ -196,6 +196,44 @@ const LandingPageController = {
 			);
 		}
 	},
+
+	getOrganizerDetails: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { organizerId } = req.params;
+
+			// Validate organizerId format
+			if (!mongoose.Types.ObjectId.isValid(organizerId)) {
+				return Response.validationErrorResponse(
+					res,
+					resp_messages?.[lang]?.invalid_organizer_id ||
+						"Invalid organizer ID"
+				);
+			}
+
+			const organizer = await LandingPageService.getOrganizerDetails(organizerId);
+			return Response.ok(
+				res,
+				organizer,
+				200,
+				resp_messages?.[lang]?.organizer_details_fetched ||
+					"Organizer details fetched successfully"
+			);
+		} catch (error) {
+			console.error("Get organizer details error:", error);
+			if (error.message === "Organizer not found") {
+				return Response.notFoundResponse(
+					res,
+					resp_messages?.[lang]?.organizer_not_found || "Organizer not found"
+				);
+			}
+			return Response.serverErrorResponse(
+				res,
+				resp_messages?.[lang]?.internalServerError ||
+					"Something went wrong"
+			);
+		}
+	},
 };
 
 module.exports = LandingPageController;

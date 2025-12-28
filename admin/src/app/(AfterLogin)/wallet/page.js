@@ -8,7 +8,11 @@ import Image from "next/image";
 import { FaFileExcel, FaPrint } from "react-icons/fa";
 import { GetWalletDetailsApi, GetWithdrawalRequestsApi } from "@/api/admin/apis";
 import { toast } from "react-toastify";
-import WalletStatsDashboard from "@/components/Wallet/WalletStatsDashboard";
+import dynamic from "next/dynamic";
+const WalletStatsDashboard = dynamic(() => import("@/components/Wallet/WalletStatsDashboard"), {
+  ssr: false,
+  loading: () => <div className="flex justify-center items-center py-10">Loading statistics...</div>
+});
 
 export default function Wallet() {
   const [walletData, setWalletData] = useState(null);
@@ -80,7 +84,7 @@ export default function Wallet() {
       <div className="container mx-auto px-4 py-8 animate-fade-in">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Wallet Management</h1>
+          <h1 className="text-3xl font-bold text-black">Wallet Management</h1>
         </div>
 
         {/* Statistics Dashboard */}

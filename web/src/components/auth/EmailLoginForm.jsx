@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 
 import { SendPhoneOTPApi, VerifyPhoneOTPApi } from "@/app/api/setting";
 import Loader from "../Loader/Loader";
-import ChangeCountryInput from "../ChangeCountryInput/ChangeCountryInput";
+import { NumberInput } from "@/components/ui/number-input";
 import OTPInput from "react-otp-input";
 import { TOKEN_NAME } from "@/until";
 import useAuthStore from "@/store/useAuthStore";
@@ -298,35 +298,14 @@ export default function EmailLoginForm() {
                                     <div className="relative group">
                                         <div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/10 to-brand-orange/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                         <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-1 shadow-sm group-hover:border-[#a797cc]/50 transition-all duration-300">
-                                            <ChangeCountryInput
-                                                mobileNumber="phone_number"
-                                                countryCode="country_code"
+                                            <NumberInput
                                                 formik={phoneFormik}
-                                                i18n={i18n}
+                                                mobileNumberField="phone_number"
+                                                countryCodeField="country_code"
                                                 disabled={loading}
                                             />
                                         </div>
                                     </div>
-                                    {phoneFormik.touched.phone_number && phoneFormik.errors.phone_number && (
-                                        <motion.p
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="mt-2 text-sm text-red-500 flex items-center gap-1"
-                                        >
-                                            <Icon icon="material-symbols:error-outline" className="w-4 h-4" />
-                                            {phoneFormik.errors.phone_number}
-                                        </motion.p>
-                                    )}
-                                    {phoneFormik.touched.country_code && phoneFormik.errors.country_code && (
-                                        <motion.p
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            className="mt-2 text-sm text-red-500 flex items-center gap-1"
-                                        >
-                                            <Icon icon="material-symbols:error-outline" className="w-4 h-4" />
-                                            {phoneFormik.errors.country_code}
-                                        </motion.p>
-                                    )}
                                 </motion.div>
 
                                 {/* Send OTP Button */}
@@ -520,7 +499,7 @@ export default function EmailLoginForm() {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => router.push("/signup/guest")}
-                                className="group py-3.5 px-4 border-2 border-brand-orange text-brand-orange hover:bg-gradient-to-r hover:from-brand-orange/10 hover:to-orange-50 font-semibold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                                className="group py-2.5 px-3 border-2 border-brand-orange text-brand-orange hover:bg-gradient-to-r hover:from-brand-orange/10 hover:to-orange-50 font-semibold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
                             >
                                 <span className="flex items-center justify-center gap-2">
                                     {t("auth.signupAsGuest") || "Guest"}
@@ -531,7 +510,7 @@ export default function EmailLoginForm() {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => router.push("/signup/host")}
-                                className="group py-3.5 px-4 bg-gradient-to-r from-[#a797cc] to-[#9d8bc0] hover:from-[#9d8bc0] hover:to-[#a797cc] text-white font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
+                                className="group py-2.5 px-3 bg-gradient-to-r from-[#a797cc] to-[#9d8bc0] hover:from-[#9d8bc0] hover:to-[#a797cc] text-white font-semibold rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
                             >
                                 <span className="flex items-center justify-center gap-2">
                                     {t("auth.signupAsHost") || "Host"}
