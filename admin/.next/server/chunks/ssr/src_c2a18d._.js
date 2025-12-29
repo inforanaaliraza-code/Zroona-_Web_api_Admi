@@ -3203,7 +3203,6 @@ const exportEventsToCSV = (data)=>{
         "Event ID",
         "Event Name",
         "Organizer",
-        "Event Type",
         "Event Category",
         "Attendees",
         "Date",
@@ -3218,7 +3217,6 @@ const exportEventsToCSV = (data)=>{
                 event.id || event._id || "N/A",
                 `"${event.event_name || "N/A"}"`,
                 `"${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}"`.trim() || "N/A",
-                formatEventTypes(event.event_types),
                 `"${formatEventCategories(event.event_category_details)}"`,
                 event.no_of_attendees || 0,
                 event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
@@ -3294,7 +3292,6 @@ const exportEventsToPDF = (data)=>{
         "Event ID",
         "Event Name",
         "Organizer",
-        "Event Type",
         "Event Category",
         "Attendees",
         "Date",
@@ -3308,7 +3305,6 @@ const exportEventsToPDF = (data)=>{
             event.id || event._id || "N/A",
             event.event_name || "N/A",
             `${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}`.trim() || "N/A",
-            formatEventTypes(event.event_types),
             formatEventCategories(event.event_category_details),
             event.no_of_attendees || 0,
             event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
@@ -3961,7 +3957,7 @@ function ManageEvents() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Event Type"
+                                                children: "Event Category"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
                                                 lineNumber: 299,
@@ -3969,7 +3965,7 @@ function ManageEvents() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Event Category"
+                                                children: "No. of Attendess"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
                                                 lineNumber: 302,
@@ -3977,7 +3973,7 @@ function ManageEvents() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "No. of Attendess"
+                                                children: "Date"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
                                                 lineNumber: 305,
@@ -3985,7 +3981,7 @@ function ManageEvents() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Date"
+                                                children: "time"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
                                                 lineNumber: 308,
@@ -3993,7 +3989,7 @@ function ManageEvents() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "time"
+                                                children: "Amount per Person"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
                                                 lineNumber: 311,
@@ -4001,7 +3997,7 @@ function ManageEvents() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Amount per Person"
+                                                children: "City"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
                                                 lineNumber: 314,
@@ -4009,18 +4005,10 @@ function ManageEvents() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "City"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                lineNumber: 317,
-                                                columnNumber: 19
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                                className: "px-2 py-4 text-left font-base text-gray-600",
                                                 children: "Status"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                lineNumber: 320,
+                                                lineNumber: 317,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4028,7 +4016,7 @@ function ManageEvents() {
                                                 children: "Action"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                lineNumber: 323,
+                                                lineNumber: 320,
                                                 columnNumber: 19
                                             }, this)
                                         ]
@@ -4045,21 +4033,21 @@ function ManageEvents() {
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
                                     children: loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
-                                            colSpan: 10,
+                                            colSpan: 9,
                                             className: "py-3",
                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Loader$2f$Loader$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                lineNumber: 332,
+                                                lineNumber: 329,
                                                 columnNumber: 23
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                            lineNumber: 331,
+                                            lineNumber: 328,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                        lineNumber: 330,
+                                        lineNumber: 327,
                                         columnNumber: 19
                                     }, this) : GetAllEvents?.data?.length > 0 ? GetAllEvents?.data?.map((event, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                             className: "border-b last:border-0 text-sm font-medium text-black",
@@ -4069,7 +4057,7 @@ function ManageEvents() {
                                                     children: event.id
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 341,
+                                                    lineNumber: 338,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4090,12 +4078,12 @@ function ManageEvents() {
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                                    lineNumber: 345,
+                                                                    lineNumber: 342,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                                lineNumber: 344,
+                                                                lineNumber: 341,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4103,18 +4091,18 @@ function ManageEvents() {
                                                                 children: event.event_name
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                                lineNumber: 356,
+                                                                lineNumber: 353,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                        lineNumber: 343,
+                                                        lineNumber: 340,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 342,
+                                                    lineNumber: 339,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4130,7 +4118,7 @@ function ManageEvents() {
                                                                 className: "w-10 h-10 rounded-full"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                                lineNumber: 361,
+                                                                lineNumber: 358,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4141,26 +4129,18 @@ function ManageEvents() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                                lineNumber: 372,
+                                                                lineNumber: 369,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                        lineNumber: 360,
+                                                        lineNumber: 357,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 359,
-                                                    columnNumber: 23
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
-                                                    className: "px-2 py-3 whitespace-nowrap",
-                                                    children: formatEventTypes(event.event_types, event.event_type)
-                                                }, void 0, false, {
-                                                    fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 378,
+                                                    lineNumber: 356,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4168,7 +4148,7 @@ function ManageEvents() {
                                                     children: formatEventCategories(event.event_category_details)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 381,
+                                                    lineNumber: 375,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4176,7 +4156,7 @@ function ManageEvents() {
                                                     children: event.no_of_attendees
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 384,
+                                                    lineNumber: 378,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4192,7 +4172,7 @@ function ManageEvents() {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 385,
+                                                    lineNumber: 379,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4210,7 +4190,7 @@ function ManageEvents() {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 392,
+                                                    lineNumber: 386,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4218,7 +4198,7 @@ function ManageEvents() {
                                                     children: event.event_price
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 407,
+                                                    lineNumber: 401,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4226,7 +4206,7 @@ function ManageEvents() {
                                                     children: event.event_address
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 410,
+                                                    lineNumber: 404,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4236,12 +4216,12 @@ function ManageEvents() {
                                                         children: event?.event_status === 1 || event?.is_approved === 0 ? "Pending" : event?.event_status === 2 || event?.is_approved === 1 ? "Upcoming" : event?.event_status === 3 ? "Completed" : event?.event_status === 4 || event?.is_approved === 2 ? "Rejected" : "N/A"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                        lineNumber: 414,
+                                                        lineNumber: 408,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 413,
+                                                    lineNumber: 407,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4260,12 +4240,12 @@ function ManageEvents() {
                                                                     width: 20
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                                    lineNumber: 435,
+                                                                    lineNumber: 429,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                                lineNumber: 430,
+                                                                lineNumber: 424,
                                                                 columnNumber: 27
                                                             }, this),
                                                             (event?.event_status === 1 || event?.is_approved === 0) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -4278,7 +4258,7 @@ function ManageEvents() {
                                                                         children: processingEventId === event._id ? "..." : "Accept"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                                        lineNumber: 446,
+                                                                        lineNumber: 440,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4289,7 +4269,7 @@ function ManageEvents() {
                                                                         children: processingEventId === event._id ? "..." : "Reject"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                                        lineNumber: 454,
+                                                                        lineNumber: 448,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
@@ -4297,38 +4277,38 @@ function ManageEvents() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                        lineNumber: 429,
+                                                        lineNumber: 423,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                                    lineNumber: 428,
+                                                    lineNumber: 422,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, i, true, {
                                             fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                            lineNumber: 337,
+                                            lineNumber: 334,
                                             columnNumber: 21
                                         }, this)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                         className: "text-center",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
-                                            colSpan: 13,
+                                            colSpan: 12,
                                             className: "pt-2",
                                             children: "No Data Found"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                            lineNumber: 470,
+                                            lineNumber: 464,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                        lineNumber: 469,
+                                        lineNumber: 463,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                                    lineNumber: 328,
+                                    lineNumber: 325,
                                     columnNumber: 15
                                 }, this)
                             ]
@@ -4354,7 +4334,7 @@ function ManageEvents() {
                     itemsPerPage: itemsPerPage
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                    lineNumber: 480,
+                    lineNumber: 474,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Modals$2f$RejectEventModal$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -4368,7 +4348,7 @@ function ManageEvents() {
                     message: `Are you sure you want to reject "${selectedEvent?.event_name}"? Please provide a reason below.`
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/events/page.js",
-                    lineNumber: 489,
+                    lineNumber: 483,
                     columnNumber: 9
                 }, this)
             ]

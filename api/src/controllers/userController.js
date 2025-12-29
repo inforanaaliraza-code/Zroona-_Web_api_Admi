@@ -796,6 +796,10 @@ const UserController = {
 			const { verifyLoginOtp } = require("../helpers/otpSend");
 			await verifyLoginOtp(fullPhoneNumber, otp.toString());
 
+			// Ensure MongoDB connection before database operations
+			const { ensureConnection } = require("../config/database");
+			await ensureConnection();
+
 			// Find user by phone number
 			const User = require("../models/userModel");
 			const Organizer = require("../models/organizerModel");
@@ -1883,11 +1887,40 @@ const UserController = {
 					profile_image: user.profile_image,
 					status: book_event.book_status,
 				};
+				// Send push notification to host
 				sendEventBookingNotification(
 					res,
 					exist_event.organizer_id,
 					notification_data
 				);
+				
+				// Notify admin about new booking (in-app only)
+				try {
+					const AdminService = require("../services/adminService");
+					const admins = await AdminService.FindService({ is_delete: { $ne: 1 } });
+					const lang = req.lang || req.headers["lang"] || "en";
+					const adminTitle = lang === "ar" ? "حجز جديد" : "New Booking";
+					const adminDesc = lang === "ar"
+						? `قام "${user.first_name} ${user.last_name}" بحجز "${exist_event.event_name}".`
+						: `"${user.first_name} ${user.last_name}" has booked "${exist_event.event_name}".`;
+					
+					for (const admin of admins) {
+						await NotificationService.CreateService({
+							user_id: admin._id,
+							role: 3, // Admin role
+							title: adminTitle,
+							description: adminDesc,
+							event_id: book_event.event_id,
+							book_id: book_event._id,
+							notification_type: 1, // Booking type
+							isRead: false,
+						});
+					}
+					console.log(`[NOTIFICATION] Created admin notifications for new booking: ${book_event._id}`);
+				} catch (adminNotifError) {
+					console.error('[NOTIFICATION] Error creating admin notification for booking:', adminNotifError);
+					// Don't fail the request if admin notification fails
+				}
 			}
 
 			return Response.ok(
@@ -2481,31 +2514,69 @@ const UserController = {
 
 			const messages = notificationMessages[lang] || notificationMessages.en;
 
-			// Notify guest
-			await NotificationService.CreateService({
-				user_id: userId,
-				role: 1, // Guest role
-				title: messages.guestTitle,
-				description: messages.guestDesc,
-				event_id: event._id,
-				book_id: book_id,
-				notification_type: 3, // Cancellation type
-				isRead: false,
-			});
+			// Notify guest with push notification
+			try {
+				const { pushNotification } = require("../helpers/pushNotification");
+				const guestNotificationData = {
+					title: messages.guestTitle,
+					description: messages.guestDesc,
+					first_name: user.first_name,
+					last_name: user.last_name,
+					userId: user._id,
+					profile_image: user.profile_image || "",
+					event_id: event._id,
+					book_id: book_id,
+					notification_type: 3, // Cancellation type
+					status: 3, // Cancelled status
+				};
+				await pushNotification(res, 1, userId, guestNotificationData);
+				console.log(`[NOTIFICATION] Sent booking cancellation push notification to guest: ${userId}`);
+			} catch (pushError) {
+				console.error('[PUSH-NOTIFICATION] Error sending push to guest, creating in-app notification:', pushError);
+				await NotificationService.CreateService({
+					user_id: userId,
+					role: 1, // Guest role
+					title: messages.guestTitle,
+					description: messages.guestDesc,
+					event_id: event._id,
+					book_id: book_id,
+					notification_type: 3, // Cancellation type
+					isRead: false,
+				});
+			}
 
-			// Notify host
-			await NotificationService.CreateService({
-				user_id: book_event.organizer_id,
-				role: 2, // Host role
-				title: messages.hostTitle,
-				description: messages.hostDesc,
-				event_id: event._id,
-				book_id: book_id,
-				notification_type: 3, // Cancellation type
-				isRead: false,
-			});
+			// Notify host with push notification
+			try {
+				const { pushNotification } = require("../helpers/pushNotification");
+				const hostNotificationData = {
+					title: messages.hostTitle,
+					description: messages.hostDesc,
+					first_name: organizer.first_name,
+					last_name: organizer.last_name,
+					userId: organizer._id,
+					profile_image: organizer.profile_image || "",
+					event_id: event._id,
+					book_id: book_id,
+					notification_type: 3, // Cancellation type
+					status: 3, // Cancelled status
+				};
+				await pushNotification(res, 2, book_event.organizer_id, hostNotificationData);
+				console.log(`[NOTIFICATION] Sent booking cancellation push notification to host: ${book_event.organizer_id}`);
+			} catch (pushError) {
+				console.error('[PUSH-NOTIFICATION] Error sending push to host, creating in-app notification:', pushError);
+				await NotificationService.CreateService({
+					user_id: book_event.organizer_id,
+					role: 2, // Host role
+					title: messages.hostTitle,
+					description: messages.hostDesc,
+					event_id: event._id,
+					book_id: book_id,
+					notification_type: 3, // Cancellation type
+					isRead: false,
+				});
+			}
 
-			// Notify admin
+			// Notify admin (in-app only, no push needed)
 			const AdminService = require("../services/adminService");
 			const admins = await AdminService.FindService({ is_delete: { $ne: 1 } });
 			for (const admin of admins) {
@@ -3099,11 +3170,34 @@ const UserController = {
 					);
 
 					if (daftraResponse && daftraResponse.id) {
+						// Clean subdomain (remove .daftra.com if present) - use the same function as DaftraService
+						let cleanSubdomain = daftraSubdomain
+							.replace(/^https?:\/\//i, '')
+							.replace(/\.daftra\.com.*$/i, '')
+							.replace(/\/$/, '')
+							.trim();
+						
+						console.log(`[RECEIPT] Cleaned subdomain: "${cleanSubdomain}" from "${daftraSubdomain}"`);
+						
 						// Save invoice/receipt to guest booking record so they can access it
+						// Try multiple URL formats in order of preference
 						const invoiceUrl = daftraResponse.receipt_pdf_url || 
 							daftraResponse.pdf_url || 
-							daftraResponse.invoice_pdf_url || 
-							`https://${daftraSubdomain}.daftra.com/receipts/${daftraResponse.id}/pdf`;
+							daftraResponse.invoice_pdf_url ||
+							`https://${cleanSubdomain}.daftra.com/invoices/${daftraResponse.id}/pdf`;
+						
+						console.log(`[RECEIPT] Generated invoice URL: ${invoiceUrl}`);
+						console.log(`[RECEIPT] Invoice ID: ${daftraResponse.id}`);
+						console.log(`[RECEIPT] Invoice verified: ${daftraResponse.verified ? 'Yes' : 'No'}`);
+						
+						// Test if invoice URL is accessible (optional verification)
+						try {
+							const testResponse = await axios.head(invoiceUrl, { timeout: 5000 });
+							console.log(`[RECEIPT] Invoice URL is accessible: ${testResponse.status}`);
+						} catch (urlTestError) {
+							console.warn(`[RECEIPT] Invoice URL might not be accessible yet: ${urlTestError.message}`);
+							console.warn(`[RECEIPT] This is normal - invoice PDF may take a few seconds to generate in Daftra`);
+						}
 						
 						// Save invoice to booking record (guest can access)
 						updatedBooking.invoice_id = daftraResponse.id;
@@ -3232,10 +3326,22 @@ const UserController = {
 				}
 			}
 
-			// Add user to group chat if event is approved and payment is successful
+			// Add user to group chat ONLY after payment is successful
+			// This ensures guests can only join group chat after they've paid
 			if (event && event.is_approved === 1 && payment_status === 1) {
 				try {
-					const groupChat = await ConversationService.GetGroupChatByEventService(event._id);
+					// Check if event is approved and has a group chat
+					let groupChat = await ConversationService.GetGroupChatByEventService(event._id);
+					
+					// If group chat doesn't exist, create it
+					if (!groupChat) {
+						console.log(`[GROUP-CHAT] Creating group chat for event: ${event.event_name} (Payment successful)`);
+						groupChat = await ConversationService.CreateGroupChatService(
+							event._id,
+							event.organizer_id,
+							event.event_name
+						);
+					}
 					
 					if (groupChat) {
 						// Add paying guest to group chat
@@ -3245,8 +3351,80 @@ const UserController = {
 							1 // Role: User/Guest
 						);
 						console.log(`[GROUP-CHAT] Added user ${bookingDetails.user_id} to group chat for event: ${event.event_name} (Payment successful)`);
+						
+						// Get user and organizer details for welcome message
+						const guestName = user ? `${user.first_name} ${user.last_name}` : "Guest";
+						const organizerName = organizer ? `${organizer.first_name} ${organizer.last_name}` : "Host";
+						
+						// Send welcome message to group chat
+						try {
+							const MessageService = require("../services/messageService");
+							const userLang = user.language || req.lang || "en";
+							const welcomeMessage = userLang === "ar" 
+								? `تم إضافة ${guestName} إلى محادثة المجموعة بعد إتمام الدفع. مرحباً بك!`
+								: `${guestName} has been added to the group chat after completing payment. Welcome!`;
+							
+							await MessageService.CreateService({
+								conversation_id: groupChat._id,
+								sender_id: organizer._id,
+								sender_role: 2, // Organizer
+								message: welcomeMessage,
+								message_type: "text",
+							});
+							
+							// Update conversation last message
+							await ConversationService.FindByIdAndUpdateService(groupChat._id, {
+								last_message: welcomeMessage,
+								last_message_at: new Date(),
+								last_sender_id: organizer._id,
+								last_sender_role: 2,
+							});
+							
+							// Send notification to guest about being added to group chat
+							try {
+								const { sendEventBookingAcceptNotification } = require("../helpers/pushNotification");
+								const groupChatNotification = {
+									title: userLang === "ar" ? "تمت إضافتك إلى محادثة المجموعة" : "Added to Group Chat",
+									description: userLang === "ar" 
+										? `تمت إضافتك إلى محادثة المجموعة لحدث "${event.event_name}" بعد إتمام الدفع. يمكنك الآن التواصل مع المشاركين الآخرين.`
+										: `You've been added to the group chat for "${event.event_name}" after completing payment. You can now communicate with other participants.`,
+									first_name: organizer.first_name,
+									last_name: organizer.last_name,
+									profile_image: organizer.profile_image || "",
+									userId: organizer._id,
+									event_id: event._id,
+									book_id: booking_id,
+									notification_type: 5, // Group chat notification type
+									status: 2, // Paid status
+								};
+								
+								// Create in-app notification
+								await NotificationService.CreateService({
+									user_id: bookingDetails.user_id,
+									role: 1, // User/Guest role
+									title: groupChatNotification.title,
+									description: groupChatNotification.description,
+									isRead: false,
+									notification_type: 5, // Group chat notification
+									event_id: event._id,
+									book_id: booking_id,
+									profile_image: organizer.profile_image || "",
+									username: `${organizer.first_name} ${organizer.last_name}`,
+									senderId: organizer._id,
+								});
+								
+								// Send push notification
+								await sendEventBookingAcceptNotification(res, bookingDetails.user_id, groupChatNotification);
+								
+								console.log(`[NOTIFICATION] Sent group chat notification to user ${bookingDetails.user_id} after payment`);
+							} catch (groupNotificationError) {
+								console.error('[NOTIFICATION] Error sending group chat notification:', groupNotificationError);
+							}
+						} catch (messageError) {
+							console.error('[GROUP-CHAT] Error sending welcome message:', messageError);
+						}
 					} else {
-						console.log(`[GROUP-CHAT] Group chat not found for event: ${event.event_name} - User will be added when organizer approves booking`);
+						console.log(`[GROUP-CHAT] Failed to create or find group chat for event: ${event.event_name}`);
 					}
 				} catch (groupChatError) {
 					console.error('[GROUP-CHAT] Error adding participant to group chat after payment:', groupChatError);
@@ -3259,20 +3437,41 @@ const UserController = {
 				const userLang = user.language || req.lang || "en";
 				const organizerLang = organizer.language || req.lang || "en";
 				
-				// Notify the guest about successful payment
-				await NotificationService.CreateService({
-					user_id: bookingDetails.user_id,
-					role: 1, // User/Guest role
-					title: userLang === "ar" ? "تم الدفع بنجاح" : "Payment Successful",
-					description: userLang === "ar" 
-						? `تم معالجة دفعتك لـ "${event.event_name}" بنجاح.`
-						: `Your payment for "${event.event_name}" has been processed successfully.`,
-					event_id: event._id,
-					book_id: booking_id,
-					notification_type: 2, // Payment success type
-					status: 2, // Approved status
-					isRead: false,
-				});
+				// Notify the guest about successful payment with push notification
+				try {
+					const { sendEventBookingAcceptNotification } = require("../helpers/pushNotification");
+					const guestNotificationData = {
+						title: userLang === "ar" ? "تم الدفع بنجاح" : "Payment Successful",
+						description: userLang === "ar" 
+							? `تم معالجة دفعتك لـ "${event.event_name}" بنجاح.`
+							: `Your payment for "${event.event_name}" has been processed successfully.`,
+						first_name: user.first_name,
+						last_name: user.last_name,
+						userId: user._id,
+						profile_image: user.profile_image || "",
+						event_id: event._id,
+						book_id: booking_id,
+						notification_type: 2, // Payment success type
+						status: 2, // Approved status
+					};
+					await sendEventBookingAcceptNotification(res, bookingDetails.user_id, guestNotificationData);
+					console.log(`[NOTIFICATION] Sent payment success push notification to guest: ${bookingDetails.user_id}`);
+				} catch (pushError) {
+					console.error('[PUSH-NOTIFICATION] Error sending push to guest, creating in-app notification:', pushError);
+					await NotificationService.CreateService({
+						user_id: bookingDetails.user_id,
+						role: 1, // User/Guest role
+						title: userLang === "ar" ? "تم الدفع بنجاح" : "Payment Successful",
+						description: userLang === "ar" 
+							? `تم معالجة دفعتك لـ "${event.event_name}" بنجاح.`
+							: `Your payment for "${event.event_name}" has been processed successfully.`,
+						event_id: event._id,
+						book_id: booking_id,
+						notification_type: 2, // Payment success type
+						status: 2, // Approved status
+						isRead: false,
+					});
+				}
 
 				// Notify the organizer/host about new payment
 				const organizerNotificationData = {

@@ -6,14 +6,15 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 
 // Helper functions for booking status
+// Backend status mapping: 1 = Pending, 2 = Approved/Confirmed, 3 = Cancelled, 4 = Rejected
 const getBookingStatusLabel = (status, t) => {
 	switch (status) {
 		case 0:
 			return t("eventsMain.pending") || "Pending";
 		case 1:
-			return t("eventsMain.approved") || "Approved";
+			return t("eventsMain.pending") || "Pending"; // Waiting for host approval
 		case 2:
-			return t("eventsMain.confirmed") || "Confirmed";
+			return t("eventsMain.approved") || "Approved"; // Host approved, can pay
 		case 3:
 			return t("eventsMain.cancelled") || "Cancelled";
 		case 4:
@@ -132,12 +133,35 @@ export default function BookingDetails({
 
 	if (!booking) return null;
 
-	// Check if payment button should be shown (only for approved status=2, not paid yet)
-	// Status mapping: 1=Pending, 2=Approved/Confirmed, 3=Cancelled, 4=Rejected
-	// CRITICAL: Payment button only shows when host has approved (book_status = 2) AND payment not done yet
-	const showPaymentButton =
-		booking.book_status === 2 &&
-		(booking.payment_status === 0 || booking.payment_status === undefined);
+	// Check if payment button should be shown
+	// Backend status mapping: 1=Pending, 2=Approved/Confirmed, 3=Cancelled, 4=Rejected
+	// Payment button shows when: booking is pending (1) OR approved (2) AND payment is not completed
+	const bookStatus = booking.book_status;
+	const paymentStatus = booking.payment_status;
+	
+	// Payment button shows for: pending (1) or approved (2) bookings that are unpaid
+	const isPendingOrApproved = bookStatus === 1 || bookStatus === 2;
+	const isUnpaid = paymentStatus === 0 || paymentStatus === null || paymentStatus === undefined || paymentStatus === false || !paymentStatus;
+	const isApproved = bookStatus === 2;
+	
+	// Show button for pending or approved bookings that are unpaid
+	const showPaymentButton = isPendingOrApproved && isUnpaid;
+	
+	// Debug logging
+	console.log('[BOOKING-DETAILS] Payment button check:', {
+		bookStatus,
+		paymentStatus,
+		isPendingOrApproved,
+		isApproved,
+		isUnpaid,
+		showPaymentButton,
+		booking: {
+			_id: booking._id,
+			order_id: booking.order_id,
+			book_status: booking.book_status,
+			payment_status: booking.payment_status
+		}
+	});
 
 	// Check if cancel button should be shown (only for approved (2) bookings, not pending (1))
 	const showCancelButton = booking.book_status === 2 && booking.book_status !== 3;
@@ -260,32 +284,84 @@ export default function BookingDetails({
 				{/* Payment Status - Only show for approved/confirmed bookings with payment status */}
 				{(booking.book_status === 1 || booking.book_status === 2) &&
 					booking.payment_status !== undefined && (
-						<div className="flex justify-between items-center p-4 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 shadow-sm">
-							<div className="flex items-center gap-3">
-								<Icon
-									icon={getPaymentStatusIcon(
-										booking.payment_status
+						<div className={`p-4 rounded-xl border shadow-sm ${
+							showPaymentButton 
+								? "bg-gradient-to-br from-blue-50 via-[#a797cc]/10 to-orange-50 border-2 border-[#a797cc]/30" 
+								: "bg-gradient-to-br from-green-50 to-green-100/50 border border-green-200/50"
+						}`}>
+							<div className="flex justify-between items-center mb-3">
+								<div className="flex items-center gap-3">
+									<Icon
+										icon={getPaymentStatusIcon(
+											booking.payment_status
+										)}
+										className={`w-5 h-5 ${getPaymentStatusColor(
+											booking.payment_status
+										)}`}
+									/>
+									<span className="text-sm font-semibold text-gray-700">
+										{getTranslation(t, "events.paymentStatus", "Payment Status")}
+									</span>
+								</div>
+								<span
+									className={`px-3 py-1.5 font-bold rounded-lg ${
+										booking.payment_status === 1
+											? "bg-green-100 text-green-700 border border-green-300"
+											: "bg-blue-100 text-blue-700 border border-blue-300"
+									}`}
+								>
+									{getPaymentStatusLabel(
+										booking.payment_status,
+										t
 									)}
-									className={`w-5 h-5 ${getPaymentStatusColor(
-										booking.payment_status
-									)}`}
-								/>
-								<span className="text-sm font-semibold text-gray-700">
-									{getTranslation(t, "events.paymentStatus", "Payment Status")}
 								</span>
 							</div>
-							<span
-								className={`px-3 py-1.5 font-bold rounded-lg ${
-									booking.payment_status === 1
-										? "bg-green-100 text-green-700 border border-green-300"
-										: "bg-blue-100 text-blue-700 border border-blue-300"
-								}`}
-							>
-								{getPaymentStatusLabel(
-									booking.payment_status,
-									t
-								)}
-							</span>
+							
+							{/* Payment Button - Show prominently right below payment status if pending/approved and unpaid */}
+							{showPaymentButton && (
+								<div className="mt-4 pt-4 border-t-2 border-[#a797cc]/20">
+									{isApproved ? (
+										// Approved booking - show active payment button
+										<>
+											<Button
+												onClick={onInitiatePayment}
+												className="w-full text-white text-lg font-bold h-16 rounded-xl bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#a797cc] transition-all duration-300 flex items-center justify-center shadow-xl hover:shadow-2xl hover:scale-[1.02] transform"
+											>
+												<span className="inline-flex justify-center items-center gap-3">
+													<Icon
+														icon="lucide:credit-card"
+														className="w-7 h-7"
+													/>
+													{getTranslation(t, "events.bookNow", "Book Now & Pay")}
+												</span>
+											</Button>
+											<p className="text-xs text-center text-gray-500 mt-2">
+												{getTranslation(t, "events.clickToPay", "Click to proceed with secure payment")}
+											</p>
+										</>
+									) : (
+										// Pending booking - show disabled button with message
+										<>
+											<Button
+												onClick={onInitiatePayment}
+												disabled={true}
+												className="w-full text-white text-lg font-bold h-16 rounded-xl bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed transition-all duration-300 flex items-center justify-center shadow-lg opacity-75"
+											>
+												<span className="inline-flex justify-center items-center gap-3">
+													<Icon
+														icon="lucide:clock"
+														className="w-7 h-7"
+													/>
+													{getTranslation(t, "events.waitingForApproval", "Waiting for Host Approval")}
+												</span>
+											</Button>
+											<p className="text-xs text-center text-orange-600 mt-2 font-medium">
+												{getTranslation(t, "events.approvalRequired", "Payment will be available after host approves your booking")}
+											</p>
+										</>
+									)}
+								</div>
+							)}
 						</div>
 					)}
 

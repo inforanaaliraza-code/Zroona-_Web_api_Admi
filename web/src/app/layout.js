@@ -12,10 +12,87 @@ import { ibmPlexSansArabic, poppins, tajawal } from "@/lib/fonts";
 import Script from "next/script";
 import RTLHandler from "@/components/RTLHandler/RTLHandler";
 
-export default function RootLayout({ children }) {
+// Dynamic ToastContainer that respects RTL/LTR
+// This component must be inside I18nextProvider to use useTranslation
+function DynamicToastContainer() {
+  // We'll use a simple approach - get language from localStorage or default
+  const getIsRTL = () => {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      try {
+        const lang = localStorage.getItem("i18nextLng") || "ar";
+        return lang === "ar";
+      } catch (e) {
+        return true; // Default to RTL
+      }
+    }
+    return true; // Default to RTL
+  };
+  
+  const isRTL = getIsRTL();
+  
   return (
-    <html lang="ar" dir="rtl" className={`${ibmPlexSansArabic.variable} ${poppins.variable} ${tajawal.variable}`} suppressHydrationWarning>
+    <ToastContainer 
+      position={isRTL ? "top-left" : "top-right"}
+      autoClose={3000}
+      rtl={isRTL}
+    />
+  );
+}
+
+// Client component to get initial language for HTML attributes
+function getInitialLanguage() {
+  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+    try {
+      const stored = localStorage.getItem("i18nextLng");
+      if (stored && (stored === "ar" || stored === "en")) {
+        return stored;
+      }
+    } catch (error) {
+      // Ignore errors
+    }
+  }
+  return "ar"; // Default
+}
+
+export default function RootLayout({ children }) {
+  // Get initial language for SSR (will be updated by RTLHandler on client)
+  const initialLang = typeof window !== "undefined" ? getInitialLanguage() : "ar";
+  const initialDir = initialLang === "ar" ? "rtl" : "ltr";
+  
+  return (
+    <html lang={initialLang} dir={initialDir} className={`${ibmPlexSansArabic.variable} ${poppins.variable} ${tajawal.variable}`} suppressHydrationWarning>
       <head>
+        {/* Initialize language and direction BEFORE React hydration to prevent flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var lang = 'ar';
+                  if (typeof localStorage !== 'undefined') {
+                    var stored = localStorage.getItem('i18nextLng');
+                    if (stored === 'ar' || stored === 'en') {
+                      lang = stored;
+                    } else {
+                      localStorage.setItem('i18nextLng', 'ar');
+                    }
+                  }
+                  var isRTL = lang === 'ar';
+                  if (document.documentElement) {
+                    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+                    document.documentElement.setAttribute('lang', lang);
+                  }
+                } catch (e) {
+                  // Fallback to Arabic RTL
+                  if (document.documentElement) {
+                    document.documentElement.setAttribute('dir', 'rtl');
+                    document.documentElement.setAttribute('lang', 'ar');
+                  }
+                }
+              })();
+            `,
+          }}
+        />
         <title>Zuroona - Your Event Platform</title>
         <link rel="icon" type="image/png" href="/assets/images/x_F_logo.png" />
         <link rel="shortcut icon" type="image/png" href="/assets/images/x_F_logo.png" />
@@ -34,6 +111,18 @@ export default function RootLayout({ children }) {
           onLoad={() => {
             if (typeof window !== 'undefined') {
               window.MoyasarReady = true;
+              console.log('[MOYASAR] Script loaded successfully');
+              if (window.Moyasar) {
+                console.log('[MOYASAR] Moyasar object available');
+              } else {
+                console.warn('[MOYASAR] Script loaded but Moyasar object not found');
+              }
+            }
+          }}
+          onError={() => {
+            console.error('[MOYASAR] Failed to load script');
+            if (typeof window !== 'undefined') {
+              window.MoyasarLoadError = true;
             }
           }}
         />
@@ -55,11 +144,7 @@ export default function RootLayout({ children }) {
           }>
             <I18nextProvider i18n={i18n}>
               <RTLHandler />
-              <ToastContainer 
-                position="top-right" 
-                autoClose={3000}
-                rtl={true}
-              />
+              <DynamicToastContainer />
               {children}
             </I18nextProvider>
           </Suspense>

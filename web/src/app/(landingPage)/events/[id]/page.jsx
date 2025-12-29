@@ -478,10 +478,18 @@ export default function EventDetailsPage() {
 				});
 
 			if (response.status) {
-				toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully"));
+				toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully! You have been added to the event group chat."));
 				// Refresh the event details to show updated payment status
 				const updatedEvent = await GetEventDetails(params.id);
-				setEvent(updatedEvent.data);
+				if (updatedEvent && updatedEvent.data) {
+					setEvent(updatedEvent.data);
+				}
+				// Close the modal after successful payment
+				setIsBookingModalOpen(false);
+				// Optionally redirect to messaging to show group chat
+				// setTimeout(() => {
+				// 	window.location.href = `/messaging?event_id=${event._id}`;
+				// }, 2000);
 			} else {
 				console.error("Payment failed:", response.message);
 				toast.error(response.message || getTranslation(t, "events.paymentFailed", "Payment failed. Please try again"));

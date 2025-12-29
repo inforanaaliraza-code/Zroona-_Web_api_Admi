@@ -16,7 +16,7 @@ const commonController = require("./controllers/commonController");
 const autoCloseGroupChats = require("./scripts/autoCloseGroupChats.js");
 const updateCompletedBookings = require("./scripts/updateCompletedBookings.js");
 const autoCancelUnpaidBookings = require("./scripts/autoCancelUnpaidBookings.js");
-const createTestUsers = require("./scripts/createTestUsers.js");
+// const createTestUsers = require("./scripts/createTestUsers.js"); // Disabled - run manually with: npm run script:create-users
 const initSentry = require("./config/sentry.js");
 const logger = require("./helpers/logger.js");
 
@@ -38,12 +38,14 @@ const port = process.env.PORT || 3000;
 // This is more secure than setting it to true, which trusts all proxies
 app.set("trust proxy", 1);
 
-// CORS configuration
+// CORS configuration - MUST be before all other middleware
 const allowedOrigins = [
 	"http://localhost:3000",
 	"http://localhost:3001",
+	"http://localhost:3434",
 	"http://127.0.0.1:3000",
 	"http://127.0.0.1:3001",
+	"http://127.0.0.1:3434",
 	process.env.FRONTEND_URL,
 	process.env.ADMIN_URL,
 ].filter(Boolean); // Remove undefined values
@@ -51,22 +53,20 @@ const allowedOrigins = [
 const corsOptions = {
 	origin: function (origin, callback) {
 		// Allow requests with no origin (like mobile apps, Postman, or curl)
-		if (!origin) return callback(null, true);
-		
-		// Allow all origins in development, or check against allowed list
-		if (process.env.NODE_ENV === 'development' || allowedOrigins.length === 0) {
+		if (!origin) {
 			return callback(null, true);
 		}
 		
+		// Allow all origins in development (not production)
+		if (process.env.NODE_ENV !== 'production') {
+			return callback(null, true);
+		}
+		
+		// Check against allowed list in production
 		if (allowedOrigins.indexOf(origin) !== -1) {
 			callback(null, true);
 		} else {
-			// In development, allow all origins
-			if (process.env.NODE_ENV === 'development') {
-				callback(null, true);
-			} else {
-				callback(new Error('Not allowed by CORS'));
-			}
+			callback(new Error('Not allowed by CORS'));
 		}
 	},
 	methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -78,17 +78,27 @@ const corsOptions = {
 		"Accept",
 		"Origin",
 		"X-Requested-With",
+		"X-CSRF-Token",
 	],
 	credentials: true,
 	optionsSuccessStatus: 200,
 	preflightContinue: false,
+	maxAge: 86400, // 24 hours
 };
 
-app.use(cors(corsOptions));
+// Apply CORS middleware FIRST - before any other middleware (including helmet)
+	app.use(cors(corsOptions));
 
-// Handle OPTIONS requests explicitly (preflight)
-app.options("*", cors(corsOptions), (req, res) => {
-	res.sendStatus(200);
+// Add a simple health check endpoint before other middleware
+app.get("/api/health", (req, res) => {
+	res.json({
+		status: 1,
+		message: "Server is running",
+		data: {
+			timestamp: new Date().toISOString(),
+			uptime: process.uptime(),
+		},
+	});
 });
 
 // File upload middleware - MUST be before any body parsers
@@ -163,19 +173,7 @@ app.use((req, res, next) => {
 // Enhanced Security headers
 app.use(
 	helmet({
-		contentSecurityPolicy: {
-			directives: {
-				defaultSrc: ["'self'"],
-				styleSrc: ["'self'", "'unsafe-inline'"],
-				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Adjust for production
-				imgSrc: ["'self'", "data:", "https:"],
-				connectSrc: ["'self'"],
-				fontSrc: ["'self'", "data:"],
-				objectSrc: ["'none'"],
-				mediaSrc: ["'self'"],
-				frameSrc: ["'none'"],
-			},
-		},
+		contentSecurityPolicy: false, // Disable CSP for API (CORS handles cross-origin)
 		crossOriginEmbedderPolicy: false, // Disable for API compatibility
 		crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow cross-origin resources
 		crossOriginOpenerPolicy: false, // Disable for API compatibility
@@ -295,14 +293,39 @@ process.on("uncaughtException", (err) => {
 });
 
 // Handle unhandled promise rejections
-process.on("unhandledRejection", (err) => {
+process.on("unhandledRejection", (err, promise) => {
 	console.error("Unhandled Rejection:", err);
+	console.error("Promise:", promise);
+	
+	// Log error details
+	if (err?.http_code) {
+		console.error(`HTTP Code: ${err.http_code}, Name: ${err.name || 'Unknown'}`);
+	}
+	if (err?.stack) {
+		console.error("Stack trace:", err.stack);
+	}
+	
 	// Capture rejection in Sentry if initialized
 	if (process.env.SENTRY_DSN || process.env.NODE_ENV === 'production') {
 		const Sentry = require("@sentry/node");
 		Sentry.captureException(err);
 	}
-	process.exit(1);
+	
+	// Only exit in production for critical errors
+	// In development, log and continue to allow debugging
+	if (process.env.NODE_ENV === 'production') {
+		// For timeout errors, don't crash - just log
+		if (err?.http_code === 499 || err?.name === 'TimeoutError') {
+			console.error("⚠️ Timeout error detected - server will continue running");
+			return;
+		}
+		// For other critical errors in production, exit
+		console.error("❌ Critical unhandled rejection - exiting process");
+		process.exit(1);
+	} else {
+		// In development, just log the error
+		console.error("⚠️ Unhandled rejection in development - server will continue");
+	}
 });
 
 // Start the application
@@ -365,15 +388,15 @@ if (process.env.ENABLE_AUTO_CANCEL_UNPAID_BOOKINGS !== 'false') {
     console.log('[AUTO-CANCEL-UNPAID] Scheduled task enabled - will run every hour');
 }
 
-// Create test users on startup (for development/testing)
-if (process.env.CREATE_TEST_USERS === 'true' || process.env.NODE_ENV === 'development') {
-    setTimeout(() => {
-        createTestUsers().catch(err => {
-            console.error('[TEST-USERS] Error creating test users:', err);
-        });
-    }, 15000); // After 15 seconds to ensure DB is connected
-    
-    console.log('[TEST-USERS] Test users will be created on startup');
-}
+// Create test users on startup (DISABLED - run manually with: npm run script:create-users)
+// if (process.env.CREATE_TEST_USERS === 'true' || process.env.NODE_ENV === 'development') {
+//     setTimeout(() => {
+//         createTestUsers().catch(err => {
+//             console.error('[TEST-USERS] Error creating test users:', err);
+//         });
+//     }, 15000); // After 15 seconds to ensure DB is connected
+//     
+//     console.log('[TEST-USERS] Test users will be created on startup');
+// }
 
 module.exports = app;

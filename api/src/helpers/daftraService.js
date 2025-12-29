@@ -404,10 +404,38 @@ const DaftraService = {
 				);
 
 				const invoiceId = invoiceResponse.data?.id || invoiceResponse.data?.Invoice?.id;
+				
+				if (!invoiceId) {
+					logger.error(`Invoice created but no ID returned. Response: ${JSON.stringify(invoiceResponse.data)}`);
+					throw new Error("Invoice created but no ID returned from Daftra");
+				}
+				
+				// Verify invoice exists by fetching it
+				let verifiedInvoice = null;
+				try {
+					const verifyResponse = await axios.get(
+						`https://${subdomain}.daftra.com/api2/invoices/${invoiceId}`,
+						{
+							headers,
+							timeout: 10000,
+						}
+					);
+					verifiedInvoice = verifyResponse.data;
+					logger.success(`Invoice verified: ${invoiceId}`);
+				} catch (verifyError) {
+					logger.warn(`Could not verify invoice ${invoiceId}: ${verifyError.message}`);
+					// Continue anyway - invoice might still be valid
+				}
+				
+				// Daftra PDF URL format: https://subdomain.daftra.com/invoices/{id}/pdf
+				// Note: Daftra uses /invoices/ for PDF access, not /api2/invoices/
 				const invoicePdfUrl = `https://${subdomain}.daftra.com/invoices/${invoiceId}/pdf`;
 
 				logger.success(`Invoice created successfully: ${invoiceId}`);
 				logger.success(`Invoice PDF URL: ${invoicePdfUrl}`);
+				
+				// Log full response for debugging
+				logger.debug(`Full Daftra response: ${JSON.stringify(invoiceResponse.data)}`);
 
 				return {
 					id: invoiceId,
@@ -415,6 +443,7 @@ const DaftraService = {
 					pdf_url: invoicePdfUrl,
 					receipt_pdf_url: invoicePdfUrl,
 					invoice_url: invoicePdfUrl,
+					verified: !!verifiedInvoice,
 					...invoiceResponse.data,
 				};
 			} catch (invoiceError) {

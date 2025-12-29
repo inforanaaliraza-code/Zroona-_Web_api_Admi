@@ -1,1 +1,7 @@
-{}
+{
+  "/page": "app/page.js",
+  "/adminsa111xyz/page": "app/adminsa111xyz/page.js",
+  "/(AfterLogin)/organizer/page": "app/(AfterLogin)/organizer/page.js",
+  "/(AfterLogin)/events/page": "app/(AfterLogin)/events/page.js",
+  "/(AfterLogin)/events/detail/[id]/page": "app/(AfterLogin)/events/detail/[id]/page.js"
+}

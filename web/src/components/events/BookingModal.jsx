@@ -110,33 +110,62 @@ export default function BookingModal({
 		try {
 			const moyasar = window.Moyasar;
 			if (!moyasar) {
-				console.error("Moyasar not loaded");
-				toast.error(getTranslation(t, "events.paymentInitError", "Error initializing payment"));
+				console.error("[PAYMENT-FORM] Moyasar not loaded");
+				toast.error(getTranslation(t, "events.paymentInitError", "Payment gateway not loaded. Please refresh and try again."));
 				return;
 			}
 
 			// Get current language (don't modify document - let RTLHandler handle it)
 			const currentLang = i18n.language || "ar";
 
-			// Safely clear previous form only if element is still in DOM
-			if (moyasarFormRef.current && moyasarFormRef.current.parentNode) {
-				try {
-					moyasarFormRef.current.innerHTML = "";
-				} catch (error) {
-					console.warn("Error clearing Moyasar form:", error);
-					return;
-				}
-			} else {
+			// Validate API key
+			const apiKey = process.env.NEXT_PUBLIC_MOYASAR_KEY;
+			if (!apiKey) {
+				console.error("[PAYMENT-FORM] Moyasar API key not configured");
+				toast.error(getTranslation(t, "events.paymentInitError", "Payment gateway configuration error. Please contact support."));
 				return;
 			}
 
+			// Validate form element
+			if (!moyasarFormRef.current || !moyasarFormRef.current.parentNode) {
+				console.error("[PAYMENT-FORM] Form element not ready");
+				return;
+			}
+
+			// Safely clear previous form only if element is still in DOM
+			try {
+				moyasarFormRef.current.innerHTML = "";
+				console.log("[PAYMENT-FORM] Cleared previous form content");
+			} catch (error) {
+				console.warn("[PAYMENT-FORM] Error clearing form:", error);
+				return;
+			}
+
+			// Validate amount
+			if (!totalAmount || totalAmount <= 0) {
+				console.error("[PAYMENT-FORM] Invalid amount:", totalAmount);
+				toast.error(getTranslation(t, "events.invalidAmount", "Invalid payment amount. Please contact support."));
+				return;
+			}
+
+			const amountInHalala = Math.round(totalAmount * 100); // Convert to halala (smallest currency unit)
+			const callbackUrl = `${window.location.origin}/events/${event?._id}?booking_id=${event?.booked_event?._id}&status=paid`;
+
+			console.log("[PAYMENT-FORM] Initializing Moyasar with:", {
+				amount: amountInHalala,
+				currency: "SAR",
+				callbackUrl,
+				apiKey: apiKey.substring(0, 10) + "...", // Log partial key for debugging
+				language: currentLang
+			});
+
 			moyasar.init({
 				element: moyasarFormRef.current,
-				amount: totalAmount * 100, // Convert to halala (smallest currency unit)
+				amount: amountInHalala,
 				currency: "SAR",
-				callback_url: `${window.location.origin}/events/${event?._id}?booking_id=${event?.booked_event?._id}`,
+				callback_url: callbackUrl,
 				description: `${getTranslation(t, "events.bookEvent", "Booking for")} ${event?.event_name || getTranslation(t, "events.eventDetails", "Event")}`,
-				publishable_api_key: process.env.NEXT_PUBLIC_MOYASAR_KEY,
+				publishable_api_key: apiKey,
 				methods: ["creditcard"],
 				language: currentLang, // Set language for Moyasar form
 				// Optimize 3DS authentication
@@ -157,26 +186,28 @@ export default function BookingModal({
 					],
 				},
 				on_failed: (error) => {
-					console.error("Payment failed:", error);
+					console.error("[PAYMENT-FORM] Payment failed:", error);
 					toast.error(getTranslation(t, "events.paymentFailed", "Payment failed. Please try again."));
 					setIsLoading(false);
 				},
 				on_completed: async function (payment) {
-					console.log("Payment completed:", payment);
+					console.log("[PAYMENT-FORM] Payment completed:", payment);
 					setIsLoading(true);
 					try {
 						await handlePaymentCompleted(payment);
 					} catch (error) {
-						console.error("Error handling payment completion:", error);
+						console.error("[PAYMENT-FORM] Error handling payment completion:", error);
 						toast.error(getTranslation(t, "events.paymentProcessingError", "Error processing payment. Please contact support."));
 					} finally {
 						setIsLoading(false);
 					}
 				},
 			});
+
+			console.log("[PAYMENT-FORM] Moyasar form initialized successfully");
 		} catch (error) {
-			console.error("Payment initialization error:", error);
-			toast.error(getTranslation(t, "events.paymentInitError", "Error initializing payment"));
+			console.error("[PAYMENT-FORM] Payment initialization error:", error);
+			toast.error(getTranslation(t, "events.paymentInitError", "Error initializing payment. Please refresh and try again."));
 			setStep("details");
 		}
 	}, [totalAmount, event?.event_name, t, event?.booked_event?._id, i18n.language, handlePaymentCompleted]);
@@ -187,49 +218,108 @@ export default function BookingModal({
 			return;
 		}
 
+		console.log('[PAYMENT-MODAL] Payment step activated, initializing Moyasar...');
+		console.log('[PAYMENT-MODAL] Moyasar available:', !!window.Moyasar);
+		console.log('[PAYMENT-MODAL] MoyasarReady:', !!window.MoyasarReady);
+		console.log('[PAYMENT-MODAL] Form ref:', !!moyasarFormRef.current);
+		console.log('[PAYMENT-MODAL] Total amount:', totalAmount);
+		console.log('[PAYMENT-MODAL] API Key:', process.env.NEXT_PUBLIC_MOYASAR_KEY ? 'Present' : 'Missing');
+
+		// Function to load Moyasar script if not already loaded
+		const loadMoyasarScript = () => {
+			return new Promise((resolve, reject) => {
+				// Check if already loaded
+				if (window.Moyasar) {
+					console.log('[PAYMENT-MODAL] Moyasar already loaded');
+					resolve();
+					return;
+				}
+
+				// Check if script is already in DOM
+				const existingScript = document.querySelector('script[src*="moyasar"]');
+				if (existingScript) {
+					console.log('[PAYMENT-MODAL] Moyasar script tag found, waiting for load...');
+					// Wait for it to load
+					existingScript.onload = () => {
+						if (window.Moyasar) {
+							console.log('[PAYMENT-MODAL] Moyasar loaded from existing script');
+							resolve();
+						} else {
+							reject(new Error('Moyasar script loaded but window.Moyasar not available'));
+						}
+					};
+					existingScript.onerror = () => reject(new Error('Failed to load Moyasar script'));
+					return;
+				}
+
+				// Load script dynamically
+				console.log('[PAYMENT-MODAL] Loading Moyasar script dynamically...');
+				const script = document.createElement('script');
+				script.src = 'https://cdn.moyasar.com/mpf/1.15.0/moyasar.js';
+				script.async = true;
+				script.onload = () => {
+					if (window.Moyasar) {
+						console.log('[PAYMENT-MODAL] Moyasar script loaded successfully');
+						window.MoyasarReady = true;
+						resolve();
+					} else {
+						reject(new Error('Moyasar script loaded but window.Moyasar not available'));
+					}
+				};
+				script.onerror = () => reject(new Error('Failed to load Moyasar script'));
+				document.body.appendChild(script);
+			});
+		};
+
 		// Check if Moyasar is ready, if not wait for it
-		const initForm = () => {
-			if (moyasarFormRef.current && moyasarFormRef.current.parentNode) {
-				if (window.Moyasar || window.MoyasarReady) {
+		const initForm = async () => {
+			if (!moyasarFormRef.current || !moyasarFormRef.current.parentNode) {
+				console.warn('[PAYMENT-MODAL] Form ref not ready');
+				return;
+			}
+
+			try {
+				// Ensure Moyasar is loaded
+				if (!window.Moyasar) {
+					console.log('[PAYMENT-MODAL] Moyasar not found, loading...');
+					await loadMoyasarScript();
+				}
+
+				// Wait a bit for DOM to be ready
+				await new Promise(resolve => setTimeout(resolve, 100));
+
+				// Now initialize the form
+				if (window.Moyasar && moyasarFormRef.current && moyasarFormRef.current.parentNode) {
+					console.log('[PAYMENT-MODAL] Initializing Moyasar form...');
 					initializeMoyasarForm();
 				} else {
-					// Wait for Moyasar to load (max 2 seconds)
-					let attempts = 0;
-					const checkMoyasar = setInterval(() => {
-						attempts++;
-						if (window.Moyasar) {
-							clearInterval(checkMoyasar);
-							initializeMoyasarForm();
-						} else if (attempts > 20) {
-							// 2 seconds timeout (20 * 100ms)
-							clearInterval(checkMoyasar);
-							toast.error(getTranslation(t, "events.paymentInitError", "Payment gateway is taking longer than expected. Please refresh and try again."));
-						}
-					}, 100);
-					
-					return () => clearInterval(checkMoyasar);
+					console.error('[PAYMENT-MODAL] Cannot initialize: Moyasar or form ref not ready');
+					toast.error(getTranslation(t, "events.paymentInitError", "Error initializing payment form. Please refresh and try again."));
 				}
+			} catch (error) {
+				console.error('[PAYMENT-MODAL] Error loading Moyasar:', error);
+				toast.error(getTranslation(t, "events.paymentInitError", "Failed to load payment gateway. Please refresh the page and try again."));
 			}
 		};
 
-		// Use requestAnimationFrame for immediate DOM readiness check
-		const rafId = requestAnimationFrame(() => {
+		// Use setTimeout to ensure DOM is ready
+		const timeoutId = setTimeout(() => {
 			initForm();
-		});
+		}, 200);
 
 		return () => {
-			cancelAnimationFrame(rafId);
+			clearTimeout(timeoutId);
 			// Cleanup: Clear Moyasar form if element still exists
 			if (moyasarFormRef.current && moyasarFormRef.current.parentNode) {
 				try {
 					moyasarFormRef.current.innerHTML = "";
+					console.log('[PAYMENT-MODAL] Cleaned up Moyasar form');
 				} catch (error) {
-					// Silently handle cleanup errors
 					console.warn("Error cleaning up Moyasar form:", error);
 				}
 			}
 		};
-	}, [step, isOpen, initializeMoyasarForm, t]);
+	}, [step, isOpen, initializeMoyasarForm, t, totalAmount]);
 
 	// Check for payment result when modal is opened
 	useEffect(() => {
@@ -559,7 +649,9 @@ export default function BookingModal({
 										
 										<div
 											ref={moyasarFormRef}
+											id="moyasar-payment-form"
 											className="relative w-full min-h-[320px] sm:min-h-[360px] md:min-h-[380px] bg-white rounded-3xl p-4 sm:p-6 md:p-10 shadow-2xl border-2 border-gray-100 transition-all duration-500 group-hover:border-[#a797cc]/40 focus-within:border-[#a797cc] focus-within:shadow-[0_0_30px_rgba(167,151,204,0.2)]"
+											style={{ minHeight: '320px' }}
 										>
 											{/* Loading Placeholder - Premium */}
 											{(!moyasarFormRef.current?.innerHTML || moyasarFormRef.current.innerHTML.trim() === "") && (
@@ -628,11 +720,19 @@ export default function BookingModal({
 									/>
 								</div>
 								<h3 className="mb-2 text-xl font-semibold text-gray-900">
-									{getTranslation(t, "events.thankYouForBooking", "Thank You for Your Booking")}
+									{getTranslation(t, "events.paymentSuccess", "Payment Successful!")}
 								</h3>
-								<p className="text-gray-600">
-									{getTranslation(t, "events.bookingConfirmationEmailSent", "A confirmation email has been sent to your registered email address.")}
+								<p className="text-gray-600 mb-4">
+									{getTranslation(t, "events.paymentSuccessDescription", "Your payment has been processed successfully. You have been added to the event group chat.")}
 								</p>
+								<div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+									<div className="flex items-center justify-center gap-2 text-blue-700">
+										<Icon icon="lucide:message-circle" className="w-5 h-5" />
+										<p className="text-sm font-medium">
+											{getTranslation(t, "events.groupChatAdded", "You can now chat with other participants in the group chat!")}
+										</p>
+									</div>
+								</div>
 							</div>
 						)}
 					</div>

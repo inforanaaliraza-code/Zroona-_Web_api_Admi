@@ -476,7 +476,7 @@ export default function SignUp() {
                       {t("signup.tab6")}
                     </label>
                     <div className="flex flex-col sm:flex-row gap-4 mt-1">
-                      {["tab7", "tab8", "tab9"].map((tab, index) => {
+                      {["tab7", "tab8"].map((tab, index) => {
                         // Fetch translated text dynamically for gender labels
                         const gender = t(`signup.${tab}`);
                         const genderValue = String(index + 1);

@@ -712,6 +712,21 @@ const MessageController = {
             const role = req.role;
             const { event_id, message, receiver_id, is_group_chat } = req.body;
 
+            // Validate required fields
+            if (!userId) {
+                return Response.unauthorizedResponse(
+                    res,
+                    'User ID is required. Please login again.'
+                );
+            }
+
+            if (!role || (role !== 1 && role !== 2)) {
+                return Response.badRequestResponse(
+                    res,
+                    'Invalid user role'
+                );
+            }
+
             // Check if file is uploaded
             if (!req.files || !req.files.file) {
                 return Response.badRequestResponse(
@@ -796,16 +811,47 @@ const MessageController = {
             let conversation;
             let user_id, organizer_id;
             
+            // Get organizer_id from event (handle both populated and non-populated)
+            const eventOrganizerId = event.organizer_id?._id 
+                ? event.organizer_id._id 
+                : event.organizer_id;
+            
+            if (!eventOrganizerId) {
+                return Response.serverErrorResponse(
+                    res,
+                    'Event organizer information is missing'
+                );
+            }
+            
             // For group chats, skip user_id/organizer_id validation
             if (!isGroupChat) {
+                // Validate receiver_id exists
+                if (!receiver_id) {
+                    return Response.badRequestResponse(
+                        res,
+                        'Receiver ID is required for one-on-one conversations'
+                    );
+                }
+
                 // Determine user_id and organizer_id based on sender role (for one-on-one chats)
                 if (role === 1) {
                     // Sender is user, receiver is organizer
                     user_id = userId;
                     organizer_id = receiver_id;
                     
-                    // Verify receiver is the event organizer
-                    if (event.organizer_id.toString() !== receiver_id.toString()) {
+                    // Verify receiver is the event organizer - safe toString comparison
+                    try {
+                        if (eventOrganizerId && receiver_id && 
+                            typeof eventOrganizerId.toString === 'function' && 
+                            typeof receiver_id.toString === 'function' &&
+                            eventOrganizerId.toString() !== receiver_id.toString()) {
+                            return Response.badRequestResponse(
+                                res,
+                                'Invalid receiver ID'
+                            );
+                        }
+                    } catch (err) {
+                        console.error('[MESSAGE] Error comparing eventOrganizerId and receiver_id:', err);
                         return Response.badRequestResponse(
                             res,
                             'Invalid receiver ID'
@@ -816,20 +862,24 @@ const MessageController = {
                     user_id = receiver_id;
                     organizer_id = userId;
                     
-                    // Verify sender is the event organizer
-                    if (event.organizer_id.toString() !== userId.toString()) {
+                    // Verify sender is the event organizer - safe toString comparison
+                    try {
+                        if (eventOrganizerId && userId && 
+                            typeof eventOrganizerId.toString === 'function' && 
+                            typeof userId.toString === 'function' &&
+                            eventOrganizerId.toString() !== userId.toString()) {
+                            return Response.unauthorizedResponse(
+                                res,
+                                'You are not authorized to message about this event'
+                            );
+                        }
+                    } catch (err) {
+                        console.error('[MESSAGE] Error comparing eventOrganizerId and userId:', err);
                         return Response.unauthorizedResponse(
                             res,
                             'You are not authorized to message about this event'
                         );
                     }
-                }
-
-                if (!receiver_id) {
-                    return Response.badRequestResponse(
-                        res,
-                        'Receiver ID is required for one-on-one conversations'
-                    );
                 }
             }
             
@@ -863,20 +913,46 @@ const MessageController = {
                     );
                 }
 
+                // Validate userId exists
+                if (!userId) {
+                    console.error('[MESSAGE] UserId is missing in sendMessageWithAttachment');
+                    return Response.unauthorizedResponse(
+                        res,
+                        'User ID is required. Please login again.'
+                    );
+                }
+
                 // Check if user is organizer (organizer is always a participant)
                 const organizerId = conversation.organizer_id?._id || conversation.organizer_id;
-                const isOrganizer = organizerId && organizerId.toString() === userId.toString();
+                
+                // Safe toString comparison for organizer check
+                let isOrganizer = false;
+                if (organizerId && userId && typeof organizerId.toString === 'function' && typeof userId.toString === 'function') {
+                    try {
+                        isOrganizer = organizerId.toString() === userId.toString();
+                    } catch (err) {
+                        console.error('[MESSAGE] Error comparing organizer ID:', err);
+                    }
+                }
 
                 // Check if user is in participants list
                 // Handle both populated (object with _id) and non-populated (ObjectId) user_id
                 const isParticipant = conversation.participants.some(p => {
-                    if (!p || p.left_at) return false;
+                    if (!p || p.left_at || !userId) return false;
                     
                     // Handle populated user_id (object with _id) or direct ObjectId
                     const participantUserId = p.user_id?._id ? p.user_id._id : p.user_id;
                     if (!participantUserId) return false;
                     
-                    return participantUserId.toString() === userId.toString();
+                    // Safe toString comparison
+                    try {
+                        if (typeof participantUserId.toString === 'function' && typeof userId.toString === 'function') {
+                            return participantUserId.toString() === userId.toString();
+                        }
+                    } catch (err) {
+                        console.error('[MESSAGE] Error comparing participant user IDs:', err);
+                    }
+                    return false;
                 });
                 
                 if (!isParticipant && !isOrganizer) {
@@ -910,8 +986,30 @@ const MessageController = {
                 );
             }
 
+            // Validate conversation exists
+            if (!conversation || !conversation._id) {
+                console.error('[MESSAGE] Conversation not found or invalid:', {
+                    conversation,
+                    event_id,
+                    isGroupChat
+                });
+                return Response.serverErrorResponse(
+                    res,
+                    'Conversation not found or invalid'
+                );
+            }
+
             // Create message with attachment
             const messageText = message || (messageType === 'image' ? '📷 Image' : '📎 File');
+            
+            if (!attachmentUrl) {
+                console.error('[MESSAGE] Attachment URL is missing after upload');
+                return Response.serverErrorResponse(
+                    res,
+                    'Failed to upload attachment'
+                );
+            }
+
             const newMessage = await MessageService.CreateService({
                 conversation_id: conversation._id,
                 sender_id: userId,
@@ -934,7 +1032,7 @@ const MessageController = {
 
             if (isGroupChatFinal) {
                 // For group chats, increment unread count for all participants except sender
-                if (conversation.participants && conversation.participants.length > 0) {
+                if (conversation.participants && conversation.participants.length > 0 && userId) {
                     conversation.participants.forEach(participant => {
                         if (!participant || participant.left_at) return;
                         
@@ -942,12 +1040,18 @@ const MessageController = {
                         const participantUserId = participant.user_id?._id ? participant.user_id._id : participant.user_id;
                         if (!participantUserId) return;
                         
-                        if (participantUserId.toString() !== userId.toString()) {
-                            if (participant.role === 1) {
-                                updateData.unread_count_user = (conversation.unread_count_user || 0) + 1;
-                            } else {
-                                updateData.unread_count_organizer = (conversation.unread_count_organizer || 0) + 1;
+                        // Safe toString comparison
+                        try {
+                            if (typeof participantUserId.toString === 'function' && typeof userId.toString === 'function' && 
+                                participantUserId.toString() !== userId.toString()) {
+                                if (participant.role === 1) {
+                                    updateData.unread_count_user = (conversation.unread_count_user || 0) + 1;
+                                } else {
+                                    updateData.unread_count_organizer = (conversation.unread_count_organizer || 0) + 1;
+                                }
                             }
+                        } catch (err) {
+                            console.error('[MESSAGE] Error comparing participant user IDs in unread count:', err);
                         }
                     });
                 }
@@ -977,9 +1081,18 @@ const MessageController = {
 
         } catch (error) {
             console.error('sendMessageWithAttachment error:', error);
+            console.error('Error stack:', error.stack);
+            console.error('Error details:', {
+                message: error.message,
+                name: error.name,
+                userId: req.userId,
+                role: req.role,
+                event_id: req.body?.event_id,
+                is_group_chat: req.body?.is_group_chat
+            });
             return Response.serverErrorResponse(
                 res,
-                resp_messages(req.lang).internalServerError
+                error.message || resp_messages(req.lang).internalServerError
             );
         }
     }

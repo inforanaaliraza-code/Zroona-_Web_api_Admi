@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { initRTL } from "@/utils/rtl";
 
 /**
  * RTLHandler - Client component that updates document direction based on language
  * This component doesn't render any HTML elements, only updates the document
+ * Ensures language and direction persist across page reloads
  */
 export default function RTLHandler() {
   const { i18n } = useTranslation();
+  const isInitialized = useRef(false);
 
   useEffect(() => {
     // Only run on client side
@@ -17,7 +19,12 @@ export default function RTLHandler() {
       return;
     }
 
-    // Initialize RTL on mount
+    // Prevent multiple initializations
+    if (isInitialized.current) {
+      return;
+    }
+
+    // Initialize RTL on mount - run immediately before React hydration
     initRTL();
     
     const updateRTL = () => {
@@ -26,21 +33,39 @@ export default function RTLHandler() {
         return;
       }
 
-      const lang = i18n.language || (typeof localStorage !== "undefined" ? localStorage.getItem("i18nextLng") : null) || "ar";
-      const rtl = lang === "ar";
+      // Get language from i18n first, then fallback to localStorage, then default
+      const lang = i18n.language || 
+                   (typeof localStorage !== "undefined" ? localStorage.getItem("i18nextLng") : null) || 
+                   "ar";
       
-      // Update document direction and language
+      // Ensure language is valid
+      const validLang = (lang === "ar" || lang === "en") ? lang : "ar";
+      const rtl = validLang === "ar";
+      
+      // Update document direction and language immediately
       if (typeof document !== "undefined" && document.documentElement) {
         try {
-          document.documentElement.dir = rtl ? "rtl" : "ltr";
-          document.documentElement.lang = lang;
+          // Update HTML attributes
+          document.documentElement.setAttribute("dir", rtl ? "rtl" : "ltr");
+          document.documentElement.setAttribute("lang", validLang);
           
-          // Update body class for RTL/LTR styling - safely check if body exists and is in DOM
+          // Update body class for RTL/LTR styling
           if (document.body && document.body.parentNode) {
-            // Use classList methods instead of direct className manipulation for better React compatibility
             document.body.classList.remove("rtl", "ltr");
             document.body.classList.add(rtl ? "rtl" : "ltr");
           }
+          
+          // Ensure language is saved to localStorage
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem("i18nextLng", validLang);
+          }
+          
+          // Sync i18n language if it's different
+          if (i18n.language !== validLang) {
+            i18n.changeLanguage(validLang);
+          }
+          
+          console.log(`[RTLHandler] Updated direction: ${rtl ? "rtl" : "ltr"}, language: ${validLang}`);
         } catch (error) {
           // Silently handle DOM manipulation errors (e.g., during unmount)
           console.warn("RTLHandler: Error updating DOM", error);
@@ -48,14 +73,33 @@ export default function RTLHandler() {
       }
     };
 
-    // Initial update
+    // Initial update - run immediately
     updateRTL();
+    isInitialized.current = true;
     
-    // Listen for language changes
-    i18n.on("languageChanged", updateRTL);
+    // Listen for language changes from i18n
+    i18n.on("languageChanged", (lng) => {
+      console.log(`[RTLHandler] Language changed event: ${lng}`);
+      updateRTL();
+    });
+
+    // Also listen for storage events (if language changes in another tab)
+    const handleStorageChange = (e) => {
+      if (e.key === "i18nextLng" && e.newValue) {
+        const newLang = e.newValue;
+        if (newLang === "ar" || newLang === "en") {
+          console.log(`[RTLHandler] Language changed in another tab: ${newLang}`);
+          i18n.changeLanguage(newLang);
+          updateRTL();
+        }
+      }
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
 
     return () => {
       i18n.off("languageChanged", updateRTL);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, [i18n]);
 

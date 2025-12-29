@@ -52,14 +52,13 @@ const formatEventCategories = (eventCategoryDetails) => {
 };
 
 export const exportEventsToCSV = (data) => {
-    const headers = ["Event ID", "Event Name", "Organizer", "Event Type", "Event Category", "Attendees", "Date", "Time", "Price", "City", "Status"];
+    const headers = ["Event ID", "Event Name", "Organizer", "Event Category", "Attendees", "Date", "Time", "Price", "City", "Status"];
     const csvContent = [
         headers.join(","),
         ...data.map(event => [
             event.id || event._id || "N/A",
             `"${event.event_name || "N/A"}"`,
             `"${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}"`.trim() || "N/A",
-            formatEventTypes(event.event_types),
             `"${formatEventCategories(event.event_category_details)}"`,
             event.no_of_attendees || 0,
             event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
@@ -119,13 +118,12 @@ export const handlePrint = () => {
 
 // Enhanced PDF export for events
 export const exportEventsToPDF = (data) => {
-    const headers = ["Event ID", "Event Name", "Organizer", "Event Type", "Event Category", "Attendees", "Date", "Time", "Price", "City", "Status"];
+    const headers = ["Event ID", "Event Name", "Organizer", "Event Category", "Attendees", "Date", "Time", "Price", "City", "Status"];
     const title = "Events Export";
     const dataMapper = (event) => [
         event.id || event._id || "N/A",
         event.event_name || "N/A",
         `${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}`.trim() || "N/A",
-        formatEventTypes(event.event_types),
         formatEventCategories(event.event_category_details),
         event.no_of_attendees || 0,
         event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",

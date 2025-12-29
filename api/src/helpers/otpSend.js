@@ -205,7 +205,61 @@ const verifyLoginOtp = async (phoneNumber, otp) => {
     // Check if it's a dummy OTP (for testing/development)
     if (DUMMY_OTPS.includes(otpStr)) {
         console.log(`[OTP:VERIFY] Dummy OTP accepted for testing: ${otpStr}`);
-        return { verified: true, phoneNumber, isDummy: true };
+        
+        // Also verify against database OTP for test users (only if connected)
+        try {
+            const { ensureConnection } = require('../config/database');
+            const mongoose = require('mongoose');
+            
+            // Check if MongoDB is connected before querying
+            if (mongoose.connection.readyState !== 1) {
+                // Not connected, try to ensure connection
+                try {
+                    await ensureConnection();
+                } catch (connError) {
+                    console.warn('[OTP:VERIFY] MongoDB not connected, skipping database check:', connError.message);
+                    // Still allow dummy OTP even if database is not connected
+                    return { verified: true, phoneNumber, isDummy: true };
+                }
+            }
+            
+            const countryCode = phoneNumber.substring(0, 4); // +966
+            const phone = phoneNumber.substring(4);
+            
+            // Check User model
+            const User = require('../models/userModel');
+            const user = await User.findOne({
+                phone_number: parseInt(phone),
+                country_code: countryCode,
+                otp: otpStr
+            });
+            
+            if (user) {
+                console.log(`[OTP:VERIFY] OTP verified against database for user: ${user._id}`);
+                return { verified: true, phoneNumber, isDummy: true, userId: user._id, role: 1 };
+            }
+            
+            // Check Organizer model
+            const Organizer = require('../models/organizerModel');
+            const organizer = await Organizer.findOne({
+                phone_number: parseInt(phone),
+                country_code: countryCode,
+                otp: otpStr
+            });
+            
+            if (organizer) {
+                console.log(`[OTP:VERIFY] OTP verified against database for organizer: ${organizer._id}`);
+                return { verified: true, phoneNumber, isDummy: true, userId: organizer._id, role: 2 };
+            }
+            
+            // If dummy OTP but not in database, still allow (for testing)
+            console.log(`[OTP:VERIFY] Dummy OTP accepted (not in database, but allowed for testing)`);
+            return { verified: true, phoneNumber, isDummy: true };
+        } catch (dbError) {
+            console.error('[OTP:VERIFY] Error checking database OTP:', dbError.message || dbError);
+            // Still allow dummy OTP even if database check fails
+            return { verified: true, phoneNumber, isDummy: true };
+        }
     }
 
     const numberKey = `login_${phoneNumber}`;

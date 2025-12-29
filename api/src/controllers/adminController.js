@@ -22,6 +22,7 @@ const TransactionService = require("../services/recentTransaction.js");
 const WalletService = require("../services/walletService.js");
 const ConversationService = require("../services/conversationService.js");
 const { sendEventApprovalEmail, sendEventRejectionEmail, sendOrganizerApprovalEmail, sendOrganizerRejectionEmail } = require("../helpers/emailService.js");
+const { pushNotification } = require("../helpers/pushNotification.js");
 
 
 // const s3 = new S3Client({
@@ -2410,24 +2411,43 @@ const adminController = {
                         // Event approved - Send email
                         await sendEventApprovalEmail(organizer.email, organizerName, event.event_name, organizerLang);
                         
-                        // Create in-app notification for organizer
+                        // Create in-app notification and send push notification for organizer
                         try {
-                            await NotificationService.CreateService({
-                                user_id: event.organizer_id,
-                                role: 2, // Organizer role
-                                title: organizerLang === "ar" ? "تم الموافقة على فعاليتك" : "Event Approved",
-                                description: organizerLang === "ar"
-                                    ? `تم الموافقة على فعاليتك "${event.event_name}". يمكن للمستخدمين الآن حجز تذاكر لحضور فعاليتك!`
-                                    : `Your event "${event.event_name}" has been approved. Users can now book tickets to attend your event!`,
-                                isRead: false,
-                                notification_type: 1, // Event approval type
-                                data: {
+                            const notificationTitle = organizerLang === "ar" ? "تم الموافقة على فعاليتك" : "Event Approved";
+                            const notificationDescription = organizerLang === "ar"
+                                ? `تم الموافقة على فعاليتك "${event.event_name}". يمكن للمستخدمين الآن حجز تذاكر لحضور فعاليتك!`
+                                : `Your event "${event.event_name}" has been approved. Users can now book tickets to attend your event!`;
+                            
+                            // Send push notification (this also creates in-app notification)
+                            try {
+                                const notificationMessage = {
+                                    title: notificationTitle,
+                                    description: notificationDescription,
+                                    first_name: organizer.first_name,
+                                    last_name: organizer.last_name,
+                                    userId: organizer._id,
+                                    profile_image: organizer.profile_image || "",
                                     event_id: event._id,
-                                    event_name: event.event_name,
+                                    notification_type: 1, // Event approval type
                                     status: newStatus
-                                }
-                            });
-                            console.log(`[NOTIFICATION] Created approval notification for organizer: ${event.organizer_id}`);
+                                };
+                                await pushNotification(res, 2, event.organizer_id, notificationMessage);
+                                console.log(`[NOTIFICATION] Created and sent approval notification to organizer: ${event.organizer_id}`);
+                            } catch (pushError) {
+                                // If push notification fails, create in-app notification as fallback
+                                console.error('[PUSH-NOTIFICATION] Error sending push notification, creating in-app notification as fallback:', pushError);
+                                await NotificationService.CreateService({
+                                    user_id: event.organizer_id,
+                                    role: 2, // Organizer role
+                                    title: notificationTitle,
+                                    description: notificationDescription,
+                                    isRead: false,
+                                    notification_type: 1, // Event approval type
+                                    event_id: event._id,
+                                    status: newStatus
+                                });
+                                console.log(`[NOTIFICATION] Created fallback in-app notification for organizer: ${event.organizer_id}`);
+                            }
                         } catch (notificationError) {
                             console.error('[NOTIFICATION] Error creating approval notification:', notificationError);
                             // Don't fail the request if notification creation fails
@@ -2436,25 +2456,43 @@ const adminController = {
                         // Event rejected - Send email
                         await sendEventRejectionEmail(organizer.email, organizerName, event.event_name, rejectionReason, organizerLang);
                         
-                        // Create in-app notification for organizer
+                        // Create in-app notification and send push notification for organizer
                         try {
-                            await NotificationService.CreateService({
-                                user_id: event.organizer_id,
-                                role: 2, // Organizer role
-                                title: organizerLang === "ar" ? "تم رفض فعاليتك" : "Event Rejected",
-                                description: organizerLang === "ar"
-                                    ? `تم رفض فعاليتك "${event.event_name}". السبب: ${rejectionReason}`
-                                    : `Your event "${event.event_name}" has been rejected. Reason: ${rejectionReason}`,
-                                isRead: false,
-                                notification_type: 3, // Event rejection type
-                                data: {
+                            const notificationTitle = organizerLang === "ar" ? "تم رفض فعاليتك" : "Event Rejected";
+                            const notificationDescription = organizerLang === "ar"
+                                ? `تم رفض فعاليتك "${event.event_name}". السبب: ${rejectionReason}`
+                                : `Your event "${event.event_name}" has been rejected. Reason: ${rejectionReason}`;
+                            
+                            // Send push notification (this also creates in-app notification)
+                            try {
+                                const notificationMessage = {
+                                    title: notificationTitle,
+                                    description: notificationDescription,
+                                    first_name: organizer.first_name,
+                                    last_name: organizer.last_name,
+                                    userId: organizer._id,
+                                    profile_image: organizer.profile_image || "",
                                     event_id: event._id,
-                                    event_name: event.event_name,
-                                    status: newStatus,
-                                    rejection_reason: rejectionReason
-                                }
-                            });
-                            console.log(`[NOTIFICATION] Created rejection notification for organizer: ${event.organizer_id}`);
+                                    notification_type: 3, // Event rejection type
+                                    status: newStatus
+                                };
+                                await pushNotification(res, 2, event.organizer_id, notificationMessage);
+                                console.log(`[NOTIFICATION] Created and sent rejection notification to organizer: ${event.organizer_id}`);
+                            } catch (pushError) {
+                                // If push notification fails, create in-app notification as fallback
+                                console.error('[PUSH-NOTIFICATION] Error sending push notification, creating in-app notification as fallback:', pushError);
+                                await NotificationService.CreateService({
+                                    user_id: event.organizer_id,
+                                    role: 2, // Organizer role
+                                    title: notificationTitle,
+                                    description: notificationDescription,
+                                    isRead: false,
+                                    notification_type: 3, // Event rejection type
+                                    event_id: event._id,
+                                    status: newStatus
+                                });
+                                console.log(`[NOTIFICATION] Created fallback in-app notification for organizer: ${event.organizer_id}`);
+                            }
                         } catch (notificationError) {
                             console.error('[NOTIFICATION] Error creating rejection notification:', notificationError);
                             // Don't fail the request if notification creation fails

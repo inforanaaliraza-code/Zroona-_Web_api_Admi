@@ -57,20 +57,19 @@ export default function MyEventsPage() {
   const [activeTab, setActiveTab] = useState("approved"); // approved, pending, rejected
 
   // Status mapping for colors and icons
+  // Backend book_status: 1 = Pending (waiting for host), 2 = Approved/Confirmed, 3 = Cancelled, 4 = Rejected
   const statusConfig = {
-    0: { color: "bg-yellow-100 text-yellow-800", icon: "lucide:clock" }, // Pending
-    1: { color: "bg-blue-100 text-blue-800", icon: "lucide:check-circle" }, // Approved
-    2: { color: "bg-green-100 text-green-800", icon: "lucide:check-circle-2" }, // Confirmed
+    1: { color: "bg-yellow-100 text-yellow-800", icon: "lucide:clock" }, // Pending - Waiting for host approval
+    2: { color: "bg-green-100 text-green-800", icon: "lucide:check-circle-2" }, // Approved/Confirmed - Host approved
     3: { color: "bg-red-100 text-red-800", icon: "lucide:x-circle" }, // Cancelled
-    4: { color: "bg-gray-100 text-gray-800", icon: "lucide:x" }, // Rejected
+    4: { color: "bg-gray-100 text-gray-800", icon: "lucide:x" }, // Rejected - Host rejected
   };
 
   // Get status text with fallbacks
   const getStatusText = (status) => {
     switch (status) {
-      case 0: return getTranslation(t, "events.pending", "Pending");
-      case 1: return getTranslation(t, "events.approved", "Approved");
-      case 2: return getTranslation(t, "events.confirmed", "Confirmed");
+      case 1: return getTranslation(t, "events.waitingByHost", "Waiting by Host") || getTranslation(t, "events.pending", "Pending");
+      case 2: return getTranslation(t, "events.approved", "Approved");
       case 3: return getTranslation(t, "events.cancelled", "Cancelled");
       case 4: return getTranslation(t, "events.rejected", "Rejected");
       default: return getTranslation(t, "events.unknown", "Unknown");
@@ -195,20 +194,30 @@ export default function MyEventsPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (activeTab === "approved") {
-      // Requirement #2: For approved, show both upcoming and past (merged)
-      // Status 1 = Pending (waiting for host approval), Status 2 = Approved/Confirmed (host approved)
-      // Only show bookings that are approved (status 2) or pending (status 1)
-      // Exclude rejected bookings (status 3 or 4) from approved tab
+    if (activeTab === "pending") {
+      // Pending tab: Show bookings waiting for host approval (status = 1)
+      // These are bookings that user has made but host hasn't approved yet
       filtered = bookings.filter(booking => {
         const status = booking.status;
-        return status === 1 || status === 2; // Only pending and approved/confirmed
+        return status === 1; // Only pending bookings (waiting for host approval)
+      });
+      // Sort by date: upcoming first
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.event?.event_date || 0);
+        const dateB = new Date(b.event?.event_date || 0);
+        return dateA - dateB;
+      });
+    } else if (activeTab === "approved") {
+      // Approved tab: Show bookings that host has approved (status = 2)
+      // These bookings are confirmed by host, user can now make payment
+      filtered = bookings.filter(booking => {
+        const status = booking.status;
+        return status === 2; // Only approved/confirmed bookings
       });
       // Sort: upcoming first, then past
       filtered.sort((a, b) => {
         const dateA = new Date(a.event?.event_date || 0);
         const dateB = new Date(b.event?.event_date || 0);
-        // Upcoming events first (future dates), then past events
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const aIsUpcoming = dateA >= today;
@@ -217,12 +226,20 @@ export default function MyEventsPage() {
         if (aIsUpcoming && !bIsUpcoming) return -1;
         if (!aIsUpcoming && bIsUpcoming) return 1;
         // If both same type, sort by date
-        return dateA - dateB; // Earlier dates first for upcoming, later dates first for past
+        return dateA - dateB;
       });
-    } else if (activeTab === "pending") {
-      filtered = bookings.filter(booking => booking.status === 0);
     } else if (activeTab === "rejected") {
-      filtered = bookings.filter(booking => booking.status === 4);
+      // Rejected tab: Show bookings that host has rejected (status = 4)
+      filtered = bookings.filter(booking => {
+        const status = booking.status;
+        return status === 4; // Only rejected bookings
+      });
+      // Sort by date: most recent first
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.event?.event_date || 0);
+        const dateB = new Date(b.event?.event_date || 0);
+        return dateB - dateA;
+      });
     }
 
     setFilteredBookings(filtered);
@@ -408,7 +425,7 @@ export default function MyEventsPage() {
                   : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
-              {getTranslation(t, "events.pending", "Pending")}
+              {getTranslation(t, "events.waitingByHost", "Waiting by Host") || getTranslation(t, "events.pending", "Pending")}
             </button>
             <button
               onClick={() => setActiveTab("rejected")}
@@ -617,8 +634,8 @@ export default function MyEventsPage() {
                         </Link>
                       )}
                       
-                      {/* Payment Button - Show for approved bookings (status 2) that are unpaid */}
-                      {(booking.status === 2 || booking.status === 1) && !booking.payment_status && (
+                      {/* Payment Button - Show only for approved bookings (status 2) that are unpaid */}
+                      {booking.status === 2 && !booking.payment_status && (
                         <Link
                           href={`/events/${booking.event?._id}?initiate_payment=true`}
                           className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:shadow-lg transition-all"

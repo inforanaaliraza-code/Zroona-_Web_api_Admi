@@ -1,131 +1,139 @@
+require('dotenv').config();
+const { connectWithRetry } = require("../config/database");
+const User = require("../models/userModel");
+const Organizer = require("../models/organizerModel");
+const HashPassword = require("../helpers/hashPassword");
+
 /**
- * Script to create test users (User and Host) for app development
+ * Script to create test Guest and Host users
  * 
- * This script creates:
- * 1. A test user (guest) with phone number and verified email
- * 2. A test host (organizer) with phone number and verified email (approved)
- * 
- * Both users can login with phone number using dummy OTP: 123456
+ * Usage (from api folder):
+ *   node src/scripts/createTestUsers.js
  */
 
-require('dotenv').config();
-const mongoose = require('mongoose');
-const UserService = require('../services/userService');
-const OrganizerService = require('../services/organizerService');
-const { hashPassword } = require('../helpers/hashPassword');
-
-const createTestUsers = async () => {
-    try {
-        console.log('🚀 Creating test users...\n');
-
-        // Connect to database
-        const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI;
-        if (!mongoURI) {
-            throw new Error('MongoDB URI not configured');
-        }
-
-        await mongoose.connect(mongoURI);
-        console.log('✅ Connected to database\n');
-
-        // Test User (Guest) credentials
-        const testUserData = {
-            first_name: 'Test',
-            last_name: 'User',
-            email: 'testuser@zuroona.com',
-            password: await hashPassword('Test@123456'),
-            phone_number: '501234567',
-            country_code: '+966',
-            role: 1, // User/Guest
-            is_verified: true, // Email verified
-            is_delete: 0,
-            language: 'en',
-        };
-
-        // Test Host (Organizer) credentials
-        const testHostData = {
-            first_name: 'Test',
-            last_name: 'Host',
-            email: 'testhost@zuroona.com',
-            password: await hashPassword('Test@123456'),
-            phone_number: '502345678',
-            country_code: '+966',
-            role: 2, // Organizer/Host
-            is_verified: true, // Email verified
-            is_approved: 2, // Approved by admin (2 = approved)
-            is_delete: 0,
-            language: 'en',
-            registration_step: 4, // Complete registration
-        };
-
-        // Check if test user already exists
-        let existingUser = await UserService.FindOneService({ email: testUserData.email });
-        if (existingUser) {
-            console.log('⚠️  Test user already exists. Updating...');
-            await UserService.FindByIdAndUpdateService(existingUser._id, {
-                ...testUserData,
-                password: testUserData.password,
-            });
-            console.log('✅ Test user updated');
-        } else {
-            const user = await UserService.CreateService(testUserData);
-            console.log('✅ Test user created:', user._id);
-        }
-
-        // Check if test host already exists
-        let existingHost = await OrganizerService.FindOneService({ email: testHostData.email });
-        if (existingHost) {
-            console.log('⚠️  Test host already exists. Updating...');
-            await OrganizerService.FindByIdAndUpdateService(existingHost._id, {
-                ...testHostData,
-                password: testHostData.password,
-            });
-            console.log('✅ Test host updated');
-        } else {
-            const host = await OrganizerService.CreateService(testHostData);
-            console.log('✅ Test host created:', host._id);
-        }
-
-        console.log('\n📋 Test Account Credentials:');
-        console.log('='.repeat(60));
-        console.log('\n👤 TEST USER (Guest):');
-        console.log('   Email: testuser@zuroona.com');
-        console.log('   Password: Test@123456');
-        console.log('   Phone: +966501234567');
-        console.log('   OTP (for phone login): 123456 (dummy)');
-        console.log('\n🏠 TEST HOST (Organizer):');
-        console.log('   Email: testhost@zuroona.com');
-        console.log('   Password: Test@123456');
-        console.log('   Phone: +966502345678');
-        console.log('   OTP (for phone login): 123456 (dummy)');
-        console.log('   Status: Approved (can login)');
-        console.log('\n' + '='.repeat(60));
-        console.log('\n✅ Test users created successfully!');
-        console.log('💡 You can now login with phone number using dummy OTP: 123456\n');
-
-        await mongoose.disconnect();
-        return { success: true };
-
-    } catch (error) {
-        console.error('❌ Error creating test users:', error);
-        if (mongoose.connection.readyState === 1) {
-            await mongoose.disconnect();
-        }
-        throw error;
-    }
+const GUEST_CREDENTIALS = {
+  first_name: "Test",
+  last_name: "Guest",
+  email: "guest@test.com",
+  phone_number: 501234567, // Saudi phone number (without country code)
+  country_code: "+966", // Saudi Arabia country code
+  password: "Guest123!",
+  gender: 1, // 1 = Male, 2 = Female, 3 = Other
+  date_of_birth: new Date("1990-01-01"),
+  role: 1, // 1 = Guest
+  otp: "123456", // OTP stored in database
+  is_verified: true,
+  registration_step: 2, // Complete registration
+  isActive: 1,
+  is_delete: 0,
+  language: "en"
 };
 
-// Run if called directly
-if (require.main === module) {
-    createTestUsers()
-        .then((result) => {
-            console.log('✅ Script completed successfully');
-            process.exit(0);
-        })
-        .catch((error) => {
-            console.error('❌ Script failed:', error);
-            process.exit(1);
-        });
-}
+const HOST_CREDENTIALS = {
+  first_name: "Test",
+  last_name: "Host",
+  email: "host@test.com",
+  phone_number: 507654321, // Saudi phone number (without country code)
+  country_code: "+966", // Saudi Arabia country code
+  password: "Host123!",
+  gender: 1, // 1 = Male, 2 = Female, 3 = Other
+  date_of_birth: new Date("1985-05-15"),
+  role: 2, // 2 = Host/Organizer
+  bio: "I am a test host organizer. I love creating amazing events for people to enjoy!",
+  otp: "123456", // OTP stored in database
+  is_verified: true,
+  registration_step: 4, // Complete registration (all 4 steps done)
+  isActive: 1,
+  is_approved: 2, // 2 = approved
+  language: "en"
+};
 
-module.exports = createTestUsers;
+const run = async () => {
+  try {
+    console.log("=".repeat(60));
+    console.log("CREATING TEST USERS");
+    console.log("=".repeat(60));
+    
+    await connectWithRetry();
+    console.log("✓ Connected to database\n");
 
+    // Check if users already exist
+    const existingGuest = await User.findOne({ email: GUEST_CREDENTIALS.email });
+    const existingHost = await Organizer.findOne({ email: HOST_CREDENTIALS.email });
+
+    // Delete existing users first
+    console.log("🗑️  Deleting existing test users...");
+    const deletedGuests = await User.deleteMany({ 
+      $or: [
+        { email: GUEST_CREDENTIALS.email },
+        { phone_number: GUEST_CREDENTIALS.phone_number, country_code: GUEST_CREDENTIALS.country_code }
+      ]
+    });
+    const deletedHosts = await Organizer.deleteMany({ 
+      $or: [
+        { email: HOST_CREDENTIALS.email },
+        { phone_number: HOST_CREDENTIALS.phone_number, country_code: HOST_CREDENTIALS.country_code }
+      ]
+    });
+    console.log(`✓ Deleted ${deletedGuests.deletedCount} existing guest user(s)`);
+    console.log(`✓ Deleted ${deletedHosts.deletedCount} existing host user(s)\n`);
+
+    // Create Guest User
+    console.log("👤 Creating Guest User...");
+
+    const hashedGuestPassword = await HashPassword.hashPassword(GUEST_CREDENTIALS.password);
+    const guestData = {
+      ...GUEST_CREDENTIALS,
+      password: hashedGuestPassword
+    };
+
+    const guest = await User.create(guestData);
+    console.log(`✓ Guest user created successfully!`);
+    console.log(`   User ID: ${guest._id}`);
+    console.log(`   Name: ${guest.first_name} ${guest.last_name}`);
+    console.log(`   Email: ${guest.email}`);
+
+    // Create Host/Organizer User
+    console.log("\n🏠 Creating Host/Organizer User...");
+
+    const hashedHostPassword = await HashPassword.hashPassword(HOST_CREDENTIALS.password);
+    const hostData = {
+      ...HOST_CREDENTIALS,
+      password: hashedHostPassword
+    };
+
+    const host = await Organizer.create(hostData);
+    console.log(`✓ Host user created successfully!`);
+    console.log(`   Organizer ID: ${host._id}`);
+    console.log(`   Name: ${host.first_name} ${host.last_name}`);
+    console.log(`   Email: ${host.email}`);
+
+    // Display login credentials
+    console.log("\n" + "=".repeat(60));
+    console.log("LOGIN CREDENTIALS");
+    console.log("=".repeat(60));
+    console.log("\n📱 GUEST USER:");
+    console.log(`   Email: ${GUEST_CREDENTIALS.email}`);
+    console.log(`   Password: ${GUEST_CREDENTIALS.password}`);
+    console.log(`   Phone: ${GUEST_CREDENTIALS.country_code}${GUEST_CREDENTIALS.phone_number}`);
+    console.log(`   OTP: ${GUEST_CREDENTIALS.otp} (stored in database)`);
+    console.log(`   User ID: ${guest._id}`);
+    
+    console.log("\n🏠 HOST/ORGANIZER USER:");
+    console.log(`   Email: ${HOST_CREDENTIALS.email}`);
+    console.log(`   Password: ${HOST_CREDENTIALS.password}`);
+    console.log(`   Phone: ${HOST_CREDENTIALS.country_code}${HOST_CREDENTIALS.phone_number}`);
+    console.log(`   OTP: ${HOST_CREDENTIALS.otp} (stored in database)`);
+    console.log(`   Organizer ID: ${host._id}`);
+    console.log("=".repeat(60));
+
+    console.log("\n✅ Test users created successfully!");
+    process.exit(0);
+  } catch (err) {
+    console.error("\n❌ Error creating test users:", err);
+    console.error(err.stack);
+    process.exit(1);
+  }
+};
+
+run();

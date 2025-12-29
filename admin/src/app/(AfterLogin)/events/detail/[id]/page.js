@@ -137,10 +137,46 @@ export default function EventDetail() {
   };
 
   const getStatusBadge = () => {
-    const isPending = detail?.event_status === 1 || detail?.is_approved === 0 || (detail?.event_status === undefined && detail?.is_approved === undefined);
-    const isUpcoming = detail?.event_status === 2 || detail?.is_approved === 1;
-    const isCompleted = detail?.event_status === 3;
-    const isRejected = detail?.event_status === 4 || detail?.is_approved === 2;
+    // Check is_approved first (backend field: 0=Pending, 1=Approved, 2=Rejected)
+    // Then check event_status (frontend mapped: 1=Pending, 2=Upcoming, 3=Completed, 4=Rejected)
+    const isApproved = detail?.is_approved === 1;
+    const isRejectedApproved = detail?.is_approved === 2;
+    const isPendingApproved = detail?.is_approved === 0 || detail?.is_approved === undefined || detail?.is_approved === null;
+    
+    const eventStatus = detail?.event_status;
+    
+    // Determine status based on both fields
+    let isPending = false;
+    let isUpcoming = false;
+    let isCompleted = false;
+    let isRejected = false;
+    
+    if (isRejectedApproved || eventStatus === 4) {
+      isRejected = true;
+    } else if (isPendingApproved || eventStatus === 1) {
+      isPending = true;
+    } else if (isApproved || eventStatus === 2) {
+      // Check if event date has passed for Completed status
+      if (eventStatus === 3) {
+        isCompleted = true;
+      } else {
+        // Check if event date is in the past
+        const eventDate = detail?.event_date ? new Date(detail.event_date) : null;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (eventDate && eventDate < today) {
+          isCompleted = true;
+        } else {
+          isUpcoming = true;
+        }
+      }
+    } else if (eventStatus === 3) {
+      isCompleted = true;
+    } else {
+      // Default to pending if status is unclear
+      isPending = true;
+    }
 
     if (isPending) {
       return {
@@ -168,14 +204,17 @@ export default function EventDetail() {
       };
     }
     return {
-      text: "N/A",
-      className: "bg-gray-100 text-gray-800 border-gray-300",
+      text: "Pending",
+      className: "bg-yellow-100 text-yellow-800 border-yellow-300",
       icon: <AlertCircle className="w-4 h-4" />
     };
   };
 
   const statusBadge = getStatusBadge();
-  const isPending = detail?.event_status === 1 || detail?.is_approved === 0 || (detail?.event_status === undefined && detail?.is_approved === undefined);
+  // Improved pending detection
+  const isPending = (detail?.is_approved === 0 || detail?.is_approved === undefined || detail?.is_approved === null) || 
+                   (detail?.event_status === 1) ||
+                   (!detail?.is_approved && !detail?.event_status);
 
   return (
     <DefaultLayout>
@@ -195,12 +234,25 @@ export default function EventDetail() {
               <p className="text-sm text-gray-500 mt-1">View and manage event information</p>
             </div>
             {detail?._id && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border shadow-sm">
-                <span className="text-xs font-medium text-gray-600">Status:</span>
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusBadge.className}`}>
-                  {statusBadge.icon}
-                  {statusBadge.text}
-                </span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border shadow-sm">
+                  <span className="text-xs font-medium text-gray-600">Status:</span>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusBadge.className}`}>
+                    {statusBadge.icon}
+                    {statusBadge.text}
+                  </span>
+                </div>
+                {isPending && (
+                  <button
+                    onClick={() => ChangeEventStatus(2)}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#a797cc] hover:bg-[#a08ec8] text-white rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Approve Event"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Approve</span>
+                  </button>
+                )}
               </div>
             )}
           </div>

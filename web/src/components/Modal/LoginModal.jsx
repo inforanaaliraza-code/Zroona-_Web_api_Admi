@@ -72,6 +72,15 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 			} catch (error) {
 				setLoading(false);
 				console.error("[LOGIN-MODAL] Error:", error);
+				
+				// Check if it's a network/connection error
+				if (error?.message === "Network Error" || error?.code === "ERR_NETWORK" || error?.code === "ERR_CONNECTION_REFUSED") {
+					const errorMsg = "Cannot connect to API server. Please make sure the server is running on port 3434.\n\nTo start: cd api && npm run dev";
+					toast.error(errorMsg);
+					console.error("[LOGIN-MODAL] API server connection failed. Server may not be running.");
+					return;
+				}
+				
 				const errorMessage = error?.response?.data?.message || 
 					error?.message || 
 					"An error occurred. Please try again.";

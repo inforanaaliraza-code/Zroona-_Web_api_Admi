@@ -13,13 +13,38 @@ export default function LanguageSwitcher({ChangeLanguage }) {
 
     const toggleLanguage = () => {
         const newLang = currentLang === 'en' ? 'ar' : 'en';
-        i18n.changeLanguage(newLang); 
-        document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+        
+        // Change language in i18n (this will trigger languageChanged event)
+        i18n.changeLanguage(newLang);
+        
+        // Ensure language is saved to localStorage immediately
+        try {
+            if (typeof localStorage !== "undefined") {
+                localStorage.setItem("i18nextLng", newLang);
+            }
+        } catch (error) {
+            console.warn("Failed to save language to localStorage:", error);
+        }
+        
+        // Update document direction immediately
+        if (typeof document !== "undefined" && document.documentElement) {
+            document.documentElement.setAttribute("dir", newLang === 'ar' ? 'rtl' : 'ltr');
+            document.documentElement.setAttribute("lang", newLang);
+            
+            // Update body class
+            if (document.body) {
+                document.body.classList.remove("rtl", "ltr");
+                document.body.classList.add(newLang === 'ar' ? 'rtl' : 'ltr');
+            }
+        }
+        
+        // Update backend if user is logged in
         const token = Cookies.get(TOKEN_NAME);
-        if (token) {
+        if (token && ChangeLanguage) {
           ChangeLanguage(newLang);
         }
-        setCurrentLang(newLang); 
+        
+        setCurrentLang(newLang);
     };
 
     useEffect(() => {

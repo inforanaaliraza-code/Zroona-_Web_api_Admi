@@ -4,7 +4,7 @@ import Modal from '../common/Modal';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getEventListDetail } from '@/redux/slices/EventListDetail';
 import { useFormik } from 'formik';
 import { AddEventListApi, EditEventListApi, UploadFileApi } from '@/app/api/setting';
@@ -12,28 +12,13 @@ import * as Yup from "yup";
 import { toast } from 'react-toastify';
 import Loader from '../Loader/Loader';
 import SelectDate from '../common/SelectDate';
-import { getCategoryEventList } from '@/redux/slices/CategoryEventList';
 import { getEventList } from '@/redux/slices/EventList';
 import { useTranslation } from 'react-i18next';
 import { getProfile } from '@/redux/slices/profileInfo';
 import { format } from 'date-fns';
 import { BASE_API_URL } from '@/until';
-
-// Predefined Event Types
-const EVENT_TYPES = [
-    { value: 'conference', label: 'Conference' },
-    { value: 'workshop', label: 'Workshop' },
-    { value: 'exhibition', label: 'Exhibition' },
-    { value: 'concert', label: 'Concert' },
-    { value: 'festival', label: 'Festival' },
-    { value: 'seminar', label: 'Seminar' },
-    { value: 'webinar', label: 'Webinar' },
-    { value: 'networking', label: 'Networking Event' },
-    { value: 'corporate', label: 'Corporate Event' },
-    { value: 'privateParty', label: 'Private Party' },
-];
-
-// Note: Event Categories are fetched from API (CategoryEventList) - see line 60 and 75
+import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
+import { getCategoryEventList } from '@/redux/slices/CategoryEventList';
 
 const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit }) => {
     const { t } = useTranslation();
@@ -45,21 +30,27 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
     const router = useRouter();
     const [page, setPage] = useState(1);
     const [loading, setLoding] = useState(false);
-    const { CategoryEventList = [] } = useSelector((state) => state.CategoryEventData || {});
     const [map, setMap] = useState(null);
-    const [marker, setMarker] = useState(null);
+    const [markerPosition, setMarkerPosition] = useState(null);
+    const [autocomplete, setAutocomplete] = useState(null);
+    const [activeSection, setActiveSection] = useState('basic');
+    const [mapError, setMapError] = useState(null);
     const GOOGLE_MAPS_API_KEY = "AIzaSyC6cKp791aygkeF6blRdhoWR0EEl8WwLTk";
     
-    // Debug: Log category list
-    useEffect(() => {
-        console.log('[CATEGORY-DEBUG] CategoryEventList from Redux:', CategoryEventList);
-        console.log('[CATEGORY-DEBUG] Is Array:', Array.isArray(CategoryEventList));
-        console.log('[CATEGORY-DEBUG] Length:', CategoryEventList?.length);
-    }, [CategoryEventList]);
+    // Load Google Maps API - libraries array should be static to avoid reload warnings
+    const libraries = ['places'];
+    const { isLoaded, loadError } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+        libraries,
+    });
     const { profile } = useSelector((state) => state.profileData || {});
     const EventListId = searchParams.get("id");
     const { EventListdetails = {}, loadingDetail } = useSelector(
         (state) => state.EventDetailData || {}
+    );
+    const { CategoryEventList = [] } = useSelector(
+        (state) => state.CategoryEventData || {}
     );
     const hostGender = profile?.user?.gender; // 1 = male, 2 = female
 
@@ -69,127 +60,14 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
         }
     }, [eventId, dispatch]);
 
-    // Initialize Google Maps when location section is active
     useEffect(() => {
-        if (activeSection === 'location' && !map && isOpen) {
-            const loadGoogleMaps = () => {
-                if (window.google && window.google.maps) {
-                    initializeMap();
-                } else {
-                    const script = document.createElement('script');
-                    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
-                    script.async = true;
-                    script.defer = true;
-                    script.onload = initializeMap;
-                    document.head.appendChild(script);
-                }
-            };
-
-            const initializeMap = () => {
-                const mapContainer = document.getElementById('map-container');
-                if (!mapContainer) return;
-
-                const defaultCenter = formik.values.latitude && formik.values.longitude
-                    ? { lat: parseFloat(formik.values.latitude), lng: parseFloat(formik.values.longitude) }
-                    : { lat: 24.7136, lng: 46.6753 }; // Default to Riyadh
-
-                const mapInstance = new window.google.maps.Map(mapContainer, {
-                    center: defaultCenter,
-                    zoom: 13,
-                    mapTypeControl: true,
-                });
-
-                let markerInstance = null;
-
-                // Add existing marker if coordinates exist
-                if (formik.values.latitude && formik.values.longitude) {
-                    markerInstance = new window.google.maps.Marker({
-                        position: defaultCenter,
-                        map: mapInstance,
-                        draggable: true,
-                    });
-                }
-
-                // Add click listener to drop pin
-                mapInstance.addListener('click', (e) => {
-                    const lat = e.latLng.lat();
-                    const lng = e.latLng.lng();
-
-                    formik.setFieldValue('latitude', lat.toFixed(6));
-                    formik.setFieldValue('longitude', lng.toFixed(6));
-
-                    if (markerInstance) {
-                        markerInstance.setPosition({ lat, lng });
-                    } else {
-                        markerInstance = new window.google.maps.Marker({
-                            position: { lat, lng },
-                            map: mapInstance,
-                            draggable: true,
-                        });
-                    }
-
-                    // Get neighborhood/address
-                    const geocoder = new window.google.maps.Geocoder();
-                    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-                        if (status === 'OK' && results[0]) {
-                            const address = results[0].formatted_address;
-                            formik.setFieldValue('event_address', address);
-
-                            // Extract neighborhood
-                            let neighborhood = '';
-                            results[0].address_components.forEach(component => {
-                                if (component.types.includes('neighborhood') || component.types.includes('sublocality')) {
-                                    neighborhood = component.long_name;
-                                } else if (component.types.includes('locality') && !neighborhood) {
-                                    neighborhood = component.long_name;
-                                }
-                            });
-                            formik.setFieldValue('neighborhood', neighborhood || address);
-                        }
-                    });
-                });
-
-                // Make marker draggable
-                if (markerInstance) {
-                    markerInstance.addListener('dragend', (e) => {
-                        const lat = e.latLng.lat();
-                        const lng = e.latLng.lng();
-                        formik.setFieldValue('latitude', lat.toFixed(6));
-                        formik.setFieldValue('longitude', lng.toFixed(6));
-
-                        const geocoder = new window.google.maps.Geocoder();
-                        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-                            if (status === 'OK' && results[0]) {
-                                const address = results[0].formatted_address;
-                                formik.setFieldValue('event_address', address);
-
-                                let neighborhood = '';
-                                results[0].address_components.forEach(component => {
-                                    if (component.types.includes('neighborhood') || component.types.includes('sublocality')) {
-                                        neighborhood = component.long_name;
-                                    } else if (component.types.includes('locality') && !neighborhood) {
-                                        neighborhood = component.long_name;
-                                    }
-                                });
-                                formik.setFieldValue('neighborhood', neighborhood || address);
-                            }
-                        });
-                    });
-                }
-
-                setMap(mapInstance);
-                setMarker(markerInstance);
-            };
-
-            // Small delay to ensure DOM is ready
-            setTimeout(loadGoogleMaps, 100);
-        }
-    }, [activeSection, isOpen]);
-
-    useEffect(() => {
-        dispatch(getCategoryEventList({ page: page, limit: 20 }));
         dispatch(getProfile());
-    }, [dispatch, page]);
+    }, [dispatch]);
+
+    // Fetch event categories from backend
+    useEffect(() => {
+        dispatch(getCategoryEventList({ page: 1, limit: 100 }));
+    }, [dispatch]);
 
     // Helper function to get proper image URL
     // Now supports both Cloudinary URLs and local storage URLs
@@ -261,33 +139,29 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             event_type: EventListId ? EventListdetails?.event_type : 1,
             event_for: EventListId ? EventListdetails?.event_for : 3,
             event_category: EventListId ? (() => {
-                // Get category values from event details
-                const categories = Array.isArray(EventListdetails?.event_category) 
-                    ? EventListdetails.event_category 
-                    : (EventListdetails?.event_category ? [EventListdetails.event_category] : []);
+                // Get category value from event details (single value now)
+                // Support both old ObjectId format and new string format
+                let category = EventListdetails?.event_category;
                 
-                // Filter to only include valid ObjectIds (24 character hex strings)
-                // This prevents old string values like "entertainment" from being included
-                return categories
-                    .filter(cat => {
-                        if (!cat) return false;
-                        // If it's an object with _id, use _id
-                        if (typeof cat === 'object' && cat._id) {
-                            return /^[0-9a-fA-F]{24}$/.test(String(cat._id));
-                        }
-                        // If it's a string, check if it's a valid ObjectId
-                        if (typeof cat === 'string') {
-                            return /^[0-9a-fA-F]{24}$/.test(cat);
-                        }
-                        return false;
-                    })
-                    .map(cat => {
-                        // Normalize to string ID
-                        if (typeof cat === 'object' && cat._id) return String(cat._id);
-                        return String(cat);
-                    });
-            })() : [],
-            event_types: EventListId ? (Array.isArray(EventListdetails?.event_types) ? EventListdetails?.event_types : (EventListdetails?.event_types ? [EventListdetails?.event_types] : [])) : [],
+                // If it's an array, get the first item (for backward compatibility)
+                if (Array.isArray(category) && category.length > 0) {
+                    category = category[0];
+                }
+                
+                if (!category) return "";
+                
+                // If it's an object with _id, return the ObjectId
+                if (typeof category === 'object' && category._id) {
+                    return String(category._id);
+                }
+                
+                // If it's already a string, return as is (should be ObjectId)
+                if (typeof category === 'string') {
+                    return category;
+                }
+                
+                return String(category);
+            })() : "",
             dos_instruction: EventListId ? EventListdetails?.dos_instruction || "" : "",
             do_not_instruction: EventListId ? EventListdetails?.do_not_instruction || "" : "",
             latitude: EventListId ? (EventListdetails?.location?.coordinates?.[1] || "") : "",
@@ -338,23 +212,19 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 .min(5, 'Event address must be at least 5 characters'),
             no_of_attendees: Yup.number()
                 .min(1, "Event capacity must be at least 1")
-                .max(10, "Event capacity cannot exceed 10")
                 .required("Event capacity is required")
-                .integer("Event capacity must be a whole number"),
+                .integer("Event capacity must be a whole number")
+                .positive("Event capacity must be a positive number"),
             event_price: Yup.number()
                 .required(t('common.required') || 'Event price is required')
                 .positive('Event price must be greater than 0')
                 .min(1, 'Event price must be at least 1 SAR')
                 .max(10000, 'Event price cannot exceed 10,000 SAR'),
-            event_category: Yup.array()
-                .min(1, "Please select at least one category")
-                .required(t('common.required') || 'At least one category is required'),
+            event_category: Yup.string()
+                .required(t('common.required') || 'Event category is required'),
             event_for: Yup.number()
                 .required(t('common.required') || 'Event audience is required')
                 .oneOf([1, 2, 3], 'Please select a valid event audience'),
-            event_types: Yup.array()
-                .min(1, "Please select at least one event type")
-                .required(t('common.required') || 'At least one event type is required'),
             dos_instruction: Yup.string()
                 .max(1000, 'Do\'s instructions cannot exceed 1000 characters'),
             do_not_instruction: Yup.string()
@@ -399,37 +269,70 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             setLoding(true);
             setSubmitting(true);
             let payload;
-            // Ensure event_category is an array and contains valid ObjectIds
-            const eventCategoryIds = Array.isArray(values.event_category) 
-                ? values.event_category.filter(cat => cat) // Filter out empty/null values
-                : values.event_category ? [values.event_category] : [];
+            // Validate event_category is a valid ObjectId
+            const eventCategory = values.event_category || "";
+            
+            // Check if it's a valid MongoDB ObjectId
+            const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(eventCategory);
+            const categoryExists = CategoryEventList.some(cat => cat._id === eventCategory);
 
-            // Validate that all category IDs are valid ObjectIds (24 character hex strings)
-            const validCategoryIds = eventCategoryIds.filter(cat => {
-                const isValid = typeof cat === 'string' && /^[0-9a-fA-F]{24}$/.test(cat);
-                if (!isValid) {
-                    console.warn('Invalid category ID:', cat);
-                }
-                return isValid;
-            });
-
-            if (validCategoryIds.length === 0 && eventCategoryIds.length > 0) {
-                toast.error('Please select valid event categories');
+            if (!eventCategory || (!isValidObjectId && !categoryExists)) {
+                toast.error('Please select a valid event category');
                 setLoding(false);
                 setSubmitting(false);
                 return;
             }
 
-            // Ensure event_types is an array
-            const eventTypesArray = Array.isArray(values.event_types) 
-                ? values.event_types 
-                : values.event_types ? [values.event_types] : [];
+            console.log('[EVENT-SUBMIT] Category being sent:', eventCategory);
 
-            console.log('[EVENT-SUBMIT] Category IDs being sent:', validCategoryIds);
-            console.log('[EVENT-SUBMIT] Raw event_category values:', values.event_category);
+            // Validate required fields before creating payload
+            if (!eventCategory || eventCategory.trim() === '') {
+                toast.error('Event category is required');
+                setLoding(false);
+                setSubmitting(false);
+                return;
+            }
+
+            if (!eventImages || eventImages.length === 0) {
+                toast.error('At least one event image is required');
+                setLoding(false);
+                setSubmitting(false);
+                return;
+            }
+
+            // Ensure event_price is a valid number
+            const eventPrice = Number(values.event_price);
+            if (isNaN(eventPrice) || eventPrice <= 0) {
+                toast.error('Event price must be a valid number greater than 0');
+                setLoding(false);
+                setSubmitting(false);
+                return;
+            }
+
+            // Ensure no_of_attendees is a valid number
+            const noOfAttendees = Number(values.no_of_attendees);
+            if (isNaN(noOfAttendees) || noOfAttendees < 1) {
+                toast.error('Number of attendees must be at least 1');
+                setLoding(false);
+                setSubmitting(false);
+                return;
+            }
+
+            // Ensure event_date is in proper format (YYYY-MM-DD or ISO string)
+            let eventDate = values.event_date;
+            if (eventDate && typeof eventDate === 'string') {
+                // If it's already in YYYY-MM-DD format, keep it
+                // Otherwise try to parse and format it
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(eventDate)) {
+                    const dateObj = new Date(eventDate);
+                    if (!isNaN(dateObj.getTime())) {
+                        eventDate = dateObj.toISOString().split('T')[0];
+                    }
+                }
+            }
 
             const basePayload = {
-                event_date: values.event_date,
+                event_date: eventDate,
                 event_start_time: values.event_start_time,
                 event_end_time: values.event_end_time,
                 event_name: values.event_name,
@@ -438,10 +341,9 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 event_address: values.event_address,
                 event_type: Number(values.event_type),
                 event_for: Number(values.event_for),
-                event_category: validCategoryIds,
-                event_types: eventTypesArray,
-                no_of_attendees: Number(values.no_of_attendees),
-                event_price: Number(values.event_price),
+                event_category: eventCategory,
+                no_of_attendees: noOfAttendees,
+                event_price: eventPrice,
                 dos_instruction: values.dos_instruction || '',
                 do_not_instruction: values.do_not_instruction || '',
                 ...(values.latitude && values.longitude && {
@@ -458,6 +360,9 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             } else {
                 payload = basePayload;
             }
+
+            console.log('[EVENT-SUBMIT] Final payload:', JSON.stringify(payload, null, 2));
+
             try {
                 if (EventListId) {
                     const res = await EditEventListApi(payload);
@@ -490,12 +395,141 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 }
             } catch (error) {
                 console.error("[EVENT-SUBMIT] Error:", error);
+                console.error("[EVENT-SUBMIT] Error response:", error?.response?.data);
+                console.error("[EVENT-SUBMIT] Error status:", error?.response?.status);
                 setLoding(false);
                 setSubmitting(false);
-                toast.error(error?.response?.data?.message || t('common.error') || 'An error occurred. Please try again.');
+                
+                // Show detailed error message
+                const errorMessage = error?.response?.data?.message || 
+                                   error?.response?.data?.error || 
+                                   error?.message || 
+                                   t('common.error') || 
+                                   'An error occurred. Please try again.';
+                toast.error(errorMessage);
             }
         },
     });
+
+    // Initialize marker position from form values
+    useEffect(() => {
+        if (formik.values.latitude && formik.values.longitude) {
+            const position = {
+                lat: parseFloat(formik.values.latitude),
+                lng: parseFloat(formik.values.longitude)
+            };
+            setMarkerPosition(position);
+            
+            // Update map center if map is loaded
+            if (map && isLoaded) {
+                map.setCenter(position);
+                map.setZoom(15);
+            }
+        } else {
+            setMarkerPosition(null);
+        }
+    }, [formik.values.latitude, formik.values.longitude, map, isLoaded]);
+
+    // Handle map load error
+    useEffect(() => {
+        if (loadError) {
+            setMapError('Failed to load Google Maps. Please check your API key configuration and internet connection.');
+        } else {
+            setMapError(null);
+        }
+    }, [loadError]);
+
+    // Geocode function to get address from coordinates
+    const geocodeLocation = (location) => {
+        if (!isLoaded || !window.google) return;
+        
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ location }, (results, status) => {
+            if (status === 'OK' && results && results[0]) {
+                const address = results[0].formatted_address;
+                formik.setFieldValue('event_address', address);
+
+                // Extract neighborhood
+                let neighborhood = '';
+                results[0].address_components.forEach(component => {
+                    if (component.types.includes('neighborhood') || component.types.includes('sublocality')) {
+                        neighborhood = component.long_name;
+                    } else if (component.types.includes('locality') && !neighborhood) {
+                        neighborhood = component.long_name;
+                    }
+                });
+                formik.setFieldValue('neighborhood', neighborhood || address);
+            }
+        });
+    };
+
+    // Handle map click to place marker
+    const handleMapClick = (e) => {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        const position = { lat, lng };
+
+        formik.setFieldValue('latitude', lat.toFixed(6));
+        formik.setFieldValue('longitude', lng.toFixed(6));
+        setMarkerPosition(position);
+        geocodeLocation(position);
+    };
+
+    // Handle marker drag end
+    const handleMarkerDragEnd = (e) => {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        const position = { lat, lng };
+
+        formik.setFieldValue('latitude', lat.toFixed(6));
+        formik.setFieldValue('longitude', lng.toFixed(6));
+        geocodeLocation(position);
+    };
+
+    // Handle autocomplete place selection
+    const handlePlaceSelect = () => {
+        if (!autocomplete) return;
+
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) {
+            return;
+        }
+
+        const location = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+        };
+
+        // Update map center
+        if (map) {
+            map.setCenter(location);
+            map.setZoom(15);
+        }
+
+        // Update form values
+        formik.setFieldValue('latitude', location.lat.toFixed(6));
+        formik.setFieldValue('longitude', location.lng.toFixed(6));
+        formik.setFieldValue('event_address', place.formatted_address || place.name);
+        setMarkerPosition(location);
+
+        // Extract neighborhood
+        let neighborhood = '';
+        if (place.address_components) {
+            place.address_components.forEach(component => {
+                if (component.types.includes('neighborhood') || component.types.includes('sublocality')) {
+                    neighborhood = component.long_name;
+                } else if (component.types.includes('locality') && !neighborhood) {
+                    neighborhood = component.long_name;
+                }
+            });
+        }
+        formik.setFieldValue('neighborhood', neighborhood || place.formatted_address || place.name);
+    };
+
+    // Get default center
+    const defaultCenter = formik.values.latitude && formik.values.longitude
+        ? { lat: parseFloat(formik.values.latitude), lng: parseFloat(formik.values.longitude) }
+        : { lat: 24.7136, lng: 46.6753 }; // Default to Riyadh
 
     const handleFile = async (file) => {
         if (!file) return;
@@ -560,14 +594,26 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
         });
     };
 
-    const [activeSection, setActiveSection] = useState('basic');
-
     const handleGetCurrentLocation = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    formik.setFieldValue('latitude', position.coords.latitude.toFixed(6));
-                    formik.setFieldValue('longitude', position.coords.longitude.toFixed(6));
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const location = { lat, lng };
+                    
+                    formik.setFieldValue('latitude', lat.toFixed(6));
+                    formik.setFieldValue('longitude', lng.toFixed(6));
+                    setMarkerPosition(location);
+                    
+                    // Update map center if map is loaded
+                    if (map) {
+                        map.setCenter(location);
+                        map.setZoom(15);
+                    }
+                    
+                    // Geocode the location to get address
+                    geocodeLocation(location);
                     toast.success('Location captured successfully!');
                 },
                 (error) => {
@@ -928,107 +974,53 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             ) : null}
                         </div>
 
-                        {/* Event Types */}
-                        <div>
-                            <label className="block text-gray-700 text-sm font-semibold mb-2">
-                                {t('add.tab55') || t('detail.tab55') || 'Event Types'} <span className="text-red-500">*</span>
-                                <span className="text-gray-400 text-xs font-normal ml-2">
-                                    (Select multiple)
-                                </span>
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 flex items-start pl-3 pt-3 pointer-events-none z-10">
-                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                    </svg>
-                                </div>
-                                <select
-                                    multiple
-                                    value={Array.isArray(formik.values.event_types) ? formik.values.event_types : []}
-                                    onChange={(e) => {
-                                        const selected = Array.from(e.target.selectedOptions, option => option.value);
-                                        formik.setFieldValue('event_types', selected);
-                                    }}
-                                    className="w-full pl-10 py-4 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] text-gray-900 text-sm min-h-[120px]"
-                                    size={Math.min(EVENT_TYPES.length, 5)}
-                                >
-                                    {EVENT_TYPES.map((type) => {
-                                        const translationKey = `add.eventTypes.${type.value}`;
-                                        const translated = t(translationKey);
-                                        const displayText = translated !== translationKey ? translated : type.label;
-                                        return (
-                                            <option key={type.value} value={type.value}>
-                                                {displayText}
-                                            </option>
-                                        );
-                                    })}
-                                </select>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                </svg>
-                                Hold Ctrl (Windows) or Cmd (Mac) to select multiple event types
-                            </p>
-                            {formik.touched.event_types && formik.errors.event_types ? (
-                                <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                    {formik.errors.event_types}
-                                </p>
-                            ) : null}
-                        </div>
-
                         {/* Event Category */}
                         <div>
                             <label className="block text-gray-700 text-sm font-semibold mb-2">
                                 {t('add.tab8') || t('add.tab56') || 'Event Categories'} <span className="text-red-500">*</span>
-                                <span className="text-gray-400 text-xs font-normal ml-2">
-                                    (Select multiple)
-                                </span>
                             </label>
                             <div className="relative">
-                                <div className="absolute inset-y-0 left-0 flex items-start pl-3 pt-3 pointer-events-none z-10">
+                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
                                     <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                     </svg>
                                 </div>
                                 <select
-                                    multiple
-                                    value={Array.isArray(formik.values.event_category) ? formik.values.event_category : []}
-                                    onChange={(e) => {
-                                        const selected = Array.from(e.target.selectedOptions, option => option.value);
-                                        formik.setFieldValue('event_category', selected);
-                                    }}
-                                    className="w-full pl-10 py-4 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] text-gray-900 text-sm min-h-[120px]"
-                                    size={Math.min((CategoryEventList || []).length || 5, 5)}
+                                    {...formik.getFieldProps('event_category')}
+                                    className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] text-gray-900 text-sm"
                                 >
-                                    {CategoryEventList && Array.isArray(CategoryEventList) && CategoryEventList.length > 0 ? (
-                                        CategoryEventList.map((category) => {
-                                            // Use category._id as value (must be ObjectId string)
-                                            const categoryId = category._id || category.id;
-                                            if (!categoryId) {
-                                                console.warn('Category missing _id:', category);
-                                                return null;
-                                            }
-                                            return (
-                                                <option key={categoryId} value={categoryId}>
-                                                    {category.name || category.category_name || 'Unnamed Category'}
-                                                </option>
-                                            );
-                                        }).filter(Boolean) // Remove any null entries
+                                    <option value="">Select a category</option>
+                                    {CategoryEventList && CategoryEventList.length > 0 ? (
+                                        CategoryEventList.map((category) => (
+                                            <option key={category._id} value={category._id}>
+                                                {category.name || 'Unnamed Category'}
+                                            </option>
+                                        ))
                                     ) : (
-                                        <option disabled>Loading categories...</option>
+                                        // Fallback to static categories if backend categories not loaded yet
+                                        [
+                                            { _id: 'cultural-traditional', name: 'Cultural & Traditional Events' },
+                                            { _id: 'outdoor-adventure', name: 'Outdoor & Adventure' },
+                                            { _id: 'educational-workshops', name: 'Educational & Workshops' },
+                                            { _id: 'sports-fitness', name: 'Sports & Fitness' },
+                                            { _id: 'music-arts', name: 'Music & Arts' },
+                                            { _id: 'family-kids', name: 'Family & Kids Activities' },
+                                            { _id: 'food-culinary', name: 'Food & Culinary Experiences' },
+                                            { _id: 'wellness-relaxation', name: 'Wellness & Relaxation' },
+                                            { _id: 'heritage-history', name: 'Heritage & History Tours' },
+                                            { _id: 'nightlife-entertainment', name: 'Nightlife & Entertainment' },
+                                            { _id: 'eco-sustainable', name: 'Eco & Sustainable Tourism' },
+                                            { _id: 'business-networking', name: 'Business & Networking' },
+                                            { _id: 'volunteering', name: 'Volunteering' },
+                                            { _id: 'photography-sightseeing', name: 'Photography & Sightseeing' },
+                                        ].map((category) => (
+                                            <option key={category._id} value={category._id}>
+                                                {category.name}
+                                            </option>
+                                        ))
                                     )}
                                 </select>
                             </div>
-                            <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                </svg>
-                                Hold Ctrl (Windows) or Cmd (Mac) to select multiple categories
-                            </p>
                             {formik.touched.event_category && formik.errors.event_category ? (
                                 <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -1111,148 +1103,37 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             )}
                         </div>
 
-                        {/* Event Price - Professional Enhanced Design */}
-                        <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-6 rounded-2xl border-2 border-orange-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-[#a797cc] to-orange-600 rounded-xl flex items-center justify-center shadow-md">
-                                    <Image
-                                        src="/assets/images/icons/amount.png"
-                                        height={24}
-                                        width={24}
-                                        alt="Price"
-                                        className="filter brightness-0 invert"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-gray-800 text-base font-bold">
-                                        {t('add.tab14') || 'Event Price'} <span className="text-red-500">*</span>
-                                    </label>
-                                    <p className="text-gray-500 text-xs mt-0.5">Enter the price per person in SAR</p>
-                                </div>
-                            </div>
+                        {/* Event Price - Compact Design */}
+                        <div>
+                            <label className="block text-gray-700 text-sm font-semibold mb-2">
+                                {t('add.tab14') || 'Event Price'} <span className="text-red-500">*</span>
+                            </label>
                             <div className="relative">
-                                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                                    <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm border border-orange-200">
-                                        <span className="text-orange-600 font-bold text-sm">ر.س</span>
-                                    </div>
+                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                                    <span className="text-gray-500 font-medium">SAR</span>
                                 </div>
                                 <input
                                     type="number"
-                                    placeholder="0.00"
+                                    placeholder="Enter price per person"
                                     {...formik.getFieldProps('event_price')}
                                     min="1"
                                     max="10000"
                                     step="0.01"
-                                    className="w-full pl-16 pr-20 py-4 bg-white border-2 border-orange-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-orange-200 focus:border-[#a797cc] text-gray-900 placeholder:text-gray-400 font-semibold text-base shadow-sm hover:border-orange-300 transition-all"
+                                    className="w-full pl-12 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all"
                                 />
-                                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                    <div className="bg-gradient-to-r from-[#a797cc] to-orange-600 text-white font-bold px-4 py-2 rounded-lg shadow-sm">
-                                        SAR
-                                    </div>
-                                </div>
                             </div>
                             {formik.touched.event_price && formik.errors.event_price ? (
-                                <div className="mt-3 bg-red-50 border-l-4 border-red-500 p-3 rounded-lg">
-                                    <p className="text-red-700 text-sm font-medium flex items-center gap-2">
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        {formik.errors.event_price}
-                                    </p>
-                                </div>
-                            ) : formik.values.event_price && formik.values.event_price > 0 ? (
-                                <div className="mt-3 bg-green-50 border-l-4 border-green-500 p-3 rounded-lg">
-                                    <p className="text-green-700 text-sm font-medium flex items-center gap-2">
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
-                                        Price set: {formik.values.event_price} SAR per person
-                                    </p>
-                                </div>
+                                <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                    {formik.errors.event_price}
+                                </p>
                             ) : null}
                         </div>
 
-                        {/* Event Duration and Capacity - Professional Enhanced Design */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                            {/* Event Duration */}
-                            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 rounded-2xl border-2 border-blue-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                                        <Image
-                                            src="/assets/images/icons/time.png"
-                                            height={24}
-                                            width={24}
-                                            alt="Duration"
-                                            className="filter brightness-0 invert"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-800 text-base font-bold">
-                                            Event Duration <span className="text-red-500">*</span>
-                                        </label>
-                                        <p className="text-gray-500 text-xs mt-0.5">Calculated from start and end time</p>
-                                    </div>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm border border-blue-200">
-                                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={(() => {
-                                            if (formik.values.event_start_time && formik.values.event_end_time) {
-                                                const start = formik.values.event_start_time.split(':').map(Number);
-                                                const end = formik.values.event_end_time.split(':').map(Number);
-                                                const startMinutes = start[0] * 60 + start[1];
-                                                const endMinutes = end[0] * 60 + end[1];
-                                                const durationMinutes = endMinutes - startMinutes;
-                                                
-                                                if (durationMinutes <= 0) return '';
-                                                
-                                                const hours = Math.floor(durationMinutes / 60);
-                                                const minutes = durationMinutes % 60;
-                                                
-                                                if (hours > 0 && minutes > 0) {
-                                                    return `${hours} hour${hours > 1 ? 's' : ''} ${minutes} minute${minutes > 1 ? 's' : ''}`;
-                                                } else if (hours > 0) {
-                                                    return `${hours} hour${hours > 1 ? 's' : ''}`;
-                                                } else {
-                                                    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
-                                                }
-                                            }
-                                            return '';
-                                        })()}
-                                        readOnly
-                                        placeholder="Duration will be calculated automatically"
-                                        className="w-full pl-16 pr-4 py-4 bg-white border-2 border-blue-200 rounded-xl text-gray-700 font-semibold text-base shadow-sm cursor-not-allowed"
-                                    />
-                                </div>
-                                {!formik.values.event_start_time || !formik.values.event_end_time ? (
-                                    <div className="mt-3 bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg">
-                                        <p className="text-blue-700 text-sm font-medium flex items-center gap-2">
-                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                            </svg>
-                                            Please select start and end time to see duration
-                                        </p>
-                                    </div>
-                                ) : formik.values.event_start_time && formik.values.event_end_time ? (
-                                    <div className="mt-3 bg-green-50 border-l-4 border-green-500 p-3 rounded-lg">
-                                        <p className="text-green-700 text-sm font-medium flex items-center gap-2">
-                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                            Duration calculated successfully
-                                        </p>
-                                    </div>
-                                ) : null}
-                            </div>
-
-                            {/* Event Capacity */}
+                        {/* Event Capacity */}
+                        <div className="mt-6">
                             <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-6 rounded-2xl border-2 border-green-200 shadow-lg hover:shadow-xl transition-all duration-300">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
@@ -1264,7 +1145,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                         <label className="block text-gray-800 text-base font-bold">
                                             {t('add.tab10') || 'Event Capacity'} <span className="text-red-500">*</span>
                                         </label>
-                                        <p className="text-gray-500 text-xs mt-0.5">Select maximum number of attendees</p>
+                                        <p className="text-gray-500 text-xs mt-0.5">Enter maximum number of attendees</p>
                                     </div>
                                 </div>
                                 <div className="relative">
@@ -1275,22 +1156,13 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                             </svg>
                                         </div>
                                     </div>
-                                    <select
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        placeholder="Enter number of people"
                                         {...formik.getFieldProps('no_of_attendees')}
-                                        className="w-full pl-16 pr-12 py-4 bg-white border-2 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-500 text-gray-900 font-semibold text-base shadow-sm hover:border-green-300 transition-all appearance-none cursor-pointer"
-                                    >
-                                        <option value="">Select Capacity</option>
-                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                                            <option key={num} value={num}>
-                                                {num} {num === 1 ? 'person' : 'people'}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
+                                        className="w-full pl-16 pr-4 py-4 bg-white border-2 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-500 text-gray-900 font-semibold text-base shadow-sm hover:border-green-300 transition-all"
+                                    />
                                 </div>
                                 {formik.touched.no_of_attendees && formik.errors.no_of_attendees ? (
                                     <div className="mt-3 bg-red-50 border-l-4 border-red-500 p-3 rounded-lg">
@@ -1329,43 +1201,159 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                 {t('add.tab7') || 'Event Address'} <span className="text-red-500">*</span>
                             </label>
                             <div className="relative mb-3">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                                    <Image
-                                        src="/assets/images/icons/location-pin.png"
-                                        height={20}
-                                        width={20}
-                                        alt="Location"
-                                    />
-                                </span>
-                                <input
-                                    type="text"
-                                    id="event-address-autocomplete"
-                                    placeholder={t('add.tab7') || 'Search and select location on map'}
-                                    value={formik.values.event_address || ''}
-                                    onChange={(e) => {
-                                        formik.setFieldValue('event_address', e.target.value);
-                                    }}
-                                    className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all"
-                                />
+                                {isLoaded ? (
+                                    <Autocomplete
+                                        onLoad={(autocomplete) => setAutocomplete(autocomplete)}
+                                        onPlaceChanged={handlePlaceSelect}
+                                        options={{
+                                            types: ['address'],
+                                            componentRestrictions: { country: 'sa' },
+                                        }}
+                                    >
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                                                <Image
+                                                    src="/assets/images/icons/location-pin.png"
+                                                    height={20}
+                                                    width={20}
+                                                    alt="Location"
+                                                />
+                                            </span>
+                                            <input
+                                                type="text"
+                                                placeholder={t('add.tab7') || 'Search and select location on map'}
+                                                value={formik.values.event_address || ''}
+                                                onChange={(e) => {
+                                                    formik.setFieldValue('event_address', e.target.value);
+                                                }}
+                                                className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all"
+                                            />
+                                        </div>
+                                    </Autocomplete>
+                                ) : (
+                                    <div className="relative">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                                            <Image
+                                                src="/assets/images/icons/location-pin.png"
+                                                height={20}
+                                                width={20}
+                                                alt="Location"
+                                            />
+                                        </span>
+                                        <input
+                                            type="text"
+                                            placeholder={t('add.tab7') || 'Search and select location on map'}
+                                            value={formik.values.event_address || ''}
+                                            onChange={(e) => {
+                                                formik.setFieldValue('event_address', e.target.value);
+                                            }}
+                                            className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all"
+                                        />
+                                    </div>
+                                )}
                             </div>
                             
-                            {/* Google Maps Container */}
-                            <div className="mb-3">
-                                <label className="block text-gray-700 text-xs font-medium mb-2">
-                                    {t('add.selectLocationOnMap') || 'Select location by dropping a pin on the map'}
-                                </label>
-                                <div 
-                                    id="map-container" 
-                                    className="w-full h-64 border border-gray-300 rounded-lg overflow-hidden bg-gray-100"
-                                    style={{ minHeight: '256px' }}
-                                >
-                                    <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
-                                        {t('add.mapLoading') || 'Map will load here. Click to drop a pin.'}
+                            {/* Google Maps Container - Professional Ultra Pro Design */}
+                            <div className="mb-4">
+                                <div className="bg-gradient-to-r from-[#a797cc] to-purple-600 rounded-t-xl p-4 shadow-lg">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="text-white font-bold text-base mb-0.5">
+                                                {t('add.selectLocationOnMap')}
+                                            </h4>
+                                            <p className="text-white/90 text-xs">
+                                                {t('add.mapInstructions')}
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    {t('add.mapInstructions') || 'Click on the map to drop a pin and select your event location. The neighborhood will be displayed below.'}
-                                </p>
+                                <div className="relative">
+                                    {!isLoaded ? (
+                                        <div 
+                                            className="w-full border-x-2 border-b-2 border-gray-200 rounded-b-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
+                                            style={{ minHeight: '400px', height: '400px' }}
+                                        >
+                                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
+                                                <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#a797cc] border-t-transparent mb-4"></div>
+                                                <p className="text-sm font-medium text-gray-600">
+                                                    {t('add.mapLoading') || 'Loading map...'}
+                                                </p>
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    Please wait while we initialize the map
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : loadError ? (
+                                        <div 
+                                            className="w-full border-x-2 border-b-2 border-gray-200 rounded-b-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
+                                            style={{ minHeight: '400px', height: '400px' }}
+                                        >
+                                            <div className="w-full h-full flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm">
+                                                <svg className="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <p className="text-sm font-medium text-red-600 mb-1">Google Maps Error</p>
+                                                <p className="text-xs text-gray-500 px-4 text-center">{mapError || loadError.message}</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <GoogleMap
+                                                mapContainerStyle={{ 
+                                                    width: '100%', 
+                                                    height: '400px',
+                                                    borderRadius: '0 0 0.75rem 0.75rem'
+                                                }}
+                                                center={defaultCenter}
+                                                zoom={formik.values.latitude && formik.values.longitude ? 15 : 13}
+                                                onClick={handleMapClick}
+                                                onLoad={(mapInstance) => setMap(mapInstance)}
+                                                options={{
+                                                    mapTypeControl: true,
+                                                    fullscreenControl: true,
+                                                    streetViewControl: false,
+                                                    zoomControl: true,
+                                                    mapTypeId: 'roadmap',
+                                                }}
+                                            >
+                                                {markerPosition && (
+                                                    <Marker
+                                                        position={markerPosition}
+                                                        draggable={true}
+                                                        onDragEnd={handleMarkerDragEnd}
+                                                    />
+                                                )}
+                                            </GoogleMap>
+                                            {/* Map Overlay Instructions */}
+                                            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 z-10 border border-gray-200">
+                                                <div className="flex items-center gap-2">
+                                                    <svg className="w-4 h-4 text-[#a797cc]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span className="text-xs font-semibold text-gray-700">Click to place marker</span>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                {/* Additional Help Text */}
+                                <div className="mt-3 flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-semibold text-blue-900 mb-1">Pro Tip</p>
+                                        <p className="text-xs text-blue-700 leading-relaxed">
+                                            You can search for an address above, then click on the map to fine-tune the exact location. The marker is draggable for precise positioning.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Neighborhood Display */}

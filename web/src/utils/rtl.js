@@ -104,13 +104,48 @@ export const getRTLIcon = (isRTL, leftIcon, rightIcon = null) => {
 
 /**
  * Initialize RTL on page load
+ * This runs immediately on client-side to prevent flash of wrong direction
  */
 export const initRTL = () => {
-  if (typeof window !== "undefined") {
-    const lang = localStorage.getItem("i18nextLng") || "ar";
-    const isRTL = lang === "ar";
-    document.documentElement.dir = isRTL ? "rtl" : "ltr";
-    document.documentElement.lang = lang;
+  if (typeof window !== "undefined" && typeof document !== "undefined") {
+    try {
+      // Get language from localStorage
+      let lang = "ar"; // Default
+      
+      if (typeof localStorage !== "undefined") {
+        const stored = localStorage.getItem("i18nextLng");
+        if (stored && (stored === "ar" || stored === "en")) {
+          lang = stored;
+        } else {
+          // If invalid or missing, set default and save it
+          localStorage.setItem("i18nextLng", "ar");
+          lang = "ar";
+        }
+      }
+      
+      const isRTL = lang === "ar";
+      
+      // Update HTML attributes immediately (before React hydration)
+      if (document.documentElement) {
+        document.documentElement.setAttribute("dir", isRTL ? "rtl" : "ltr");
+        document.documentElement.setAttribute("lang", lang);
+        
+        // Update body class
+        if (document.body) {
+          document.body.classList.remove("rtl", "ltr");
+          document.body.classList.add(isRTL ? "rtl" : "ltr");
+        }
+      }
+      
+      console.log(`[initRTL] Initialized with language: ${lang}, direction: ${isRTL ? "rtl" : "ltr"}`);
+    } catch (error) {
+      console.warn("[initRTL] Error initializing RTL:", error);
+      // Fallback to Arabic RTL
+      if (document.documentElement) {
+        document.documentElement.setAttribute("dir", "rtl");
+        document.documentElement.setAttribute("lang", "ar");
+      }
+    }
   }
 };
 

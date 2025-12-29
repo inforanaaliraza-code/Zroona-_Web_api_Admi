@@ -44,20 +44,31 @@ const commonController = {
                 // Check if file might be in a different format
                 const fileKeys = req.files ? Object.keys(req.files) : [];
                 if (fileKeys.length > 0) {
-                    console.log('File keys found:', fileKeys);
+                    console.log('⚠️ File key "file" not found. Available keys:', fileKeys);
                     // Try to use the first file if 'file' key doesn't exist
                     const firstFileKey = fileKeys[0];
                     if (req.files[firstFileKey]) {
+                        console.log(`✅ Using file from key: ${firstFileKey}`);
                         req.files.file = req.files[firstFileKey];
                     } else {
+                        console.error('❌ No valid file found in request');
                         return Response.badRequestResponse(res, `file is required. Received keys: ${fileKeys.join(', ')}`);
                     }
                 } else {
+                    console.error('❌ No files found in request');
                     return Response.badRequestResponse(res, 'file is required. No files found in request.');
                 }
             }
 
             const uploaded = req.files.file;
+            
+            console.log('📄 File details:', {
+                hasTempFilePath: !!uploaded.tempFilePath,
+                hasData: !!uploaded.data,
+                name: uploaded.name,
+                mimetype: uploaded.mimetype,
+                size: uploaded.size || (uploaded.data ? uploaded.data.length : 'unknown')
+            });
             
             // Handle both temp files and in-memory files
             let fileData;
@@ -65,14 +76,26 @@ const commonController = {
             
             if (uploaded.tempFilePath) {
                 // File was saved to temp directory (useTempFiles: true)
-                fileData = fs.readFileSync(uploaded.tempFilePath);
-                originalName = uploaded.name || uploaded.tempFilePath.split('/').pop() || `upload-${Date.now()}`;
+                try {
+                    fileData = fs.readFileSync(uploaded.tempFilePath);
+                    originalName = uploaded.name || uploaded.tempFilePath.split('/').pop() || uploaded.tempFilePath.split('\\').pop() || `upload-${Date.now()}`;
+                    console.log('✅ File read from temp path:', uploaded.tempFilePath);
+                } catch (readError) {
+                    console.error('❌ Error reading temp file:', readError.message);
+                    return Response.badRequestResponse(res, `Failed to read uploaded file: ${readError.message}`);
+                }
             } else if (uploaded.data) {
                 // File is in memory (useTempFiles: false)
                 fileData = uploaded.data;
                 originalName = uploaded.name || `upload-${Date.now()}`;
+                console.log('✅ File data found in memory');
             } else {
-                return Response.badRequestResponse(res, 'File data not found. File may not have been uploaded correctly.');
+                console.error('❌ File data not found. File object:', {
+                    keys: Object.keys(uploaded),
+                    tempFilePath: uploaded.tempFilePath,
+                    hasData: !!uploaded.data
+                });
+                return Response.badRequestResponse(res, 'File data not found. File may not have been uploaded correctly. Please try again.');
             }
             
             // ========== AWS S3 UPLOAD CODE - COMMENTED OUT ==========
@@ -128,12 +151,26 @@ const commonController = {
                 );
             }
 
+            // Check file size before upload (Cloudinary free tier limit is 10 MB)
+            const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+            const fileSize = fileData.length;
+            
+            if (fileSize > MAX_FILE_SIZE) {
+                const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+                return Response.badRequestResponse(
+                    res,
+                    `File size too large. Your file is ${fileSizeMB} MB, but the maximum allowed size is ${maxSizeMB} MB. Please compress or resize your image before uploading.`
+                );
+            }
+
             // Upload to Cloudinary
             console.log('📤 Starting Cloudinary upload:', {
                 dirName,
                 originalName,
                 mimetype: uploaded.mimetype,
-                fileSize: fileData.length
+                fileSize: fileData.length,
+                fileSizeMB: (fileData.length / (1024 * 1024)).toFixed(2)
             });
             
             const cloudinaryResult = await uploadToCloudinary(
@@ -181,17 +218,34 @@ const commonController = {
                 stack: error?.stack ? error.stack.split('\n').slice(0, 5).join('\n') : 'No stack trace'
             });
 
+            // Handle file size errors specifically (before other error handling)
+            if (error?.message && (error.message.includes('File size too large') || error.message.includes('Maximum is'))) {
+                return Response.badRequestResponse(
+                    res,
+                    error.message || 'File size exceeds the maximum allowed limit of 10 MB. Please compress or resize your image before uploading.'
+                );
+            }
+
             // Handle Cloudinary-specific errors
             if (error?.http_code) {
                 let userMessage = 'File upload failed';
                 if (error.http_code === 401) {
                     userMessage = 'Cloudinary authentication failed. Please check your API credentials.';
                 } else if (error.http_code === 400) {
+                    // Check if it's a file size error
+                    if (error.message && (error.message.includes('File size too large') || error.message.includes('Maximum is'))) {
+                        return Response.badRequestResponse(
+                            res,
+                            error.message || 'File size exceeds the maximum allowed limit of 10 MB. Please compress or resize your image before uploading.'
+                        );
+                    }
                     userMessage = `Cloudinary upload failed: ${error.message || 'Invalid request'}`;
                 } else if (error.http_code === 403) {
                     userMessage = 'Cloudinary access denied. Please check your API key permissions.';
                 } else if (error.http_code === 404) {
                     userMessage = 'Cloudinary resource not found. Please check your cloud name.';
+                } else if (error.http_code === 499 || error.name === 'TimeoutError') {
+                    userMessage = 'File upload timeout: The upload took too long. Please try again with a smaller file or check your internet connection.';
                 } else {
                     userMessage = `Cloudinary upload failed (HTTP ${error.http_code}): ${error.message || 'Unknown error'}`;
                 }

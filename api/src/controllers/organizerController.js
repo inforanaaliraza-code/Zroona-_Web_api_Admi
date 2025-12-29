@@ -1980,112 +1980,11 @@ const organizerController = {
 				console.log(`[BOOKING-REJECTED] Booking ${booked_event._id} rejected - Guest will not see this in active bookings`);
 			}
 
-			// If booking is approved (status 2), add guest to event's group chat
+			// NOTE: Guest will be added to group chat ONLY after payment is completed
+			// When booking is accepted (status 2), guest can now proceed to payment
+			// Group chat addition happens in updatePaymentStatus after payment is successful
 			if (book_status === 2) {
-				try {
-					// Check if event is approved and has a group chat
-					if (event.is_approved === 1) {
-						let groupChat = await ConversationService.GetGroupChatByEventService(event._id);
-						
-						// If group chat doesn't exist, create it
-						if (!groupChat) {
-							console.log(`[GROUP-CHAT] Creating group chat for event: ${event.event_name}`);
-							groupChat = await ConversationService.CreateGroupChatService(
-								event._id,
-								event.organizer_id,
-								event.event_name
-							);
-						}
-						
-						if (groupChat) {
-							// Add approved guest to group chat
-							await ConversationService.AddParticipantToGroupService(
-								event._id,
-								booked_event.user_id,
-								1 // Role: User/Guest
-							);
-							console.log(`[GROUP-CHAT] Added user ${booked_event.user_id} to group chat for event: ${event.event_name}`);
-							
-							// Get user details for welcome message
-							const UserService = require("../services/userService");
-							const guestUser = await UserService.FindOneService({ _id: booked_event.user_id });
-							const guestName = guestUser ? `${guestUser.first_name} ${guestUser.last_name}` : "Guest";
-							
-							// Send welcome message to group chat
-							try {
-								const MessageService = require("../services/messageService");
-								const welcomeMessage = req.lang === "ar" 
-									? `تم إضافة ${guestName} إلى محادثة المجموعة. مرحباً بك!`
-									: `${guestName} has been added to the group chat. Welcome!`;
-								
-								await MessageService.CreateService({
-									conversation_id: groupChat._id,
-									sender_id: organizer._id,
-									sender_role: 2, // Organizer
-									message: welcomeMessage,
-									message_type: "text",
-								});
-								
-								// Update conversation last message
-								await ConversationService.FindByIdAndUpdateService(groupChat._id, {
-									last_message: welcomeMessage,
-									last_message_at: new Date(),
-									last_sender_id: organizer._id,
-									last_sender_role: 2,
-								});
-								
-								// Send notification to guest about being added to group
-								try {
-									const groupChatNotification = {
-										title: req.lang === "ar" ? "تمت إضافتك إلى محادثة المجموعة" : "Added to Group Chat",
-										description: req.lang === "ar" 
-											? `تمت إضافتك إلى محادثة المجموعة لحدث "${event.event_name}". يمكنك الآن التواصل مع المشاركين الآخرين.`
-											: `You've been added to the group chat for "${event.event_name}". You can now communicate with other participants.`,
-										first_name: organizer.first_name,
-										last_name: organizer.last_name,
-										profile_image: organizer.profile_image || "",
-										userId: organizer._id,
-										event_id: event._id,
-										book_id: booked_event._id,
-										notification_type: 5, // Group chat notification type
-										status: 1,
-									};
-									
-									await NotificationService.CreateService({
-										user_id: booked_event.user_id,
-										role: 1, // User/Guest role
-										title: groupChatNotification.title,
-										description: groupChatNotification.description,
-										isRead: false,
-										notification_type: 5, // Group chat notification
-										event_id: event._id,
-										book_id: booked_event._id,
-										profile_image: organizer.profile_image || "",
-										username: `${organizer.first_name} ${organizer.last_name}`,
-										senderId: organizer._id,
-									});
-									
-									// Send push notification
-									const sendEventBookingAcceptNotification = require("../helpers/pushNotification").sendEventBookingAcceptNotification;
-									await sendEventBookingAcceptNotification(res, booked_event.user_id, groupChatNotification);
-									
-									console.log(`[NOTIFICATION] Sent group chat notification to user ${booked_event.user_id}`);
-								} catch (groupNotificationError) {
-									console.error('[NOTIFICATION] Error sending group chat notification:', groupNotificationError);
-								}
-							} catch (messageError) {
-								console.error('[GROUP-CHAT] Error sending welcome message:', messageError);
-							}
-						} else {
-							console.log(`[GROUP-CHAT] Failed to create or find group chat for event: ${event.event_name}`);
-						}
-					} else {
-						console.log(`[GROUP-CHAT] Event ${event.event_name} is not approved yet. Group chat will be created when event is approved.`);
-					}
-				} catch (groupChatError) {
-					console.error('[GROUP-CHAT] Error adding participant to group chat:', groupChatError);
-					// Don't fail the request if group chat addition fails
-				}
+				console.log(`[BOOKING-APPROVED] Booking ${booked_event._id} approved. Guest can now proceed to payment. Group chat will be added after payment.`);
 			}
 
 			return Response.ok(
@@ -3361,32 +3260,74 @@ const organizerController = {
 
 			const messages = notificationMessages[lang] || notificationMessages.en;
 
-			// Notify host
-			await NotificationService.CreateService({
-				user_id: userId,
-				role: 2, // Host role
-				title: messages.hostTitle,
-				description: messages.hostDesc,
-				event_id: event._id,
-				notification_type: 3, // Cancellation type
-				isRead: false,
-			});
-
-			// Notify all guests who had accepted bookings
-			for (const booking of allBookings) {
-				await NotificationService.CreateService({
-					user_id: booking.user_id,
-					role: 1, // Guest role
-					title: messages.guestTitle,
-					description: messages.guestDesc,
+			// Notify host with push notification
+			try {
+				const { pushNotification } = require("../helpers/pushNotification");
+				const hostNotificationData = {
+					title: messages.hostTitle,
+					description: messages.hostDesc,
+					first_name: organizer.first_name,
+					last_name: organizer.last_name,
+					userId: organizer._id,
+					profile_image: organizer.profile_image || "",
 					event_id: event._id,
-					book_id: booking._id,
+					notification_type: 3, // Cancellation type
+					status: 3, // Cancelled status
+				};
+				await pushNotification(res, 2, userId, hostNotificationData);
+				console.log(`[NOTIFICATION] Sent event cancellation push notification to host: ${userId}`);
+			} catch (pushError) {
+				console.error('[PUSH-NOTIFICATION] Error sending push to host, creating in-app notification:', pushError);
+				await NotificationService.CreateService({
+					user_id: userId,
+					role: 2, // Host role
+					title: messages.hostTitle,
+					description: messages.hostDesc,
+					event_id: event._id,
 					notification_type: 3, // Cancellation type
 					isRead: false,
 				});
 			}
 
-			// Notify admin
+			// Notify all guests who had accepted bookings with push notifications
+			const UserService = require("../services/userService");
+			for (const booking of allBookings) {
+				try {
+					// Get user details for notification
+					const guestUser = await UserService.FindOneService({ _id: booking.user_id });
+					if (guestUser) {
+						const { sendEventBookingAcceptNotification } = require("../helpers/pushNotification");
+						const guestNotificationData = {
+							title: messages.guestTitle,
+							description: messages.guestDesc,
+							first_name: guestUser.first_name,
+							last_name: guestUser.last_name,
+							userId: guestUser._id,
+							profile_image: guestUser.profile_image || "",
+							event_id: event._id,
+							book_id: booking._id,
+							notification_type: 3, // Cancellation type
+							status: 3, // Cancelled status
+						};
+						await sendEventBookingAcceptNotification(res, booking.user_id, guestNotificationData);
+						console.log(`[NOTIFICATION] Sent event cancellation push notification to guest: ${booking.user_id}`);
+					}
+				} catch (pushError) {
+					console.error(`[PUSH-NOTIFICATION] Error sending push to guest ${booking.user_id}, creating in-app notification:`, pushError);
+					await NotificationService.CreateService({
+						user_id: booking.user_id,
+						role: 1, // Guest role
+						title: messages.guestTitle,
+						description: messages.guestDesc,
+						event_id: event._id,
+						book_id: booking._id,
+						notification_type: 3, // Cancellation type
+						isRead: false,
+					});
+				}
+			}
+
+			// Notify admin (in-app only, no push needed)
 			const AdminService = require("../services/adminService");
 			const admins = await AdminService.FindService({ is_delete: { $ne: 1 } });
 			for (const admin of admins) {

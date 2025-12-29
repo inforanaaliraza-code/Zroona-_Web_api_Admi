@@ -67,19 +67,62 @@ if (!configureCloudinary()) {
 }
 
 /**
- * Upload file to Cloudinary
+ * Upload file to Cloudinary with timeout handling
  * @param {Buffer} fileBuffer - File buffer data
  * @param {string} folder - Folder name in Cloudinary (e.g., 'Zuroona/events', 'Zuroona/profiles')
  * @param {string} fileName - Original file name
  * @param {string} mimeType - File MIME type
+ * @param {number} timeoutMs - Timeout in milliseconds (default: 60000 = 60 seconds)
  * @returns {Promise<Object>} - Cloudinary upload result with secure_url
  */
-const uploadToCloudinary = async (fileBuffer, folder = 'Jeena', fileName = null, mimeType = 'image/jpeg') => {
+const uploadToCloudinary = async (fileBuffer, folder = 'Jeena', fileName = null, mimeType = 'image/jpeg', timeoutMs = 60000) => {
     return new Promise((resolve, reject) => {
+        let isResolved = false;
+        let timeoutId = null;
+
+        // Set up timeout
+        timeoutId = setTimeout(() => {
+            if (!isResolved) {
+                isResolved = true;
+                const timeoutError = new Error('Cloudinary upload timeout: Request took too long to complete');
+                timeoutError.http_code = 499;
+                timeoutError.name = 'TimeoutError';
+                console.error('❌ Cloudinary upload timeout after', timeoutMs, 'ms');
+                reject(timeoutError);
+            }
+        }, timeoutMs);
+
+        // Helper to clear timeout and mark as resolved
+        const clearTimeoutAndResolve = (result) => {
+            if (!isResolved) {
+                isResolved = true;
+                if (timeoutId) clearTimeout(timeoutId);
+                resolve(result);
+            }
+        };
+
+        const clearTimeoutAndReject = (error) => {
+            if (!isResolved) {
+                isResolved = true;
+                if (timeoutId) clearTimeout(timeoutId);
+                reject(error);
+            }
+        };
+
         try {
             // Validate file buffer
             if (!fileBuffer || !Buffer.isBuffer(fileBuffer)) {
                 throw new Error('Invalid file buffer provided');
+            }
+
+            // Check file size - Cloudinary free tier limit is 10 MB (10485760 bytes)
+            const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+            const fileSize = fileBuffer.length;
+            
+            if (fileSize > MAX_FILE_SIZE) {
+                const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0);
+                throw new Error(`File size too large. File is ${fileSizeMB} MB, maximum allowed is ${maxSizeMB} MB. Please compress or resize your image before uploading.`);
             }
 
             // Check if Cloudinary is configured
@@ -143,6 +186,17 @@ const uploadToCloudinary = async (fileBuffer, folder = 'Jeena', fileName = null,
                         fetch_format: 'auto', // Auto format (WebP when supported)
                     }
                 ];
+                
+                // For large images (>5MB), add additional compression and resizing
+                if (fileSize > 5 * 1024 * 1024) {
+                    uploadOptions.transformation.push({
+                        width: 1920, // Max width 1920px
+                        height: 1920, // Max height 1920px
+                        crop: 'limit', // Maintain aspect ratio, don't crop
+                        quality: 'auto:best', // Better compression for large files
+                    });
+                    console.log('📐 Large image detected, applying compression and resizing...');
+                }
             }
 
             console.log('📤 Uploading to Cloudinary:', {
@@ -157,6 +211,8 @@ const uploadToCloudinary = async (fileBuffer, folder = 'Jeena', fileName = null,
             const uploadStream = cloudinary.uploader.upload_stream(
                 uploadOptions,
                 (error, result) => {
+                    if (isResolved) return; // Already handled by timeout
+                    
                     if (error) {
                         console.error('❌ Cloudinary upload error:', {
                             message: error.message,
@@ -164,10 +220,16 @@ const uploadToCloudinary = async (fileBuffer, folder = 'Jeena', fileName = null,
                             name: error.name,
                             error: error.error || error
                         });
-                        reject(new Error(error.message || `Cloudinary upload failed: ${error.http_code || 'Unknown error'}`));
+                        const uploadError = new Error(error.message || `Cloudinary upload failed: ${error.http_code || 'Unknown error'}`);
+                        uploadError.http_code = error.http_code || 500;
+                        uploadError.name = error.name || 'UploadError';
+                        uploadError.error = error.error || error;
+                        clearTimeoutAndReject(uploadError);
                     } else if (!result) {
                         console.error('❌ Cloudinary upload error: No result returned');
-                        reject(new Error('Cloudinary upload failed: No result returned'));
+                        const noResultError = new Error('Cloudinary upload failed: No result returned');
+                        noResultError.http_code = 500;
+                        clearTimeoutAndReject(noResultError);
                     } else {
                         console.log('✅ Cloudinary upload success:', {
                             public_id: result.public_id,
@@ -175,7 +237,7 @@ const uploadToCloudinary = async (fileBuffer, folder = 'Jeena', fileName = null,
                             format: result.format,
                             bytes: result.bytes
                         });
-                        resolve({
+                        clearTimeoutAndResolve({
                             public_id: result.public_id,
                             secure_url: result.secure_url,
                             url: result.url,
@@ -191,15 +253,22 @@ const uploadToCloudinary = async (fileBuffer, folder = 'Jeena', fileName = null,
 
             // Handle stream errors
             uploadStream.on('error', (streamError) => {
+                if (isResolved) return; // Already handled
                 console.error('❌ Cloudinary stream error:', streamError);
-                reject(new Error(`Cloudinary stream error: ${streamError.message || 'Unknown error'}`));
+                const streamErr = new Error(`Cloudinary stream error: ${streamError.message || 'Unknown error'}`);
+                streamErr.http_code = 500;
+                streamErr.name = 'StreamError';
+                clearTimeoutAndReject(streamErr);
             });
 
             // Pipe file buffer to upload stream
             uploadStream.end(fileBuffer);
         } catch (error) {
+            if (isResolved) return; // Already handled
             console.error('❌ Error in uploadToCloudinary:', error);
-            reject(error);
+            const catchError = error instanceof Error ? error : new Error(String(error));
+            catchError.http_code = catchError.http_code || 500;
+            clearTimeoutAndReject(catchError);
         }
     });
 };

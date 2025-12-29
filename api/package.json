@@ -7,7 +7,9 @@
     "start": "node src/app.js",
     "dev": "node ./node_modules/nodemon/bin/nodemon.js src/app.js",
     "test:booking": "node test-booking-flow.js",
-    "test:quick": "node quick-test.js"
+    "test:quick": "node quick-test.js",
+    "script:delete-events": "node src/scripts/deleteAllEvents.js",
+    "script:create-users": "node src/scripts/createTestUsers.js"
   },
   "keywords": [],
   "author": "",
