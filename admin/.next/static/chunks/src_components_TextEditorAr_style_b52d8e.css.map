@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["[project]/src/components/TextEditorAr/style.css"],"sourcesContent":[".hideTopBar .ql-toolbar {\n  display: none;\n}\n.ql-snow .ql-picker.ql-size .ql-picker-label[data-value]::before,\n.ql-snow .ql-picker.ql-size .ql-picker-item[data-value]::before {\n  content: attr(data-value) !important;\n}\n"],"names":[],"mappings":"AAAA;;;;AAGA"}},
-    {"offset": {"line": 8, "column": 0}, "map": {"version":3,"sources":[],"names":[],"mappings":"A"}}]
-}
