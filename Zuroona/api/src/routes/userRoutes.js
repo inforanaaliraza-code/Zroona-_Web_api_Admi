@@ -23,6 +23,8 @@ router.post("/login", authLimiter, userController.userLoginByEmailPhone); // Ema
 router.post("/login/by-email-phone", authLimiter, userController.userLoginByEmailPhone); // Alias for backward compatibility
 router.get("/verify-email", userController.verifyEmail); // Email verification
 router.post("/resend-verification", userController.resendVerification); // Resend verification email
+router.post("/verify-signup-otp", userController.verifySignupOtp); // Verify signup OTP for phone
+router.post("/resend-signup-otp", userController.resendSignupOtp); // Resend signup OTP
 
 // ===== PHONE-BASED AUTHENTICATION (Saudi Arabia Only) =====
 router.post("/login/phone/send-otp", userController.sendPhoneOTP); // Send OTP to phone number

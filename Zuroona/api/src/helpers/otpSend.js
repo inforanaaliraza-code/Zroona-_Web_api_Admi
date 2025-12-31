@@ -280,9 +280,136 @@ const verifyLoginOtp = async (phoneNumber, otp) => {
     return { verified: true, phoneNumber };
 };
 
+/**
+ * Send OTP to phone number during signup
+ * @param {string} userId - User ID
+ * @param {string} phoneNumber - Phone number with country code
+ * @param {number} role - User role (1=User, 2=Organizer)
+ * @param {string} lang - Language
+ * @returns {Promise<string>} - Generated OTP
+ */
+const sendSignupOtp = async (userId, phoneNumber, role, lang = 'en') => {
+    const numberKey = `signup_${role}_${phoneNumber}`;
+
+    // Check rate limiting (30 seconds between requests)
+    let currentTime = Date.now();
+    let lastRequestTime = otpRequestTimes.get(numberKey);
+
+    if (lastRequestTime && (currentTime - lastRequestTime < 30000)) {
+        const waitTime = Math.ceil((30000 - (currentTime - lastRequestTime)) / 1000);
+        throw new Error(`Please wait ${waitTime} seconds before requesting another OTP`);
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Store OTP with expiration (5 minutes)
+    otpStore.set(`${numberKey}_${otp}`, {
+        otp,
+        userId,
+        role,
+        phoneNumber,
+        expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes
+    });
+
+    // Update request time
+    otpRequestTimes.set(numberKey, currentTime);
+
+    // Update OTP in database
+    try {
+        const service = role == 1 ? UserService : organizerService;
+        await service.FindByIdAndUpdateService(userId, { otp });
+    } catch (error) {
+        console.error('[SIGNUP:OTP] Error updating OTP in database:', error);
+    }
+
+    // Send OTP via Msegat SMS
+    try {
+        await sendOTPSMS(phoneNumber, otp, lang);
+        console.log(`✅ Signup OTP sent successfully to ${phoneNumber} via Msegat`);
+    } catch (error) {
+        console.error('❌ Error sending signup OTP via Msegat:', error.message);
+        // In development, still allow OTP generation
+        if (process.env.NODE_ENV === 'development' || process.env.ALLOW_OTP_WITHOUT_SMS === 'true') {
+            console.warn('⚠️  Development mode: OTP generated but not sent via SMS:', otp);
+        } else {
+            console.error('⚠️  SMS sending failed, but OTP is still generated for verification');
+        }
+    }
+
+    return otp;
+};
+
+/**
+ * Verify signup OTP
+ * @param {string} userId - User ID
+ * @param {string} phoneNumber - Phone number with country code
+ * @param {string} otp - OTP to verify
+ * @param {number} role - User role
+ * @returns {Promise<Object>} - Verification result
+ */
+const verifySignupOtp = async (userId, phoneNumber, otp, role) => {
+    const otpStr = otp.toString().trim();
+    
+    // Check dummy OTPs for testing
+    const DUMMY_OTPS = ['123456', '000000', '111111'];
+    if (DUMMY_OTPS.includes(otpStr)) {
+        console.log(`[SIGNUP:OTP:VERIFY] Dummy OTP accepted for testing: ${otpStr}`);
+        // Check database as fallback
+        const service = role == 1 ? UserService : organizerService;
+        const user = await service.FindOneService({
+            _id: userId,
+            otp: otpStr
+        });
+        
+        if (user) {
+            return { verified: true, userId: user._id.toString(), role };
+        }
+        return { verified: true, userId, role };
+    }
+
+    const numberKey = `signup_${role}_${phoneNumber}`;
+    const storedOtp = otpStore.get(`${numberKey}_${otpStr}`);
+
+    // Check in-memory store
+    if (storedOtp) {
+        if (Date.now() > storedOtp.expiresAt) {
+            otpStore.delete(`${numberKey}_${otpStr}`);
+            throw new Error('OTP has expired. Please request a new one.');
+        }
+
+        // Verify user ID matches
+        if (storedOtp.userId.toString() !== userId.toString()) {
+            throw new Error('Invalid OTP for this user.');
+        }
+
+        // OTP is valid, remove it
+        otpStore.delete(`${numberKey}_${otpStr}`);
+        return { verified: true, userId: storedOtp.userId.toString(), role: storedOtp.role };
+    }
+
+    // Fallback: Check database
+    const service = role == 1 ? UserService : organizerService;
+    const user = await service.FindOneService({
+        _id: userId,
+        otp: otpStr
+    });
+
+    if (!user) {
+        throw new Error('Invalid OTP. Please check and try again.');
+    }
+
+    // Clear OTP from database after successful verification
+    await service.FindByIdAndUpdateService(userId, { otp: '' });
+
+    return { verified: true, userId: user._id.toString(), role };
+};
+
 module.exports = {
     sendOtp,
     verifyOtp,
     sendOtpToPhone,
-    verifyLoginOtp
+    verifyLoginOtp,
+    sendSignupOtp,
+    verifySignupOtp
 };

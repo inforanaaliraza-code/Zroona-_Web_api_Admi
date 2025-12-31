@@ -57,54 +57,53 @@ const organizerController = {
 	organizerRegistration: async (req, res) => {
 		const { lang = "en" } = req.headers;
 		try {
-			const { email, password, confirmPassword, phone_number, country_code, registration_step = 4 } = req.body;
+			const { email, phone_number, country_code, registration_step = 4 } = req.body;
 
 			console.log("[ORGANIZER:REGISTRATION] Registration request:", {
 				email,
 				phone_number,
 				step: registration_step,
-				password: "***"
+				password: "NOT_REQUIRED"
 			});
 
-			// Email is required
-			if (!email || !email.includes("@")) {
+			// Import validation helpers
+			const { validateEmail, validateSaudiPhone } = require("../helpers/validationHelpers");
+
+			// Validate email
+			if (!email) {
 				return Response.validationErrorResponse(
 					res,
-					resp_messages?.[lang]?.email_required || "Valid email address is required"
+					resp_messages?.[lang]?.email_required || "Email address is required"
 				);
 			}
 
-			// Password is required
-			if (!password) {
+			const emailValidation = validateEmail(email);
+			if (!emailValidation.isValid) {
 				return Response.validationErrorResponse(
 					res,
-					resp_messages?.[lang]?.password_required || "Password is required"
+					emailValidation.message
 				);
 			}
 
-			// Validate password strength
-			const { validatePasswordStrength, validatePasswordMatch } = require("../helpers/passwordValidator");
-			const passwordValidation = validatePasswordStrength(password);
-			
-			if (!passwordValidation.isValid) {
+			// Phone number is required for passwordless authentication
+			if (!phone_number || !country_code) {
 				return Response.validationErrorResponse(
 					res,
-					passwordValidation.message
+					"Phone number and country code are required"
 				);
 			}
 
-			// Validate password match
-			if (confirmPassword) {
-				const passwordMatchValidation = validatePasswordMatch(password, confirmPassword);
-				if (!passwordMatchValidation.isValid) {
-					return Response.validationErrorResponse(
-						res,
-						passwordMatchValidation.message
-					);
-				}
+			// Validate Saudi phone number
+			const phoneValidation = validateSaudiPhone(phone_number, country_code);
+			if (!phoneValidation.isValid) {
+				return Response.validationErrorResponse(
+					res,
+					phoneValidation.message
+				);
 			}
 
 			const emailLower = cleanEmail(email);
+			const phoneStr = phoneValidation.cleanPhone;
 
 			// Check for existing organizer by email (including deleted ones for email/phone reuse prevention)
 			const exist_organizer_email = await organizerService.FindOneService({
@@ -244,60 +243,41 @@ const organizerController = {
 				}
 			}
 
-			// Check phone number if provided
-			if (phone_number && country_code) {
-				// Validate Saudi Arabia phone number only
-				if (country_code !== "+966") {
-					return Response.validationErrorResponse(
-						res,
-						"Only Saudi Arabia phone numbers (+966) are allowed"
-					);
-				}
+			// Check for existing phone number
+			const exist_organizer_phone = await organizerService.FindOneService({
+				phone_number: parseInt(phoneStr),
+				country_code,
+			});
 
-				// Validate phone number format (9 digits for Saudi Arabia)
-				const phoneStr = phone_number.toString().replace(/\s+/g, '');
-				if (!/^\d{9}$/.test(phoneStr)) {
-					return Response.validationErrorResponse(
-						res,
-						"Invalid Saudi Arabia phone number format. Please enter 9 digits (e.g., 501234567)"
-					);
-				}
+			const exist_user_phone = await UserService.FindOneService({
+				phone_number: parseInt(phoneStr),
+				country_code,
+			});
 
-				const exist_organizer_phone = await organizerService.FindOneService({
-					phone_number: phoneStr,
-					country_code,
-				});
-
-				const exist_user_phone = await UserService.FindOneService({
-					phone_number: phoneStr,
-					country_code,
-				});
-
-				if (exist_organizer_phone || exist_user_phone) {
-					const existingPhoneAccount = exist_organizer_phone || exist_user_phone;
-					
-					// Prevent reuse of phone from deleted accounts
-					if (existingPhoneAccount.is_delete === 1) {
-						return Response.conflictResponse(
-							res,
-							{
-								phone_number: phone_number,
-							},
-							409,
-							"This phone number was previously used with a deleted account. Please use a different phone number."
-						);
-					}
-					
+			if (exist_organizer_phone || exist_user_phone) {
+				const existingPhoneAccount = exist_organizer_phone || exist_user_phone;
+				
+				// Prevent reuse of phone from deleted accounts
+				if (existingPhoneAccount.is_delete === 1) {
 					return Response.conflictResponse(
 						res,
 						{
-							exists_as: exist_organizer_phone ? "organizer" : "user",
 							phone_number: phone_number,
 						},
 						409,
-						resp_messages?.[lang]?.phone_exist || "Phone number already registered"
+						"This phone number was previously used with a deleted account. Please use a different phone number."
 					);
 				}
+				
+				return Response.conflictResponse(
+					res,
+					{
+						exists_as: exist_organizer_phone ? "organizer" : "user",
+						phone_number: phone_number,
+					},
+					409,
+					resp_messages?.[lang]?.phone_exist || "Phone number already registered"
+				);
 			}
 
 			// Validate required fields based on completion
@@ -323,52 +303,52 @@ const organizerController = {
 				}
 			}
 
-			// Hash password
-			const { hashPassword } = require("../helpers/hashPassword");
-			const hashedPassword = await hashPassword(password);
-			console.log("[ORGANIZER:REGISTRATION] Password hashed successfully");
-
-			// Create new organizer
-			const phoneStr = phone_number ? phone_number.toString().replace(/\s+/g, '') : null;
 			// Check if this is a re-application (check if email/phone was previously rejected)
 			const wasRejected = await organizerService.FindOneService({
 				$or: [
 					{ email: emailLower, is_approved: 3 },
-					{ phone_number: phoneStr, country_code, is_approved: 3 }
+					{ phone_number: parseInt(phoneStr), country_code, is_approved: 3 }
 				]
 			});
 			const registrationType = wasRejected ? 'Re-apply' : 'New';
 			
+			// Create new organizer (passwordless - no password field)
 			const organizerData = {
 				...req.body,
 				email: emailLower,
-				password: hashedPassword,
-				phone_number: phoneStr,
+				phone_number: parseInt(phoneStr),
+				country_code: country_code,
 				role: 2, // Organizer role
-				is_verified: false, // Must verify email first
+				is_verified: false, // Will be true only when BOTH email AND phone are verified
+				phone_verified: false,
+				email_verified_at: null,
+				phone_verified_at: null,
 				is_approved: 1, // Pending approval
 				registration_type: registrationType,
 				language: lang,
 				registration_step: registration_step || 4,
 			};
 
-			// Remove confirmPassword from organizerData
+			// Remove password and confirmPassword if they exist (passwordless auth)
+			delete organizerData.password;
 			delete organizerData.confirmPassword;
 
 			const organizer = await organizerService.CreateService(organizerData);
 			console.log("[ORGANIZER:REGISTRATION] Organizer created:", organizer._id);
 
-			// Send OTP to phone number if provided (via Msegat)
-			if (phone_number && country_code && country_code === "+966") {
-				try {
-					const { sendOtpToPhone } = require("../helpers/otpSend");
-					const fullPhoneNumber = `${country_code}${phoneStr}`;
-					await sendOtpToPhone(fullPhoneNumber, lang);
-					console.log("[ORGANIZER:REGISTRATION] OTP sent to phone number via Msegat");
-				} catch (otpError) {
-					console.error("[ORGANIZER:REGISTRATION] Error sending OTP to phone:", otpError.message);
-					// Don't fail registration if OTP sending fails
-				}
+			// Send OTP to phone number for verification (via Msegat)
+			const fullPhoneNumber = `${country_code}${phoneStr}`;
+			let otpSent = false;
+			let otpValue = null;
+			
+			try {
+				const { sendSignupOtp } = require("../helpers/otpSend");
+				otpValue = await sendSignupOtp(organizer._id.toString(), fullPhoneNumber, 2, lang);
+				otpSent = true;
+				console.log("[ORGANIZER:REGISTRATION] OTP sent to phone number via Msegat");
+			} catch (otpError) {
+				console.error("[ORGANIZER:REGISTRATION] Error sending OTP to phone:", otpError.message);
+				// Don't fail registration, but log the error
 			}
 
 			// Create wallet for organizer
@@ -458,15 +438,24 @@ const organizerController = {
 						first_name: organizer.first_name,
 						last_name: organizer.last_name,
 						is_verified: false,
+						phone_verified: false,
+						email_verified: false,
 						is_approved: 1, // Pending
 						registration_step: organizer.registration_step,
 					},
-					verification_sent: emailSent,
+					verification_status: {
+						email_sent: emailSent,
+						otp_sent: otpSent,
+						email_verified: false,
+						phone_verified: false,
+					},
 					verification_link: process.env.NODE_ENV === "development" ? verificationLink : undefined,
+					otp_for_testing: process.env.NODE_ENV === "development" && otpValue ? otpValue : undefined,
 				},
 				201,
-				resp_messages?.[lang]?.registration_success_verify || 
-				"Registration successful! Please check your email to verify your account. Your application will be reviewed by our team."
+				lang === "ar"
+					? "تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني ورقم الهاتف. سيتم مراجعة طلبك من قبل فريقنا."
+					: "Registration successful! Please verify your email address and enter the OTP sent to your phone number. Your application will be reviewed by our team."
 			);
 		} catch (error) {
 			console.error("[ORGANIZER:REGISTRATION] Registration error:", error);
@@ -2874,10 +2863,13 @@ const organizerController = {
 			}
 
 			// Check if already verified
-			if (organizer.is_verified) {
-				console.log("[ORGANIZER:VERIFY-EMAIL] Organizer already verified");
+			// Check if email already verified
+			if (organizer.email_verified_at) {
+				console.log("[ORGANIZER:VERIFY-EMAIL] Email already verified");
 				// Mark token as used anyway
 				await EmailVerificationService.MarkAsUsed(tokenDoc._id);
+				
+				const bothVerified = organizer.is_verified && organizer.phone_verified;
 				
 				return Response.ok(
 					res,
@@ -2887,18 +2879,32 @@ const organizerController = {
 							email: organizer.email,
 							first_name: organizer.first_name,
 							last_name: organizer.last_name,
-							is_verified: true,
+							is_verified: organizer.is_verified,
+							phone_verified: organizer.phone_verified,
+							email_verified: true,
 							is_approved: organizer.is_approved,
 						},
 					},
 					200,
-					resp_messages?.[lang]?.already_verified || 
-					"Email already verified. Your application is pending admin approval."
+					bothVerified
+						? (resp_messages?.[lang]?.already_verified || "Email already verified. Your application is pending admin approval.")
+						: (lang === "ar"
+							? "البريد الإلكتروني مُؤكد بالفعل. يرجى تأكيد رقم الهاتف لإكمال التسجيل."
+							: "Email already verified. Please verify your phone number to complete registration.")
 				);
 			}
 
-			// Verify organizer
-			organizer.is_verified = true;
+			// Mark email as verified
+			organizer.email_verified_at = new Date();
+			
+			// Check if phone is also verified - if both verified, mark is_verified as true
+			if (organizer.phone_verified) {
+				organizer.is_verified = true;
+				console.log("[ORGANIZER:VERIFY-EMAIL] Both email and phone verified - account fully verified");
+			} else {
+				console.log("[ORGANIZER:VERIFY-EMAIL] Email verified, waiting for phone verification");
+			}
+			
 			await organizer.save();
 
 			// Mark token as used
@@ -2906,26 +2912,272 @@ const organizerController = {
 
 			console.log("[ORGANIZER:VERIFY-EMAIL] Organizer verified successfully:", organizer.email);
 
+			const responseData = {
+				organizer: {
+					_id: organizer._id,
+					email: organizer.email,
+					phone_number: organizer.phone_number,
+					first_name: organizer.first_name,
+					last_name: organizer.last_name,
+					is_verified: organizer.is_verified,
+					phone_verified: organizer.phone_verified,
+					email_verified: true,
+					is_approved: organizer.is_approved, // Still pending approval
+					role: organizer.role,
+				},
+			};
+
 			return Response.ok(
 				res,
-				{
-					organizer: {
-						_id: organizer._id,
-						email: organizer.email,
-						phone_number: organizer.phone_number,
-						first_name: organizer.first_name,
-						last_name: organizer.last_name,
-						is_verified: true,
-						is_approved: organizer.is_approved, // Still pending approval
-						role: organizer.role,
-					},
-				},
+				responseData,
 				200,
-				resp_messages?.[lang]?.verification_success_pending || 
-				"Email verified successfully! Your application is pending admin approval. We will notify you via email once approved."
+				organizer.is_verified
+					? (resp_messages?.[lang]?.verification_success_pending || 
+						"Email and phone verified successfully! Your application is pending admin approval. We will notify you via email once approved.")
+					: (lang === "ar"
+						? "تم تأكيد البريد الإلكتروني بنجاح! يرجى تأكيد رقم الهاتف لإكمال التسجيل."
+						: "Email verified successfully! Please verify your phone number to complete registration.")
 			);
 		} catch (error) {
 			console.error("[ORGANIZER:VERIFY-EMAIL] Verification error:", error);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages?.[lang]?.internalServerError
+			);
+		}
+	},
+
+	/**
+	 * Verify signup OTP for organizer phone number
+	 * POST /organizer/verify-signup-otp
+	 * Body: { organizer_id, phone_number, country_code, otp }
+	 */
+	verifySignupOtp: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { organizer_id, phone_number, country_code, otp } = req.body;
+
+			console.log("[ORGANIZER:VERIFY-SIGNUP-OTP] Verification request:", { organizer_id, phone_number, country_code });
+
+			// Validate inputs
+			if (!organizer_id) {
+				return Response.validationErrorResponse(
+					res,
+					"Organizer ID is required"
+				);
+			}
+
+			if (!phone_number || !country_code) {
+				return Response.validationErrorResponse(
+					res,
+					"Phone number and country code are required"
+				);
+			}
+
+			const { validateOTP, validateSaudiPhone } = require("../helpers/validationHelpers");
+
+			// Validate phone number
+			const phoneValidation = validateSaudiPhone(phone_number, country_code);
+			if (!phoneValidation.isValid) {
+				return Response.validationErrorResponse(
+					res,
+					phoneValidation.message
+				);
+			}
+
+			// Validate OTP format
+			const otpValidation = validateOTP(otp);
+			if (!otpValidation.isValid) {
+				return Response.validationErrorResponse(
+					res,
+					otpValidation.message
+				);
+			}
+
+			// Find organizer
+			const organizer = await organizerService.FindByIdService(organizer_id);
+			if (!organizer) {
+				return Response.notFoundResponse(
+					res,
+					resp_messages?.[lang]?.organizer_not_found || "Organizer not found"
+				);
+			}
+
+			// Check if phone already verified
+			if (organizer.phone_verified) {
+				console.log("[ORGANIZER:VERIFY-SIGNUP-OTP] Phone already verified");
+				return Response.ok(
+					res,
+					{
+						organizer: {
+							_id: organizer._id,
+							phone_verified: true,
+							is_verified: organizer.is_verified,
+						},
+					},
+					200,
+					lang === "ar"
+						? "رقم الهاتف مؤكد بالفعل"
+						: "Phone number already verified"
+				);
+			}
+
+			// Verify OTP
+			const fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+			const { verifySignupOtp } = require("../helpers/otpSend");
+			
+			try {
+				await verifySignupOtp(organizer_id, fullPhoneNumber, otpValidation.cleanOtp, 2);
+			} catch (otpError) {
+				console.error("[ORGANIZER:VERIFY-SIGNUP-OTP] OTP verification failed:", otpError.message);
+				return Response.validationErrorResponse(
+					res,
+					otpError.message || "Invalid or expired OTP"
+				);
+			}
+
+			// Mark phone as verified
+			organizer.phone_verified = true;
+			organizer.phone_verified_at = new Date();
+
+			// Check if email is also verified - if both verified, mark is_verified as true
+			if (organizer.email_verified_at) {
+				organizer.is_verified = true;
+				console.log("[ORGANIZER:VERIFY-SIGNUP-OTP] Both email and phone verified - account fully verified");
+			} else {
+				console.log("[ORGANIZER:VERIFY-SIGNUP-OTP] Phone verified, waiting for email verification");
+			}
+
+			await organizer.save();
+
+			const responseData = {
+				organizer: {
+					_id: organizer._id,
+					email: organizer.email,
+					phone_number: organizer.phone_number,
+					country_code: organizer.country_code,
+					first_name: organizer.first_name,
+					last_name: organizer.last_name,
+					is_verified: organizer.is_verified,
+					phone_verified: true,
+					email_verified: !!organizer.email_verified_at,
+					is_approved: organizer.is_approved,
+					role: organizer.role,
+				},
+			};
+
+			return Response.ok(
+				res,
+				responseData,
+				200,
+				organizer.is_verified
+					? (lang === "ar"
+						? "تم تأكيد البريد الإلكتروني ورقم الهاتف بنجاح! طلبك قيد مراجعة الإدارة."
+						: "Email and phone verified successfully! Your application is pending admin approval.")
+					: (lang === "ar"
+						? "تم تأكيد رقم الهاتف بنجاح! يرجى تأكيد البريد الإلكتروني لإكمال التسجيل."
+						: "Phone number verified successfully! Please verify your email address to complete registration.")
+			);
+		} catch (error) {
+			console.error("[ORGANIZER:VERIFY-SIGNUP-OTP] Verification error:", error);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages?.[lang]?.internalServerError
+			);
+		}
+	},
+
+	/**
+	 * Resend signup OTP to organizer phone number
+	 * POST /organizer/resend-signup-otp
+	 * Body: { organizer_id, phone_number, country_code }
+	 */
+	resendSignupOtp: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { organizer_id, phone_number, country_code } = req.body;
+
+			console.log("[ORGANIZER:RESEND-SIGNUP-OTP] Resend request:", { organizer_id, phone_number, country_code });
+
+			if (!organizer_id) {
+				return Response.validationErrorResponse(
+					res,
+					"Organizer ID is required"
+				);
+			}
+
+			if (!phone_number || !country_code) {
+				return Response.validationErrorResponse(
+					res,
+					"Phone number and country code are required"
+				);
+			}
+
+			const { validateSaudiPhone } = require("../helpers/validationHelpers");
+			const phoneValidation = validateSaudiPhone(phone_number, country_code);
+			if (!phoneValidation.isValid) {
+				return Response.validationErrorResponse(
+					res,
+					phoneValidation.message
+				);
+			}
+
+			// Find organizer
+			const organizer = await organizerService.FindByIdService(organizer_id);
+			if (!organizer) {
+				return Response.notFoundResponse(
+					res,
+					resp_messages?.[lang]?.organizer_not_found || "Organizer not found"
+				);
+			}
+
+			// Check if phone already verified
+			if (organizer.phone_verified) {
+				return Response.validationErrorResponse(
+					res,
+					lang === "ar"
+						? "رقم الهاتف مؤكد بالفعل"
+						: "Phone number already verified"
+				);
+			}
+
+			// Send OTP
+			const fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+			const { sendSignupOtp } = require("../helpers/otpSend");
+			let otpSent = false;
+			let otpValue = null;
+
+			try {
+				otpValue = await sendSignupOtp(organizer_id, fullPhoneNumber, 2, lang);
+				otpSent = true;
+				console.log("[ORGANIZER:RESEND-SIGNUP-OTP] OTP sent successfully");
+			} catch (otpError) {
+				console.error("[ORGANIZER:RESEND-SIGNUP-OTP] Error sending OTP:", otpError.message);
+				return Response.validationErrorResponse(
+					res,
+					otpError.message || "Failed to send OTP. Please try again later."
+				);
+			}
+
+			return Response.ok(
+				res,
+				{
+					organizer_id: organizer_id,
+					phone_number: phone_number,
+					otp_sent: otpSent,
+					otp_for_testing: process.env.NODE_ENV === "development" && otpValue ? otpValue : undefined,
+				},
+				200,
+				otpSent
+					? (lang === "ar"
+						? "تم إرسال رمز التحقق بنجاح"
+						: "OTP sent successfully to your phone number")
+					: (lang === "ar"
+						? "فشل إرسال رمز التحقق"
+						: "Failed to send OTP")
+			);
+		} catch (error) {
+			console.error("[ORGANIZER:RESEND-SIGNUP-OTP] Error:", error);
 			return Response.serverErrorResponse(
 				res,
 				resp_messages?.[lang]?.internalServerError
