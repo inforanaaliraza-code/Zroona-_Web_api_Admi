@@ -32,51 +32,50 @@ const UserController = {
 	userRegistration: async (req, res) => {
 		const lang = req.headers["lang"] || "en";
 		try {
-			const { email, password, confirmPassword, phone_number, country_code } = req.body;
+			const { email, phone_number, country_code } = req.body;
 
-			// Log request data for debugging (excluding password)
-			console.log("[USER:REGISTRATION] Registration request:", { ...req.body, password: "***", confirmPassword: "***" });
+			// Log request data for debugging
+			console.log("[USER:REGISTRATION] Registration request:", { ...req.body, password: "NOT_REQUIRED", confirmPassword: "NOT_REQUIRED" });
 
-			// Email is required for verification
-			if (!email || !email.includes("@")) {
+			// Import validation helpers
+			const { validateEmail, validateSaudiPhone } = require("../helpers/validationHelpers");
+
+			// Validate email
+			if (!email) {
 				return Response.validationErrorResponse(
 					res,
-					resp_messages(lang).email_required || "Valid email address is required"
+					resp_messages(lang).email_required || "Email address is required"
 				);
 			}
 
-			// Password is required
-			if (!password) {
+			const emailValidation = validateEmail(email);
+			if (!emailValidation.isValid) {
 				return Response.validationErrorResponse(
 					res,
-					resp_messages(lang).password_required || "Password is required"
+					emailValidation.message
 				);
 			}
 
-			// Validate password strength
-			const { validatePasswordStrength, validatePasswordMatch } = require("../helpers/passwordValidator");
-			const passwordValidation = validatePasswordStrength(password);
-			
-			if (!passwordValidation.isValid) {
+			// Phone number is required for passwordless authentication
+			if (!phone_number || !country_code) {
 				return Response.validationErrorResponse(
 					res,
-					passwordValidation.message
+					"Phone number and country code are required"
 				);
 			}
 
-			// Validate password match
-			if (confirmPassword) {
-				const passwordMatchValidation = validatePasswordMatch(password, confirmPassword);
-				if (!passwordMatchValidation.isValid) {
-					return Response.validationErrorResponse(
-						res,
-						passwordMatchValidation.message
-					);
-				}
+			// Validate Saudi phone number
+			const phoneValidation = validateSaudiPhone(phone_number, country_code);
+			if (!phoneValidation.isValid) {
+				return Response.validationErrorResponse(
+					res,
+					phoneValidation.message
+				);
 			}
 
 			// Clean email - remove invisible/zero-width characters, trim, and lowercase
 			const emailLower = cleanEmail(email);
+			const phoneStr = phoneValidation.cleanPhone;
 
 			// Check for existing user by email (including deleted ones for email/phone reuse prevention)
 			const exist_user_email = await UserService.FindOneService({
@@ -189,96 +188,77 @@ const UserController = {
 				);
 			}
 
-			// Check phone number if provided
-			if (phone_number && country_code) {
-				// Validate Saudi Arabia phone number only
-				if (country_code !== "+966") {
-					return Response.validationErrorResponse(
-						res,
-						"Only Saudi Arabia phone numbers (+966) are allowed"
-					);
-				}
+			// Check for existing phone number
+			const exist_user_phone = await UserService.FindOneService({
+				phone_number: parseInt(phoneStr),
+				country_code,
+			});
 
-				// Validate phone number format (9 digits for Saudi Arabia)
-				const phoneStr = phone_number.toString().replace(/\s+/g, '');
-				if (!/^\d{9}$/.test(phoneStr)) {
-					return Response.validationErrorResponse(
-						res,
-						"Invalid Saudi Arabia phone number format. Please enter 9 digits (e.g., 501234567)"
-					);
-				}
+			const exist_organizer_phone = await organizerService.FindOneService({
+				phone_number: parseInt(phoneStr),
+				country_code,
+			});
 
-				const exist_user_phone = await UserService.FindOneService({
-					phone_number: phoneStr,
-					country_code,
-				});
-
-				const exist_organizer_phone = await organizerService.FindOneService({
-					phone_number: phoneStr,
-					country_code,
-				});
-
-				if (exist_user_phone || exist_organizer_phone) {
-					const existingPhoneAccount = exist_user_phone || exist_organizer_phone;
-					
-					// Prevent reuse of phone from deleted accounts
-					if (existingPhoneAccount.is_delete === 1) {
-						return Response.conflictResponse(
-							res,
-							{
-								phone_number: phone_number,
-							},
-							409,
-							"This phone number was previously used with a deleted account. Please use a different phone number."
-						);
-					}
-					
+			if (exist_user_phone || exist_organizer_phone) {
+				const existingPhoneAccount = exist_user_phone || exist_organizer_phone;
+				
+				// Prevent reuse of phone from deleted accounts
+				if (existingPhoneAccount.is_delete === 1) {
 					return Response.conflictResponse(
 						res,
 						{
-							exists_as: exist_user_phone ? "user" : "organizer",
 							phone_number: phone_number,
 						},
 						409,
-						resp_messages(lang).phone_exist || "Phone number already registered"
+						"This phone number was previously used with a deleted account. Please use a different phone number."
 					);
 				}
+				
+				return Response.conflictResponse(
+					res,
+					{
+						exists_as: exist_user_phone ? "user" : "organizer",
+						phone_number: phone_number,
+					},
+					409,
+					resp_messages(lang).phone_exist || "Phone number already registered"
+				);
 			}
 
-			// Hash password
-			const { hashPassword } = require("../helpers/hashPassword");
-			const hashedPassword = await hashPassword(password);
-			console.log("[USER:REGISTRATION] Password hashed successfully");
-
-			// Create new user
-			const phoneStr = phone_number ? phone_number.toString().replace(/\s+/g, '') : null;
+			// Create new user (passwordless - no password field)
 			const userData = {
 				...req.body,
 				email: emailLower,
-				password: hashedPassword,
-				phone_number: phoneStr,
+				phone_number: parseInt(phoneStr),
+				country_code: country_code,
 				role: 1, // Guest role
-				is_verified: false, // Must verify email first
+				is_verified: false, // Will be true only when BOTH email AND phone are verified
+				phone_verified: false,
+				email_verified_at: null,
+				phone_verified_at: null,
 				language: lang,
 			};
 
-			// Remove confirmPassword from userData if it exists
+			// Remove password and confirmPassword if they exist (passwordless auth)
+			delete userData.password;
 			delete userData.confirmPassword;
 
 			const user = await UserService.CreateService(userData);
 			console.log("[USER:REGISTRATION] User created:", user._id);
 
-			// Send OTP to phone number if provided (via Msegat)
-			if (phone_number && country_code && country_code === "+966") {
-				try {
-					const { sendOtpToPhone } = require("../helpers/otpSend");
-					const fullPhoneNumber = `${country_code}${phoneStr}`;
-					await sendOtpToPhone(fullPhoneNumber, lang);
-					console.log("[USER:REGISTRATION] OTP sent to phone number via Msegat");
-				} catch (otpError) {
-					console.error("[USER:REGISTRATION] Error sending OTP to phone:", otpError.message);
-					// Don't fail registration if OTP sending fails
-				}
+			// Send OTP to phone number for verification (via Msegat)
+			const fullPhoneNumber = `${country_code}${phoneStr}`;
+			let otpSent = false;
+			let otpValue = null;
+			
+			try {
+				const { sendSignupOtp } = require("../helpers/otpSend");
+				otpValue = await sendSignupOtp(user._id.toString(), fullPhoneNumber, 1, lang);
+				otpSent = true;
+				console.log("[USER:REGISTRATION] OTP sent to phone number via Msegat");
+			} catch (otpError) {
+				console.error("[USER:REGISTRATION] Error sending OTP to phone:", otpError.message);
+				// Don't fail registration, but log the error
 			}
 
 			// Generate verification token
@@ -340,13 +320,22 @@ const UserController = {
 						first_name: user.first_name,
 						last_name: user.last_name,
 						is_verified: false,
+						phone_verified: false,
+						email_verified: false,
 					},
-					verification_sent: emailSent,
+					verification_status: {
+						email_sent: emailSent,
+						otp_sent: otpSent,
+						email_verified: false,
+						phone_verified: false,
+					},
 					verification_link: process.env.NODE_ENV === "development" ? verificationLink : undefined,
+					otp_for_testing: process.env.NODE_ENV === "development" && otpValue ? otpValue : undefined,
 				},
 				201,
-				resp_messages(lang).registration_success_verify || 
-				"Registration successful! Please check your email to verify your account."
+				lang === "ar" 
+					? "تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني ورقم الهاتف."
+					: "Registration successful! Please verify your email address and enter the OTP sent to your phone number."
 			);
 		} catch (error) {
 			console.error("[USER:REGISTRATION] Registration error:", error);
@@ -713,6 +702,37 @@ const UserController = {
 				);
 			}
 
+			const account = user || organizer;
+
+			// Check if account is fully verified (both email AND phone must be verified for login)
+			if (!account.is_verified) {
+				const needsEmail = !account.email_verified_at;
+				const needsPhone = !account.phone_verified;
+				
+				if (needsEmail && needsPhone) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "يرجى التحقق من بريدك الإلكتروني ورقم الهاتف أولاً"
+							: "Please verify both your email address and phone number before logging in."
+					);
+				} else if (needsEmail) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "يرجى التحقق من بريدك الإلكتروني أولاً"
+							: "Please verify your email address first. Check your inbox for the verification link."
+					);
+				} else if (needsPhone) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "يرجى التحقق من رقم الهاتف أولاً"
+							: "Please verify your phone number first."
+					);
+				}
+			}
+
 		// Send OTP via Msegat
 		const { sendOtpToPhone } = require("../helpers/otpSend");
 		let otpGenerated = false;
@@ -835,14 +855,33 @@ const UserController = {
 				is_approved: account.is_approved,
 			});
 
-			// Check if email is verified (required for both)
+			// Check if account is fully verified (both email AND phone must be verified)
 			if (!account.is_verified) {
-				return Response.unauthorizedResponse(
-					res,
-					lang === "ar"
-						? "يرجى التحقق من بريدك الإلكتروني أولاً"
-						: "Please verify your email address first. Check your inbox for the verification link."
-				);
+				const needsEmail = !account.email_verified_at;
+				const needsPhone = !account.phone_verified;
+				
+				if (needsEmail && needsPhone) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "يرجى التحقق من بريدك الإلكتروني ورقم الهاتف أولاً"
+							: "Please verify both your email address and phone number first."
+					);
+				} else if (needsEmail) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "يرجى التحقق من بريدك الإلكتروني أولاً"
+							: "Please verify your email address first. Check your inbox for the verification link."
+					);
+				} else if (needsPhone) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "يرجى التحقق من رقم الهاتف أولاً"
+							: "Please verify your phone number first."
+					);
+				}
 			}
 
 			// For organizers, check admin approval (COMPULSORY)
@@ -3575,11 +3614,13 @@ const UserController = {
 				);
 			}
 
-			// Check if already verified
-			if (user.is_verified) {
-				console.log("[USER:VERIFY-EMAIL] User already verified");
+			// Check if email already verified
+			if (user.email_verified_at) {
+				console.log("[USER:VERIFY-EMAIL] Email already verified");
 				// Mark token as used anyway
 				await EmailVerificationService.MarkAsUsed(tokenDoc._id);
+				
+				const bothVerified = user.is_verified && user.phone_verified;
 				
 				return Response.ok(
 					res,
@@ -3589,42 +3630,67 @@ const UserController = {
 							email: user.email,
 							first_name: user.first_name,
 							last_name: user.last_name,
-							is_verified: true,
+							is_verified: user.is_verified,
+							phone_verified: user.phone_verified,
+							email_verified: true,
 						},
 					},
 					200,
-					resp_messages(lang).already_verified || "Email already verified. You can login now."
+					bothVerified 
+						? (resp_messages(lang).already_verified || "Email already verified. You can login now.")
+						: (lang === "ar" 
+							? "البريد الإلكتروني مُؤكد بالفعل. يرجى تأكيد رقم الهاتف لإكمال التسجيل."
+							: "Email already verified. Please verify your phone number to complete registration.")
 				);
 			}
 
-			// Verify user
-			user.is_verified = true;
+			// Mark email as verified
+			user.email_verified_at = new Date();
+			
+			// Check if phone is also verified - if both verified, mark is_verified as true
+			if (user.phone_verified) {
+				user.is_verified = true;
+				console.log("[USER:VERIFY-EMAIL] Both email and phone verified - account fully verified");
+			} else {
+				console.log("[USER:VERIFY-EMAIL] Email verified, waiting for phone verification");
+			}
+			
 			await user.save();
 
 			// Mark token as used
 			await EmailVerificationService.MarkAsUsed(tokenDoc._id);
 
-			console.log("[USER:VERIFY-EMAIL] User verified successfully:", user.email);
+			console.log("[USER:VERIFY-EMAIL] Email verified successfully:", user.email);
 
-			// Generate login token for auto-login
-			const loginToken = generateToken(user._id, user.role);
+			// If both verified, generate login token for auto-login
+			const responseData = {
+				user: {
+					_id: user._id,
+					email: user.email,
+					phone_number: user.phone_number,
+					first_name: user.first_name,
+					last_name: user.last_name,
+					is_verified: user.is_verified,
+					phone_verified: user.phone_verified,
+					email_verified: true,
+					role: user.role,
+				},
+			};
+
+			if (user.is_verified) {
+				const loginToken = generateToken(user._id, user.role);
+				responseData.token = loginToken; // For auto-login only when both verified
+			}
 
 			return Response.ok(
 				res,
-				{
-					user: {
-						_id: user._id,
-						email: user.email,
-						phone_number: user.phone_number,
-						first_name: user.first_name,
-						last_name: user.last_name,
-						is_verified: true,
-						role: user.role,
-					},
-					token: loginToken, // For auto-login
-				},
+				responseData,
 				200,
-				resp_messages(lang).verification_success || "Email verified successfully! You can now login."
+				user.is_verified
+					? (resp_messages(lang).verification_success || "Email and phone verified successfully! You can now login.")
+					: (lang === "ar"
+						? "تم تأكيد البريد الإلكتروني بنجاح! يرجى تأكيد رقم الهاتف لإكمال التسجيل."
+						: "Email verified successfully! Please verify your phone number to complete registration.")
 			);
 		} catch (error) {
 			console.error("[USER:VERIFY-EMAIL] Verification error:", error);
@@ -3723,6 +3789,7 @@ const UserController = {
 				{
 					email: emailLower,
 					verification_sent: emailSent,
+					verification_link: process.env.NODE_ENV === "development" ? verificationLink : undefined,
 				},
 				200,
 				emailSent 
@@ -3731,6 +3798,250 @@ const UserController = {
 			);
 		} catch (error) {
 			console.error("[USER:RESEND-VERIFICATION] Error:", error);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages(lang).internalServerError
+			);
+		}
+	},
+
+	/**
+	 * Verify signup OTP for phone number
+	 * POST /user/verify-signup-otp
+	 * Body: { user_id, phone_number, country_code, otp }
+	 */
+	verifySignupOtp: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { user_id, phone_number, country_code, otp } = req.body;
+
+			console.log("[USER:VERIFY-SIGNUP-OTP] Verification request:", { user_id, phone_number, country_code });
+
+			// Validate inputs
+			if (!user_id) {
+				return Response.validationErrorResponse(
+					res,
+					"User ID is required"
+				);
+			}
+
+			if (!phone_number || !country_code) {
+				return Response.validationErrorResponse(
+					res,
+					"Phone number and country code are required"
+				);
+			}
+
+			const { validateOTP, validateSaudiPhone } = require("../helpers/validationHelpers");
+
+			// Validate phone number
+			const phoneValidation = validateSaudiPhone(phone_number, country_code);
+			if (!phoneValidation.isValid) {
+				return Response.validationErrorResponse(
+					res,
+					phoneValidation.message
+				);
+			}
+
+			// Validate OTP format
+			const otpValidation = validateOTP(otp);
+			if (!otpValidation.isValid) {
+				return Response.validationErrorResponse(
+					res,
+					otpValidation.message
+				);
+			}
+
+			// Find user
+			const user = await UserService.FindByIdService(user_id);
+			if (!user) {
+				return Response.notFoundResponse(
+					res,
+					resp_messages(lang).user_not_found || "User not found"
+				);
+			}
+
+			// Check if phone already verified
+			if (user.phone_verified) {
+				console.log("[USER:VERIFY-SIGNUP-OTP] Phone already verified");
+				return Response.ok(
+					res,
+					{
+						user: {
+							_id: user._id,
+							phone_verified: true,
+							is_verified: user.is_verified,
+						},
+					},
+					200,
+					lang === "ar"
+						? "رقم الهاتف مؤكد بالفعل"
+						: "Phone number already verified"
+				);
+			}
+
+			// Verify OTP
+			const fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+			const { verifySignupOtp } = require("../helpers/otpSend");
+			
+			try {
+				await verifySignupOtp(user_id, fullPhoneNumber, otpValidation.cleanOtp, 1);
+			} catch (otpError) {
+				console.error("[USER:VERIFY-SIGNUP-OTP] OTP verification failed:", otpError.message);
+				return Response.validationErrorResponse(
+					res,
+					otpError.message || "Invalid or expired OTP"
+				);
+			}
+
+			// Mark phone as verified
+			user.phone_verified = true;
+			user.phone_verified_at = new Date();
+
+			// Check if email is also verified - if both verified, mark is_verified as true
+			if (user.email_verified_at) {
+				user.is_verified = true;
+				console.log("[USER:VERIFY-SIGNUP-OTP] Both email and phone verified - account fully verified");
+			} else {
+				console.log("[USER:VERIFY-SIGNUP-OTP] Phone verified, waiting for email verification");
+			}
+
+			await user.save();
+
+			// Generate login token if both verified
+			const responseData = {
+				user: {
+					_id: user._id,
+					email: user.email,
+					phone_number: user.phone_number,
+					country_code: user.country_code,
+					first_name: user.first_name,
+					last_name: user.last_name,
+					is_verified: user.is_verified,
+					phone_verified: true,
+					email_verified: !!user.email_verified_at,
+					role: user.role,
+				},
+			};
+
+			if (user.is_verified) {
+				const { generateToken } = require("../helpers/generateToken");
+				const loginToken = generateToken(user._id, user.role);
+				responseData.token = loginToken; // For auto-login only when both verified
+			}
+
+			return Response.ok(
+				res,
+				responseData,
+				200,
+				user.is_verified
+					? (lang === "ar"
+						? "تم تأكيد البريد الإلكتروني ورقم الهاتف بنجاح! يمكنك الآن تسجيل الدخول."
+						: "Email and phone verified successfully! You can now login.")
+					: (lang === "ar"
+						? "تم تأكيد رقم الهاتف بنجاح! يرجى تأكيد البريد الإلكتروني لإكمال التسجيل."
+						: "Phone number verified successfully! Please verify your email address to complete registration.")
+			);
+		} catch (error) {
+			console.error("[USER:VERIFY-SIGNUP-OTP] Verification error:", error);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages(lang).internalServerError
+			);
+		}
+	},
+
+	/**
+	 * Resend signup OTP to phone number
+	 * POST /user/resend-signup-otp
+	 * Body: { user_id, phone_number, country_code }
+	 */
+	resendSignupOtp: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { user_id, phone_number, country_code } = req.body;
+
+			console.log("[USER:RESEND-SIGNUP-OTP] Resend request:", { user_id, phone_number, country_code });
+
+			if (!user_id) {
+				return Response.validationErrorResponse(
+					res,
+					"User ID is required"
+				);
+			}
+
+			if (!phone_number || !country_code) {
+				return Response.validationErrorResponse(
+					res,
+					"Phone number and country code are required"
+				);
+			}
+
+			const { validateSaudiPhone } = require("../helpers/validationHelpers");
+			const phoneValidation = validateSaudiPhone(phone_number, country_code);
+			if (!phoneValidation.isValid) {
+				return Response.validationErrorResponse(
+					res,
+					phoneValidation.message
+				);
+			}
+
+			// Find user
+			const user = await UserService.FindByIdService(user_id);
+			if (!user) {
+				return Response.notFoundResponse(
+					res,
+					resp_messages(lang).user_not_found || "User not found"
+				);
+			}
+
+			// Check if phone already verified
+			if (user.phone_verified) {
+				return Response.validationErrorResponse(
+					res,
+					lang === "ar"
+						? "رقم الهاتف مؤكد بالفعل"
+						: "Phone number already verified"
+				);
+			}
+
+			// Send OTP
+			const fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+			const { sendSignupOtp } = require("../helpers/otpSend");
+			let otpSent = false;
+			let otpValue = null;
+
+			try {
+				otpValue = await sendSignupOtp(user_id, fullPhoneNumber, 1, lang);
+				otpSent = true;
+				console.log("[USER:RESEND-SIGNUP-OTP] OTP sent successfully");
+			} catch (otpError) {
+				console.error("[USER:RESEND-SIGNUP-OTP] Error sending OTP:", otpError.message);
+				return Response.validationErrorResponse(
+					res,
+					otpError.message || "Failed to send OTP. Please try again later."
+				);
+			}
+
+			return Response.ok(
+				res,
+				{
+					user_id: user_id,
+					phone_number: phone_number,
+					otp_sent: otpSent,
+					otp_for_testing: process.env.NODE_ENV === "development" && otpValue ? otpValue : undefined,
+				},
+				200,
+				otpSent
+					? (lang === "ar"
+						? "تم إرسال رمز التحقق بنجاح"
+						: "OTP sent successfully to your phone number")
+					: (lang === "ar"
+						? "فشل إرسال رمز التحقق"
+						: "Failed to send OTP")
+			);
+		} catch (error) {
+			console.error("[USER:RESEND-SIGNUP-OTP] Error:", error);
 			return Response.serverErrorResponse(
 				res,
 				resp_messages(lang).internalServerError

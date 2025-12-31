@@ -25,7 +25,7 @@ const OrganizerSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: false, // Password is now optional (passwordless authentication)
         select: false, // Don't return password in queries by default
     },
     date_of_birth: {
@@ -83,7 +83,19 @@ const OrganizerSchema = new mongoose.Schema({
     },
     is_verified: {
         type: Boolean,
+        default: false // Only true when both email AND phone are verified
+    },
+    phone_verified: {
+        type: Boolean,
         default: false
+    },
+    phone_verified_at: {
+        type: Date,
+        default: null
+    },
+    email_verified_at: {
+        type: Date,
+        default: null
     },
     language: {
         type: String,

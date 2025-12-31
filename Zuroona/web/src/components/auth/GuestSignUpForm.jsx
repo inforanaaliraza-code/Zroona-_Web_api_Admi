@@ -92,8 +92,13 @@ export default function GuestSignUpForm() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-    const [showEmailVerificationMessage, setShowEmailVerificationMessage] = useState(false);
+    const [showVerificationStep, setShowVerificationStep] = useState(false);
     const [profileImage, setProfileImage] = useState(null);
+    const [userId, setUserId] = useState(null);
+    const [otp, setOtp] = useState("");
+    const [otpVerifying, setOtpVerifying] = useState(false);
+    const [emailVerified, setEmailVerified] = useState(false);
+    const [phoneVerified, setPhoneVerified] = useState(false);
 
     const validationSchema = Yup.object({
         first_name: Yup.string()
@@ -105,16 +110,6 @@ export default function GuestSignUpForm() {
         email: Yup.string()
             .required(t("auth.emailRequired") || "Email is required")
             .email(t("auth.emailInvalid") || "Invalid email address"),
-        password: Yup.string()
-            .required(t("auth.passwordRequired") || "Password is required")
-            .min(8, t("auth.passwordMinLength") || "Password must be at least 8 characters")
-            .matches(
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{};':"\\|,.<>\/])/,
-                t("auth.passwordStrength") || "Password must contain uppercase, lowercase, number, and special character"
-            ),
-        confirmPassword: Yup.string()
-            .required(t("auth.confirmPasswordRequired") || "Please confirm your password")
-            .oneOf([Yup.ref('password')], t("auth.passwordsMustMatch") || 'Passwords must match'),
         phone_number: Yup.string()
             .required(t("auth.phoneRequired") || "Phone number is required")
             .matches(/^[0-9]+$/, t("auth.phoneInvalid") || "Phone number must contain only digits"),
@@ -144,8 +139,6 @@ export default function GuestSignUpForm() {
             first_name: "",
             last_name: "",
             email: "",
-            password: "",
-            confirmPassword: "",
             phone_number: "",
             country_code: "+966", // Default to Saudi Arabia
             gender: "", // Empty string for select dropdown
@@ -171,12 +164,13 @@ export default function GuestSignUpForm() {
                 const response = await SignUpApi(payload);
                 
                 if (response?.status === 1 || response?.status === true) {
-                    // Show email verification message instead of OTP modal
-                    setShowEmailVerificationMessage(true);
+                    // Store user ID for OTP verification
+                    setUserId(response?.data?.user?._id);
+                    setShowVerificationStep(true);
                     toast.success(
                         response.message || 
                         t("auth.verificationEmailSent") || 
-                        "Account created successfully! Please check your email to verify your account."
+                        "Account created! Please verify your email and enter the OTP sent to your phone."
                     );
                 } else {
                     toast.error(response.message || t("auth.signupError") || "Signup failed. Please try again.");
@@ -215,6 +209,86 @@ export default function GuestSignUpForm() {
         } catch (error) {
             console.error("Resend verification error:", error);
             toast.error(t("auth.resendFailed") || "Failed to resend verification email. Please try again.");
+        }
+    };
+
+    const handleResendOtp = async () => {
+        if (!userId || !formik.values.phone_number || !formik.values.country_code) {
+            toast.error("Missing information to resend OTP");
+            return;
+        }
+        try {
+            setLoading(true);
+            const response = await fetch(`${BASE_API_URL}user/resend-signup-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'lang': i18n.language || 'en'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    phone_number: formik.values.phone_number,
+                    country_code: formik.values.country_code
+                })
+            });
+            const data = await response.json();
+            if (data?.status === 1 || data?.success) {
+                toast.success(data.message || "OTP resent successfully!");
+            } else {
+                toast.error(data.message || "Failed to resend OTP.");
+            }
+        } catch (error) {
+            console.error("Resend OTP error:", error);
+            toast.error("Failed to resend OTP. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otp || otp.length !== 6) {
+            toast.error("Please enter a valid 6-digit OTP");
+            return;
+        }
+        if (!userId || !formik.values.phone_number || !formik.values.country_code) {
+            toast.error("Missing information to verify OTP");
+            return;
+        }
+        try {
+            setOtpVerifying(true);
+            const response = await fetch(`${BASE_API_URL}user/verify-signup-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'lang': i18n.language || 'en'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    phone_number: formik.values.phone_number,
+                    country_code: formik.values.country_code,
+                    otp: otp
+                })
+            });
+            const data = await response.json();
+            if (data?.status === 1 || data?.success) {
+                setPhoneVerified(true);
+                if (data?.data?.user?.is_verified) {
+                    // Both verified - success!
+                    toast.success(data.message || "Account verified successfully! You can now login.");
+                    setTimeout(() => {
+                        router.push("/login");
+                    }, 2000);
+                } else {
+                    toast.success(data.message || "Phone verified! Please verify your email to complete registration.");
+                }
+            } else {
+                toast.error(data.message || "Invalid OTP. Please try again.");
+            }
+        } catch (error) {
+            console.error("Verify OTP error:", error);
+            toast.error("Failed to verify OTP. Please try again.");
+        } finally {
+            setOtpVerifying(false);
         }
     };
 
@@ -331,52 +405,6 @@ export default function GuestSignUpForm() {
                         )}
                     </div>
 
-                    {/* Password Fields */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {t("auth.password") || "Password"} *
-                            </label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formik.values.password}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.password && formik.errors.password
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
-                                placeholder={t("auth.enterPassword") || "Enter your password"}
-                            />
-                            {formik.touched.password && formik.errors.password && (
-                                <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {t("auth.confirmPassword") || "Confirm Password"} *
-                            </label>
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                value={formik.values.confirmPassword}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.confirmPassword && formik.errors.confirmPassword
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
-                                placeholder={t("auth.confirmYourPassword") || "Confirm your password"}
-                            />
-                            {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-                                <p className="mt-1 text-sm text-red-600">{formik.errors.confirmPassword}</p>
-                            )}
-                        </div>
-                    </div>
 
                     {/* Phone Number */}
                     <div>
@@ -577,8 +605,8 @@ export default function GuestSignUpForm() {
                 </div>
             </div>
 
-            {/* Email Verification Message Modal */}
-            {showEmailVerificationMessage && (
+            {/* Verification Step Modal */}
+            {showVerificationStep && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
@@ -593,30 +621,80 @@ export default function GuestSignUpForm() {
 
                             {/* Title */}
                             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                {t("auth.checkYourEmail") || "Check Your Email"}
+                                {t("auth.verifyYourAccount") || "Verify Your Account"}
                             </h2>
 
-                            {/* Message */}
-                            <p className="text-gray-600 mb-6">
-                                {t("auth.verificationEmailSentMessage") || 
-                                "We've sent a verification link to your email address. Please click the link in the email to verify your account and complete your registration."}
-                            </p>
+                            {/* Verification Status */}
+                            <div className="mb-6 space-y-3">
+                                {/* Email Verification Status */}
+                                <div className={`flex items-center justify-center gap-2 p-3 rounded-lg ${
+                                    emailVerified ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                                }`}>
+                                    <Icon 
+                                        icon={emailVerified ? "material-symbols:check-circle" : "material-symbols:schedule"} 
+                                        className="w-5 h-5" 
+                                    />
+                                    <span className="text-sm font-medium">
+                                        {emailVerified 
+                                            ? "Email Verified ✓" 
+                                            : "Check your email and click the verification link"}
+                                    </span>
+                                </div>
 
-                            <p className="text-sm text-gray-500 mb-6 font-medium">
-                                {formik.values.email}
-                            </p>
+                                {/* Phone Verification Status */}
+                                <div className={`flex items-center justify-center gap-2 p-3 rounded-lg ${
+                                    phoneVerified ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                                }`}>
+                                    <Icon 
+                                        icon={phoneVerified ? "material-symbols:check-circle" : "material-symbols:schedule"} 
+                                        className="w-5 h-5" 
+                                    />
+                                    <span className="text-sm font-medium">
+                                        {phoneVerified 
+                                            ? "Phone Verified ✓" 
+                                            : "Enter OTP sent to your phone"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* OTP Input */}
+                            {!phoneVerified && (
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+                                        {t("auth.enterOTP") || "Enter OTP"}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={otp}
+                                        onChange={(e) => {
+                                            const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                                            setOtp(value);
+                                        }}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-center text-2xl tracking-widest"
+                                        placeholder="000000"
+                                        maxLength={6}
+                                    />
+                                    <button
+                                        onClick={handleResendOtp}
+                                        disabled={loading}
+                                        className="mt-2 text-sm text-[#a797cc] hover:text-[#8ba179] font-medium"
+                                    >
+                                        {t("auth.resendOTP") || "Resend OTP"}
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Actions */}
                             <div className="space-y-3">
-                                <button
-                                    onClick={() => {
-                                        setShowEmailVerificationMessage(false);
-                                        router.push("/login");
-                                    }}
-                                    className="w-full py-3 px-4 bg-[#a797cc] hover:bg-[#d66a0a] text-white font-semibold rounded-lg transition-colors"
-                                >
-                                    {t("auth.goToLogin") || "Go to Login"}
-                                </button>
+                                {!phoneVerified && (
+                                    <button
+                                        onClick={handleVerifyOtp}
+                                        disabled={otpVerifying || otp.length !== 6}
+                                        className="w-full py-3 px-4 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                    >
+                                        {otpVerifying ? "Verifying..." : t("auth.verifyOTP") || "Verify OTP"}
+                                    </button>
+                                )}
 
                                 <button
                                     onClick={handleResendVerification}
@@ -625,8 +703,17 @@ export default function GuestSignUpForm() {
                                     {t("auth.resendVerificationEmail") || "Resend Verification Email"}
                                 </button>
 
+                                {(emailVerified && phoneVerified) && (
+                                    <button
+                                        onClick={() => router.push("/login")}
+                                        className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                                    >
+                                        {t("auth.goToLogin") || "Go to Login"}
+                                    </button>
+                                )}
+
                                 <button
-                                    onClick={() => setShowEmailVerificationMessage(false)}
+                                    onClick={() => setShowVerificationStep(false)}
                                     className="w-full py-2 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium"
                                 >
                                     {t("auth.close") || "Close"}

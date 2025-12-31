@@ -14,6 +14,8 @@ const { organizerRegistrationValidation, paymentSchema } = require('../validatio
 router.post("/register", organizerController.organizerRegistration); // Email verification + 4 steps
 router.post("/login", organizerController.organizerLogin); // Email + password login
 router.get("/verify-email", organizerController.verifyOrganizerEmail); // Email verification
+router.post("/verify-signup-otp", organizerController.verifySignupOtp); // Verify signup OTP for phone
+router.post("/resend-signup-otp", organizerController.resendSignupOtp); // Resend signup OTP
 router.post("/forgot-password", organizerController.forgotPassword); // Send password reset email
 router.post("/reset-password", organizerController.resetPassword); // Reset password using token
 router.put('/registration/update', organizerController.updateRegistrationProfile); // Update during registration (steps 3-4, accepts organizer_id in body)
