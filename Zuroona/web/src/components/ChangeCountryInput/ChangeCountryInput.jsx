@@ -85,7 +85,8 @@ function ChangeCountryInput(props) {
         <PhoneInput
           country={"sa"}
           countryCodeEditable={false}
-          onlyCountries={['sa']}
+          onlyCountries={['sa', 'pk']}
+          autoFormat={false}
           inputProps={{
             name: props.mobileNumber,
             placeholder: "Mobile No.",
@@ -93,10 +94,9 @@ function ChangeCountryInput(props) {
             style: { textAlign: isRTL ? 'right' : 'left' }
           }}
           disabled={props.disabled}
-          enableSearch={false}
-          disableDropdown={true}
+          enableSearch={true}
+          disableDropdown={false}
           containerStyle={{ width: "100%" }}
-          dropdownStyle={{ display: 'none' }}
           value={
             props.value
               ? props.value
@@ -106,8 +106,19 @@ function ChangeCountryInput(props) {
           }
           onChange={(phone, country, e, formattedValue) => {
             if (phone.length > 0) {
-              const raw = phone.slice(country?.dialCode?.length);
-              const rawLimited = raw.slice(0, 10);
+              let raw = phone.slice(country?.dialCode?.length);
+              
+              // Remove any dashes, spaces, or special characters ONLY
+              // DO NOT auto-add leading 0 - let user enter what they want
+              raw = raw.replace(/[-\s()]/g, '');
+              
+              // Set max length based on country
+              // Saudi: 9 digits max, Pakistan: 9 or 10 digits (user can choose)
+              const maxLength = country?.dialCode === '966' ? 9 : 10;
+              const rawLimited = raw.slice(0, maxLength);
+              
+              console.log(`[CHANGE_COUNTRY_INPUT] Phone formatting - phone: "${phone}", raw: "${raw}", limited: "${rawLimited}", country: ${country?.dialCode}`);
+              
               props.formik.setFieldValue(props.mobileNumber, rawLimited);
               props.formik.setFieldValue(props.countryCode, `+${country.dialCode}`);
             } else {

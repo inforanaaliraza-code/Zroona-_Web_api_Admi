@@ -36,8 +36,13 @@ export default function TermsCondition() {
   const { fetchCMSDetail } = useDataStore();
 
   useEffect(() => {
-    fetchCMSDetail({ type: 2 });
+    fetchCMSDetail({ type: 1 }); // Type 1 = Terms & Conditions (matches Admin Portal)
   }, [i18n.language, fetchCMSDetail]);
+
+  // Get content based on language - ONLY from CMS (Admin Portal is source of truth)
+  const content = i18n.language === 'ar' 
+    ? CMSDetail?.description_ar 
+    : CMSDetail?.description;
 
   return (
     <>
@@ -60,10 +65,23 @@ export default function TermsCondition() {
           <div className="space-y-8">
             {/* Section 1 */}
             <div>
-              <p
-                className="text-gray-700 text-justify [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-3 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:space-y-2 [&_li]:mb-1"
-                dangerouslySetInnerHTML={{ __html: CMSDetail?.description }}
-              />
+              {content ? (
+                <div
+                  className={`text-gray-700 text-justify [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-8 [&_h1]:mb-6 [&_h1]:text-gray-900 [&_h1]:border-b-2 [&_h1]:border-[#a797cc] [&_h1]:pb-3
+                    [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-4 [&_h2]:text-gray-900
+                    [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-3 [&_h3]:text-gray-800
+                    [&_p]:mb-4 [&_p]:text-gray-700 [&_p]:leading-relaxed
+                    [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:space-y-2 [&_ul]:mb-4
+                    [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:space-y-2 [&_ol]:mb-4
+                    [&_li]:mb-2 [&_li]:text-gray-700
+                    [&_strong]:font-bold [&_strong]:text-gray-900`}
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>{t("common.loading") || "Loading content..."}</p>
+                </div>
+              )}
             </div>
             
           </div>

@@ -5,7 +5,7 @@ import { store } from "@/redux/store";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../lib/i18n";
 import { ibmPlexSansArabic, poppins, tajawal } from "@/lib/fonts";
@@ -15,20 +15,37 @@ import RTLHandler from "@/components/RTLHandler/RTLHandler";
 // Dynamic ToastContainer that respects RTL/LTR
 // This component must be inside I18nextProvider to use useTranslation
 function DynamicToastContainer() {
-  // We'll use a simple approach - get language from localStorage or default
-  const getIsRTL = () => {
-    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
-      try {
-        const lang = localStorage.getItem("i18nextLng") || "ar";
-        return lang === "ar";
-      } catch (e) {
-        return true; // Default to RTL
+  const [isRTL, setIsRTL] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    // Get language from localStorage or default
+    const getIsRTL = () => {
+      if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+        try {
+          const lang = localStorage.getItem("i18nextLng") || "en";
+          return lang === "ar";
+        } catch (e) {
+          return false; // Default to LTR (English)
+        }
       }
-    }
-    return true; // Default to RTL
-  };
+      return false; // Default to LTR (English)
+    };
+    
+    setIsRTL(getIsRTL());
+  }, []);
   
-  const isRTL = getIsRTL();
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!isMounted) {
+    return (
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        rtl={false}
+      />
+    );
+  }
   
   return (
     <ToastContainer 
@@ -39,25 +56,11 @@ function DynamicToastContainer() {
   );
 }
 
-// Client component to get initial language for HTML attributes
-function getInitialLanguage() {
-  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
-    try {
-      const stored = localStorage.getItem("i18nextLng");
-      if (stored && (stored === "ar" || stored === "en")) {
-        return stored;
-      }
-    } catch (error) {
-      // Ignore errors
-    }
-  }
-  return "ar"; // Default
-}
-
 export default function RootLayout({ children }) {
-  // Get initial language for SSR (will be updated by RTLHandler on client)
-  const initialLang = typeof window !== "undefined" ? getInitialLanguage() : "ar";
-  const initialDir = initialLang === "ar" ? "rtl" : "ltr";
+  // Always use "en" for SSR to prevent hydration mismatch
+  // RTLHandler will update it on client side
+  const initialLang = "en";
+  const initialDir = "ltr";
   
   return (
     <html lang={initialLang} dir={initialDir} className={`${ibmPlexSansArabic.variable} ${poppins.variable} ${tajawal.variable}`} suppressHydrationWarning>
@@ -68,13 +71,13 @@ export default function RootLayout({ children }) {
             __html: `
               (function() {
                 try {
-                  var lang = 'ar';
+                  var lang = 'en';
                   if (typeof localStorage !== 'undefined') {
                     var stored = localStorage.getItem('i18nextLng');
                     if (stored === 'ar' || stored === 'en') {
                       lang = stored;
                     } else {
-                      localStorage.setItem('i18nextLng', 'ar');
+                      localStorage.setItem('i18nextLng', 'en');
                     }
                   }
                   var isRTL = lang === 'ar';
@@ -83,10 +86,10 @@ export default function RootLayout({ children }) {
                     document.documentElement.setAttribute('lang', lang);
                   }
                 } catch (e) {
-                  // Fallback to Arabic RTL
+                  // Fallback to English LTR
                   if (document.documentElement) {
-                    document.documentElement.setAttribute('dir', 'rtl');
-                    document.documentElement.setAttribute('lang', 'ar');
+                    document.documentElement.setAttribute('dir', 'ltr');
+                    document.documentElement.setAttribute('lang', 'en');
                   }
                 }
               })();

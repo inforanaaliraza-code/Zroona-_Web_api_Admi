@@ -351,47 +351,56 @@ const menuGroups = [
             {
                 icon: "/assets/images/menu/event-org.png",
                 label: "Manage Hosts",
+                translationKey: "sidebar.manageHosts",
                 route: "/organizer"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Guests Management",
+                translationKey: "sidebar.guestsManagement",
                 route: "/user"
             },
             {
                 icon: "/assets/images/menu/event.png",
                 label: "Manage Events",
+                translationKey: "sidebar.manageEvents",
                 route: "/events"
             },
             {
                 icon: "/assets/images/menu/cms.png",
                 label: "Manage CMS",
+                translationKey: "sidebar.manageCMS",
                 route: "/cms"
             },
             {
                 icon: "/assets/images/menu/settings-line.png",
                 hoverIcon: "/assets/images/menu/settings-line.png",
                 label: "Settings",
+                translationKey: "sidebar.settings",
                 route: "/setting"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Admin Management",
+                translationKey: "sidebar.adminManagement",
                 route: "/admin-management"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Wallet",
+                translationKey: "sidebar.wallet",
                 route: "/wallet"
             },
             {
                 icon: "/assets/images/menu/withdrawal.png",
                 label: "Host Withdrawal Requests",
+                translationKey: "sidebar.hostWithdrawalRequests",
                 route: "/withdrawal-requests"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Guest Invoices",
+                translationKey: "sidebar.guestInvoices",
                 route: "/guest-invoices"
             }
         ]
@@ -1182,6 +1191,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/until/index.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Loader$2f$Loader$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Loader/Loader.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$setting$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/api/setting.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-ssr] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-ssr] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 "use client";
 ;
@@ -1197,7 +1208,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$setting$2e$js_
 ;
 ;
 ;
+;
 function LoginForm(props) {
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useTranslation"])();
     const { push } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -1210,9 +1223,9 @@ function LoginForm(props) {
                 error: ""
             },
             validationSchema: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.object({
-                email: props.page !== "forgot" ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().email("Enter a valid email address").required("Required") : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string(),
-                mobile_number: props.page === "forgot" ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required("Mobile number is required").matches(/^[0-9]{10}$/, "Mobile number must be 10 digits") : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string(),
-                password: props.page !== "forgot" && __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required("Required")
+                email: props.page !== "forgot" ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().email(t("validation.invalidEmail")).required(t("validation.required")) : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string(),
+                mobile_number: props.page === "forgot" ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required(t("common.mobileNumberRequired")).matches(/^[0-9]{10}$/, t("common.mobileNumberDigits")) : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string(),
+                password: props.page !== "forgot" && __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required(t("validation.required"))
             }),
             onSubmit: (values, action)=>{
                 setLoading(true);
@@ -1271,10 +1284,10 @@ function LoginForm(props) {
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                         htmlFor: props.page === "forgot" ? "mobile_number" : "email",
                                         className: "block text-base font-semibold text-gray-700",
-                                        children: props.page === "forgot" ? "Mobile Number *" : "Email *"
+                                        children: props.page === "forgot" ? t("common.mobileNumberLabel") : t("common.emailLabel")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                        lineNumber: 102,
+                                        lineNumber: 104,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1286,18 +1299,18 @@ function LoginForm(props) {
                                                     className: "w-6 h-6 text-[#a797cc]"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                    lineNumber: 108,
+                                                    lineNumber: 110,
                                                     columnNumber: 23
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$mail$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Mail$3e$__["Mail"], {
                                                     className: "w-6 h-6 text-[#a797cc]"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                    lineNumber: 110,
+                                                    lineNumber: 112,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                lineNumber: 106,
+                                                lineNumber: 108,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1305,19 +1318,19 @@ function LoginForm(props) {
                                                 id: props.page === "forgot" ? "mobile_number" : "email",
                                                 name: props.page === "forgot" ? "mobile_number" : "email",
                                                 className: "block w-full px-3 pl-12 py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc]/20 focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold transition-all duration-200",
-                                                placeholder: props.page === "forgot" ? "Enter mobile number" : "Enter email id",
+                                                placeholder: props.page === "forgot" ? t("common.enterMobileNumber") : t("common.enterEmailId"),
                                                 onChange: handleChange,
                                                 onBlur: handleBlur,
                                                 value: props.page === "forgot" ? values.mobile_number || values.email : values.email
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                lineNumber: 113,
+                                                lineNumber: 115,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                        lineNumber: 105,
+                                        lineNumber: 107,
                                         columnNumber: 17
                                     }, this),
                                     (props.page === "forgot" && errors.mobile_number && touched.mobile_number || props.page !== "forgot" && errors.email && touched.email) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1325,13 +1338,13 @@ function LoginForm(props) {
                                         children: props.page === "forgot" ? errors.mobile_number : errors.email
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                        lineNumber: 127,
+                                        lineNumber: 129,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                lineNumber: 101,
+                                lineNumber: 103,
                                 columnNumber: 15
                             }, this),
                             props.page !== "forgot" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1340,10 +1353,10 @@ function LoginForm(props) {
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                         htmlFor: "password-field",
                                         className: "block text-sm font-medium text-gray-700",
-                                        children: "Password"
+                                        children: t("common.passwordLabel")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                        lineNumber: 135,
+                                        lineNumber: 137,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1355,12 +1368,12 @@ function LoginForm(props) {
                                                     className: "w-4 h-4 text-[#a797cc]"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                    lineNumber: 140,
+                                                    lineNumber: 142,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                lineNumber: 139,
+                                                lineNumber: 141,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1368,13 +1381,13 @@ function LoginForm(props) {
                                                 type: values.toggle ? "text" : "password",
                                                 name: "password",
                                                 className: "block w-full px-3 pl-12 py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc]/20 focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold transition-all duration-200",
-                                                placeholder: "Enter Password",
+                                                placeholder: t("common.enterPasswordPlaceholder"),
                                                 onChange: handleChange,
                                                 onBlur: handleBlur,
                                                 value: values.password
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                lineNumber: 142,
+                                                lineNumber: 144,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1383,21 +1396,21 @@ function LoginForm(props) {
                                                     type: "button",
                                                     className: "py-1 md:py-2 px-3 md:px-4 rounded-lg text-sm text-white bg-gradient-to-r from-[#a797cc] to-[#8b7bb3] hover:from-[#8b7bb3] hover:to-[#6d5a9a] transition-all duration-200 shadow-md",
                                                     onClick: ()=>setFieldValue("toggle", !values.toggle),
-                                                    children: values.toggle ? "Hide" : "Show"
+                                                    children: values.toggle ? t("common.hide") : t("common.show")
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                    lineNumber: 153,
+                                                    lineNumber: 155,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                lineNumber: 152,
+                                                lineNumber: 154,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                        lineNumber: 138,
+                                        lineNumber: 140,
                                         columnNumber: 19
                                     }, this),
                                     errors.password && touched.password && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1408,13 +1421,13 @@ function LoginForm(props) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                        lineNumber: 163,
+                                        lineNumber: 165,
                                         columnNumber: 21
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                lineNumber: 134,
+                                lineNumber: 136,
                                 columnNumber: 17
                             }, this),
                             props.page !== "forgot" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1423,20 +1436,20 @@ function LoginForm(props) {
                                     href: "/forgot-password",
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         className: "text-sm text-[#a797cc] font-bold cursor-pointer hover:text-[#8b7bb3] transition-colors",
-                                        children: "Forgot Password?"
+                                        children: t("common.forgotPassword")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                        lineNumber: 171,
+                                        lineNumber: 173,
                                         columnNumber: 21
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                    lineNumber: 170,
+                                    lineNumber: 172,
                                     columnNumber: 19
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                lineNumber: 169,
+                                lineNumber: 171,
                                 columnNumber: 17
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1449,15 +1462,15 @@ function LoginForm(props) {
                                         color: "#fff"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                        lineNumber: 186,
+                                        lineNumber: 188,
                                         columnNumber: 21
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                children: props.page === "forgot" ? "Continue" : "LogIn"
+                                                children: props.page === "forgot" ? t("common.continue") : t("common.login")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                lineNumber: 189,
+                                                lineNumber: 191,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -1467,35 +1480,35 @@ function LoginForm(props) {
                                                 width: 20
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                                lineNumber: 190,
+                                                lineNumber: 192,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                    lineNumber: 180,
+                                    lineNumber: 182,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                                lineNumber: 179,
+                                lineNumber: 181,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                        lineNumber: 99,
+                        lineNumber: 101,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-                    lineNumber: 91,
+                    lineNumber: 93,
                     columnNumber: 11
                 }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/LoginForm/LoginForm.jsx",
-            lineNumber: 20,
+            lineNumber: 22,
             columnNumber: 7
         }, this)
     }, void 0, false);

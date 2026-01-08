@@ -14,6 +14,9 @@ import { toast } from "react-toastify";
 import { BASE_API_URL } from "@/until";
 import Cookies from "js-cookie";
 import { TOKEN_NAME } from "@/until";
+import { ChangeStatusOrganizerApi } from "@/app/api/myBookings/apis";
+import RejectReasonModal from "@/components/Modal/RejectReasonModal";
+import { Check, X, MessageCircle } from "lucide-react";
 
 export default function EventAnalytics() {
   const { t, i18n } = useTranslation();
@@ -25,6 +28,9 @@ export default function EventAnalytics() {
   const [loading, setLoading] = useState(true);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [activeTab, setActiveTab] = useState("all"); // all, pending, approved, rejected, paid
+  const [processingBooking, setProcessingBooking] = useState(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [selectedBookingForReject, setSelectedBookingForReject] = useState(null);
 
   useEffect(() => {
     if (eventId) {
@@ -69,7 +75,7 @@ export default function EventAnalytics() {
       case "approved":
         return analyticsData.bookings.filter(b => b.book_status === 2);
       case "rejected":
-        return analyticsData.bookings.filter(b => b.book_status === 3);
+        return analyticsData.bookings.filter(b => b.book_status === 3 || b.book_status === 4); // Support both 3 and 4 for rejected
       case "paid":
         return analyticsData.bookings.filter(b => b.payment_status === 1);
       default:
@@ -125,6 +131,64 @@ export default function EventAnalytics() {
         {t("events.unpaid", "Unpaid")}
         </span>
     );
+  };
+
+  const handleAcceptReject = async (bookingId, action, rejectionReason = null) => {
+    setProcessingBooking(bookingId);
+    try {
+      const book_status = action === "accept" ? 2 : 4; // 2 = approved, 4 = rejected (backend uses 4 for rejected)
+      const payload = {
+        book_id: bookingId,
+        book_status: book_status,
+      };
+      
+      // Add rejection reason if rejecting
+      if (action === "reject" && rejectionReason) {
+        payload.rejection_reason = rejectionReason;
+      }
+      
+      const response = await ChangeStatusOrganizerApi(payload);
+
+      if (response?.status === 1) {
+        toast.success(
+          response?.message || 
+          `Booking ${action === "accept" ? "accepted" : "rejected"} successfully`
+        );
+        // Refresh analytics data
+        await fetchAnalytics();
+        // Close reject modal if open
+        if (action === "reject") {
+          setRejectModalOpen(false);
+          setSelectedBookingForReject(null);
+        }
+      } else {
+        toast.error(response?.message || `Failed to ${action} booking`);
+      }
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      toast.error(`Failed to ${action} booking`);
+    } finally {
+      setProcessingBooking(null);
+    }
+  };
+
+  const handleRejectClick = (booking) => {
+    const userData = booking.userDetail || {};
+    const userName = `${userData.first_name || ""} ${userData.last_name || ""}`.trim() || t("events.unknown") || "Unknown";
+    const eventName = analyticsData?.event?.event_name || "Event";
+    
+    setSelectedBookingForReject({
+      bookingId: booking._id,
+      guestName: userName,
+      eventName: eventName,
+    });
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectConfirm = (rejectionReason) => {
+    if (selectedBookingForReject) {
+      handleAcceptReject(selectedBookingForReject.bookingId, "reject", rejectionReason);
+    }
   };
 
   const breadcrumbItems = [
@@ -393,16 +457,50 @@ export default function EventAnalytics() {
                             {getBookingStatusBadge(booking.book_status)}
                           </td>
                           <td className={`px-6 py-4 whitespace-nowrap text-sm text-gray-600 ${textAlign}`}>
-                            {format(new Date(booking.createdAt), "MMM dd, yyyy")}
+                            {booking.createdAt ? format(new Date(booking.createdAt), "MMM dd, yyyy") : "N/A"}
                           </td>
                           <td className={`px-6 py-4 whitespace-nowrap text-sm ${textAlign}`}>
-                            <Link
-                              href={`/myBookings/detail?id=${booking._id}`}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-[#a797cc] text-white rounded-lg hover:bg-[#8ba179] text-xs font-medium transition-colors"
-                            >
-                              <Icon icon="lucide:eye" className="w-4 h-4" />
-                              {t("events.view", "View")}
-                            </Link>
+                            <div className={`flex items-center gap-2 ${flexDirection}`}>
+                              {/* Accept/Reject buttons for pending bookings */}
+                              {(booking.book_status === 0 || booking.book_status === 1) && (
+                                <>
+                                  <button
+                                    onClick={() => handleAcceptReject(booking._id, "accept")}
+                                    disabled={processingBooking === booking._id}
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                                  >
+                                    <Check className="w-4 h-4" />
+                                    {t("accept") || "Accept"}
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectClick(booking)}
+                                    disabled={processingBooking === booking._id}
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                                  >
+                                    <X className="w-4 h-4" />
+                                    {t("reject") || "Reject"}
+                                  </button>
+                                </>
+                              )}
+                              {/* Group Chat for approved and paid bookings */}
+                              {booking.book_status === 2 && booking.payment_status === 1 && (
+                                <Link
+                                  href={`/messaging?event_id=${eventId}`}
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-[#a797cc] text-white rounded-lg hover:bg-[#8ba179] text-xs font-medium transition-colors"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  {t("events.groupChat", "Group Chat")}
+                                </Link>
+                              )}
+                              {/* View Details link for all bookings */}
+                              <Link
+                                href={`/myBookings?event_id=${eventId}`}
+                                className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition-colors"
+                              >
+                                <Icon icon="lucide:eye" className="w-4 h-4" />
+                                {t("events.viewDetails", "Details")}
+                              </Link>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -423,6 +521,21 @@ export default function EventAnalytics() {
           </div>
         </div>
       </section>
+
+      {/* Reject Reason Modal */}
+      {selectedBookingForReject && (
+        <RejectReasonModal
+          isOpen={rejectModalOpen}
+          onClose={() => {
+            setRejectModalOpen(false);
+            setSelectedBookingForReject(null);
+          }}
+          onConfirm={handleRejectConfirm}
+          guestName={selectedBookingForReject.guestName}
+          eventName={selectedBookingForReject.eventName}
+          isLoading={processingBooking === selectedBookingForReject.bookingId}
+        />
+      )}
     </>
   );
 }

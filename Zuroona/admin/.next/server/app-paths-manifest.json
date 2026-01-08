@@ -1,7 +1,8 @@
 {
   "/page": "app/page.js",
+  "/icon.png/route": "app/icon.png/route.js",
   "/adminsa111xyz/page": "app/adminsa111xyz/page.js",
   "/(AfterLogin)/organizer/page": "app/(AfterLogin)/organizer/page.js",
-  "/(AfterLogin)/events/page": "app/(AfterLogin)/events/page.js",
-  "/(AfterLogin)/events/detail/[id]/page": "app/(AfterLogin)/events/detail/[id]/page.js"
+  "/(AfterLogin)/user/page": "app/(AfterLogin)/user/page.js",
+  "/(AfterLogin)/events/page": "app/(AfterLogin)/events/page.js"
 }

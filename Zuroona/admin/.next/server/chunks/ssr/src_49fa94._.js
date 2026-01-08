@@ -10,14 +10,17 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/link.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/navigation.js [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-ssr] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-ssr] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
+"use client";
 ;
 ;
 ;
 ;
 ;
 const SidebarItem = ({ item, pageName, setPageName, index = 0 })=>{
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useTranslation"])();
     const [isHovered, setIsHovered] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isMobile, setIsMobile] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const handleClick = ()=>{
@@ -57,80 +60,65 @@ const SidebarItem = ({ item, pageName, setPageName, index = 0 })=>{
             onMouseEnter: ()=>!isMobile && setIsHovered(true),
             onMouseLeave: ()=>!isMobile && setIsHovered(false),
             className: `
-          group relative flex items-center gap-3 rounded-xl py-2.5 px-3 font-medium text-white text-sm
-          transition-all duration-300 ease-in-out w-full min-w-0
-          ${isItemActive ? "bg-white/30 shadow-lg shadow-white/20 backdrop-blur-sm" : "bg-white/0 hover:bg-white/20"}
-          ${!isMobile ? "hover:shadow-lg hover:shadow-white/20 hover:backdrop-blur-sm hover:scale-[1.01]" : ""}
-          ${isItemActive ? "scale-[1.01]" : ""}
+          group relative flex items-center rounded-xl py-3 px-4 font-medium text-sm
+          transition-all duration-300 ease-in-out w-full min-w-0 overflow-hidden
+          ${isItemActive ? "bg-gradient-to-r from-purple-600/40 via-purple-500/30 to-green-500/40 shadow-lg shadow-purple-500/30 backdrop-blur-sm border border-purple-400/40" : "bg-transparent hover:bg-gradient-to-r hover:from-purple-600/20 hover:via-purple-500/10 hover:to-green-500/20 border border-transparent hover:border-purple-400/20"}
+          ${!isMobile ? "hover:shadow-lg hover:shadow-purple-500/20 hover:scale-[1.02]" : ""}
+          ${isItemActive ? "scale-[1.02]" : ""}
         `,
             children: [
                 isItemActive && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-brand-green to-brand-gray-green-2 rounded-r-full animate-scale-in"
+                    className: "absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-green-400 via-green-300 to-purple-400 rounded-r-full shadow-lg shadow-green-400/50"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 69,
+                    lineNumber: 72,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: `
-            absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/10 to-white/0
-            opacity-0 transition-opacity duration-300
-            ${isHovered || isItemActive ? "opacity-100" : ""}
+            absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/0 via-green-400/0 to-purple-500/0
+            transition-all duration-500
+            ${isHovered || isItemActive ? "from-purple-500/10 via-green-400/10 to-purple-500/10" : ""}
           `
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 73,
+                    lineNumber: 76,
                     columnNumber: 9
                 }, this),
-                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: `
-          relative z-10 transition-all duration-300 flex-shrink-0
-          ${isItemActive ? "scale-105" : "group-hover:scale-105"}
-          ${isHovered || isItemActive ? "brightness-110" : ""}
-        `,
-                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                        src: item.icon,
-                        alt: item.label,
-                        width: 20,
-                        height: 20,
-                        className: "transition-transform duration-300"
-                    }, void 0, false, {
-                        fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                        lineNumber: 87,
-                        columnNumber: 11
-                    }, this)
+                (isHovered || isItemActive) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 82,
-                    columnNumber: 9
+                    lineNumber: 86,
+                    columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                     className: `
           relative z-10 transition-all duration-300 flex-1 text-left leading-tight
-          ${isItemActive ? "font-semibold" : "font-medium"}
+          ${isItemActive ? "font-semibold bg-gradient-to-r from-green-200 via-white to-purple-200 bg-clip-text text-transparent" : "font-medium text-white/90 group-hover:text-white"}
         `,
-                    children: item.label
+                    children: item.translationKey ? t(item.translationKey) : item.label
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 97,
+                    lineNumber: 90,
                     columnNumber: 9
                 }, this),
-                isHovered && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute inset-0 rounded-xl shimmer opacity-30"
+                isItemActive && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-gradient-to-r from-green-400 to-purple-400 shadow-lg shadow-green-400/50 animate-pulse"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 106,
+                    lineNumber: 102,
                     columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-            lineNumber: 51,
+            lineNumber: 54,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-        lineNumber: 47,
+        lineNumber: 50,
         columnNumber: 5
     }, this);
 };
@@ -586,47 +574,56 @@ const menuGroups = [
             {
                 icon: "/assets/images/menu/event-org.png",
                 label: "Manage Hosts",
+                translationKey: "sidebar.manageHosts",
                 route: "/organizer"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Guests Management",
+                translationKey: "sidebar.guestsManagement",
                 route: "/user"
             },
             {
                 icon: "/assets/images/menu/event.png",
                 label: "Manage Events",
+                translationKey: "sidebar.manageEvents",
                 route: "/events"
             },
             {
                 icon: "/assets/images/menu/cms.png",
                 label: "Manage CMS",
+                translationKey: "sidebar.manageCMS",
                 route: "/cms"
             },
             {
                 icon: "/assets/images/menu/settings-line.png",
                 hoverIcon: "/assets/images/menu/settings-line.png",
                 label: "Settings",
+                translationKey: "sidebar.settings",
                 route: "/setting"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Admin Management",
+                translationKey: "sidebar.adminManagement",
                 route: "/admin-management"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Wallet",
+                translationKey: "sidebar.wallet",
                 route: "/wallet"
             },
             {
                 icon: "/assets/images/menu/withdrawal.png",
                 label: "Host Withdrawal Requests",
+                translationKey: "sidebar.hostWithdrawalRequests",
                 route: "/withdrawal-requests"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Guest Invoices",
+                translationKey: "sidebar.guestInvoices",
                 route: "/guest-invoices"
             }
         ]
@@ -646,6 +643,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navi
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/link.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$log$2d$out$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__LogOutIcon$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/log-out.js [app-ssr] (ecmascript) <export default as LogOutIcon>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-redux/dist/react-redux.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Sidebar$2f$SidebarItem$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Sidebar/SidebarItem.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$ClickOutside$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/ClickOutside.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/hooks/useLocalStorage.jsx [app-ssr] (ecmascript)");
@@ -664,64 +662,97 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie
 ;
 ;
 ;
+;
 const Sidebar = ({ sidebarOpen, setSidebarOpen })=>{
     const [pageName, setPageName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"])("selectedMenu", "dashboard");
+    const { isRTL } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSelector"])((state)=>state.language);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$ClickOutside$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
         onClick: ()=>setSidebarOpen(false),
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
-            className: `fixed left-0 top-0 z-[9999] flex h-screen w-[320px] flex-col bg-gradient-to-br from-brand-gray-purple-2 via-brand-pastel-gray-purple-1 to-brand-gray-purple-3 shadow-2xl duration-300 ease-in-out lg:translate-x-0 overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`,
+            className: `fixed top-0 z-[9999] flex h-screen w-[320px] flex-col shadow-2xl duration-300 ease-in-out lg:translate-x-0 overflow-y-auto ${isRTL ? 'right-0' : 'left-0'} ${sidebarOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"}`,
             style: {
-                background: "linear-gradient(135deg, #a797cc 0%, #b0a0df 50%, #a08ec8 100%)"
+                background: "linear-gradient(180deg, #1a0d2e 0%, #2d1b4e 50%, #1a0d2e 100%)"
             },
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"
+                    className: "absolute inset-0 opacity-20 pointer-events-none",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "absolute inset-0",
+                        style: {
+                            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(167, 151, 204, 0.3) 0%, transparent 50%),
+                             radial-gradient(circle at 80% 80%, rgba(176, 160, 223, 0.2) 0%, transparent 50%),
+                             radial-gradient(circle at 40% 20%, rgba(160, 142, 200, 0.25) 0%, transparent 50%)`
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/src/components/Sidebar/index.jsx",
+                        lineNumber: 33,
+                        columnNumber: 11
+                    }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 28,
+                    lineNumber: 32,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "flex items-center justify-center mt-6 mb-4 px-5 relative z-10 animate-fade-in flex-shrink-0",
+                    className: "absolute inset-0 border-r-2 pointer-events-none",
+                    style: {
+                        borderImage: "linear-gradient(180deg, rgba(167, 151, 204, 0.5) 0%, rgba(76, 175, 80, 0.5) 50%, rgba(167, 151, 204, 0.5) 100%) 1"
+                    }
+                }, void 0, false, {
+                    fileName: "[project]/src/components/Sidebar/index.jsx",
+                    lineNumber: 41,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex items-center justify-center mt-8 mb-6 px-5 relative z-10 animate-fade-in flex-shrink-0",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                         href: "/",
-                        className: "group relative",
+                        className: "group relative block",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "absolute inset-0 bg-white/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"
+                                className: "absolute -inset-2 bg-gradient-to-r from-purple-500/30 via-green-400/30 to-purple-500/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar/index.jsx",
-                                lineNumber: 33,
+                                lineNumber: 49,
                                 columnNumber: 13
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                                width: 140,
-                                height: 45,
-                                src: "/assets/images/main-logo.png",
-                                alt: "Zuroona Logo",
-                                className: "object-contain relative z-10 transform group-hover:scale-105 transition-transform duration-300 w-auto h-auto max-h-[50px]"
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "relative z-10 p-3 rounded-xl bg-gradient-to-br from-purple-600/20 to-green-500/20 backdrop-blur-sm border border-purple-400/30 group-hover:border-green-400/50 transition-all duration-300 group-hover:scale-105",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+                                    width: 200,
+                                    height: 60,
+                                    src: "/assets/images/x_F_logo.png",
+                                    alt: "Zuroona Logo",
+                                    className: "object-contain relative z-10 transform transition-transform duration-300 w-auto h-auto max-h-[55px] brightness-110",
+                                    priority: true
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/Sidebar/index.jsx",
+                                    lineNumber: 53,
+                                    columnNumber: 15
+                                }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar/index.jsx",
-                                lineNumber: 34,
+                                lineNumber: 52,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar/index.jsx",
-                        lineNumber: 32,
+                        lineNumber: 47,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 31,
+                    lineNumber: 46,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "flex flex-col flex-grow relative z-10 w-full px-5 min-w-0",
+                    className: "flex flex-col flex-grow relative z-10 w-full px-4 min-w-0",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
                         className: "py-2 w-full scroll-smooth",
                         style: {
-                            scrollbarWidth: "thin"
+                            scrollbarWidth: "thin",
+                            scrollbarColor: "rgba(167, 151, 204, 0.5) transparent"
                         },
                         children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["menuGroups"].map((group, groupIndex)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "animate-fade-in w-full",
@@ -729,7 +760,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen })=>{
                                     animationDelay: `${groupIndex * 0.1}s`
                                 },
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
-                                    className: "mb-2 flex flex-col gap-2 w-full",
+                                    className: "mb-3 flex flex-col gap-2 w-full",
                                     children: group.menuItems.map((menuItem, menuIndex)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Sidebar$2f$SidebarItem$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                                             item: menuItem,
                                             pageName: pageName,
@@ -737,60 +768,60 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen })=>{
                                             index: menuIndex
                                         }, menuIndex, false, {
                                             fileName: "[project]/src/components/Sidebar/index.jsx",
-                                            lineNumber: 58,
+                                            lineNumber: 82,
                                             columnNumber: 21
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                                    lineNumber: 56,
+                                    lineNumber: 80,
                                     columnNumber: 17
                                 }, this)
                             }, groupIndex, false, {
                                 fileName: "[project]/src/components/Sidebar/index.jsx",
-                                lineNumber: 51,
+                                lineNumber: 75,
                                 columnNumber: 15
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/components/Sidebar/index.jsx",
-                        lineNumber: 46,
+                        lineNumber: 67,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 45,
+                    lineNumber: 66,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "mt-auto px-5 py-4 relative z-10 border-t border-white/20 flex-shrink-0",
+                    className: "mt-auto px-5 py-5 relative z-10 flex-shrink-0 border-t border-purple-400/20",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex items-center justify-center",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                            className: "text-xs text-white/80 font-medium text-center",
+                            className: "text-xs font-medium text-center bg-gradient-to-r from-purple-300 via-green-300 to-purple-300 bg-clip-text text-transparent",
                             children: "© 2024 All Rights Reserved"
                         }, void 0, false, {
                             fileName: "[project]/src/components/Sidebar/index.jsx",
-                            lineNumber: 75,
+                            lineNumber: 99,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/Sidebar/index.jsx",
-                        lineNumber: 74,
+                        lineNumber: 98,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 73,
+                    lineNumber: 97,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Sidebar/index.jsx",
-            lineNumber: 19,
+            lineNumber: 21,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Sidebar/index.jsx",
-        lineNumber: 18,
+        lineNumber: 20,
         columnNumber: 5
     }, this);
 };
@@ -1122,18 +1153,60 @@ const putFormData = async (url = "", data = {})=>{
     try {
         const token = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].get(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TOKEN_NAME"]);
         const formData = new FormData();
+        // Append all fields to FormData - simplified approach
         for(let key in data){
-            formData.append(key, data[key]);
+            const value = data[key];
+            // Skip null, undefined, or empty strings
+            if (value === null || value === undefined || value === '') {
+                continue;
+            }
+            // If it's a File object, append as-is with proper name
+            if (value instanceof File) {
+                formData.append(key, value, value.name);
+            } else if (typeof value === 'object') {
+                // Skip objects (except File) - they cause issues
+                console.warn(`[putFormData] Skipping object value for key: ${key}`);
+                continue;
+            } else {
+                // Convert other values to string
+                formData.append(key, String(value));
+            }
+        }
+        // Check if FormData has any entries
+        let hasEntries = false;
+        for (let pair of formData.entries()){
+            hasEntries = true;
+            break;
+        }
+        if (!hasEntries) {
+            console.warn('[putFormData] FormData is empty, falling back to JSON');
+            return putRawData(url, data);
         }
         const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].put(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["BASE_API_URL"] + url, formData, {
             headers: {
                 Authorization: token ? token : ""
-            }
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            timeout: 60000
         });
         return response.data;
     } catch (error) {
-        // toast.error(error.response.data);
-        return error.response.data;
+        console.error('[putFormData] Error:', error);
+        console.error('[putFormData] Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: {
+                url: error.config?.url,
+                method: error.config?.method,
+                headers: error.config?.headers
+            }
+        });
+        return error.response?.data || {
+            status: 0,
+            message: error.message
+        };
     }
 };
 const putFormDataURLIncoded = async (url = "", data = {})=>{
@@ -1347,9 +1420,61 @@ const CreateAdminApi = async (payload)=>{
     });
 };
 const UpdateAdminApi = async (payload)=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", payload).then((data)=>{
-        return data;
-    });
+    // Separate file upload from other data
+    const hasFile = payload.profile_image && payload.profile_image instanceof File;
+    if (hasFile) {
+        // Step 1: Upload image first
+        try {
+            const { postFormData } = __turbopack_require__("[project]/src/api/index.js [app-ssr] (ecmascript)");
+            const uploadPayload = {
+                file: payload.profile_image,
+                dirName: "Zuroona/Admin"
+            };
+            const uploadRes = await postFormData("uploadFile", uploadPayload);
+            if (uploadRes?.status === 1 && uploadRes?.data?.location) {
+                // Step 2: Update admin with image URL
+                const updatePayload = {
+                    ...payload
+                };
+                updatePayload.profile_image = uploadRes.data.location;
+                delete updatePayload.profile_image; // Remove File object
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                    return data;
+                });
+            } else {
+                // If upload fails, continue without image
+                console.warn("Image upload failed, updating without image");
+                const updatePayload = {
+                    ...payload
+                };
+                delete updatePayload.profile_image;
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                    return data;
+                });
+            }
+        } catch (uploadError) {
+            console.error("Error uploading image:", uploadError);
+            // Continue with update without image
+            const updatePayload = {
+                ...payload
+            };
+            delete updatePayload.profile_image;
+            return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                return data;
+            });
+        }
+    } else {
+        // No file, use regular JSON
+        const jsonPayload = {
+            ...payload
+        };
+        if (!jsonPayload.profile_image || jsonPayload.profile_image === null || jsonPayload.profile_image === '') {
+            delete jsonPayload.profile_image;
+        }
+        return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", jsonPayload).then((data)=>{
+            return data;
+        });
+    }
 };
 const DeleteAdminApi = async (payload)=>{
     return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DeleteParams"])("admin/delete", payload).then((data)=>{
@@ -1412,7 +1537,7 @@ __turbopack_esm__({
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/link.js [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$ClickOutside$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/ClickOutside.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/js-cookie/dist/js.cookie.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/until/index.js [app-ssr] (ecmascript)");
@@ -1437,15 +1562,13 @@ const DropdownUser = ()=>{
                 if (res?.status === 1 || res?.code === 200) {
                     const admin = res?.data || res;
                     setAdminData({
-                        admin_name: `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || "Admin",
-                        profile_image: admin.image || "/assets/images/home/Profile.png"
+                        admin_name: `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || "Admin"
                     });
                 }
             } catch (error) {
                 console.error("Error fetching admin data:", error);
                 setAdminData({
-                    admin_name: "Admin",
-                    profile_image: "/assets/images/home/Profile.png"
+                    admin_name: "Admin"
                 });
             }
         };
@@ -1473,7 +1596,7 @@ const DropdownUser = ()=>{
                             children: getGreeting()
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                            lineNumber: 51,
+                            lineNumber: 49,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -1481,42 +1604,38 @@ const DropdownUser = ()=>{
                             children: adminData?.admin_name || "Admin"
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                            lineNumber: 54,
+                            lineNumber: 52,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                    lineNumber: 50,
+                    lineNumber: 48,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                    className: "h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-brand-pastel-gray-purple-1/30 overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-brand-pastel-gray-purple-1 transition-all duration-300 group-hover:scale-105",
-                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                        width: 120,
-                        height: 120,
-                        src: adminData?.profile_image || "/assets/images/home/Profile.png",
-                        alt: "Admin",
-                        className: "w-full h-auto object-cover"
+                    className: "h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-[#a797cc] to-[#8b7ab8] flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 border-2 border-brand-pastel-gray-purple-1/30 group-hover:border-brand-pastel-gray-purple-1",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FaUserCircle"], {
+                        className: "text-white text-2xl sm:text-3xl"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                        lineNumber: 59,
+                        lineNumber: 57,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                    lineNumber: 58,
+                    lineNumber: 56,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Header/DropdownUser.jsx",
-            lineNumber: 45,
+            lineNumber: 43,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Header/DropdownUser.jsx",
-        lineNumber: 44,
+        lineNumber: 42,
         columnNumber: 5
     }, this);
 };
@@ -1619,7 +1738,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 ;
 ;
 ;
-const SearchBar = ({ search, setSearch, setPage })=>{
+const SearchBar = ({ search, setSearch, setPage, placeholder })=>{
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex gap-x-3",
         children: [
@@ -1644,7 +1763,7 @@ const SearchBar = ({ search, setSearch, setPage })=>{
                             setSearch(e.target.value);
                             setPage(1); // Reset to first page on search
                         },
-                        placeholder: "Search by Organizer name/ID..",
+                        placeholder: placeholder || "Search by Guest Name / Email ID",
                         className: "w-full p-2.5 outline-none text-sm text-gray-800 placeholder:text-gray-400 placeholder:text-xs bg-transparent"
                     }, void 0, false, {
                         fileName: "[project]/src/components/ui/Searchbar.jsx",
@@ -1974,6 +2093,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-ssr] (ecmascript) <module evaluation>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-redux/dist/react-redux.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$redux$2f$slices$2f$language$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/redux/slices/language.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-ssr] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 "use client";
@@ -1981,8 +2102,12 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$ico
 ;
 ;
 ;
+;
+;
 const LanguageSwitcher = ()=>{
     const { i18n, t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useTranslation"])();
+    const dispatch = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useDispatch"])();
+    const { currentLanguage, isRTL } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSelector"])((state)=>state.language);
     const [isOpen, setIsOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const dropdownRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
     const languages = [
@@ -1999,17 +2124,54 @@ const LanguageSwitcher = ()=>{
             flag: "🇸🇦"
         }
     ];
-    const currentLanguage = languages.find((lang)=>lang.code === i18n.language) || languages[0];
+    const currentLang = languages.find((lang)=>lang.code === currentLanguage) || languages[0];
     const changeLanguage = (langCode)=>{
+        // Dispatch Redux action to set language
+        dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$redux$2f$slices$2f$language$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setLanguage"])(langCode));
+        // Update i18n
         i18n.changeLanguage(langCode);
-        localStorage.setItem("i18nextLng", langCode);
-        // Update document direction
-        document.documentElement.dir = langCode === "ar" ? "rtl" : "ltr";
-        document.documentElement.lang = langCode;
+        // Update document direction immediately
+        if (typeof document !== "undefined" && document.documentElement) {
+            document.documentElement.dir = langCode === "ar" ? "rtl" : "ltr";
+            document.documentElement.lang = langCode;
+            // Update body class
+            if (document.body) {
+                document.body.classList.remove("rtl", "ltr");
+                document.body.classList.add(langCode === "ar" ? "rtl" : "ltr");
+            }
+        }
         setIsOpen(false);
-        // Reload page to apply direction changes properly and prevent hydration issues
-        window.location.reload();
+    // NO PAGE RELOAD - Language switching is instant now!
     };
+    // Sync i18n with Redux on mount and language changes
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (i18n.language !== currentLanguage) {
+            i18n.changeLanguage(currentLanguage);
+        }
+        // Update document direction based on Redux state
+        if (typeof document !== "undefined" && document.documentElement) {
+            document.documentElement.dir = isRTL ? "rtl" : "ltr";
+            document.documentElement.lang = currentLanguage;
+            if (document.body) {
+                document.body.classList.remove("rtl", "ltr");
+                document.body.classList.add(isRTL ? "rtl" : "ltr");
+            }
+        }
+        // Listen for language changes from i18n and sync with Redux
+        const handleLanguageChange = (lang)=>{
+            if (lang !== currentLanguage) {
+                dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$redux$2f$slices$2f$language$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setLanguage"])(lang));
+            }
+        };
+        i18n.on("languageChanged", handleLanguageChange);
+        return ()=>{
+            i18n.off("languageChanged", handleLanguageChange);
+        };
+    }, [
+        dispatch,
+        currentLanguage,
+        isRTL
+    ]);
     // Close dropdown when clicking outside
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         const handleClickOutside = (event)=>{
@@ -2033,23 +2195,23 @@ const LanguageSwitcher = ()=>{
                         className: "w-4 h-4"
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 53,
+                        lineNumber: 98,
                         columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "hidden sm:inline",
-                        children: currentLanguage.flag
+                        children: currentLang.flag
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 54,
+                        lineNumber: 99,
                         columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "hidden md:inline",
-                        children: currentLanguage.nativeName
+                        children: currentLang.nativeName
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 55,
+                        lineNumber: 100,
                         columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -2064,32 +2226,32 @@ const LanguageSwitcher = ()=>{
                             d: "M19 9l-7 7-7-7"
                         }, void 0, false, {
                             fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                            lineNumber: 62,
+                            lineNumber: 107,
                             columnNumber: 6
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 56,
+                        lineNumber: 101,
                         columnNumber: 5
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                lineNumber: 48,
+                lineNumber: 93,
                 columnNumber: 4
             }, this),
             isOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50",
                 children: languages.map((lang)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                         onClick: ()=>changeLanguage(lang.code),
-                        className: `w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${currentLanguage.code === lang.code ? "bg-[#a797cc]/10 text-[#a797cc] font-medium" : "text-gray-700"}`,
+                        className: `w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${currentLanguage === lang.code ? "bg-[#a797cc]/10 text-[#a797cc] font-medium" : "text-gray-700"}`,
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-xl",
                                 children: lang.flag
                             }, void 0, false, {
                                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                lineNumber: 83,
+                                lineNumber: 128,
                                 columnNumber: 8
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2099,7 +2261,7 @@ const LanguageSwitcher = ()=>{
                                         children: lang.nativeName
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                        lineNumber: 85,
+                                        lineNumber: 130,
                                         columnNumber: 9
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2107,16 +2269,16 @@ const LanguageSwitcher = ()=>{
                                         children: lang.name
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                        lineNumber: 86,
+                                        lineNumber: 131,
                                         columnNumber: 9
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                lineNumber: 84,
+                                lineNumber: 129,
                                 columnNumber: 8
                             }, this),
-                            currentLanguage.code === lang.code && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                            currentLanguage === lang.code && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
                                 className: "w-4 h-4 ml-auto text-[#a797cc]",
                                 fill: "currentColor",
                                 viewBox: "0 0 20 20",
@@ -2126,29 +2288,29 @@ const LanguageSwitcher = ()=>{
                                     clipRule: "evenodd"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                    lineNumber: 94,
+                                    lineNumber: 139,
                                     columnNumber: 10
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                lineNumber: 89,
+                                lineNumber: 134,
                                 columnNumber: 9
                             }, this)
                         ]
                     }, lang.code, true, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 74,
+                        lineNumber: 119,
                         columnNumber: 7
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                lineNumber: 72,
+                lineNumber: 117,
                 columnNumber: 5
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-        lineNumber: 47,
+        lineNumber: 92,
         columnNumber: 3
     }, this);
 };
@@ -2172,7 +2334,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$imag
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/js-cookie/dist/js.cookie.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$NotificationBell$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/NotificationBell.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$LanguageSwitcher$2f$LanguageSwitcher$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-ssr] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-ssr] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
+"use client";
 ;
 ;
 ;
@@ -2184,7 +2349,9 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Languag
 ;
 ;
 ;
-const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
+;
+const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage, searchPlaceholder })=>{
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useTranslation"])();
     const { push } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
     async function logout(e) {
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"].remove(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TOKEN_NAME"]);
@@ -2216,27 +2383,27 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                                     className: `relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-brand-pastel-gray-purple-1 delay-[0] duration-200 ease-in-out transition-all ${!sidebarOpen && "!w-full delay-300"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 36,
+                                                    lineNumber: 40,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: `relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-brand-pastel-gray-purple-1 delay-150 duration-200 ease-in-out transition-all ${!sidebarOpen && "delay-400 !w-full"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 39,
+                                                    lineNumber: 43,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: `relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-brand-pastel-gray-purple-1 delay-200 duration-200 ease-in-out transition-all ${!sidebarOpen && "!w-full delay-500"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 42,
+                                                    lineNumber: 46,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Header/index.jsx",
-                                            lineNumber: 35,
+                                            lineNumber: 39,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2246,36 +2413,36 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                                     className: `absolute left-2.5 top-0 block h-full w-0.5 rounded-sm bg-brand-pastel-gray-purple-1 delay-300 duration-200 ease-in-out transition-all ${!sidebarOpen && "!h-0 !delay-[0]"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 47,
+                                                    lineNumber: 51,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: `delay-400 absolute left-0 top-2.5 block h-0.5 w-full rounded-sm bg-brand-pastel-gray-purple-1 duration-200 ease-in-out transition-all ${!sidebarOpen && "!h-0 !delay-200"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 50,
+                                                    lineNumber: 54,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Header/index.jsx",
-                                            lineNumber: 46,
+                                            lineNumber: 50,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 34,
+                                    lineNumber: 38,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header/index.jsx",
-                                lineNumber: 26,
+                                lineNumber: 30,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/index.jsx",
-                            lineNumber: 24,
+                            lineNumber: 28,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2283,15 +2450,16 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Searchbar$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                                 search: search,
                                 setSearch: setSearch,
-                                setPage: setPage
+                                setPage: setPage,
+                                placeholder: searchPlaceholder
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header/index.jsx",
-                                lineNumber: 60,
+                                lineNumber: 64,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/index.jsx",
-                            lineNumber: 59,
+                            lineNumber: 63,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2304,12 +2472,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$LanguageSwitcher$2f$LanguageSwitcher$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 67,
+                                        lineNumber: 71,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 66,
+                                    lineNumber: 70,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2319,12 +2487,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$NotificationBell$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 72,
+                                        lineNumber: 76,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 71,
+                                    lineNumber: 75,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2334,12 +2502,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$DropdownUser$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 77,
+                                        lineNumber: 81,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 76,
+                                    lineNumber: 80,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2361,55 +2529,60 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                                 className: "w-[16px] sm:w-[20px] transition-transform duration-300 group-hover:rotate-12"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Header/index.jsx",
-                                                lineNumber: 88,
+                                                lineNumber: 92,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "hidden sm:inline",
-                                                children: "Logout"
+                                                children: t("common.logout")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Header/index.jsx",
-                                                lineNumber: 89,
+                                                lineNumber: 93,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 82,
+                                        lineNumber: 86,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 81,
+                                    lineNumber: 85,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Header/index.jsx",
-                            lineNumber: 63,
+                            lineNumber: 67,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Header/index.jsx",
-                    lineNumber: 23,
+                    lineNumber: 27,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/Header/index.jsx",
-                lineNumber: 22,
+                lineNumber: 26,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "mt-5 block lg:hidden animate-fade-in",
-                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Searchbar$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Searchbar$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
+                    search: search,
+                    setSearch: setSearch,
+                    setPage: setPage,
+                    placeholder: searchPlaceholder
+                }, void 0, false, {
                     fileName: "[project]/src/components/Header/index.jsx",
-                    lineNumber: 97,
+                    lineNumber: 101,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/Header/index.jsx",
-                lineNumber: 96,
+                lineNumber: 100,
                 columnNumber: 7
             }, this)
         ]
@@ -2426,6 +2599,7 @@ __turbopack_esm__({
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/server/future/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-redux/dist/react-redux.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Sidebar$2f$index$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Sidebar/index.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$index$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/index.jsx [app-ssr] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
@@ -2434,8 +2608,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$
 ;
 ;
 ;
-function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPage }) {
+;
+function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPage, searchPlaceholder }) {
     const [sidebarOpen, setSidebarOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const { isRTL } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSelector"])((state)=>state.language);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "flex min-h-screen bg-[#b0a0df] transition-all duration-300",
@@ -2445,11 +2621,11 @@ function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPag
                     setSidebarOpen: setSidebarOpen
                 }, void 0, false, {
                     fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                    lineNumber: 14,
+                    lineNumber: 16,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "overflow-auto relative flex flex-1 flex-col lg:ml-[320px] px-4 sm:px-6 transition-all duration-300",
+                    className: `overflow-auto relative flex flex-1 flex-col px-4 sm:px-6 transition-all duration-300 ${isRTL ? 'lg:mr-[320px]' : 'lg:ml-[320px]'}`,
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$index$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                             sidebarOpen: sidebarOpen,
@@ -2458,10 +2634,11 @@ function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPag
                             breadcrumbs: breadcrumbs,
                             search: search,
                             setSearch: setSearch,
-                            setPage: setPage
+                            setPage: setPage,
+                            searchPlaceholder: searchPlaceholder
                         }, void 0, false, {
                             fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                            lineNumber: 20,
+                            lineNumber: 24,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -2473,29 +2650,29 @@ function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPag
                                     children: children
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                                    lineNumber: 34,
+                                    lineNumber: 39,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                                lineNumber: 33,
+                                lineNumber: 38,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                            lineNumber: 32,
+                            lineNumber: 37,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                    lineNumber: 18,
+                    lineNumber: 20,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-            lineNumber: 12,
+            lineNumber: 14,
             columnNumber: 7
         }, this)
     }, void 0, false);
@@ -2765,7 +2942,6 @@ const exportEventsToCSV = (data)=>{
         "Event ID",
         "Event Name",
         "Organizer",
-        "Event Type",
         "Event Category",
         "Attendees",
         "Date",
@@ -2780,7 +2956,6 @@ const exportEventsToCSV = (data)=>{
                 event.id || event._id || "N/A",
                 `"${event.event_name || "N/A"}"`,
                 `"${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}"`.trim() || "N/A",
-                formatEventTypes(event.event_types),
                 `"${formatEventCategories(event.event_category_details)}"`,
                 event.no_of_attendees || 0,
                 event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
@@ -2856,7 +3031,6 @@ const exportEventsToPDF = (data)=>{
         "Event ID",
         "Event Name",
         "Organizer",
-        "Event Type",
         "Event Category",
         "Attendees",
         "Date",
@@ -2870,7 +3044,6 @@ const exportEventsToPDF = (data)=>{
             event.id || event._id || "N/A",
             event.event_name || "N/A",
             `${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}`.trim() || "N/A",
-            formatEventTypes(event.event_types),
             formatEventCategories(event.event_category_details),
             event.no_of_attendees || 0,
             event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
@@ -2995,9 +3168,11 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$formik$2f$dist$2f$formik$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/formik/dist/formik.esm.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/yup/index.esm.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-toastify/dist/react-toastify.esm.mjs [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Loader$2f$Loader$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Loader/Loader.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$admin$2f$apis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/api/admin/apis.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-ssr] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-ssr] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 "use client";
 ;
@@ -3008,38 +3183,17 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$admin$2f$apis$
 ;
 ;
 ;
-function AdminModal({ show, onClose, admin }) {
+;
+function AdminModal({ show, onClose, admin, onSuccess }) {
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useTranslation"])();
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
-    const [previewImage, setPreviewImage] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
-        if (admin?.profile_image) {
-            setPreviewImage(admin.profile_image);
-        }
-    }, [
-        admin
-    ]);
     const validationSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.object({
-        admin_name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required("Admin name is required"),
-        username: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required("Username is required"),
-        mobile_number: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required("Mobile number is required").matches(/^[0-9]{10}$/, "Mobile number must be 10 digits"),
-        email: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().email("Invalid email address"),
-        password: admin ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string() : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required("Password is required")
+        admin_name: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required(t("common.adminNameRequired")),
+        username: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required(t("common.usernameRequired")),
+        mobile_number: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required(t("common.mobileNumberRequired")).matches(/^[0-9]{10}$/, t("common.mobileNumberDigits")),
+        email: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().email(t("common.invalidEmail")),
+        password: admin ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string() : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__.string().required(t("common.passwordRequired"))
     });
-    const handleImageChange = (e, setFieldValue)=>{
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("Image size should be less than 5MB");
-                return;
-            }
-            const reader = new FileReader();
-            reader.onloadend = ()=>{
-                setPreviewImage(reader.result);
-                setFieldValue("profile_image", file);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
     const handleSubmit = async (values)=>{
         setLoading(true);
         try {
@@ -3049,8 +3203,7 @@ function AdminModal({ show, onClose, admin }) {
                 username: values.username,
                 mobile_number: values.mobile_number,
                 email: values.email,
-                password: values.password,
-                profile_image: values.profile_image
+                password: values.password || undefined
             };
             let res;
             if (admin) {
@@ -3059,14 +3212,18 @@ function AdminModal({ show, onClose, admin }) {
                 res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$admin$2f$apis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CreateAdminApi"])(payload);
             }
             if (res?.status === 1 || res?.code === 200) {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success(admin ? "Admin updated successfully" : "Admin created successfully");
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success(admin ? t("common.adminUpdated") : t("common.adminCreated"));
+                // Call onSuccess callback to refresh admin list
+                if (onSuccess) {
+                    onSuccess(res?.data);
+                }
                 onClose();
             } else {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(res?.message || "Failed to save admin");
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(res?.message || t("common.failedToSave"));
             }
         } catch (error) {
             console.error("Error saving admin:", error);
-            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("Failed to save admin");
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(error?.response?.data?.message || t("common.failedToSave"));
         } finally{
             setLoading(false);
         }
@@ -3082,10 +3239,10 @@ function AdminModal({ show, onClose, admin }) {
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                             className: "text-xl font-semibold text-gray-900",
-                            children: admin ? "Edit Admin" : "Add New Admin"
+                            children: admin ? t("common.editAdmin") : t("common.addNewAdmin")
                         }, void 0, false, {
                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                            lineNumber: 86,
+                            lineNumber: 69,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3094,13 +3251,13 @@ function AdminModal({ show, onClose, admin }) {
                             children: "×"
                         }, void 0, false, {
                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                            lineNumber: 89,
+                            lineNumber: 72,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                    lineNumber: 85,
+                    lineNumber: 68,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$formik$2f$dist$2f$formik$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Formik"], {
@@ -3109,8 +3266,7 @@ function AdminModal({ show, onClose, admin }) {
                         username: admin?.username || "",
                         mobile_number: admin?.mobile_number || "",
                         email: admin?.email || "",
-                        password: "",
-                        profile_image: null
+                        password: ""
                     },
                     validationSchema: validationSchema,
                     onSubmit: handleSubmit,
@@ -3119,56 +3275,24 @@ function AdminModal({ show, onClose, admin }) {
                             className: "space-y-4",
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                            className: "block text-sm font-medium text-gray-700 mb-2",
-                                            children: "Profile Photo"
+                                    className: "flex justify-center mb-4",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "w-24 h-24 rounded-full bg-gradient-to-br from-[#a797cc] to-[#8b7ab8] flex items-center justify-center shadow-lg",
+                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FaUserCircle"], {
+                                            className: "text-white text-6xl"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 121,
-                                            columnNumber: 17
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "flex items-center gap-4",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                    className: "w-20 h-20 rounded-full overflow-hidden border-2 border-gray-300",
-                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                                                        src: previewImage || "/assets/images/home/Profile.png",
-                                                        alt: "Profile",
-                                                        width: 80,
-                                                        height: 80,
-                                                        className: "w-full h-full object-cover"
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                                        lineNumber: 126,
-                                                        columnNumber: 21
-                                                    }, this)
-                                                }, void 0, false, {
-                                                    fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                                    lineNumber: 125,
-                                                    columnNumber: 19
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                                    type: "file",
-                                                    accept: "image/*",
-                                                    onChange: (e)=>handleImageChange(e, setFieldValue),
-                                                    className: "text-sm text-gray-600"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                                    lineNumber: 134,
-                                                    columnNumber: 19
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 124,
-                                            columnNumber: 17
+                                            lineNumber: 104,
+                                            columnNumber: 19
                                         }, this)
-                                    ]
-                                }, void 0, true, {
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/Modals/AdminModal.jsx",
+                                        lineNumber: 103,
+                                        columnNumber: 17
+                                    }, this)
+                                }, void 0, false, {
                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                    lineNumber: 120,
+                                    lineNumber: 102,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3176,19 +3300,20 @@ function AdminModal({ show, onClose, admin }) {
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                             className: "block text-sm font-medium text-gray-700 mb-1",
                                             children: [
-                                                "Admin Name ",
+                                                t("common.adminName"),
+                                                " ",
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "text-red-500",
                                                     children: "*"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                                    lineNumber: 146,
-                                                    columnNumber: 30
+                                                    lineNumber: 111,
+                                                    columnNumber: 43
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 145,
+                                            lineNumber: 110,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3198,10 +3323,10 @@ function AdminModal({ show, onClose, admin }) {
                                             onChange: handleChange,
                                             onBlur: handleBlur,
                                             className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc]",
-                                            placeholder: "Enter admin name"
+                                            placeholder: t("common.enterAdminName")
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 148,
+                                            lineNumber: 113,
                                             columnNumber: 17
                                         }, this),
                                         errors.admin_name && touched.admin_name && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3209,13 +3334,13 @@ function AdminModal({ show, onClose, admin }) {
                                             children: errors.admin_name
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 158,
+                                            lineNumber: 123,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                    lineNumber: 144,
+                                    lineNumber: 109,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3223,19 +3348,20 @@ function AdminModal({ show, onClose, admin }) {
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                             className: "block text-sm font-medium text-gray-700 mb-1",
                                             children: [
-                                                "Username ",
+                                                t("common.username"),
+                                                " ",
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "text-red-500",
                                                     children: "*"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                                    lineNumber: 165,
-                                                    columnNumber: 28
+                                                    lineNumber: 130,
+                                                    columnNumber: 42
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 164,
+                                            lineNumber: 129,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3245,10 +3371,10 @@ function AdminModal({ show, onClose, admin }) {
                                             onChange: handleChange,
                                             onBlur: handleBlur,
                                             className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc]",
-                                            placeholder: "Enter username"
+                                            placeholder: t("common.enterUsername")
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 167,
+                                            lineNumber: 132,
                                             columnNumber: 17
                                         }, this),
                                         errors.username && touched.username && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3256,13 +3382,13 @@ function AdminModal({ show, onClose, admin }) {
                                             children: errors.username
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 177,
+                                            lineNumber: 142,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                    lineNumber: 163,
+                                    lineNumber: 128,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3270,19 +3396,20 @@ function AdminModal({ show, onClose, admin }) {
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                             className: "block text-sm font-medium text-gray-700 mb-1",
                                             children: [
-                                                "Mobile Number ",
+                                                t("common.mobileNumber"),
+                                                " ",
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "text-red-500",
                                                     children: "*"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                                    lineNumber: 184,
-                                                    columnNumber: 33
+                                                    lineNumber: 149,
+                                                    columnNumber: 46
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 183,
+                                            lineNumber: 148,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3295,7 +3422,7 @@ function AdminModal({ show, onClose, admin }) {
                                             placeholder: "0598379373"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 186,
+                                            lineNumber: 151,
                                             columnNumber: 17
                                         }, this),
                                         errors.mobile_number && touched.mobile_number && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3303,23 +3430,23 @@ function AdminModal({ show, onClose, admin }) {
                                             children: errors.mobile_number
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 196,
+                                            lineNumber: 161,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                    lineNumber: 182,
+                                    lineNumber: 147,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                             className: "block text-sm font-medium text-gray-700 mb-1",
-                                            children: "Email"
+                                            children: t("common.email")
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 202,
+                                            lineNumber: 167,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3329,10 +3456,10 @@ function AdminModal({ show, onClose, admin }) {
                                             onChange: handleChange,
                                             onBlur: handleBlur,
                                             className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc]",
-                                            placeholder: "Enter email (optional)"
+                                            placeholder: t("common.enterEmailOptional")
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 205,
+                                            lineNumber: 170,
                                             columnNumber: 17
                                         }, this),
                                         errors.email && touched.email && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3340,13 +3467,13 @@ function AdminModal({ show, onClose, admin }) {
                                             children: errors.email
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 215,
+                                            lineNumber: 180,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                    lineNumber: 201,
+                                    lineNumber: 166,
                                     columnNumber: 15
                                 }, this),
                                 !admin && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3354,19 +3481,20 @@ function AdminModal({ show, onClose, admin }) {
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                             className: "block text-sm font-medium text-gray-700 mb-1",
                                             children: [
-                                                "Password ",
+                                                t("common.password"),
+                                                " ",
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "text-red-500",
                                                     children: "*"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                                    lineNumber: 223,
-                                                    columnNumber: 30
+                                                    lineNumber: 188,
+                                                    columnNumber: 44
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 222,
+                                            lineNumber: 187,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3376,10 +3504,10 @@ function AdminModal({ show, onClose, admin }) {
                                             onChange: handleChange,
                                             onBlur: handleBlur,
                                             className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc]",
-                                            placeholder: "Enter password"
+                                            placeholder: t("common.enterPassword")
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 225,
+                                            lineNumber: 190,
                                             columnNumber: 19
                                         }, this),
                                         errors.password && touched.password && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3387,13 +3515,13 @@ function AdminModal({ show, onClose, admin }) {
                                             children: errors.password
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 235,
+                                            lineNumber: 200,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                    lineNumber: 221,
+                                    lineNumber: 186,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3403,10 +3531,10 @@ function AdminModal({ show, onClose, admin }) {
                                             type: "button",
                                             onClick: onClose,
                                             className: "px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400 transition",
-                                            children: "Cancel"
+                                            children: t("common.cancel")
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 242,
+                                            lineNumber: 207,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3417,40 +3545,40 @@ function AdminModal({ show, onClose, admin }) {
                                                 color: "#fff"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                                lineNumber: 254,
+                                                lineNumber: 219,
                                                 columnNumber: 30
-                                            }, this) : admin ? "Update" : "Create"
+                                            }, this) : admin ? t("common.update") : t("common.create")
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                            lineNumber: 249,
+                                            lineNumber: 214,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                                    lineNumber: 241,
+                                    lineNumber: 206,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                            lineNumber: 118,
+                            lineNumber: 100,
                             columnNumber: 13
                         }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Modals/AdminModal.jsx",
-                    lineNumber: 97,
+                    lineNumber: 80,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Modals/AdminModal.jsx",
-            lineNumber: 84,
+            lineNumber: 67,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Modals/AdminModal.jsx",
-        lineNumber: 83,
+        lineNumber: 66,
         columnNumber: 5
     }, this);
 }
@@ -3468,12 +3596,13 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Layouts$2f$DefaultLayout$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Layouts/DefaultLayout.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Loader$2f$Loader$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Loader/Loader.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Paginations$2f$Pagination$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Paginations/Pagination.jsx [app-ssr] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-toastify/dist/react-toastify.esm.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$exportUtils$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/utils/exportUtils.js [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Modals$2f$AdminModal$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Modals/AdminModal.jsx [app-ssr] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$admin$2f$apis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/api/admin/apis.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-ssr] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-ssr] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 "use client";
 ;
@@ -3488,6 +3617,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$admin$2f$apis$
 ;
 ;
 function AdminManagement() {
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useTranslation"])();
     const [admins, setAdmins] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
     const [search, setSearch] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])("");
@@ -3514,27 +3644,27 @@ function AdminManagement() {
             }
         } catch (error) {
             console.error("Error fetching admins:", error);
-            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("Failed to fetch admins");
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(t("common.failedToFetchAdmins"));
         } finally{
             setLoading(false);
         }
     };
     const handleDelete = async (id)=>{
-        if (!confirm("Are you sure you want to delete this admin?")) return;
+        if (!confirm(t("common.confirmDeleteAdmin"))) return;
         setLoading(true);
         try {
             const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$admin$2f$apis$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DeleteAdminApi"])({
                 id
             });
             if (res?.status === 1 || res?.code === 200) {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success("Admin deleted successfully");
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success(t("common.adminDeleted"));
                 fetchAdmins();
             } else {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(res?.message || "Failed to delete admin");
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(res?.message || t("common.failedToDeleteAdmin"));
             }
         } catch (error) {
             console.error("Error deleting admin:", error);
-            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error("Failed to delete admin");
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].error(t("common.failedToDeleteAdmin"));
         } finally{
             setLoading(false);
         }
@@ -3554,11 +3684,11 @@ function AdminManagement() {
     };
     const exportToCSV = ()=>{
         const headers = [
-            "Admin ID",
-            "Admin Name",
-            "Username",
-            "Mobile Number",
-            "Email"
+            t("common.adminId"),
+            t("common.adminName"),
+            t("common.username"),
+            t("common.mobileNumber"),
+            t("common.email")
         ];
         const csvContent = [
             headers.join(","),
@@ -3602,15 +3732,15 @@ function AdminManagement() {
                             className: "flex lg:w-[40%] items-end mb-4 sm:mb-0",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                                 className: "text-xl font-bold text-black",
-                                children: "Admin Management"
+                                children: t("common.adminManagement")
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                lineNumber: 112,
+                                lineNumber: 113,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                            lineNumber: 111,
+                            lineNumber: 112,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3622,14 +3752,15 @@ function AdminManagement() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FaPlus"], {}, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                            lineNumber: 120,
+                                            lineNumber: 121,
                                             columnNumber: 15
                                         }, this),
-                                        " Add Admin"
+                                        " ",
+                                        t("common.addAdmin")
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                    lineNumber: 116,
+                                    lineNumber: 117,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3638,14 +3769,15 @@ function AdminManagement() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FaFileExcel"], {}, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                            lineNumber: 126,
+                                            lineNumber: 127,
                                             columnNumber: 15
                                         }, this),
-                                        " Export CSV"
+                                        " ",
+                                        t("common.exportCSV")
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                    lineNumber: 122,
+                                    lineNumber: 123,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3654,26 +3786,27 @@ function AdminManagement() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FaPrint"], {}, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                            lineNumber: 132,
+                                            lineNumber: 133,
                                             columnNumber: 15
                                         }, this),
-                                        " Print/PDF"
+                                        " ",
+                                        t("common.printPDF")
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                    lineNumber: 128,
+                                    lineNumber: 129,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                            lineNumber: 115,
+                            lineNumber: 116,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                    lineNumber: 110,
+                    lineNumber: 111,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3690,15 +3823,7 @@ function AdminManagement() {
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-4 py-4 text-left font-base text-gray-600",
-                                                children: "Admin ID"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                lineNumber: 142,
-                                                columnNumber: 19
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                                className: "px-4 py-4 text-left font-base text-gray-600",
-                                                children: "Photo"
+                                                children: t("common.adminId")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
                                                 lineNumber: 143,
@@ -3706,7 +3831,7 @@ function AdminManagement() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-4 py-4 text-left font-base text-gray-600",
-                                                children: "Admin Name"
+                                                children: t("common.photo")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
                                                 lineNumber: 144,
@@ -3714,7 +3839,7 @@ function AdminManagement() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-4 py-4 text-left font-base text-gray-600",
-                                                children: "Username"
+                                                children: t("common.adminName")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
                                                 lineNumber: 145,
@@ -3722,7 +3847,7 @@ function AdminManagement() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-4 py-4 text-left font-base text-gray-600",
-                                                children: "Mobile Number"
+                                                children: t("common.username")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
                                                 lineNumber: 146,
@@ -3730,7 +3855,7 @@ function AdminManagement() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-4 py-4 text-left font-base text-gray-600",
-                                                children: "Email"
+                                                children: t("common.mobileNumber")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
                                                 lineNumber: 147,
@@ -3738,29 +3863,37 @@ function AdminManagement() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-4 py-4 text-left font-base text-gray-600",
-                                                children: "Type"
+                                                children: t("common.email")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
                                                 lineNumber: 148,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                                className: "px-4 py-4 text-center font-base text-gray-600",
-                                                children: "Action"
+                                                className: "px-4 py-4 text-left font-base text-gray-600",
+                                                children: t("common.type")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
                                                 lineNumber: 149,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
+                                                className: "px-4 py-4 text-center font-base text-gray-600",
+                                                children: t("common.actions")
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
+                                                lineNumber: 150,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                        lineNumber: 141,
+                                        lineNumber: 142,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                    lineNumber: 140,
+                                    lineNumber: 141,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -3770,17 +3903,17 @@ function AdminManagement() {
                                             className: "py-3",
                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Loader$2f$Loader$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                lineNumber: 156,
+                                                lineNumber: 157,
                                                 columnNumber: 23
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                            lineNumber: 155,
+                                            lineNumber: 156,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                        lineNumber: 154,
+                                        lineNumber: 155,
                                         columnNumber: 19
                                     }, this) : admins.length > 0 ? admins.map((admin)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                             className: "border-b last:border-0 text-sm font-medium text-black",
@@ -3790,32 +3923,28 @@ function AdminManagement() {
                                                     children: admin._id
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                    lineNumber: 165,
+                                                    lineNumber: 166,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                     className: "px-2 py-2",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "w-10 h-10 rounded-full overflow-hidden",
-                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
-                                                            src: admin.profile_image || "/assets/images/home/Profile.png",
-                                                            alt: admin.admin_name,
-                                                            height: 40,
-                                                            width: 40,
-                                                            className: "w-full h-full object-cover"
+                                                        className: "w-10 h-10 rounded-full bg-gradient-to-br from-[#a797cc] to-[#8b7ab8] flex items-center justify-center shadow-md",
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FaUserCircle"], {
+                                                            className: "text-white text-xl"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                            lineNumber: 168,
+                                                            lineNumber: 169,
                                                             columnNumber: 27
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                        lineNumber: 167,
+                                                        lineNumber: 168,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                    lineNumber: 166,
+                                                    lineNumber: 167,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3823,7 +3952,7 @@ function AdminManagement() {
                                                     children: admin.admin_name
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                    lineNumber: 177,
+                                                    lineNumber: 172,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3831,7 +3960,7 @@ function AdminManagement() {
                                                     children: admin.username
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                    lineNumber: 178,
+                                                    lineNumber: 173,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3839,7 +3968,7 @@ function AdminManagement() {
                                                     children: admin.mobile_number
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                    lineNumber: 179,
+                                                    lineNumber: 174,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3847,22 +3976,22 @@ function AdminManagement() {
                                                     children: admin.email || "N/A"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                    lineNumber: 180,
+                                                    lineNumber: 175,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                     className: "px-2 py-2",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         className: `text-sm font-medium ${admin.is_main ? "text-[#a797cc]" : "text-gray-600"}`,
-                                                        children: admin.is_main ? "Main Admin" : "Admin"
+                                                        children: admin.is_main ? t("common.mainAdmin") : t("common.admin")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                        lineNumber: 182,
+                                                        lineNumber: 177,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                    lineNumber: 181,
+                                                    lineNumber: 176,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3873,85 +4002,85 @@ function AdminManagement() {
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                 onClick: ()=>handleEdit(admin),
                                                                 className: "text-[#a797cc] hover:text-[#a08ec8]",
-                                                                title: "Edit",
+                                                                title: t("common.edit"),
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FaEdit"], {
                                                                     size: 18
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                                    lineNumber: 195,
+                                                                    lineNumber: 190,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                                lineNumber: 190,
+                                                                lineNumber: 185,
                                                                 columnNumber: 27
                                                             }, this),
                                                             !admin.is_main && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                 onClick: ()=>handleDelete(admin._id),
                                                                 className: "text-red-600 hover:text-red-800",
-                                                                title: "Delete",
+                                                                title: t("common.delete"),
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FaTrash"], {
                                                                     size: 16
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                                    lineNumber: 203,
+                                                                    lineNumber: 198,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                                lineNumber: 198,
+                                                                lineNumber: 193,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                        lineNumber: 189,
+                                                        lineNumber: 184,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                                    lineNumber: 188,
+                                                    lineNumber: 183,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, admin._id, true, {
                                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                            lineNumber: 161,
+                                            lineNumber: 162,
                                             columnNumber: 21
                                         }, this)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                             colSpan: 8,
                                             className: "py-3 text-center",
-                                            children: "No Data Available"
+                                            children: t("common.noDataAvailable")
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                            lineNumber: 212,
+                                            lineNumber: 207,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                        lineNumber: 211,
+                                        lineNumber: 206,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                                    lineNumber: 152,
+                                    lineNumber: 153,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                            lineNumber: 139,
+                            lineNumber: 140,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                        lineNumber: 138,
+                        lineNumber: 139,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                    lineNumber: 137,
+                    lineNumber: 138,
                     columnNumber: 9
                 }, this),
                 admins.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Paginations$2f$Pagination$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
@@ -3961,27 +4090,30 @@ function AdminManagement() {
                     itemsPerPage: itemsPerPage
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                    lineNumber: 223,
+                    lineNumber: 218,
                     columnNumber: 11
                 }, this),
                 showModal && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Modals$2f$AdminModal$2e$jsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"], {
                     show: showModal,
                     onClose: handleModalClose,
-                    admin: editingAdmin
+                    admin: editingAdmin,
+                    onSuccess: ()=>{
+                        fetchAdmins();
+                    }
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-                    lineNumber: 232,
+                    lineNumber: 227,
                     columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-            lineNumber: 109,
+            lineNumber: 110,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/(AfterLogin)/admin-management/page.js",
-        lineNumber: 108,
+        lineNumber: 109,
         columnNumber: 5
     }, this);
 }

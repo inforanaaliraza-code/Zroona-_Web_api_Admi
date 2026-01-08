@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { LogOutIcon } from "lucide-react";
+import { useSelector } from "react-redux";
 import SidebarItem from "./SidebarItem";
 import ClickOutside from "../Header/ClickOutside";
 import useLocalStorage from "../hooks/useLocalStorage";
@@ -13,39 +14,57 @@ import Cookies from "js-cookie";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const [pageName, setPageName] = useLocalStorage("selectedMenu", "dashboard");
+  const { isRTL } = useSelector((state) => state.language);
 
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>
       <aside
-        className={`fixed left-0 top-0 z-[9999] flex h-screen w-[320px] flex-col bg-gradient-to-br from-brand-gray-purple-2 via-brand-pastel-gray-purple-1 to-brand-gray-purple-3 shadow-2xl duration-300 ease-in-out lg:translate-x-0 overflow-y-auto ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 z-[9999] flex h-screen w-[320px] flex-col shadow-2xl duration-300 ease-in-out lg:translate-x-0 overflow-y-auto border-r-2 border-purple-200/40 ${
+          isRTL ? 'right-0' : 'left-0'
+        } ${
+          sidebarOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"
         }`}
         style={{
-          background: "linear-gradient(135deg, #a797cc 0%, #b0a0df 50%, #a08ec8 100%)",
+          background: "linear-gradient(180deg, #faf5ff 0%, #ffffff 50%, #faf5ff 100%)",
         }}
       >
-        {/* Decorative gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none" />
+        {/* Light purple background pattern */}
+        <div className="absolute inset-0 opacity-40 pointer-events-none">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(167, 151, 204, 0.12) 0%, transparent 50%),
+                             radial-gradient(circle at 80% 80%, rgba(196, 181, 253, 0.08) 0%, transparent 50%),
+                             radial-gradient(circle at 40% 20%, rgba(167, 151, 204, 0.1) 0%, transparent 50%)`,
+          }} />
+        </div>
         
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-center mt-6 mb-4 px-5 relative z-10 animate-fade-in flex-shrink-0">
-          <Link href="/" className="group relative">
-            <div className="absolute inset-0 bg-white/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100" />
-            <Image
-              width={140}
-              height={45}
-              src="/assets/images/main-logo.png"
-              alt="Zuroona Logo"
-              className="object-contain relative z-10 transform group-hover:scale-105 transition-transform duration-300 w-auto h-auto max-h-[50px]"
-            />
+        {/* Sidebar Header with logo */}
+        <div className="flex items-center justify-center mt-8 mb-6 px-5 relative z-10 animate-fade-in flex-shrink-0 border-b-2 border-purple-200/60 pb-6">
+          <Link href="/" className="group relative block">
+            {/* Glow effect on hover */}
+            <div className="absolute -inset-2 bg-gradient-to-r from-purple-200/40 via-green-200/40 to-purple-200/40 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            {/* Logo container with purple border */}
+            <div className="relative z-10 p-4 rounded-xl bg-white shadow-md border-2 border-purple-200 group-hover:border-purple-400 group-hover:shadow-lg group-hover:shadow-purple-200/50 transition-all duration-300 group-hover:scale-105">
+              <Image
+                width={280}
+                height={80}
+                src="/assets/images/x_F_logo.png"
+                alt="Zuroona Logo"
+                className="object-contain relative z-10 transform transition-transform duration-300 w-full h-auto max-h-[70px]"
+                priority
+              />
+            </div>
           </Link>
         </div>
 
         {/* Sidebar Menu */}
-        <div className="flex flex-col flex-grow relative z-10 w-full px-5 min-w-0">
+        <div className="flex flex-col flex-grow relative z-10 w-full px-4 min-w-0">
           <nav 
             className="py-2 w-full scroll-smooth" 
-            style={{ scrollbarWidth: "thin" }}
+            style={{ 
+              scrollbarWidth: "thin",
+              scrollbarColor: "rgba(167, 151, 204, 0.5) transparent"
+            }}
           >
             {menuGroups.map((group, groupIndex) => (
               <div 
@@ -53,7 +72,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 className="animate-fade-in w-full"
                 style={{ animationDelay: `${groupIndex * 0.1}s` }}
               >
-                <ul className="mb-2 flex flex-col gap-2 w-full">
+                <ul className="mb-3 flex flex-col gap-2 w-full">
                   {group.menuItems.map((menuItem, menuIndex) => (
                     <SidebarItem
                       key={menuIndex}
@@ -69,10 +88,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           </nav>
         </div>
 
-        {/* Footer */}
-        <div className="mt-auto px-5 py-4 relative z-10 border-t border-white/20 flex-shrink-0">
+        {/* Footer with purple border */}
+        <div className="mt-auto px-5 py-5 relative z-10 flex-shrink-0 border-t-2 border-purple-200/60 bg-white/60">
           <div className="flex items-center justify-center">
-            <span className="text-xs text-white/80 font-medium text-center">
+            <span className="text-xs font-medium text-center text-purple-700/70">
               © 2024 All Rights Reserved
             </span>
           </div>

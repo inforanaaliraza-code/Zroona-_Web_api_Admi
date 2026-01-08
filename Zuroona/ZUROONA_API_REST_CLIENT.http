@@ -1,0 +1,1236 @@
+### Zuroona Platform - Complete API Testing File
+### REST Client Extension for VS Code
+### 
+### INSTALLATION:
+### 1. Install "REST Client" extension in VS Code
+### 2. Open this file
+### 3. Click "Send Request" above each API call
+###
+### USAGE:
+### - Replace {{baseUrl}} with your API base URL (e.g., http://localhost:3434)
+### - Replace {{token}} with your authentication token
+### - Replace {{userId}}, {{organizerId}}, {{eventId}}, etc. with actual IDs
+### - Variables are defined at the top - modify as needed
+###
+### ============================================
+### VARIABLES (Change these values)
+### ============================================
+### IMPORTANT: Make sure your API server is running before testing!
+### Default port is 3000, change if your server uses different port
+
+@baseUrl = http://localhost:3434
+@apiUrl = {{baseUrl}}/api
+@adminUrl = {{baseUrl}}/api/admin
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTVhMTI1MDI0MTRiMGM2MDMxMGFlNDMiLCJyb2xlIjozLCJpYXQiOjE3Njc2ODU5NDN9.YFgBBcFfWbR_Tl-olwqvJD2tVeiF2naFCIycZ7rrjTA
+@userId = your_user_id_here
+@organizerId = your_organizer_id_here
+@eventId = your_event_id_here
+@bookingId = your_booking_id_here
+@refundId = your_refund_id_here
+@transactionId = your_transaction_id_here
+@conversationId = your_conversation_id_here
+@categoryId = your_category_id_here
+@adminId = 695a12502414b0c60310ae43
+@applicationId = your_application_id_here
+
+### ============================================
+### COMMON ROUTES (No Auth Required)
+### ============================================
+
+### Health Check
+GET {{apiUrl}}/health
+
+### Get CMS Content (Terms, Privacy, etc.)
+GET {{apiUrl}}/cms?type=1
+### type: 1=Terms, 2=Privacy, 3=Other
+
+### Upload File
+POST {{apiUrl}}/uploadFile
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="test.jpg"
+Content-Type: image/jpeg
+
+< ./test.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+
+### ============================================
+### USER AUTHENTICATION (Guest)
+### ============================================
+
+### Check Email Format
+POST {{apiUrl}}/user/check-email
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### User Registration (Email-based)
+POST {{apiUrl}}/user/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "first_name": "Ahmed",
+  "last_name": "Ali",
+  "country_code": "+966",
+  "phone_number": 501234567,
+  "gender": 1,
+  "date_of_birth": "1990-01-01",
+  "language": "en"
+}
+
+### User Login (Email + Password)
+POST {{apiUrl}}/user/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+### User Login (Phone OTP - Send OTP)
+POST {{apiUrl}}/user/login/phone/send-otp
+Content-Type: application/json
+
+{
+  "country_code": "+966",
+  "phone_number": 501234567
+}
+
+### User Login (Phone OTP - Verify OTP)
+POST {{apiUrl}}/user/login/phone/verify-otp
+Content-Type: application/json
+
+{
+  "country_code": "+92",
+  "phone_number": 3289081825,
+  "otp": "123456"
+}
+
+### Verify Email
+GET {{apiUrl}}/user/verify-email?token=email_verification_token_here
+
+### Resend Verification Email
+POST {{apiUrl}}/user/resend-verification
+Content-Type: application/json
+
+{
+  "email": "user@example.com"
+}
+
+### Verify Signup OTP (Phone)
+POST {{apiUrl}}/user/verify-signup-otp
+Content-Type: application/json
+
+{
+  "country_code": "+966",
+  "phone_number": 501234567,
+  "otp": "123456"
+}
+
+### Resend Signup OTP
+POST {{apiUrl}}/user/resend-signup-otp
+Content-Type: application/json
+
+{
+  "country_code": "+966",
+  "phone_number": 501234567
+}
+
+### Forgot Password
+POST {{apiUrl}}/user/forgot-password
+Content-Type: application/json
+
+{
+  "email": "user@example.com"
+}
+
+### Reset Password
+POST {{apiUrl}}/user/reset-password
+Content-Type: application/json
+
+{
+  "token": "password_reset_token_here",
+  "password": "newpassword123"
+}
+
+### ============================================
+### USER PROFILE (Auth Required)
+### ============================================
+
+### Get User Profile
+GET {{apiUrl}}/user/profile/detail
+Authorization: Bearer {{token}}
+
+### Update User Profile
+PUT {{apiUrl}}/user/profile/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "first_name": "Ahmed",
+  "last_name": "Ali",
+  "profile_image": "https://example.com/image.jpg",
+  "description": "User description",
+  "date_of_birth": "1990-01-01",
+  "gender": 1,
+  "nationality": "Saudi"
+}
+
+### Update Language
+PATCH {{apiUrl}}/user/language
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "language": "ar"
+}
+
+### User Logout
+POST {{apiUrl}}/user/profile/logout
+Authorization: Bearer {{token}}
+
+### Delete User Account
+DELETE {{apiUrl}}/user/profile/delete
+Authorization: Bearer {{token}}
+
+### ============================================
+### EVENTS (User - No Auth)
+### ============================================
+
+### Get Event List (Public)
+GET {{apiUrl}}/user/event/list?page=1&limit=10&category_id={{eventId}}&location=24.7136,46.6753&radius=10
+
+### Get Event Detail (Public - Optional Auth)
+GET {{apiUrl}}/user/event/detail?event_id={{eventId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### BOOKINGS (User - Auth Required)
+### ============================================
+
+### Book Event
+POST {{apiUrl}}/user/event/book
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "event_id": "{{eventId}}",
+  "no_of_attendees": 2,
+  "total_amount_attendees": 200,
+  "total_tax_attendees": 30,
+  "total_amount": 230
+}
+
+### Get Booked Events List
+GET {{apiUrl}}/user/event/booked/list?page=1&limit=10&status=2
+Authorization: Bearer {{token}}
+### status: 1=pending, 2=confirmed, 3=cancelled, 4=rejected, 5=completed, 6=refunded
+
+### Get Booking Detail
+GET {{apiUrl}}/user/event/booked/detail?booking_id={{bookingId}}
+Authorization: Bearer {{token}}
+
+### Cancel Booking
+POST {{apiUrl}}/user/event/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_id": "{{bookingId}}",
+  "cancellation_reason": "Change of plans"
+}
+
+### ============================================
+### PAYMENTS (User - Auth Required)
+### ============================================
+
+### Verify Payment
+POST {{apiUrl}}/user/verifyPayment
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_id": "{{bookingId}}",
+  "payment_id": "payment_id_from_moyasar",
+  "amount": 230
+}
+
+### Get Payment Detail
+GET {{apiUrl}}/user/payment?booking_id={{bookingId}}
+Authorization: Bearer {{token}}
+
+### Update Payment Status
+POST {{apiUrl}}/user/payment/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_id": "{{bookingId}}",
+  "payment_id": "payment_id_from_moyasar",
+  "amount": 230
+}
+
+### Payment Webhook (Moyasar)
+POST {{apiUrl}}/user/webhookReceived
+Content-Type: application/json
+
+{
+  "data": {
+    "id": "payment_id",
+    "status": "paid",
+    "amount": 23000,
+    "metadata": {
+      "booking_id": "{{bookingId}}"
+    }
+  }
+}
+
+### ============================================
+### REFUNDS (User - Auth Required)
+### ============================================
+
+### Request Refund
+POST {{apiUrl}}/user/refund/request
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_id": "{{bookingId}}",
+  "refund_reason": "Event cancelled by host"
+}
+
+### Get Refund Requests List
+GET {{apiUrl}}/user/refund/list?page=1&limit=10&status=0
+Authorization: Bearer {{token}}
+### status: 0=pending, 1=approved, 2=rejected, 3=processed
+
+### Get Refund Detail
+GET {{apiUrl}}/user/refund/detail?refund_id={{refundId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### REVIEWS (User - Auth Required)
+### ============================================
+
+### Add Event Review
+POST {{apiUrl}}/user/event/review/add
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "event_id": "{{eventId}}",
+  "rating": 5,
+  "description": "Great event!"
+}
+
+### Get Event Reviews List
+GET {{apiUrl}}/user/event/review/list?event_id={{eventId}}&page=1&limit=10
+Authorization: Bearer {{token}}
+
+### ============================================
+### NOTIFICATIONS (User - Auth Required)
+### ============================================
+
+### Get Notifications List
+GET {{apiUrl}}/user/notification/list?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get Unread Notification Count
+GET {{apiUrl}}/user/unreadNotificationCount
+Authorization: Bearer {{token}}
+
+### ============================================
+### MESSAGING (User - Auth Required)
+### ============================================
+
+### Get Conversations List
+GET {{apiUrl}}/user/conversations?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get Messages
+GET {{apiUrl}}/user/messages?conversation_id={{conversationId}}&page=1&limit=50
+Authorization: Bearer {{token}}
+
+### Send Message
+POST {{apiUrl}}/user/message/send
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "conversation_id": "{{conversationId}}",
+  "message": "Hello, I have a question about the event"
+}
+
+### Send Message with Attachment
+POST {{apiUrl}}/user/message/send-with-attachment
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="conversation_id"
+
+{{conversationId}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="message"
+
+Check out this image
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachment"; filename="image.jpg"
+Content-Type: image/jpeg
+
+< ./image.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+
+### Get or Create Conversation
+GET {{apiUrl}}/user/conversation/get-or-create?event_id={{eventId}}&organizer_id={{organizerId}}
+Authorization: Bearer {{token}}
+
+### Get Unread Messages Count
+GET {{apiUrl}}/user/messages/unread-count
+Authorization: Bearer {{token}}
+
+### Get Group Chat
+GET {{apiUrl}}/user/group-chat?event_id={{eventId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### CAREER (Public)
+### ============================================
+
+### Submit Career Application
+POST {{apiUrl}}/user/career/apply
+Content-Type: application/json
+
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john@example.com",
+  "phone_number": "+966501234567",
+  "position": "Software Developer",
+  "cover_letter": "I am interested in this position...",
+  "resume_url": "https://example.com/resume.pdf"
+}
+
+### Get Available Positions
+GET {{apiUrl}}/user/career/positions
+
+### ============================================
+### LANDING PAGE (Public - Optional Auth)
+### ============================================
+
+### Get Events (Landing Page)
+GET {{apiUrl}}/landing/events?page=1&limit=10&category_id={{eventId}}&location=24.7136,46.6753&radius=10
+Authorization: Bearer {{token}}
+
+### Get Featured Events
+GET {{apiUrl}}/landing/featured-events
+Authorization: Bearer {{token}}
+
+### Get Event Details (Landing Page)
+GET {{apiUrl}}/landing/events/{{eventId}}
+Authorization: Bearer {{token}}
+
+### Get Similar Events
+GET {{apiUrl}}/landing/events/{{eventId}}/similar
+Authorization: Bearer {{token}}
+
+### Get Organizer Details (Public)
+GET {{apiUrl}}/landing/organizer/{{organizerId}}
+
+### ============================================
+### ORGANIZER AUTHENTICATION
+### ============================================
+
+### Check Email Format (Organizer)
+POST {{apiUrl}}/organizer/check-email
+Content-Type: application/json
+
+{
+  "email": "organizer@example.com"
+}
+
+### Organizer Registration
+POST {{apiUrl}}/organizer/register
+Content-Type: application/json
+
+{
+  "email": "organizer@example.com",
+  "password": "password123",
+  "first_name": "Mohammed",
+  "last_name": "Ahmed",
+  "country_code": "+966",
+  "phone_number": 501234567,
+  "gender": 1,
+  "date_of_birth": "1985-01-01",
+  "language": "en"
+}
+
+### Organizer Login
+POST {{apiUrl}}/organizer/login
+Content-Type: application/json
+
+{
+  "email": "organizer@example.com",
+  "password": "password123"
+}
+
+### Verify Organizer Email
+GET {{apiUrl}}/organizer/verify-email?token=email_verification_token_here
+
+### Verify Signup OTP (Organizer)
+POST {{apiUrl}}/organizer/verify-signup-otp
+Content-Type: application/json
+
+{
+  "country_code": "+966",
+  "phone_number": 501234567,
+  "otp": "123456"
+}
+
+### Resend Signup OTP (Organizer)
+POST {{apiUrl}}/organizer/resend-signup-otp
+Content-Type: application/json
+
+{
+  "country_code": "+966",
+  "phone_number": 501234567
+}
+
+### Forgot Password (Organizer)
+POST {{apiUrl}}/organizer/forgot-password
+Content-Type: application/json
+
+{
+  "email": "organizer@example.com"
+}
+
+### Reset Password (Organizer)
+POST {{apiUrl}}/organizer/reset-password
+Content-Type: application/json
+
+{
+  "token": "password_reset_token_here",
+  "password": "newpassword123"
+}
+
+### Update Registration Profile (During Registration)
+PUT {{apiUrl}}/organizer/registration/update
+Content-Type: application/json
+
+{
+  "organizer_id": "{{organizerId}}",
+  "group_name": "My Event Group",
+  "bio": "Event organizer description",
+  "group_category": ["category_id_1", "category_id_2"],
+  "group_location": [{
+    "location": {
+      "type": "Point",
+      "coordinates": [46.6753, 24.7136]
+    },
+    "city_name": "Riyadh"
+  }]
+}
+
+### ============================================
+### ORGANIZER PROFILE (Auth Required)
+### ============================================
+
+### Update Organizer Profile
+PUT {{apiUrl}}/organizer/profile/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "first_name": "Mohammed",
+  "last_name": "Ahmed",
+  "group_name": "My Event Group",
+  "bio": "Updated description",
+  "profile_image": "https://example.com/image.jpg",
+  "group_category": ["category_id_1"],
+  "group_location": [{
+    "location": {
+      "type": "Point",
+      "coordinates": [46.6753, 24.7136]
+    },
+    "city_name": "Riyadh"
+  }]
+}
+
+### Deactivate Organizer Account
+PUT {{apiUrl}}/organizer/deactivate
+Authorization: Bearer {{token}}
+
+### ============================================
+### ORGANIZER EVENTS (Auth Required)
+### ============================================
+
+### Get Categories List
+GET {{apiUrl}}/organizer/category/list
+
+### Get Event Categories List
+GET {{apiUrl}}/organizer/event/category/list
+
+### Add Event
+POST {{apiUrl}}/organizer/event/add
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "event_name": "Music Concert",
+  "event_description": "Amazing music concert",
+  "event_date": "2024-12-31",
+  "event_start_time": "20:00",
+  "event_end_time": "23:00",
+  "event_address": "Riyadh, Saudi Arabia",
+  "location": {
+    "type": "Point",
+    "coordinates": [46.6753, 24.7136]
+  },
+  "event_price": 100,
+  "no_of_attendees": 50,
+  "event_category": "category_id_here",
+  "event_categories": ["category_id_1", "category_id_2"],
+  "event_for": 3,
+  "event_images": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
+  "event_image": "https://example.com/main_image.jpg",
+  "dos_instruction": "Bring ID",
+  "do_not_instruction": "No smoking"
+}
+
+### Update Event
+PUT {{apiUrl}}/organizer/event/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "event_id": "{{eventId}}",
+  "event_name": "Updated Event Name",
+  "event_price": 150,
+  "event_description": "Updated description"
+}
+
+### Get Event Detail
+GET {{apiUrl}}/organizer/event/detail?event_id={{eventId}}
+Authorization: Bearer {{token}}
+
+### Get Events List
+GET {{apiUrl}}/organizer/event/list?page=1&limit=10&status=1
+Authorization: Bearer {{token}}
+### status: 0=pending, 1=approved, 2=rejected
+
+### Delete Event
+DELETE {{apiUrl}}/organizer/event/delete?event_id={{eventId}}
+Authorization: Bearer {{token}}
+
+### Cancel Event
+POST {{apiUrl}}/organizer/event/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "event_id": "{{eventId}}",
+  "cancellation_reason": "Venue unavailable"
+}
+
+### ============================================
+### ORGANIZER BOOKINGS (Auth Required)
+### ============================================
+
+### Get Bookings List
+GET {{apiUrl}}/organizer/event/booking/list?page=1&limit=10&event_id={{eventId}}&status=2
+Authorization: Bearer {{token}}
+### status: 1=pending, 2=confirmed, 3=cancelled, 4=rejected, 5=completed, 6=refunded
+
+### Get Booking Detail
+GET {{apiUrl}}/organizer/event/booking/detail?booking_id={{bookingId}}
+Authorization: Bearer {{token}}
+
+### Update Booking Status
+PATCH {{apiUrl}}/organizer/event/booking/update-status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_id": "{{bookingId}}",
+  "book_status": 2
+}
+### book_status: 1=pending, 2=confirmed, 3=cancelled, 4=rejected, 5=completed, 6=refunded
+
+### Get Event Analytics
+GET {{apiUrl}}/organizer/event/analytics?event_id={{eventId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### ORGANIZER EARNINGS (Auth Required)
+### ============================================
+
+### Get Earnings List
+GET {{apiUrl}}/organizer/earning?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### ============================================
+### ORGANIZER WITHDRAWAL (Auth Required)
+### ============================================
+
+### Request Withdrawal
+POST {{apiUrl}}/organizer/withdrawal
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 1000,
+  "withdrawal_method": "bank_transfer",
+  "bank_details": {
+    "bank_name": "Al Rajhi Bank",
+    "account_holder_name": "Mohammed Ahmed",
+    "account_number": "1234567890",
+    "iban": "SA1234567890123456789012",
+    "swift_code": "RJHISARI",
+    "branch_name": "Riyadh Main Branch"
+  }
+}
+
+### Get Withdrawal List
+GET {{apiUrl}}/organizer/withdrawalList?page=1&limit=10&status=0
+Authorization: Bearer {{token}}
+### status: 0=pending, 1=approved, 2=rejected
+
+### ============================================
+### ORGANIZER REVIEWS (Auth Required)
+### ============================================
+
+### Get Reviews List
+GET {{apiUrl}}/organizer/event/review/list?event_id={{eventId}}&page=1&limit=10
+Authorization: Bearer {{token}}
+
+### ============================================
+### ORGANIZER MESSAGING (Auth Required)
+### ============================================
+
+### Get Conversations List
+GET {{apiUrl}}/organizer/conversations?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get Messages
+GET {{apiUrl}}/organizer/messages?conversation_id={{conversationId}}&page=1&limit=50
+Authorization: Bearer {{token}}
+
+### Send Message
+POST {{apiUrl}}/organizer/message/send
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "conversation_id": "{{conversationId}}",
+  "message": "Thank you for your booking!"
+}
+
+### Send Message with Attachment
+POST {{apiUrl}}/organizer/message/send-with-attachment
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="conversation_id"
+
+{{conversationId}}
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="message"
+
+Check this out
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="attachment"; filename="document.pdf"
+Content-Type: application/pdf
+
+< ./document.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+
+### Get or Create Conversation
+GET {{apiUrl}}/organizer/conversation/get-or-create?event_id={{eventId}}&user_id={{userId}}
+Authorization: Bearer {{token}}
+
+### Get Unread Messages Count
+GET {{apiUrl}}/organizer/messages/unread-count
+Authorization: Bearer {{token}}
+
+### Get Group Chat
+GET {{apiUrl}}/organizer/group-chat?event_id={{eventId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN AUTHENTICATION
+### ============================================
+
+### Admin Login
+POST {{baseUrl}}/api/admin/login
+Content-Type: application/json
+
+{
+  "email": "admin@zuroona.com",
+  "password": "12345678"
+}
+
+### Admin Forgot Password
+POST {{adminUrl}}/forgot-password
+Content-Type: application/json
+
+{
+  "email": "admin@zuroona.com"
+}
+
+### Admin Reset Password
+POST {{adminUrl}}/reset-password
+Content-Type: application/json
+
+{
+  "token": "password_reset_token_here",
+  "password": "newpassword123"
+}
+
+### ============================================
+### ADMIN PROFILE (Auth Required)
+### ============================================
+
+### Get Admin Profile
+GET {{adminUrl}}/profile
+Authorization: Bearer {{token}}
+
+### Change Admin Password
+POST {{adminUrl}}/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "old_password": "oldpassword123",
+  "new_password": "newpassword123"
+}
+
+### Admin Logout
+POST {{adminUrl}}/logout
+Authorization: Bearer {{token}}
+
+### Get Current Admin
+GET {{adminUrl}}/admin/current
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN USER MANAGEMENT (Auth Required)
+### ============================================
+
+### Get Users List
+GET {{adminUrl}}/user/list?page=1&limit=10&search=ahmed&status=1
+Authorization: Bearer {{token}}
+### status: 1=active, 2=inactive
+
+### Get User Detail
+GET {{adminUrl}}/user/detail?user_id={{userId}}
+Authorization: Bearer {{token}}
+
+### Update User
+PUT {{adminUrl}}/user/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "user_id": "{{userId}}",
+  "first_name": "Updated Name",
+  "last_name": "Updated Last",
+  "isActive": 1
+}
+
+### Change User Status
+PATCH {{adminUrl}}/user/changeStatus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "user_id": "{{userId}}",
+  "isActive": 2
+}
+### isActive: 1=active, 2=inactive
+
+### Delete User
+DELETE {{adminUrl}}/user/delete?user_id={{userId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN ORGANIZER MANAGEMENT (Auth Required)
+### ============================================
+
+### Get Organizers List
+GET {{adminUrl}}/organizer/list?page=1&limit=10&status=1&search=mohammed
+Authorization: Bearer {{token}}
+### status: 1=pending, 2=approved, 3=rejected
+
+### Get Organizer Detail
+GET {{adminUrl}}/organizer/detail?organizer_id={{organizerId}}
+Authorization: Bearer {{token}}
+
+### Change Organizer Status
+PATCH {{adminUrl}}/changeOrganizerStatus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "organizer_id": "{{organizerId}}",
+  "is_approved": 2
+}
+### is_approved: 1=pending, 2=approved, 3=rejected
+
+### Approve Organizer
+PUT {{apiUrl}}/organizer/admin/approve/{{organizerId}}
+Authorization: Bearer {{token}}
+
+### Reject Organizer
+PUT {{apiUrl}}/organizer/admin/reject/{{organizerId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN EVENT MANAGEMENT (Auth Required)
+### ============================================
+
+### Get Events List
+GET {{adminUrl}}/eventList?page=1&limit=10&status=0&search=concert
+Authorization: Bearer {{token}}
+### status: 0=pending, 1=approved, 2=rejected
+
+### Get Event Detail
+GET {{adminUrl}}/event/detail?event_id={{eventId}}
+Authorization: Bearer {{token}}
+
+### Change Event Status
+PUT {{adminUrl}}/event/changeStatus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "event_id": "{{eventId}}",
+  "is_approved": 1,
+  "rejection_reason": null
+}
+### is_approved: 0=pending, 1=approved, 2=rejected
+
+### ============================================
+### ADMIN BOOKING MANAGEMENT (Auth Required)
+### ============================================
+
+### Get Bookings with Invoices
+GET {{adminUrl}}/bookings/invoices?page=1&limit=10&status=2
+Authorization: Bearer {{token}}
+
+### Get Invoice Stats
+GET {{adminUrl}}/bookings/invoices/stats
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN REFUND MANAGEMENT (Auth Required)
+### ============================================
+
+### Get Refund Requests List
+GET {{adminUrl}}/refund/list?page=1&limit=10&status=0
+Authorization: Bearer {{token}}
+### status: 0=pending, 1=approved, 2=rejected, 3=processed
+
+### Get Refund Detail
+GET {{adminUrl}}/refund/detail?refund_id={{refundId}}
+Authorization: Bearer {{token}}
+
+### Update Refund Status
+PUT {{adminUrl}}/refund/update-status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "refund_id": "{{refundId}}",
+  "status": 1,
+  "admin_response": "Refund approved and processed"
+}
+### status: 0=pending, 1=approved, 2=rejected, 3=processed
+
+### ============================================
+### ADMIN WITHDRAWAL MANAGEMENT (Auth Required)
+### ============================================
+
+### Get Withdrawal List
+GET {{adminUrl}}/organizer/withdrawalList?page=1&limit=10&status=0
+Authorization: Bearer {{token}}
+### status: 0=pending, 1=approved, 2=rejected
+
+### Update Withdrawal Status
+PUT {{adminUrl}}/withdrawalStatus
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "transaction_id": "{{transactionId}}",
+  "status": 1,
+  "admin_notes": "Payment transferred successfully",
+  "transaction_reference": "BANK_TRANSFER_12345"
+}
+### status: 0=pending, 1=approved, 2=rejected
+
+### Get Withdrawal Stats
+GET {{adminUrl}}/organizer/withdrawalStats
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN WALLET MANAGEMENT (Auth Required)
+### ============================================
+
+### Get Wallet Stats
+GET {{adminUrl}}/wallet/stats
+Authorization: Bearer {{token}}
+
+### Get Wallet Details
+GET {{adminUrl}}/wallet/details?organizer_id={{organizerId}}&page=1&limit=10
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN CATEGORY MANAGEMENT (Auth Required)
+### ============================================
+
+### Add Group Category
+POST {{adminUrl}}/group-category/add
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": {
+    "en": "Music",
+    "ar": "موسيقى"
+  },
+  "selected_image": "https://example.com/selected.jpg",
+  "unselected_image": "https://example.com/unselected.jpg"
+}
+
+### Get Group Categories List
+GET {{adminUrl}}/group-category/list?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Get Group Category Detail
+GET {{adminUrl}}/group-category/detail?category_id={{categoryId}}
+Authorization: Bearer {{token}}
+
+### Update Group Category
+PUT {{adminUrl}}/group-category/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "category_id": "{{categoryId}}",
+  "name": {
+    "en": "Updated Music",
+    "ar": "موسيقى محدثة"
+  }
+}
+
+### Delete Group Category
+DELETE {{adminUrl}}/group-category/delete?category_id={{categoryId}}
+Authorization: Bearer {{token}}
+
+### Add Event Category
+POST {{adminUrl}}/event/group-category/add
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": {
+    "en": "Concert",
+    "ar": "حفلة موسيقية"
+  },
+  "selected_image": "https://example.com/selected.jpg",
+  "unselected_image": "https://example.com/unselected.jpg"
+}
+
+### Get Event Categories List
+GET {{adminUrl}}/event/group-category/list?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Get Event Category Detail
+GET {{adminUrl}}/event/group-category/detail?category_id={{categoryId}}
+Authorization: Bearer {{token}}
+
+### Update Event Category
+PUT {{adminUrl}}/event/group-category/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "category_id": "{{categoryId}}",
+  "name": {
+    "en": "Updated Concert",
+    "ar": "حفلة موسيقية محدثة"
+  }
+}
+
+### Delete Event Category
+DELETE {{adminUrl}}/event/group-category/delete?category_id={{categoryId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN CMS MANAGEMENT (Auth Required)
+### ============================================
+
+### Get CMS Detail
+GET {{adminUrl}}/cms/detail?type=1
+Authorization: Bearer {{token}}
+### type: 1=Terms, 2=Privacy, 3=Other
+
+### Update CMS
+PUT {{adminUrl}}/cms/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "1",
+  "description": "Updated Terms and Conditions",
+  "description_ar": "الشروط والأحكام المحدثة"
+}
+
+### ============================================
+### ADMIN NOTIFICATION MANAGEMENT (Auth Required)
+### ============================================
+
+### Add Notification
+POST {{adminUrl}}/notification/add
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "New Event Available",
+  "description": "Check out our new events",
+  "user_ids": ["user_id_1", "user_id_2"],
+  "role": 1
+}
+### role: 1=User, 2=Organizer, 3=Admin
+
+### Get Notifications List
+GET {{adminUrl}}/notification/list?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### Get Admin Notifications
+GET {{adminUrl}}/admin/notifications?page=1&limit=20
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN CAREER MANAGEMENT (Auth Required)
+### ============================================
+
+### Get Career Applications List
+GET {{adminUrl}}/career/applications?page=1&limit=10&status=0&position=developer
+Authorization: Bearer {{token}}
+### status: 0=Pending, 1=Under Review, 2=Accepted, 3=Rejected
+
+### Get Career Application Detail
+GET {{adminUrl}}/career/application/detail?application_id={{applicationId}}
+Authorization: Bearer {{token}}
+
+### Update Career Application Status
+PUT {{adminUrl}}/career/application/update-status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "application_id": "{{applicationId}}",
+  "status": 2,
+  "notes": "Accepted for interview"
+}
+### status: 0=Pending, 1=Under Review, 2=Accepted, 3=Rejected
+
+### ============================================
+### ADMIN ADMIN MANAGEMENT (Auth Required)
+### ============================================
+
+### Get Admins List
+GET {{adminUrl}}/admin/list?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Get Admin Detail
+GET {{adminUrl}}/admin/detail?admin_id={{adminId}}
+Authorization: Bearer {{token}}
+
+### Create Admin
+POST {{adminUrl}}/admin/create
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "Admin",
+  "lastName": "User",
+  "email": "admin2@example.com",
+  "password": "admin123",
+  "countryCode": "+966",
+  "mobileNumber": 501234567,
+  "gender": 1,
+  "dateOfBirth": "1990-01-01"
+}
+
+### Update Admin
+PUT {{adminUrl}}/admin/update
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "admin_id": "{{adminId}}",
+  "firstName": "Updated Admin",
+  "lastName": "Updated User"
+}
+
+### Delete Admin
+DELETE {{adminUrl}}/admin/delete?admin_id={{adminId}}
+Authorization: Bearer {{token}}
+
+### ============================================
+### USER REVIEWS (Public/User)
+### ============================================
+
+### Add User Review (User to Organizer or vice versa)
+POST {{apiUrl}}/user-reviews/add
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reviewer_type": "User",
+  "reviewed_id": "{{organizerId}}",
+  "reviewed_type": "Organizer",
+  "rating": 5,
+  "description": "Great organizer!"
+}
+
+### Get User Reviews
+GET {{apiUrl}}/user-reviews/list?reviewed_id={{organizerId}}&reviewed_type=Organizer&page=1&limit=10
+Authorization: Bearer {{token}}
+
+### ============================================
+### NOTES (نوٹس)
+### ============================================
+###
+### 1. Replace all {{variable}} placeholders with actual values
+### 2. Get token from login endpoints
+### 3. Some endpoints require specific roles (User/Organizer/Admin)
+### 4. File uploads use multipart/form-data
+### 5. All timestamps are in ISO 8601 format
+### 6. Pagination: page starts from 1, limit default is 10
+### 7. Status codes: Check response status for success/error
+### 8. Error responses include message and error details
+###
+### ============================================
+### TESTING TIPS (ٹیسٹنگ کے نکات)
+### ============================================
+###
+### 1. Start with authentication endpoints
+### 2. Save token from login response
+### 3. Use token in Authorization header for protected routes
+### 4. Test endpoints in logical order (create → read → update → delete)
+### 5. Check response status codes (200=success, 400=bad request, 401=unauthorized, 404=not found, 500=server error)
+### 6. Use variables at top of file for easy testing
+### 7. Comment out requests you don't need
+### 8. Test error cases (invalid IDs, missing fields, etc.)
+###
+### ============================================
+

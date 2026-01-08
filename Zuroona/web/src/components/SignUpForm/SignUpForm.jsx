@@ -12,12 +12,18 @@ import ProfileImageUpload from "../ProfileImageUpload/ProfileImageUpload";
 import { NumberInput } from "@/components/ui/number-input";
 import Loader from "../Loader/Loader";
 import S3 from "react-aws-s3";
-import { config } from "@/until";
+import { config, BASE_API_URL } from "@/until";
 import { Icon } from "@iconify/react";
+import axios from "axios";
 
 export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }) {
     const [loading, setLoading] = useState(false);
     const [isOtpOpen, setIsOtpOpen] = useState(false);
+    const [showEmailVerificationMessage, setShowEmailVerificationMessage] = useState(false);
+    const [signupPhoneNumber, setSignupPhoneNumber] = useState("");
+    const [signupCountryCode, setSignupCountryCode] = useState("+966");
+    const [signupUserId, setSignupUserId] = useState(null);
+    const [userEmail, setUserEmail] = useState("");
     const { t, i18n } = useTranslation();
     const ReactS3Client = new S3(config);
 
@@ -39,7 +45,21 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
         validationSchema: Yup.object({
             first_name: Yup.string().required(t('signup.tab16')),
             last_name: Yup.string().required(t('signup.tab16')),
-            email: Yup.string().email("Invalid email").required(t('signup.tab16')),
+            email: Yup.string()
+                .required(t('signup.tab16'))
+                .test('gmail-only', "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+                    if (!value) return true;
+                    const emailLower = value.toLowerCase().trim();
+                    return emailLower.endsWith('@gmail.com');
+                })
+                .test('gmail-format', "Invalid Gmail address format", function(value) {
+                    if (!value) return true;
+                    const emailLower = value.toLowerCase().trim();
+                    const localPart = emailLower.split('@')[0];
+                    if (!localPart) return false;
+                    return /^[a-z0-9.+]+$/.test(localPart);
+                })
+                .email("Invalid email"),
             phone: Yup.string().required(t('signup.tab16')),
             gender: Yup.string().required(t('signup.tab16')),
             nationality: Yup.string().required(t('signup.tab16')),
@@ -49,22 +69,50 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
         onSubmit: async (values) => {
             setLoading(true);
             try {
-                const formData = new FormData();
-                Object.keys(values).forEach((key) => {
-                    if (values[key] !== null) {
-                        formData.append(key, values[key]);
-                    }
-                });
+                // Convert to JSON payload (passwordless)
+                const payload = {
+                    first_name: values.first_name,
+                    last_name: values.last_name,
+                    email: values.email.toLowerCase().trim(),
+                    phone_number: parseInt(values.phone),
+                    country_code: values.country_code || "+966",
+                    gender: parseInt(values.gender),
+                    nationality: values.nationality,
+                    date_of_birth: values.date_of_birth,
+                    description: values.description,
+                    profile_image: values.profile_image || "",
+                    language: i18n.language || "en",
+                };
 
-                const response = await SignUpApi(formData);
-                if (response?.status === 1) {
-                    toast.success(response?.message);
-                    setIsOtpOpen(true);
+                const response = await SignUpApi(payload);
+                
+                if (response?.status === 1 || response?.status === true) {
+                    setSignupUserId(response.user?._id);
+                    setSignupPhoneNumber(response.user?.phone_number);
+                    setSignupCountryCode(response.user?.country_code || "+966");
+                    setUserEmail(response.user?.email);
+
+                    if (response.verification_status?.email_sent) {
+                        setShowEmailVerificationMessage(true);
+                        toast.success(
+                            response.message || 
+                            t("auth.verificationEmailSent") || 
+                            "Account created! Please check your email and phone for verification."
+                        );
+                    }
+                    if (response.verification_status?.otp_sent) {
+                        setIsOtpOpen(true);
+                    }
                 } else {
-                    toast.error(response?.message);
+                    toast.error(response?.message || t("auth.signupError") || "Signup failed. Please try again.");
                 }
             } catch (error) {
-                toast.error("Something went wrong");
+                console.error("Signup error:", error);
+                toast.error(
+                    error?.response?.data?.message || 
+                    t("auth.signupError") || 
+                    "An error occurred. Please try again."
+                );
             } finally {
                 setLoading(false);
             }
@@ -73,6 +121,63 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
 
     const handleGenderSelect = (gender) => {
         formik.setFieldValue("gender", gender);
+    };
+
+    const handleResendEmailVerification = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.post(
+                `${BASE_API_URL}user/resend-verification`,
+                { email: userEmail },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        lang: i18n.language || "en",
+                    },
+                }
+            );
+            const data = response.data;
+            if (data?.status === 1 || data?.success) {
+                toast.success(data.message || t("auth.verificationEmailResent") || "Verification email resent successfully!");
+            } else {
+                toast.error(data.message || t("auth.resendFailed") || "Failed to resend verification email.");
+            }
+        } catch (error) {
+            console.error("Resend email error:", error);
+            toast.error(error?.response?.data?.message || t("auth.resendError") || "Failed to resend verification email. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResendOtp = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${BASE_API_URL}user/resend-signup-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'lang': i18n.language || 'en'
+                },
+                body: JSON.stringify({
+                    user_id: signupUserId,
+                    phone_number: signupPhoneNumber,
+                    country_code: signupCountryCode,
+                    role: 1,
+                })
+            });
+            const data = await response.json();
+            if (data?.status === 1 || data?.success) {
+                toast.success(data.message || t("auth.otpResent") || "OTP resent successfully!");
+            } else {
+                toast.error(data.message || t("auth.otpResendFailed") || "Failed to resend OTP.");
+            }
+        } catch (error) {
+            console.error("Resend OTP error:", error);
+            toast.error(t("auth.otpResendFailed") || "Failed to resend OTP. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const inputClasses = `w-full px-4 py-3 rounded-lg border bg-white/90 transition-all duration-200
@@ -354,7 +459,147 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                 </div>
             </div>
 
-            <OtpVerificationModal isOpen={isOtpOpen} onClose={closeOtpModal} />
+            {/* Email Verification Message */}
+            {showEmailVerificationMessage && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 max-w-md mx-4">
+                        <div className="text-center mb-6">
+                            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Icon icon="material-symbols:check-circle" className="w-12 h-12 text-green-600" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                {t("auth.registrationSuccessful") || "Registration Successful!"}
+                            </h2>
+                            <p className="text-gray-600 mb-6">
+                                {t("auth.verificationEmailSent") || 
+                                `We've sent a verification link to ${userEmail}. Please check your inbox and click the link to verify your email address.`}
+                            </p>
+                        </div>
+                        <div className="space-y-3">
+                            <button
+                                onClick={handleResendEmailVerification}
+                                disabled={loading}
+                                className="w-full py-3 px-4 bg-[#a797cc] hover:bg-[#d66a0a] text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+                            >
+                                {loading ? (
+                                    <span className="flex items-center justify-center">
+                                        <Loader /> {t("auth.sending") || "Sending..."}
+                                    </span>
+                                ) : (
+                                    t("auth.resendVerificationEmail") || "Resend Verification Email"
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setShowEmailVerificationMessage(false)}
+                                className="w-full py-3 px-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-colors"
+                            >
+                                {t("auth.close") || "Close"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* OTP Verification Modal - Simple inline version for signup */}
+            {isOtpOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 max-w-md mx-4">
+                        <div className="text-center mb-6">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                {t("auth.verifyPhone") || "Verify Your Phone Number"}
+                            </h2>
+                            <p className="text-gray-600 mb-4">
+                                {t("auth.otpSentTo") || `We've sent a verification code to ${signupCountryCode}${signupPhoneNumber}`}
+                            </p>
+                        </div>
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            const otp = e.target.otp.value;
+                            if (!otp || otp.length !== 6) {
+                                toast.error(t("auth.invalidOtp") || "Please enter a valid 6-digit OTP");
+                                return;
+                            }
+                            setLoading(true);
+                            try {
+                                const response = await fetch(`${BASE_API_URL}user/verify-signup-otp`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'lang': i18n.language || 'en'
+                                    },
+                                    body: JSON.stringify({
+                                        user_id: signupUserId,
+                                        phone_number: signupPhoneNumber,
+                                        country_code: signupCountryCode,
+                                        otp: otp
+                                    })
+                                });
+                                const data = await response.json();
+                                if (data?.status === 1 || data?.success) {
+                                    setIsOtpOpen(false);
+                                    if (data?.data?.user?.is_verified) {
+                                        toast.success(data.message || t("auth.accountVerified") || "Account verified successfully! You can now login.");
+                                        setTimeout(() => {
+                                            window.location.href = "/login";
+                                        }, 2000);
+                                    } else {
+                                        toast.success(data.message || t("auth.phoneVerified") || "Phone verified! Please verify your email to complete registration.");
+                                    }
+                                } else {
+                                    toast.error(data.message || t("auth.invalidOtp") || "Invalid OTP. Please try again.");
+                                }
+                            } catch (error) {
+                                console.error("Verify OTP error:", error);
+                                toast.error(t("auth.otpVerifyFailed") || "Failed to verify OTP. Please try again.");
+                            } finally {
+                                setLoading(false);
+                            }
+                        }}>
+                            <div className="mb-6">
+                                <input
+                                    type="text"
+                                    name="otp"
+                                    maxLength={6}
+                                    pattern="[0-9]{6}"
+                                    placeholder="000000"
+                                    className="w-full px-4 py-3 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc] outline-none"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-3 px-4 bg-[#a797cc] hover:bg-[#d66a0a] text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    {loading ? (
+                                        <span className="flex items-center justify-center">
+                                            <Loader /> {t("auth.verifying") || "Verifying..."}
+                                        </span>
+                                    ) : (
+                                        t("auth.verify") || "Verify"
+                                    )}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleResendOtp}
+                                    disabled={loading}
+                                    className="w-full py-3 px-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    {t("auth.resendOtp") || "Resend OTP"}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={closeOtpModal}
+                                    className="w-full py-3 px-4 text-gray-600 hover:text-gray-800 font-semibold rounded-lg transition-colors"
+                                >
+                                    {t("auth.close") || "Close"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

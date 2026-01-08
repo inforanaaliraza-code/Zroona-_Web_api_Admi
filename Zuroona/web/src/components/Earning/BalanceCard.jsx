@@ -41,8 +41,13 @@ export default function BalanceCard({ data }) {
                     </div>
                     
                     {/* Available Balance Label - Compact */}
-                    <p className="text-white/80 text-xs md:text-sm font-medium mb-4 md:mb-5">
+                    <p className="text-white/80 text-xs md:text-sm font-medium mb-2">
                         {t('earning.tab3')}
+                    </p>
+                    
+                    {/* Fee Notice */}
+                    <p className="text-white/70 text-xs mb-4 md:mb-5">
+                        {t('withdrawFee') || 'Please note that 5% will be deducted for fees.'}
                     </p>
                     
                     {/* Withdraw Button - Compact */}

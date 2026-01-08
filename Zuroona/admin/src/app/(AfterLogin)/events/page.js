@@ -12,6 +12,7 @@ import { exportEventsToCSV, exportEventsToPDF } from "@/utils/exportUtils";
 import { ChangeEventStatusApi } from "@/api/events/apis";
 import { toast } from "react-toastify";
 import RejectEventModal from "@/components/Modals/RejectEventModal";
+import { useTranslation } from "react-i18next";
 
 // Predefined Event Types (matching organizer side)
 const EVENT_TYPES = [
@@ -118,6 +119,7 @@ const getEventImageUrl = (event) => {
 };
 
 export default function ManageEvents() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState("Pending");
@@ -168,15 +170,15 @@ export default function ManageEvents() {
       });
 
       if (response?.status === 1) {
-        toast.success("Event approved successfully!");
+        toast.success(t("events.eventApprovedSuccess"));
         // Refresh events list
         refreshEvents();
       } else {
-        toast.error(response?.message || "Failed to approve event");
+        toast.error(response?.message || t("events.failedToApproveEvent"));
       }
     } catch (error) {
       console.error("Accept event error:", error);
-      toast.error("Failed to approve event. Please try again.");
+      toast.error(t("events.failedToApproveEventTryAgain"));
     } finally {
       setProcessingEventId(null);
     }
@@ -200,17 +202,17 @@ export default function ManageEvents() {
       });
 
       if (response?.status === 1) {
-        toast.success("Event rejected successfully!");
+        toast.success(t("events.eventRejectedSuccess"));
         setShowRejectModal(false);
         setSelectedEvent(null);
         // Refresh events list
         refreshEvents();
       } else {
-        toast.error(response?.message || "Failed to reject event");
+        toast.error(response?.message || t("events.failedToRejectEvent"));
       }
     } catch (error) {
       console.error("Reject event error:", error);
-      toast.error("Failed to reject event. Please try again.");
+      toast.error(t("events.failedToRejectEventTryAgain"));
     } finally {
       setProcessingEventId(null);
     }
@@ -222,22 +224,22 @@ export default function ManageEvents() {
         <div className="flex sm:items-end flex-col sm:flex-row gap-x-10 py-6">
           {/* Header */}
           <div className="flex lg:w-[40%] items-end mb-4 sm:mb-0">
-            <h1 className="text-xl font-bold text-black">Manage Events</h1>
+            <h1 className="text-xl font-bold text-black">{t("events.manageEvents")}</h1>
           </div>
 
           {/* Export Buttons */}
           <div className="w-full flex lg:justify-end gap-3 items-center mt-5 lg:mt-0">
             <button onClick={() => exportEventsToCSV(GetAllEvents?.data || [])} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition">
-              <FaFileExcel /> Export CSV
+              <FaFileExcel /> {t("events.exportCSV")}
             </button>
             <button onClick={() => exportEventsToPDF(GetAllEvents?.data || [])} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition">
-              <FaPrint /> Export PDF
+              <FaPrint /> {t("events.exportPDF")}
             </button>
           </div>
 
           {/* Header (old) */}
           <div className="mb-4 sm:mb-0">
-            <h1 className="text-xl font-bold text-black">Manage Events</h1>
+            <h1 className="text-xl font-bold text-black">{t("events.manageEvents")}</h1>
           </div>
 
           {/* Tabs */}
@@ -249,7 +251,7 @@ export default function ManageEvents() {
                 : "border-2 border-transparent text-[#c8b68b]"
                 }`}
             >
-              Pending
+              {t("events.pending")}
             </button>
             <button
               onClick={() => handleTabChange("Upcoming")}
@@ -258,7 +260,7 @@ export default function ManageEvents() {
                 : "border-2 border-transparent text-[#c8b68b]"
                 }`}
             >
-              Upcoming
+              {t("events.upcoming")}
             </button>
             <button
               onClick={() => handleTabChange("Completed")}
@@ -267,7 +269,7 @@ export default function ManageEvents() {
                 : "border-2 border-transparent text-[#c8b68b]"
                 }`}
             >
-              Completed
+              {t("completed")}
             </button>
             <button
               onClick={() => handleTabChange("Rejected")}
@@ -276,7 +278,7 @@ export default function ManageEvents() {
                 : "border-2 border-transparent text-[#c8b68b]"
                 }`}
             >
-              Rejected
+              {t("events.rejected")}
             </button>
           </div>
         </div>
@@ -288,37 +290,37 @@ export default function ManageEvents() {
               <thead className="bg-[#f3f7ff]">
                 <tr className="text-sm">
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    Event ID
+                    {t("events.eventId")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    Event Name
+                    {t("events.eventName")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    Organizer
+                    {t("events.organizer")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    Event Category
+                    {t("events.eventCategory")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    No. of Attendess
+                    {t("events.numberOfAttendees")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    Date
+                    {t("events.date")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    time
+                    {t("events.time")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    Amount per Person
+                    {t("events.amountPerPerson")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    City
+                    {t("events.city")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    Status
+                    {t("events.status")}
                   </th>
                   <th className="px-2 py-4 text-center font-base text-gray-600">
-                    Action
+                    {t("events.action")}
                   </th>
                 </tr>
               </thead>
@@ -412,10 +414,10 @@ export default function ManageEvents() {
                           (event?.event_status === 4 || event?.is_approved === 2) ? "text-red-600 bg-red-100" :
                           "text-gray-600 bg-gray-100"
                         }`}>
-                          {(event?.event_status === 1 || event?.is_approved === 0) ? "Pending" :
-                           (event?.event_status === 2 || event?.is_approved === 1) ? "Upcoming" :
-                           event?.event_status === 3 ? "Completed" :
-                           (event?.event_status === 4 || event?.is_approved === 2) ? "Rejected" :
+                          {(event?.event_status === 1 || event?.is_approved === 0) ? t("events.pending") :
+                           (event?.event_status === 2 || event?.is_approved === 1) ? t("events.upcoming") :
+                           event?.event_status === 3 ? t("events.completed") :
+                           (event?.event_status === 4 || event?.is_approved === 2) ? t("events.rejected") :
                            "N/A"}
                         </span>
                       </td>
@@ -424,11 +426,11 @@ export default function ManageEvents() {
                           <Link
                             href={`/events/detail/${event?._id}`}
                             className="text-orange-500 hover:text-orange-600"
-                            title="View Details"
+                            title={t("events.viewDetails")}
                           >
                             <Image
                               src="/assets/images/home/eye-outline.png"
-                              alt="View"
+                              alt={t("events.view")}
                               height={20}
                               width={20}
                             />
@@ -441,17 +443,17 @@ export default function ManageEvents() {
                                 onClick={() => handleAcceptEvent(event._id)}
                                 disabled={processingEventId === event._id}
                                 className="bg-green-500 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Accept Event"
+                                title={t("events.acceptEvent")}
                               >
-                                {processingEventId === event._id ? "..." : "Accept"}
+                                {processingEventId === event._id ? "..." : t("events.accept")}
                               </button>
                               <button
                                 onClick={() => handleRejectEvent(event)}
                                 disabled={processingEventId === event._id}
                                 className="bg-red-500 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                title="Reject Event"
+                                title={t("events.rejectEvent")}
                               >
-                                {processingEventId === event._id ? "..." : "Reject"}
+                                {processingEventId === event._id ? "..." : t("common.reject")}
                               </button>
                             </>
                           )}
@@ -462,7 +464,7 @@ export default function ManageEvents() {
                 ) : (
                   <tr className="text-center">
                     <td colSpan={12} className="pt-2">
-                      No Data Found
+                      {t("events.noDataFound")}
                     </td>
                   </tr>
                 )}
@@ -487,8 +489,8 @@ export default function ManageEvents() {
             setSelectedEvent(null);
           }}
           onConfirm={confirmRejectEvent}
-          title="Reject Event"
-          message={`Are you sure you want to reject "${selectedEvent?.event_name}"? Please provide a reason below.`}
+          title={t("events.rejectEvent")}
+          message={t("events.confirmRejectEvent", { eventName: selectedEvent?.event_name })}
         />
       </div>
     </DefaultLayout>

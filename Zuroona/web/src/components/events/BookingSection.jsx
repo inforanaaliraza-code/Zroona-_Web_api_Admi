@@ -25,7 +25,7 @@ export default function BookingSection({
           </span>
         </div>
         <span className="text-sm font-medium text-gray-600">
-          {t("events.perPerson")}
+          {t("Per Person")}
         </span>
       </div>
 
@@ -35,6 +35,8 @@ export default function BookingSection({
             ? "bg-gray-400 cursor-not-allowed"
             : "bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#a797cc] hover:shadow-xl transform hover:-translate-y-0.5"
         }`}
+
+        
         onClick={onBookNowClick}
         disabled={isReserving || bookStatus === 1 || (bookStatus !== 2 && bookStatus !== undefined)}
       >

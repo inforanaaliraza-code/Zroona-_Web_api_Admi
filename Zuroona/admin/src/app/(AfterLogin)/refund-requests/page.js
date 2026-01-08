@@ -9,8 +9,10 @@ import { FaFileExcel, FaPrint, FaCheckCircle, FaTimesCircle, FaEye } from "react
 import ApprovalModal from "@/components/Modals/ApprovalModal";
 import { GetRefundListApi, UpdateRefundStatusApi, GetRefundDetailApi } from "@/api/setting";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 export default function RefundRequests() {
+  const { t } = useTranslation();
   const [refunds, setRefunds] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -43,7 +45,7 @@ export default function RefundRequests() {
       }
     } catch (error) {
       console.error("Error fetching refund requests:", error);
-      toast.error("Failed to fetch refund requests");
+      toast.error(t("refund.failedToFetch"));
     } finally {
       setLoading(false);
     }
@@ -69,11 +71,11 @@ export default function RefundRequests() {
         setRefundDetail(res.data);
         setShowDetailModal(true);
       } else {
-        toast.error(res?.message || "Failed to load refund details");
+        toast.error(res?.message || t("refund.failedToLoadDetails"));
       }
     } catch (error) {
       console.error("Error fetching refund detail:", error);
-      toast.error("Failed to load refund details");
+      toast.error(t("refund.failedToLoadDetails"));
     } finally {
       setLoading(false);
     }
@@ -89,15 +91,15 @@ export default function RefundRequests() {
       });
       
       if (res?.status === 1 || res?.code === 200) {
-        toast.success(`Refund request ${actionType === "approve" ? "approved" : "rejected"} successfully`);
+        toast.success(actionType === "approve" ? t("refund.refundApprovedSuccess") : t("refund.refundRejectedSuccess"));
         setShowModal(false);
         fetchRefunds();
       } else {
-        toast.error(res?.message || "Failed to update request");
+        toast.error(res?.message || t("refund.failedToUpdate"));
       }
     } catch (error) {
       console.error("Error updating refund request:", error);
-      toast.error("Failed to update request");
+      toast.error(t("refund.failedToUpdate"));
     } finally {
       setLoading(false);
     }
@@ -106,18 +108,18 @@ export default function RefundRequests() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 0:
-        return <span className="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">Pending</span>;
+        return <span className="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">{t("refund.pending")}</span>;
       case 1:
-        return <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Approved</span>;
+        return <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">{t("refund.approved")}</span>;
       case 2:
-        return <span className="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">Rejected</span>;
+        return <span className="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">{t("refund.rejected")}</span>;
       default:
-        return <span className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">Unknown</span>;
+        return <span className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">{t("common.unknown")}</span>;
     }
   };
 
   const exportToCSV = () => {
-    const headers = ["Refund ID", "Booking ID", "User", "Amount", "Reason", "Status", "Request Date"];
+    const headers = [t("refund.refundId"), t("refund.bookingId"), t("refund.user"), t("refund.amount"), t("refund.reason"), t("refund.status"), t("refund.requestDate")];
     const csvContent = [
       headers.join(","),
       ...refunds.map(refund => [
@@ -126,7 +128,7 @@ export default function RefundRequests() {
         refund.user?.email || "N/A",
         refund.amount,
         `"${(refund.refund_reason || "").replace(/"/g, '""')}"`,
-        refund.status === 0 ? "Pending" : refund.status === 1 ? "Approved" : "Rejected",
+        refund.status === 0 ? t("refund.pending") : refund.status === 1 ? t("refund.approved") : t("refund.rejected"),
         refund.createdAt ? format(new Date(refund.createdAt), "yyyy-MM-dd") : "N/A"
       ].join(","))
     ].join("\n");
@@ -146,8 +148,8 @@ export default function RefundRequests() {
     <DefaultLayout>
       <div className="p-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Refund Requests</h1>
-          <p className="mt-1 text-sm text-gray-600">Manage and process refund requests from users</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("refund.title")}</h1>
+          <p className="mt-1 text-sm text-gray-600">{t("refund.description")}</p>
         </div>
 
         {/* Filters and Actions */}
@@ -155,7 +157,7 @@ export default function RefundRequests() {
           <div className="flex items-center gap-4">
             <input
               type="text"
-              placeholder="Search by booking ID, user email..."
+              placeholder={t("refund.searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -165,10 +167,10 @@ export default function RefundRequests() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
+              <option value="all">{t("refund.allStatus")}</option>
+              <option value="pending">{t("refund.pending")}</option>
+              <option value="approved">{t("refund.approved")}</option>
+              <option value="rejected">{t("refund.rejected")}</option>
             </select>
           </div>
           <div className="flex items-center gap-2">
@@ -177,14 +179,14 @@ export default function RefundRequests() {
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <FaFileExcel className="text-green-600" />
-              Export CSV
+              {t("refund.exportCSV")}
             </button>
             <button
               onClick={() => window.print()}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <FaPrint />
-              Print
+              {t("refund.print")}
             </button>
           </div>
         </div>
@@ -196,7 +198,7 @@ export default function RefundRequests() {
           </div>
         ) : refunds.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-lg shadow-sm">
-            <p className="text-gray-500">No refund requests found</p>
+            <p className="text-gray-500">{t("refund.noRefundsFound")}</p>
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -205,28 +207,28 @@ export default function RefundRequests() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Refund ID
+                      {t("refund.refundId")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Booking ID
+                      {t("refund.bookingId")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
+                      {t("refund.user")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
+                      {t("refund.amount")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Reason
+                      {t("refund.reason")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                      {t("refund.status")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Request Date
+                      {t("refund.requestDate")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      {t("refund.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -246,7 +248,7 @@ export default function RefundRequests() {
                         {refund.amount || 0} {refund.currency || "SAR"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                        {refund.refund_reason || "No reason provided"}
+                        {refund.refund_reason || t("refund.noReasonProvided")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(refund.status)}
@@ -259,7 +261,7 @@ export default function RefundRequests() {
                           <button
                             onClick={() => handleViewDetail(refund)}
                             className="text-blue-600 hover:text-blue-900"
-                            title="View Details"
+                            title={t("refund.viewDetails")}
                           >
                             <FaEye />
                           </button>
@@ -268,14 +270,14 @@ export default function RefundRequests() {
                               <button
                                 onClick={() => handleApprove(refund)}
                                 className="text-green-600 hover:text-green-900"
-                                title="Approve"
+                                title={t("refund.approve")}
                               >
                                 <FaCheckCircle />
                               </button>
                               <button
                                 onClick={() => handleReject(refund)}
                                 className="text-red-600 hover:text-red-900"
-                                title="Reject"
+                                title={t("refund.reject")}
                               >
                                 <FaTimesCircle />
                               </button>
@@ -303,9 +305,9 @@ export default function RefundRequests() {
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           onConfirm={handleConfirm}
-          title={`${actionType === "approve" ? "Approve" : "Reject"} Refund Request`}
-          message={`Are you sure you want to ${actionType} this refund request? This action will process the refund via Moyasar payment gateway.`}
-          confirmText={actionType === "approve" ? "Approve" : "Reject"}
+          title={actionType === "approve" ? t("refund.approveTitle") : t("refund.rejectTitle")}
+          message={actionType === "approve" ? t("refund.approveMessage") : t("refund.rejectMessage")}
+          confirmText={actionType === "approve" ? t("refund.approve") : t("refund.reject")}
           confirmColor={actionType === "approve" ? "green" : "red"}
         />
 
@@ -315,7 +317,7 @@ export default function RefundRequests() {
             <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">Refund Details</h2>
+                  <h2 className="text-xl font-bold text-gray-900">{t("refund.detailsTitle")}</h2>
                   <button
                     onClick={() => setShowDetailModal(false)}
                     className="text-gray-400 hover:text-gray-600"
@@ -325,35 +327,35 @@ export default function RefundRequests() {
                 </div>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Refund ID</p>
+                    <p className="text-sm font-medium text-gray-500">{t("refund.refundId")}</p>
                     <p className="text-sm text-gray-900">{refundDetail._id}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Booking ID</p>
+                    <p className="text-sm font-medium text-gray-500">{t("refund.bookingId")}</p>
                     <p className="text-sm text-gray-900">{refundDetail.booking_id}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Amount</p>
+                    <p className="text-sm font-medium text-gray-500">{t("refund.amount")}</p>
                     <p className="text-sm font-semibold text-gray-900">
                       {refundDetail.amount} {refundDetail.currency || "SAR"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Reason</p>
-                    <p className="text-sm text-gray-900">{refundDetail.refund_reason || "No reason provided"}</p>
+                    <p className="text-sm font-medium text-gray-500">{t("refund.reason")}</p>
+                    <p className="text-sm text-gray-900">{refundDetail.refund_reason || t("refund.noReasonProvided")}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Status</p>
+                    <p className="text-sm font-medium text-gray-500">{t("refund.status")}</p>
                     {getStatusBadge(refundDetail.status)}
                   </div>
                   {refundDetail.refund_error && (
                     <div>
-                      <p className="text-sm font-medium text-red-500">Error</p>
+                      <p className="text-sm font-medium text-red-500">{t("refund.error")}</p>
                       <p className="text-sm text-red-600">{refundDetail.refund_error}</p>
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Request Date</p>
+                    <p className="text-sm font-medium text-gray-500">{t("refund.requestDate")}</p>
                     <p className="text-sm text-gray-900">
                       {refundDetail.createdAt ? format(new Date(refundDetail.createdAt), "MMM dd, yyyy 'at' hh:mm a") : "N/A"}
                     </p>

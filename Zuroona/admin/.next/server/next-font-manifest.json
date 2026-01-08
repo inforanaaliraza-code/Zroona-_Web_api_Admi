@@ -9,10 +9,10 @@
     "[project]/src/app/(AfterLogin)/organizer/page": [
       "static/media/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw-s.p.0faac26c.woff2"
     ],
-    "[project]/src/app/(AfterLogin)/events/page": [
+    "[project]/src/app/(AfterLogin)/user/page": [
       "static/media/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw-s.p.0faac26c.woff2"
     ],
-    "[project]/src/app/(AfterLogin)/events/detail/[id]/page": [
+    "[project]/src/app/(AfterLogin)/events/page": [
       "static/media/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw-s.p.0faac26c.woff2"
     ]
   },

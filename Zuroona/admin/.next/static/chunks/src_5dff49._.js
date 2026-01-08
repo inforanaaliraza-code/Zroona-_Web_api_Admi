@@ -10,16 +10,19 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/link.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/navigation.js [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-client] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
 var _s = __turbopack_refresh__.signature();
+"use client";
 ;
 ;
 ;
 ;
 const SidebarItem = ({ item, pageName, setPageName, index = 0 })=>{
     _s();
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
     const [isHovered, setIsHovered] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isMobile, setIsMobile] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const handleClick = ()=>{
@@ -59,85 +62,71 @@ const SidebarItem = ({ item, pageName, setPageName, index = 0 })=>{
             onMouseEnter: ()=>!isMobile && setIsHovered(true),
             onMouseLeave: ()=>!isMobile && setIsHovered(false),
             className: `
-          group relative flex items-center gap-3 rounded-xl py-2.5 px-3 font-medium text-white text-sm
-          transition-all duration-300 ease-in-out w-full min-w-0
-          ${isItemActive ? "bg-white/30 shadow-lg shadow-white/20 backdrop-blur-sm" : "bg-white/0 hover:bg-white/20"}
-          ${!isMobile ? "hover:shadow-lg hover:shadow-white/20 hover:backdrop-blur-sm hover:scale-[1.01]" : ""}
-          ${isItemActive ? "scale-[1.01]" : ""}
+          group relative flex items-center rounded-xl py-3 px-4 font-medium text-sm
+          transition-all duration-300 ease-in-out w-full min-w-0 overflow-hidden
+          ${isItemActive ? "bg-gradient-to-r from-purple-600/40 via-purple-500/30 to-green-500/40 shadow-lg shadow-purple-500/30 backdrop-blur-sm border border-purple-400/40" : "bg-transparent hover:bg-gradient-to-r hover:from-purple-600/20 hover:via-purple-500/10 hover:to-green-500/20 border border-transparent hover:border-purple-400/20"}
+          ${!isMobile ? "hover:shadow-lg hover:shadow-purple-500/20 hover:scale-[1.02]" : ""}
+          ${isItemActive ? "scale-[1.02]" : ""}
         `,
             children: [
                 isItemActive && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-brand-green to-brand-gray-green-2 rounded-r-full animate-scale-in"
+                    className: "absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-green-400 via-green-300 to-purple-400 rounded-r-full shadow-lg shadow-green-400/50"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 69,
+                    lineNumber: 72,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: `
-            absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/10 to-white/0
-            opacity-0 transition-opacity duration-300
-            ${isHovered || isItemActive ? "opacity-100" : ""}
+            absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/0 via-green-400/0 to-purple-500/0
+            transition-all duration-500
+            ${isHovered || isItemActive ? "from-purple-500/10 via-green-400/10 to-purple-500/10" : ""}
           `
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 73,
+                    lineNumber: 76,
                     columnNumber: 9
                 }, this),
-                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: `
-          relative z-10 transition-all duration-300 flex-shrink-0
-          ${isItemActive ? "scale-105" : "group-hover:scale-105"}
-          ${isHovered || isItemActive ? "brightness-110" : ""}
-        `,
-                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                        src: item.icon,
-                        alt: item.label,
-                        width: 20,
-                        height: 20,
-                        className: "transition-transform duration-300"
-                    }, void 0, false, {
-                        fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                        lineNumber: 87,
-                        columnNumber: 11
-                    }, this)
+                (isHovered || isItemActive) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 82,
-                    columnNumber: 9
+                    lineNumber: 86,
+                    columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                     className: `
           relative z-10 transition-all duration-300 flex-1 text-left leading-tight
-          ${isItemActive ? "font-semibold" : "font-medium"}
+          ${isItemActive ? "font-semibold bg-gradient-to-r from-green-200 via-white to-purple-200 bg-clip-text text-transparent" : "font-medium text-white/90 group-hover:text-white"}
         `,
-                    children: item.label
+                    children: item.translationKey ? t(item.translationKey) : item.label
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 97,
+                    lineNumber: 90,
                     columnNumber: 9
                 }, this),
-                isHovered && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute inset-0 rounded-xl shimmer opacity-30"
+                isItemActive && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-gradient-to-r from-green-400 to-purple-400 shadow-lg shadow-green-400/50 animate-pulse"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 106,
+                    lineNumber: 102,
                     columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-            lineNumber: 51,
+            lineNumber: 54,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-        lineNumber: 47,
+        lineNumber: 50,
         columnNumber: 5
     }, this);
 };
-_s(SidebarItem, "x+n+rv9YvEIUxjm91kKJ+YNn9ZQ=", false, function() {
+_s(SidebarItem, "ZBp1HFSRQnOzqSsm32719PV16cc=", false, function() {
     return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"]
     ];
 });
@@ -250,7 +239,7 @@ function useLocalStorage(key, initialValue) {
         setStoredValue
     ];
 }
-_s(useLocalStorage, "E4FYgWHiGR6T2hKNHeDxqQf/QGU=");
+_s(useLocalStorage, "1rasLt+G1piOAr2hoSRhvsO2DC8=");
 const __TURBOPACK__default__export__ = useLocalStorage;
 
 })()),
@@ -607,47 +596,56 @@ const menuGroups = [
             {
                 icon: "/assets/images/menu/event-org.png",
                 label: "Manage Hosts",
+                translationKey: "sidebar.manageHosts",
                 route: "/organizer"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Guests Management",
+                translationKey: "sidebar.guestsManagement",
                 route: "/user"
             },
             {
                 icon: "/assets/images/menu/event.png",
                 label: "Manage Events",
+                translationKey: "sidebar.manageEvents",
                 route: "/events"
             },
             {
                 icon: "/assets/images/menu/cms.png",
                 label: "Manage CMS",
+                translationKey: "sidebar.manageCMS",
                 route: "/cms"
             },
             {
                 icon: "/assets/images/menu/settings-line.png",
                 hoverIcon: "/assets/images/menu/settings-line.png",
                 label: "Settings",
+                translationKey: "sidebar.settings",
                 route: "/setting"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Admin Management",
+                translationKey: "sidebar.adminManagement",
                 route: "/admin-management"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Wallet",
+                translationKey: "sidebar.wallet",
                 route: "/wallet"
             },
             {
                 icon: "/assets/images/menu/withdrawal.png",
                 label: "Host Withdrawal Requests",
+                translationKey: "sidebar.hostWithdrawalRequests",
                 route: "/withdrawal-requests"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Guest Invoices",
+                translationKey: "sidebar.guestInvoices",
                 route: "/guest-invoices"
             }
         ]
@@ -667,6 +665,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navi
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/link.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$log$2d$out$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LogOutIcon$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/log-out.js [app-client] (ecmascript) <export default as LogOutIcon>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-redux/dist/react-redux.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Sidebar$2f$SidebarItem$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Sidebar/SidebarItem.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$ClickOutside$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/ClickOutside.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/hooks/useLocalStorage.jsx [app-client] (ecmascript)");
@@ -686,65 +685,98 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
+;
 const Sidebar = ({ sidebarOpen, setSidebarOpen })=>{
     _s();
     const [pageName, setPageName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])("selectedMenu", "dashboard");
+    const { isRTL } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"])((state)=>state.language);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$ClickOutside$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
         onClick: ()=>setSidebarOpen(false),
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
-            className: `fixed left-0 top-0 z-[9999] flex h-screen w-[320px] flex-col bg-gradient-to-br from-brand-gray-purple-2 via-brand-pastel-gray-purple-1 to-brand-gray-purple-3 shadow-2xl duration-300 ease-in-out lg:translate-x-0 overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`,
+            className: `fixed top-0 z-[9999] flex h-screen w-[320px] flex-col shadow-2xl duration-300 ease-in-out lg:translate-x-0 overflow-y-auto ${isRTL ? 'right-0' : 'left-0'} ${sidebarOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"}`,
             style: {
-                background: "linear-gradient(135deg, #a797cc 0%, #b0a0df 50%, #a08ec8 100%)"
+                background: "linear-gradient(180deg, #1a0d2e 0%, #2d1b4e 50%, #1a0d2e 100%)"
             },
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"
+                    className: "absolute inset-0 opacity-20 pointer-events-none",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "absolute inset-0",
+                        style: {
+                            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(167, 151, 204, 0.3) 0%, transparent 50%),
+                             radial-gradient(circle at 80% 80%, rgba(176, 160, 223, 0.2) 0%, transparent 50%),
+                             radial-gradient(circle at 40% 20%, rgba(160, 142, 200, 0.25) 0%, transparent 50%)`
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/src/components/Sidebar/index.jsx",
+                        lineNumber: 33,
+                        columnNumber: 11
+                    }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 28,
+                    lineNumber: 32,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "flex items-center justify-center mt-6 mb-4 px-5 relative z-10 animate-fade-in flex-shrink-0",
+                    className: "absolute inset-0 border-r-2 pointer-events-none",
+                    style: {
+                        borderImage: "linear-gradient(180deg, rgba(167, 151, 204, 0.5) 0%, rgba(76, 175, 80, 0.5) 50%, rgba(167, 151, 204, 0.5) 100%) 1"
+                    }
+                }, void 0, false, {
+                    fileName: "[project]/src/components/Sidebar/index.jsx",
+                    lineNumber: 41,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex items-center justify-center mt-8 mb-6 px-5 relative z-10 animate-fade-in flex-shrink-0",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                         href: "/",
-                        className: "group relative",
+                        className: "group relative block",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "absolute inset-0 bg-white/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"
+                                className: "absolute -inset-2 bg-gradient-to-r from-purple-500/30 via-green-400/30 to-purple-500/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar/index.jsx",
-                                lineNumber: 33,
+                                lineNumber: 49,
                                 columnNumber: 13
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                width: 140,
-                                height: 45,
-                                src: "/assets/images/main-logo.png",
-                                alt: "Zuroona Logo",
-                                className: "object-contain relative z-10 transform group-hover:scale-105 transition-transform duration-300 w-auto h-auto max-h-[50px]"
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "relative z-10 p-3 rounded-xl bg-gradient-to-br from-purple-600/20 to-green-500/20 backdrop-blur-sm border border-purple-400/30 group-hover:border-green-400/50 transition-all duration-300 group-hover:scale-105",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                    width: 200,
+                                    height: 60,
+                                    src: "/assets/images/x_F_logo.png",
+                                    alt: "Zuroona Logo",
+                                    className: "object-contain relative z-10 transform transition-transform duration-300 w-auto h-auto max-h-[55px] brightness-110",
+                                    priority: true
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/Sidebar/index.jsx",
+                                    lineNumber: 53,
+                                    columnNumber: 15
+                                }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar/index.jsx",
-                                lineNumber: 34,
+                                lineNumber: 52,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar/index.jsx",
-                        lineNumber: 32,
+                        lineNumber: 47,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 31,
+                    lineNumber: 46,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "flex flex-col flex-grow relative z-10 w-full px-5 min-w-0",
+                    className: "flex flex-col flex-grow relative z-10 w-full px-4 min-w-0",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
                         className: "py-2 w-full scroll-smooth",
                         style: {
-                            scrollbarWidth: "thin"
+                            scrollbarWidth: "thin",
+                            scrollbarColor: "rgba(167, 151, 204, 0.5) transparent"
                         },
                         children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["menuGroups"].map((group, groupIndex)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "animate-fade-in w-full",
@@ -752,7 +784,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen })=>{
                                     animationDelay: `${groupIndex * 0.1}s`
                                 },
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
-                                    className: "mb-2 flex flex-col gap-2 w-full",
+                                    className: "mb-3 flex flex-col gap-2 w-full",
                                     children: group.menuItems.map((menuItem, menuIndex)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Sidebar$2f$SidebarItem$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                             item: menuItem,
                                             pageName: pageName,
@@ -760,66 +792,67 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen })=>{
                                             index: menuIndex
                                         }, menuIndex, false, {
                                             fileName: "[project]/src/components/Sidebar/index.jsx",
-                                            lineNumber: 58,
+                                            lineNumber: 82,
                                             columnNumber: 21
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                                    lineNumber: 56,
+                                    lineNumber: 80,
                                     columnNumber: 17
                                 }, this)
                             }, groupIndex, false, {
                                 fileName: "[project]/src/components/Sidebar/index.jsx",
-                                lineNumber: 51,
+                                lineNumber: 75,
                                 columnNumber: 15
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/components/Sidebar/index.jsx",
-                        lineNumber: 46,
+                        lineNumber: 67,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 45,
+                    lineNumber: 66,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "mt-auto px-5 py-4 relative z-10 border-t border-white/20 flex-shrink-0",
+                    className: "mt-auto px-5 py-5 relative z-10 flex-shrink-0 border-t border-purple-400/20",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex items-center justify-center",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                            className: "text-xs text-white/80 font-medium text-center",
+                            className: "text-xs font-medium text-center bg-gradient-to-r from-purple-300 via-green-300 to-purple-300 bg-clip-text text-transparent",
                             children: "© 2024 All Rights Reserved"
                         }, void 0, false, {
                             fileName: "[project]/src/components/Sidebar/index.jsx",
-                            lineNumber: 75,
+                            lineNumber: 99,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/Sidebar/index.jsx",
-                        lineNumber: 74,
+                        lineNumber: 98,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 73,
+                    lineNumber: 97,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Sidebar/index.jsx",
-            lineNumber: 19,
+            lineNumber: 21,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Sidebar/index.jsx",
-        lineNumber: 18,
+        lineNumber: 20,
         columnNumber: 5
     }, this);
 };
-_s(Sidebar, "ovyRBlmxW6EOKjEShFY25lSAh/g=", false, function() {
+_s(Sidebar, "nmYkqXVghCtUs+5/B64zxWaapIc=", false, function() {
     return [
-        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"]
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"]
     ];
 });
 _c = Sidebar;
@@ -1153,18 +1186,60 @@ const putFormData = async (url = "", data = {})=>{
     try {
         const token = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TOKEN_NAME"]);
         const formData = new FormData();
+        // Append all fields to FormData - simplified approach
         for(let key in data){
-            formData.append(key, data[key]);
+            const value = data[key];
+            // Skip null, undefined, or empty strings
+            if (value === null || value === undefined || value === '') {
+                continue;
+            }
+            // If it's a File object, append as-is with proper name
+            if (value instanceof File) {
+                formData.append(key, value, value.name);
+            } else if (typeof value === 'object') {
+                // Skip objects (except File) - they cause issues
+                console.warn(`[putFormData] Skipping object value for key: ${key}`);
+                continue;
+            } else {
+                // Convert other values to string
+                formData.append(key, String(value));
+            }
+        }
+        // Check if FormData has any entries
+        let hasEntries = false;
+        for (let pair of formData.entries()){
+            hasEntries = true;
+            break;
+        }
+        if (!hasEntries) {
+            console.warn('[putFormData] FormData is empty, falling back to JSON');
+            return putRawData(url, data);
         }
         const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].put(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["BASE_API_URL"] + url, formData, {
             headers: {
                 Authorization: token ? token : ""
-            }
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            timeout: 60000
         });
         return response.data;
     } catch (error) {
-        // toast.error(error.response.data);
-        return error.response.data;
+        console.error('[putFormData] Error:', error);
+        console.error('[putFormData] Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: {
+                url: error.config?.url,
+                method: error.config?.method,
+                headers: error.config?.headers
+            }
+        });
+        return error.response?.data || {
+            status: 0,
+            message: error.message
+        };
     }
 };
 const putFormDataURLIncoded = async (url = "", data = {})=>{
@@ -1384,9 +1459,61 @@ const CreateAdminApi = async (payload)=>{
 };
 _c2 = CreateAdminApi;
 const UpdateAdminApi = async (payload)=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", payload).then((data)=>{
-        return data;
-    });
+    // Separate file upload from other data
+    const hasFile = payload.profile_image && payload.profile_image instanceof File;
+    if (hasFile) {
+        // Step 1: Upload image first
+        try {
+            const { postFormData } = __turbopack_require__("[project]/src/api/index.js [app-client] (ecmascript)");
+            const uploadPayload = {
+                file: payload.profile_image,
+                dirName: "Zuroona/Admin"
+            };
+            const uploadRes = await postFormData("uploadFile", uploadPayload);
+            if (uploadRes?.status === 1 && uploadRes?.data?.location) {
+                // Step 2: Update admin with image URL
+                const updatePayload = {
+                    ...payload
+                };
+                updatePayload.profile_image = uploadRes.data.location;
+                delete updatePayload.profile_image; // Remove File object
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                    return data;
+                });
+            } else {
+                // If upload fails, continue without image
+                console.warn("Image upload failed, updating without image");
+                const updatePayload = {
+                    ...payload
+                };
+                delete updatePayload.profile_image;
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                    return data;
+                });
+            }
+        } catch (uploadError) {
+            console.error("Error uploading image:", uploadError);
+            // Continue with update without image
+            const updatePayload = {
+                ...payload
+            };
+            delete updatePayload.profile_image;
+            return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                return data;
+            });
+        }
+    } else {
+        // No file, use regular JSON
+        const jsonPayload = {
+            ...payload
+        };
+        if (!jsonPayload.profile_image || jsonPayload.profile_image === null || jsonPayload.profile_image === '') {
+            delete jsonPayload.profile_image;
+        }
+        return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", jsonPayload).then((data)=>{
+            return data;
+        });
+    }
 };
 _c3 = UpdateAdminApi;
 const DeleteAdminApi = async (payload)=>{
@@ -1475,7 +1602,7 @@ __turbopack_esm__({
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/link.js [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$ClickOutside$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/ClickOutside.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/js-cookie/dist/js.cookie.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/until/index.js [app-client] (ecmascript)");
@@ -1502,15 +1629,13 @@ const DropdownUser = ()=>{
                 if (res?.status === 1 || res?.code === 200) {
                     const admin = res?.data || res;
                     setAdminData({
-                        admin_name: `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || "Admin",
-                        profile_image: admin.image || "/assets/images/home/Profile.png"
+                        admin_name: `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || "Admin"
                     });
                 }
             } catch (error) {
                 console.error("Error fetching admin data:", error);
                 setAdminData({
-                    admin_name: "Admin",
-                    profile_image: "/assets/images/home/Profile.png"
+                    admin_name: "Admin"
                 });
             }
         };
@@ -1538,7 +1663,7 @@ const DropdownUser = ()=>{
                             children: getGreeting()
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                            lineNumber: 51,
+                            lineNumber: 49,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -1546,42 +1671,38 @@ const DropdownUser = ()=>{
                             children: adminData?.admin_name || "Admin"
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                            lineNumber: 54,
+                            lineNumber: 52,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                    lineNumber: 50,
+                    lineNumber: 48,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                    className: "h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-brand-pastel-gray-purple-1/30 overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-brand-pastel-gray-purple-1 transition-all duration-300 group-hover:scale-105",
-                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                        width: 120,
-                        height: 120,
-                        src: adminData?.profile_image || "/assets/images/home/Profile.png",
-                        alt: "Admin",
-                        className: "w-full h-auto object-cover"
+                    className: "h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-[#a797cc] to-[#8b7ab8] flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 border-2 border-brand-pastel-gray-purple-1/30 group-hover:border-brand-pastel-gray-purple-1",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaUserCircle"], {
+                        className: "text-white text-2xl sm:text-3xl"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                        lineNumber: 59,
+                        lineNumber: 57,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                    lineNumber: 58,
+                    lineNumber: 56,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Header/DropdownUser.jsx",
-            lineNumber: 45,
+            lineNumber: 43,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Header/DropdownUser.jsx",
-        lineNumber: 44,
+        lineNumber: 42,
         columnNumber: 5
     }, this);
 };
@@ -1694,7 +1815,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 ;
 ;
 ;
-const SearchBar = ({ search, setSearch, setPage })=>{
+const SearchBar = ({ search, setSearch, setPage, placeholder })=>{
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex gap-x-3",
         children: [
@@ -1719,7 +1840,7 @@ const SearchBar = ({ search, setSearch, setPage })=>{
                             setSearch(e.target.value);
                             setPage(1); // Reset to first page on search
                         },
-                        placeholder: "Search by Organizer name/ID..",
+                        placeholder: placeholder || "Search by Guest Name / Email ID",
                         className: "w-full p-2.5 outline-none text-sm text-gray-800 placeholder:text-gray-400 placeholder:text-xs bg-transparent"
                     }, void 0, false, {
                         fileName: "[project]/src/components/ui/Searchbar.jsx",
@@ -2058,6 +2179,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-client] (ecmascript) <module evaluation>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-redux/dist/react-redux.mjs [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$redux$2f$slices$2f$language$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/redux/slices/language.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
@@ -2066,9 +2189,13 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
+;
+;
 const LanguageSwitcher = ()=>{
     _s();
     const { i18n, t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
+    const dispatch = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDispatch"])();
+    const { currentLanguage, isRTL } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"])((state)=>state.language);
     const [isOpen, setIsOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const dropdownRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
     const languages = [
@@ -2085,17 +2212,54 @@ const LanguageSwitcher = ()=>{
             flag: "🇸🇦"
         }
     ];
-    const currentLanguage = languages.find((lang)=>lang.code === i18n.language) || languages[0];
+    const currentLang = languages.find((lang)=>lang.code === currentLanguage) || languages[0];
     const changeLanguage = (langCode)=>{
+        // Dispatch Redux action to set language
+        dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$redux$2f$slices$2f$language$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["setLanguage"])(langCode));
+        // Update i18n
         i18n.changeLanguage(langCode);
-        localStorage.setItem("i18nextLng", langCode);
-        // Update document direction
-        document.documentElement.dir = langCode === "ar" ? "rtl" : "ltr";
-        document.documentElement.lang = langCode;
+        // Update document direction immediately
+        if (typeof document !== "undefined" && document.documentElement) {
+            document.documentElement.dir = langCode === "ar" ? "rtl" : "ltr";
+            document.documentElement.lang = langCode;
+            // Update body class
+            if (document.body) {
+                document.body.classList.remove("rtl", "ltr");
+                document.body.classList.add(langCode === "ar" ? "rtl" : "ltr");
+            }
+        }
         setIsOpen(false);
-        // Reload page to apply direction changes properly and prevent hydration issues
-        window.location.reload();
+    // NO PAGE RELOAD - Language switching is instant now!
     };
+    // Sync i18n with Redux on mount and language changes
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (i18n.language !== currentLanguage) {
+            i18n.changeLanguage(currentLanguage);
+        }
+        // Update document direction based on Redux state
+        if (typeof document !== "undefined" && document.documentElement) {
+            document.documentElement.dir = isRTL ? "rtl" : "ltr";
+            document.documentElement.lang = currentLanguage;
+            if (document.body) {
+                document.body.classList.remove("rtl", "ltr");
+                document.body.classList.add(isRTL ? "rtl" : "ltr");
+            }
+        }
+        // Listen for language changes from i18n and sync with Redux
+        const handleLanguageChange = (lang)=>{
+            if (lang !== currentLanguage) {
+                dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$redux$2f$slices$2f$language$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["setLanguage"])(lang));
+            }
+        };
+        i18n.on("languageChanged", handleLanguageChange);
+        return ()=>{
+            i18n.off("languageChanged", handleLanguageChange);
+        };
+    }, [
+        dispatch,
+        currentLanguage,
+        isRTL
+    ]);
     // Close dropdown when clicking outside
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         const handleClickOutside = (event)=>{
@@ -2119,23 +2283,23 @@ const LanguageSwitcher = ()=>{
                         className: "w-4 h-4"
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 53,
+                        lineNumber: 98,
                         columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "hidden sm:inline",
-                        children: currentLanguage.flag
+                        children: currentLang.flag
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 54,
+                        lineNumber: 99,
                         columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "hidden md:inline",
-                        children: currentLanguage.nativeName
+                        children: currentLang.nativeName
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 55,
+                        lineNumber: 100,
                         columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -2150,32 +2314,32 @@ const LanguageSwitcher = ()=>{
                             d: "M19 9l-7 7-7-7"
                         }, void 0, false, {
                             fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                            lineNumber: 62,
+                            lineNumber: 107,
                             columnNumber: 6
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 56,
+                        lineNumber: 101,
                         columnNumber: 5
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                lineNumber: 48,
+                lineNumber: 93,
                 columnNumber: 4
             }, this),
             isOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50",
                 children: languages.map((lang)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                         onClick: ()=>changeLanguage(lang.code),
-                        className: `w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${currentLanguage.code === lang.code ? "bg-[#a797cc]/10 text-[#a797cc] font-medium" : "text-gray-700"}`,
+                        className: `w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${currentLanguage === lang.code ? "bg-[#a797cc]/10 text-[#a797cc] font-medium" : "text-gray-700"}`,
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-xl",
                                 children: lang.flag
                             }, void 0, false, {
                                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                lineNumber: 83,
+                                lineNumber: 128,
                                 columnNumber: 8
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2185,7 +2349,7 @@ const LanguageSwitcher = ()=>{
                                         children: lang.nativeName
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                        lineNumber: 85,
+                                        lineNumber: 130,
                                         columnNumber: 9
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2193,16 +2357,16 @@ const LanguageSwitcher = ()=>{
                                         children: lang.name
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                        lineNumber: 86,
+                                        lineNumber: 131,
                                         columnNumber: 9
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                lineNumber: 84,
+                                lineNumber: 129,
                                 columnNumber: 8
                             }, this),
-                            currentLanguage.code === lang.code && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                            currentLanguage === lang.code && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
                                 className: "w-4 h-4 ml-auto text-[#a797cc]",
                                 fill: "currentColor",
                                 viewBox: "0 0 20 20",
@@ -2212,35 +2376,37 @@ const LanguageSwitcher = ()=>{
                                     clipRule: "evenodd"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                    lineNumber: 94,
+                                    lineNumber: 139,
                                     columnNumber: 10
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                lineNumber: 89,
+                                lineNumber: 134,
                                 columnNumber: 9
                             }, this)
                         ]
                     }, lang.code, true, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 74,
+                        lineNumber: 119,
                         columnNumber: 7
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                lineNumber: 72,
+                lineNumber: 117,
                 columnNumber: 5
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-        lineNumber: 47,
+        lineNumber: 92,
         columnNumber: 3
     }, this);
 };
-_s(LanguageSwitcher, "YbtBu5uKDQknLVJNkWQN024LUlQ=", false, function() {
+_s(LanguageSwitcher, "KMiytdIv/jO+C3BQoA6vTsP7F38=", false, function() {
     return [
-        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"]
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDispatch"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"]
     ];
 });
 _c = LanguageSwitcher;
@@ -2266,9 +2432,12 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$imag
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/js-cookie/dist/js.cookie.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$NotificationBell$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/NotificationBell.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$LanguageSwitcher$2f$LanguageSwitcher$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-client] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
 var _s = __turbopack_refresh__.signature();
+"use client";
 ;
 ;
 ;
@@ -2279,8 +2448,10 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
-const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
+;
+const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage, searchPlaceholder })=>{
     _s();
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
     const { push } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
     async function logout(e) {
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].remove(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TOKEN_NAME"]);
@@ -2312,27 +2483,27 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                                     className: `relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-brand-pastel-gray-purple-1 delay-[0] duration-200 ease-in-out transition-all ${!sidebarOpen && "!w-full delay-300"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 36,
+                                                    lineNumber: 40,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: `relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-brand-pastel-gray-purple-1 delay-150 duration-200 ease-in-out transition-all ${!sidebarOpen && "delay-400 !w-full"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 39,
+                                                    lineNumber: 43,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: `relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-brand-pastel-gray-purple-1 delay-200 duration-200 ease-in-out transition-all ${!sidebarOpen && "!w-full delay-500"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 42,
+                                                    lineNumber: 46,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Header/index.jsx",
-                                            lineNumber: 35,
+                                            lineNumber: 39,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2342,36 +2513,36 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                                     className: `absolute left-2.5 top-0 block h-full w-0.5 rounded-sm bg-brand-pastel-gray-purple-1 delay-300 duration-200 ease-in-out transition-all ${!sidebarOpen && "!h-0 !delay-[0]"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 47,
+                                                    lineNumber: 51,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: `delay-400 absolute left-0 top-2.5 block h-0.5 w-full rounded-sm bg-brand-pastel-gray-purple-1 duration-200 ease-in-out transition-all ${!sidebarOpen && "!h-0 !delay-200"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 50,
+                                                    lineNumber: 54,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Header/index.jsx",
-                                            lineNumber: 46,
+                                            lineNumber: 50,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 34,
+                                    lineNumber: 38,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header/index.jsx",
-                                lineNumber: 26,
+                                lineNumber: 30,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/index.jsx",
-                            lineNumber: 24,
+                            lineNumber: 28,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2379,15 +2550,16 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Searchbar$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                 search: search,
                                 setSearch: setSearch,
-                                setPage: setPage
+                                setPage: setPage,
+                                placeholder: searchPlaceholder
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header/index.jsx",
-                                lineNumber: 60,
+                                lineNumber: 64,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/index.jsx",
-                            lineNumber: 59,
+                            lineNumber: 63,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2400,12 +2572,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$LanguageSwitcher$2f$LanguageSwitcher$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 67,
+                                        lineNumber: 71,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 66,
+                                    lineNumber: 70,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2415,12 +2587,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$NotificationBell$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 72,
+                                        lineNumber: 76,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 71,
+                                    lineNumber: 75,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2430,12 +2602,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$DropdownUser$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 77,
+                                        lineNumber: 81,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 76,
+                                    lineNumber: 80,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2457,62 +2629,68 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                                 className: "w-[16px] sm:w-[20px] transition-transform duration-300 group-hover:rotate-12"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Header/index.jsx",
-                                                lineNumber: 88,
+                                                lineNumber: 92,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "hidden sm:inline",
-                                                children: "Logout"
+                                                children: t("common.logout")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Header/index.jsx",
-                                                lineNumber: 89,
+                                                lineNumber: 93,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 82,
+                                        lineNumber: 86,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 81,
+                                    lineNumber: 85,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Header/index.jsx",
-                            lineNumber: 63,
+                            lineNumber: 67,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Header/index.jsx",
-                    lineNumber: 23,
+                    lineNumber: 27,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/Header/index.jsx",
-                lineNumber: 22,
+                lineNumber: 26,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "mt-5 block lg:hidden animate-fade-in",
-                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Searchbar$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Searchbar$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                    search: search,
+                    setSearch: setSearch,
+                    setPage: setPage,
+                    placeholder: searchPlaceholder
+                }, void 0, false, {
                     fileName: "[project]/src/components/Header/index.jsx",
-                    lineNumber: 97,
+                    lineNumber: 101,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/Header/index.jsx",
-                lineNumber: 96,
+                lineNumber: 100,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true);
 };
-_s(Header, "qsDkn33CqmlEcFEENil8IeDjAvk=", false, function() {
+_s(Header, "j6SrKCj52YvmKvGTdP0q7pnlgAE=", false, function() {
     return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"]
     ];
 });
@@ -2530,6 +2708,7 @@ __turbopack_esm__({
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-redux/dist/react-redux.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Sidebar$2f$index$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Sidebar/index.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$index$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/index.jsx [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
@@ -2539,9 +2718,11 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
-function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPage }) {
+;
+function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPage, searchPlaceholder }) {
     _s();
     const [sidebarOpen, setSidebarOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const { isRTL } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"])((state)=>state.language);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "flex min-h-screen bg-[#b0a0df] transition-all duration-300",
@@ -2551,11 +2732,11 @@ function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPag
                     setSidebarOpen: setSidebarOpen
                 }, void 0, false, {
                     fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                    lineNumber: 14,
+                    lineNumber: 16,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "overflow-auto relative flex flex-1 flex-col lg:ml-[320px] px-4 sm:px-6 transition-all duration-300",
+                    className: `overflow-auto relative flex flex-1 flex-col px-4 sm:px-6 transition-all duration-300 ${isRTL ? 'lg:mr-[320px]' : 'lg:ml-[320px]'}`,
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$index$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                             sidebarOpen: sidebarOpen,
@@ -2564,10 +2745,11 @@ function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPag
                             breadcrumbs: breadcrumbs,
                             search: search,
                             setSearch: setSearch,
-                            setPage: setPage
+                            setPage: setPage,
+                            searchPlaceholder: searchPlaceholder
                         }, void 0, false, {
                             fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                            lineNumber: 20,
+                            lineNumber: 24,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -2579,34 +2761,38 @@ function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPag
                                     children: children
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                                    lineNumber: 34,
+                                    lineNumber: 39,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                                lineNumber: 33,
+                                lineNumber: 38,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                            lineNumber: 32,
+                            lineNumber: 37,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                    lineNumber: 18,
+                    lineNumber: 20,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-            lineNumber: 12,
+            lineNumber: 14,
             columnNumber: 7
         }, this)
     }, void 0, false);
 }
-_s(DefaultLayout, "5rGDkYpGQ8fHM9RkMWnKOwsxadk=");
+_s(DefaultLayout, "BziAQXBDEJHLLyRPFDSclb7JysY=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"]
+    ];
+});
 _c = DefaultLayout;
 var _c;
 __turbopack_refresh__.register(_c, "DefaultLayout");
@@ -3446,6 +3632,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$styled$2d$js
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-client] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
 var _s = __turbopack_refresh__.signature();
@@ -3454,8 +3642,10 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
+;
 function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }) {
     _s();
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
     const [adminNotes, setAdminNotes] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [rejectionReason, setRejectionReason] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [transactionRef, setTransactionRef] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
@@ -3505,12 +3695,12 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 className: "text-white text-2xl"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 54,
+                                                lineNumber: 56,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                            lineNumber: 53,
+                                            lineNumber: 55,
                                             columnNumber: 17
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "jsx-96791053da2ae55f" + " " + "w-12 h-12 bg-red-500 rounded-full flex items-center justify-center",
@@ -3518,12 +3708,12 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 className: "text-white text-2xl"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 58,
+                                                lineNumber: 60,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                            lineNumber: 57,
+                                            lineNumber: 59,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3531,34 +3721,30 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
                                                     className: "jsx-96791053da2ae55f" + " " + `text-2xl font-bold ${isApprove ? 'text-green-700' : 'text-red-700'}`,
-                                                    children: isApprove ? 'Approve Withdrawal Request' : 'Reject Withdrawal Request'
+                                                    children: isApprove ? t("common.approveWithdrawalRequest") : t("common.rejectWithdrawalRequest")
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                    lineNumber: 62,
+                                                    lineNumber: 64,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                     className: "jsx-96791053da2ae55f" + " " + "text-gray-600 text-sm",
-                                                    children: [
-                                                        "Review and ",
-                                                        isApprove ? 'approve' : 'reject',
-                                                        " this request"
-                                                    ]
-                                                }, void 0, true, {
+                                                    children: isApprove ? t("common.reviewAndApprove") : t("common.reviewAndReject")
+                                                }, void 0, false, {
                                                     fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                    lineNumber: 65,
+                                                    lineNumber: 67,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                            lineNumber: 61,
+                                            lineNumber: 63,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                    lineNumber: 51,
+                                    lineNumber: 53,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3568,23 +3754,23 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                         className: "text-2xl"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 72,
+                                        lineNumber: 74,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                    lineNumber: 68,
+                                    lineNumber: 70,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                            lineNumber: 50,
+                            lineNumber: 52,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                        lineNumber: 49,
+                        lineNumber: 51,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3600,14 +3786,14 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 className: "text-[#a797cc]"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 82,
+                                                lineNumber: 84,
                                                 columnNumber: 15
                                             }, this),
-                                            "Host Information"
+                                            t("common.hostInformation")
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 81,
+                                        lineNumber: 83,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3623,12 +3809,12 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                     className: "w-full h-full object-cover"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                    lineNumber: 87,
+                                                    lineNumber: 89,
                                                     columnNumber: 17
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 86,
+                                                lineNumber: 88,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3639,7 +3825,7 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         children: request.host_name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 96,
+                                                        lineNumber: 98,
                                                         columnNumber: 17
                                                     }, this),
                                                     request.organizer?.email && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3647,7 +3833,7 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         children: request.organizer.email
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 98,
+                                                        lineNumber: 100,
                                                         columnNumber: 19
                                                     }, this),
                                                     request.organizer?.phone_number && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3660,25 +3846,25 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 101,
+                                                        lineNumber: 103,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 95,
+                                                lineNumber: 97,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 85,
+                                        lineNumber: 87,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                lineNumber: 80,
+                                lineNumber: 82,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3694,21 +3880,21 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         className: "text-2xl"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 111,
+                                                        lineNumber: 113,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
                                                         className: "jsx-96791053da2ae55f" + " " + "font-semibold",
-                                                        children: "Withdrawal Amount"
+                                                        children: t("common.withdrawalAmount")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 112,
+                                                        lineNumber: 114,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 110,
+                                                lineNumber: 112,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3716,17 +3902,17 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 children: [
                                                     request.amount,
                                                     " ",
-                                                    request.currency || 'SAR'
+                                                    request.currency || t("common.currency")
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 114,
+                                                lineNumber: 116,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 109,
+                                        lineNumber: 111,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3739,21 +3925,21 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         className: "text-2xl"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 119,
+                                                        lineNumber: 121,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
                                                         className: "jsx-96791053da2ae55f" + " " + "font-semibold",
-                                                        children: "Request Date"
+                                                        children: t("common.requestDate")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 120,
+                                                        lineNumber: 122,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 118,
+                                                lineNumber: 120,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3765,19 +3951,19 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 })
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 122,
+                                                lineNumber: 124,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 117,
+                                        lineNumber: 119,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                lineNumber: 108,
+                                lineNumber: 110,
                                 columnNumber: 11
                             }, this),
                             request.bank_details || request.organizer?.bank_details ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3790,14 +3976,14 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 className: "text-blue-600"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 136,
+                                                lineNumber: 138,
                                                 columnNumber: 17
                                             }, this),
-                                            "Bank Details"
+                                            t("common.bankDetails")
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 135,
+                                        lineNumber: 137,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3808,10 +3994,10 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "jsx-96791053da2ae55f" + " " + "text-gray-600 font-medium",
-                                                        children: "Bank Name"
+                                                        children: t("common.bankName")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 142,
+                                                        lineNumber: 144,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3819,13 +4005,13 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         children: request.bank_details?.bank_name || request.organizer?.bank_details?.bank_name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 143,
+                                                        lineNumber: 145,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 141,
+                                                lineNumber: 143,
                                                 columnNumber: 19
                                             }, this),
                                             (request.bank_details?.account_holder_name || request.organizer?.bank_details?.account_holder_name) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3833,10 +4019,10 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "jsx-96791053da2ae55f" + " " + "text-gray-600 font-medium",
-                                                        children: "Account Holder"
+                                                        children: t("common.accountName")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 148,
+                                                        lineNumber: 150,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3844,13 +4030,13 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         children: request.bank_details?.account_holder_name || request.organizer?.bank_details?.account_holder_name
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 149,
+                                                        lineNumber: 151,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 147,
+                                                lineNumber: 149,
                                                 columnNumber: 19
                                             }, this),
                                             (request.bank_details?.account_number || request.organizer?.bank_details?.account_number) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3858,10 +4044,10 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "jsx-96791053da2ae55f" + " " + "text-gray-600 font-medium",
-                                                        children: "Account Number"
+                                                        children: t("common.accountNumber")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 154,
+                                                        lineNumber: 156,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3869,13 +4055,13 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         children: request.bank_details?.account_number || request.organizer?.bank_details?.account_number
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 155,
+                                                        lineNumber: 157,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 153,
+                                                lineNumber: 155,
                                                 columnNumber: 19
                                             }, this),
                                             (request.bank_details?.iban || request.organizer?.bank_details?.iban) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3883,10 +4069,10 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "jsx-96791053da2ae55f" + " " + "text-gray-600 font-medium",
-                                                        children: "IBAN"
+                                                        children: t("common.iban")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 160,
+                                                        lineNumber: 162,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3894,39 +4080,39 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         children: request.bank_details?.iban || request.organizer?.bank_details?.iban
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 161,
+                                                        lineNumber: 163,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 159,
+                                                lineNumber: 161,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 139,
+                                        lineNumber: 141,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                lineNumber: 134,
+                                lineNumber: 136,
                                 columnNumber: 13
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "jsx-96791053da2ae55f" + " " + "bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6",
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "jsx-96791053da2ae55f" + " " + "text-yellow-800 font-medium",
-                                    children: "⚠️ No bank details available for this host"
+                                    children: t("common.noBankDetails")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                    lineNumber: 168,
+                                    lineNumber: 170,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                lineNumber: 167,
+                                lineNumber: 169,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3942,31 +4128,31 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                                         className: "inline mr-2"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 177,
+                                                        lineNumber: 179,
                                                         columnNumber: 19
                                                     }, this),
-                                                    "Transaction Reference (Optional)"
+                                                    t("common.transactionReference")
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 176,
+                                                lineNumber: 178,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                                 type: "text",
                                                 value: transactionRef,
                                                 onChange: (e)=>setTransactionRef(e.target.value),
-                                                placeholder: "Enter transaction reference number",
+                                                placeholder: t("common.enterTransactionReference"),
                                                 className: "jsx-96791053da2ae55f" + " " + "w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 180,
+                                                lineNumber: 182,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 175,
+                                        lineNumber: 177,
                                         columnNumber: 15
                                     }, this),
                                     !isApprove && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3975,37 +4161,38 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                                 className: "jsx-96791053da2ae55f" + " " + "block text-sm font-semibold text-gray-700 mb-2",
                                                 children: [
-                                                    "Rejection Reason ",
+                                                    t("common.rejectionReason"),
+                                                    " ",
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         className: "jsx-96791053da2ae55f" + " " + "text-red-500",
                                                         children: "*"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                        lineNumber: 193,
-                                                        columnNumber: 36
+                                                        lineNumber: 195,
+                                                        columnNumber: 49
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 192,
+                                                lineNumber: 194,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
                                                 value: rejectionReason,
                                                 onChange: (e)=>setRejectionReason(e.target.value),
-                                                placeholder: "Please provide a reason for rejection (required)",
+                                                placeholder: t("common.rejectionReasonRequired"),
                                                 rows: 3,
                                                 required: true,
                                                 className: "jsx-96791053da2ae55f" + " " + "w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all resize-none"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 195,
+                                                lineNumber: 197,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 191,
+                                        lineNumber: 193,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4013,39 +4200,39 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                                 className: "jsx-96791053da2ae55f" + " " + "block text-sm font-semibold text-gray-700 mb-2",
-                                                children: "Admin Notes (Optional)"
+                                                children: t("common.adminNotes")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 207,
+                                                lineNumber: 209,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
                                                 value: adminNotes,
                                                 onChange: (e)=>setAdminNotes(e.target.value),
-                                                placeholder: "Add internal notes (optional)",
+                                                placeholder: t("common.addInternalNotes"),
                                                 rows: 3,
                                                 className: "jsx-96791053da2ae55f" + " " + "w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#a797cc] focus:ring-4 focus:ring-[#a797cc]/20 transition-all resize-none"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                                lineNumber: 210,
+                                                lineNumber: 212,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                        lineNumber: 206,
+                                        lineNumber: 208,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                lineNumber: 173,
+                                lineNumber: 175,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                        lineNumber: 78,
+                        lineNumber: 80,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4055,10 +4242,10 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                 onClick: handleClose,
                                 disabled: loading,
                                 className: "jsx-96791053da2ae55f" + " " + "px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition disabled:opacity-50",
-                                children: "Cancel"
+                                children: t("common.cancel")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                lineNumber: 223,
+                                lineNumber: 225,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4071,40 +4258,40 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
                                             className: "jsx-96791053da2ae55f" + " " + "w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                            lineNumber: 241,
+                                            lineNumber: 243,
                                             columnNumber: 17
                                         }, this),
-                                        "Processing..."
+                                        t("common.processing")
                                     ]
                                 }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                     children: [
                                         isApprove ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaCheckCircle"], {}, void 0, false, {
                                             fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                            lineNumber: 246,
+                                            lineNumber: 248,
                                             columnNumber: 30
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaTimesCircle"], {}, void 0, false, {
                                             fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                            lineNumber: 246,
+                                            lineNumber: 248,
                                             columnNumber: 50
                                         }, this),
-                                        isApprove ? 'Approve Request' : 'Reject Request'
+                                        isApprove ? t("common.approveRequestButton") : t("common.rejectRequestButton")
                                     ]
                                 }, void 0, true)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                                lineNumber: 230,
+                                lineNumber: 232,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                        lineNumber: 222,
+                        lineNumber: 224,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-                lineNumber: 47,
+                lineNumber: 49,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$styled$2d$jsx$2f$style$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -4114,11 +4301,15 @@ function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/Modals/WithdrawalActionModal.jsx",
-        lineNumber: 46,
+        lineNumber: 48,
         columnNumber: 5
     }, this);
 }
-_s(WithdrawalActionModal, "L7Liws5iOOiHC/1fTQxuxGjTBHo=");
+_s(WithdrawalActionModal, "VFOrPLQzNVi/NujueYC1H3Ppwmo=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"]
+    ];
+});
 _c = WithdrawalActionModal;
 var _c;
 __turbopack_refresh__.register(_c, "WithdrawalActionModal");
@@ -4141,6 +4332,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$imag
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-toastify/dist/react-toastify.esm.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$admin$2f$apis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/api/admin/apis.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-client] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
 var _s = __turbopack_refresh__.signature();
@@ -4155,8 +4348,10 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
+;
 function WithdrawalRequests() {
     _s();
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
     const [requests, setRequests] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [stats, setStats] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -4223,7 +4418,7 @@ function WithdrawalRequests() {
             }
         } catch (error) {
             console.error("Error fetching withdrawal requests:", error);
-            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error("Failed to fetch withdrawal requests");
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(t("withdrawal.failedToFetchRequests"));
         } finally{
             setLoading(false);
         }
@@ -4242,16 +4437,16 @@ function WithdrawalRequests() {
         try {
             const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$admin$2f$apis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["UpdateWithdrawalRequestApi"])(data);
             if (res?.status === 1 || res?.code === 200) {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(`Withdrawal request ${data.status === 1 ? "approved" : "rejected"} successfully`);
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(data.status === 1 ? t("withdrawal.requestApprovedSuccess") : t("withdrawal.requestRejectedSuccess"));
                 setShowModal(false);
                 fetchRequests();
                 fetchStats(); // Refresh stats
             } else {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(res?.message || "Failed to update request");
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(res?.message || t("withdrawal.failedToUpdateRequest"));
             }
         } catch (error) {
             console.error("Error updating withdrawal request:", error);
-            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error("Failed to update request");
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(t("withdrawal.failedToUpdateRequest"));
         }
     };
     const clearFilters = ()=>{
@@ -4262,17 +4457,17 @@ function WithdrawalRequests() {
     };
     const exportToCSV = ()=>{
         const headers = [
-            "Request ID",
-            "Host Name",
-            "Email",
-            "Phone",
-            "Amount (SAR)",
-            "Currency",
-            "Request Date",
-            "Status",
-            "Processed Date",
-            "Rejection Reason",
-            "Admin Notes"
+            t("withdrawal.requestId"),
+            t("withdrawal.hostName"),
+            t("common.email"),
+            t("common.phone"),
+            t("withdrawal.amount") + " (SAR)",
+            t("common.currency"),
+            t("withdrawal.requestDate"),
+            t("withdrawal.status"),
+            t("withdrawal.processedDate"),
+            t("withdrawal.rejectionReason"),
+            t("withdrawal.adminNotes")
         ];
         const csvContent = [
             headers.join(","),
@@ -4284,7 +4479,7 @@ function WithdrawalRequests() {
                     req.amount,
                     req.currency || 'SAR',
                     new Date(req.createdAt).toLocaleDateString(),
-                    req.status === 0 ? "Pending" : req.status === 1 ? "Approved" : "Rejected",
+                    req.status === 0 ? t("withdrawal.pending") : req.status === 1 ? t("withdrawal.approved") : t("withdrawal.rejected"),
                     req.processed_at ? new Date(req.processed_at).toLocaleDateString() : '',
                     `"${req.rejection_reason || ''}"`,
                     `"${req.admin_notes || ''}"`
@@ -4309,15 +4504,15 @@ function WithdrawalRequests() {
     const getStatusBadge = (status)=>{
         const badges = {
             0: {
-                text: "Pending",
+                text: t("withdrawal.pending"),
                 class: "bg-yellow-100 text-yellow-800 border border-yellow-300"
             },
             1: {
-                text: "Approved",
+                text: t("withdrawal.approved"),
                 class: "bg-green-100 text-green-800 border border-green-300"
             },
             2: {
-                text: "Rejected",
+                text: t("withdrawal.rejected"),
                 class: "bg-red-100 text-red-800 border border-red-300"
             }
         };
@@ -4327,7 +4522,7 @@ function WithdrawalRequests() {
             children: badge.text
         }, void 0, false, {
             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-            lineNumber: 175,
+            lineNumber: 177,
             columnNumber: 7
         }, this);
     };
@@ -4342,24 +4537,24 @@ function WithdrawalRequests() {
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                                     className: "text-3xl font-bold text-black",
-                                    children: "Host Withdrawal Requests"
+                                    children: t("withdrawal.hostWithdrawalRequests")
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 187,
+                                    lineNumber: 189,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "text-gray-600 mt-1",
-                                    children: "Manage and process withdrawal requests"
+                                    children: t("withdrawal.manageAndProcess")
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 190,
+                                    lineNumber: 192,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                            lineNumber: 186,
+                            lineNumber: 188,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4371,16 +4566,15 @@ function WithdrawalRequests() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaFilter"], {}, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 202,
+                                            lineNumber: 204,
                                             columnNumber: 15
                                         }, this),
                                         " ",
-                                        showFilters ? 'Hide' : 'Show',
-                                        " Filters"
+                                        showFilters ? t("withdrawal.hideFilters") : t("withdrawal.showFilters")
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 194,
+                                    lineNumber: 196,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4389,14 +4583,15 @@ function WithdrawalRequests() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaFileExcel"], {}, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 208,
+                                            lineNumber: 210,
                                             columnNumber: 15
                                         }, this),
-                                        " Export CSV"
+                                        " ",
+                                        t("withdrawal.exportCSV")
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 204,
+                                    lineNumber: 206,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4405,26 +4600,27 @@ function WithdrawalRequests() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaPrint"], {}, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 214,
+                                            lineNumber: 216,
                                             columnNumber: 15
                                         }, this),
-                                        " Print"
+                                        " ",
+                                        t("withdrawal.print")
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 210,
+                                    lineNumber: 212,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                            lineNumber: 193,
+                            lineNumber: 195,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                    lineNumber: 185,
+                    lineNumber: 187,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Withdrawal$2f$StatsDashboard$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -4432,7 +4628,7 @@ function WithdrawalRequests() {
                     loading: statsLoading
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                    lineNumber: 220,
+                    lineNumber: 222,
                     columnNumber: 9
                 }, this),
                 showFilters && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4450,41 +4646,41 @@ function WithdrawalRequests() {
                                                     className: "inline mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 229,
+                                                    lineNumber: 231,
                                                     columnNumber: 19
                                                 }, this),
-                                                "Search"
+                                                t("withdrawal.search")
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 228,
+                                            lineNumber: 230,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
                                             type: "text",
                                             value: search,
                                             onChange: (e)=>setSearch(e.target.value),
-                                            placeholder: "Search by name, email, phone...",
+                                            placeholder: t("withdrawal.searchPlaceholder"),
                                             className: "w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 232,
+                                            lineNumber: 234,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 227,
+                                    lineNumber: 229,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                             className: "block text-sm font-semibold text-gray-700 mb-2",
-                                            children: "Status Filter"
+                                            children: t("withdrawal.statusFilter")
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 243,
+                                            lineNumber: 245,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -4494,46 +4690,46 @@ function WithdrawalRequests() {
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                     value: "all",
-                                                    children: "All Status"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 251,
-                                                    columnNumber: 19
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                    value: "0",
-                                                    children: "Pending"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 252,
-                                                    columnNumber: 19
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                    value: "1",
-                                                    children: "Approved"
+                                                    children: t("withdrawal.allStatus")
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
                                                     lineNumber: 253,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
-                                                    value: "2",
-                                                    children: "Rejected"
+                                                    value: "0",
+                                                    children: t("withdrawal.pending")
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
                                                     lineNumber: 254,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                    value: "1",
+                                                    children: t("withdrawal.approved")
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
+                                                    lineNumber: 255,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                    value: "2",
+                                                    children: t("withdrawal.rejected")
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
+                                                    lineNumber: 256,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 246,
+                                            lineNumber: 248,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 242,
+                                    lineNumber: 244,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4545,14 +4741,14 @@ function WithdrawalRequests() {
                                                     className: "inline mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 261,
+                                                    lineNumber: 263,
                                                     columnNumber: 19
                                                 }, this),
-                                                "From Date"
+                                                t("withdrawal.fromDate")
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 260,
+                                            lineNumber: 262,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -4562,13 +4758,13 @@ function WithdrawalRequests() {
                                             className: "w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 264,
+                                            lineNumber: 266,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 259,
+                                    lineNumber: 261,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4580,14 +4776,14 @@ function WithdrawalRequests() {
                                                     className: "inline mr-2"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 275,
+                                                    lineNumber: 277,
                                                     columnNumber: 19
                                                 }, this),
-                                                "To Date"
+                                                t("withdrawal.toDate")
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 274,
+                                            lineNumber: 276,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -4597,19 +4793,19 @@ function WithdrawalRequests() {
                                             className: "w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 278,
+                                            lineNumber: 280,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 273,
+                                    lineNumber: 275,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                            lineNumber: 225,
+                            lineNumber: 227,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4618,31 +4814,31 @@ function WithdrawalRequests() {
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                     onClick: clearFilters,
                                     className: "px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition",
-                                    children: "Clear Filters"
+                                    children: t("withdrawal.clearFilters")
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 288,
+                                    lineNumber: 290,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                     onClick: fetchRequests,
                                     className: "px-6 py-2 bg-gradient-to-r from-[#a3cc69] to-[#a797cc] text-white rounded-xl font-semibold hover:opacity-90 transition",
-                                    children: "Apply Filters"
+                                    children: t("withdrawal.applyFilters")
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 294,
+                                    lineNumber: 296,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                            lineNumber: 287,
+                            lineNumber: 289,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                    lineNumber: 224,
+                    lineNumber: 226,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4658,23 +4854,7 @@ function WithdrawalRequests() {
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-6 py-4 text-left text-sm font-bold text-gray-700",
-                                                children: "Host"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                lineNumber: 310,
-                                                columnNumber: 19
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                                className: "px-6 py-4 text-left text-sm font-bold text-gray-700",
-                                                children: "Contact"
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                lineNumber: 311,
-                                                columnNumber: 19
-                                            }, this),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                                className: "px-6 py-4 text-left text-sm font-bold text-gray-700",
-                                                children: "Amount"
+                                                children: t("withdrawal.host")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
                                                 lineNumber: 312,
@@ -4682,7 +4862,7 @@ function WithdrawalRequests() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-6 py-4 text-left text-sm font-bold text-gray-700",
-                                                children: "Request Date"
+                                                children: t("withdrawal.contact")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
                                                 lineNumber: 313,
@@ -4690,29 +4870,45 @@ function WithdrawalRequests() {
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-6 py-4 text-left text-sm font-bold text-gray-700",
-                                                children: "Status"
+                                                children: t("withdrawal.amount")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
                                                 lineNumber: 314,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
-                                                className: "px-6 py-4 text-center text-sm font-bold text-gray-700",
-                                                children: "Actions"
+                                                className: "px-6 py-4 text-left text-sm font-bold text-gray-700",
+                                                children: t("withdrawal.requestDate")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
                                                 lineNumber: 315,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
+                                                className: "px-6 py-4 text-left text-sm font-bold text-gray-700",
+                                                children: t("withdrawal.status")
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
+                                                lineNumber: 316,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
+                                                className: "px-6 py-4 text-center text-sm font-bold text-gray-700",
+                                                children: t("withdrawal.actions")
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
+                                                lineNumber: 317,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                        lineNumber: 309,
+                                        lineNumber: 311,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 308,
+                                    lineNumber: 310,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -4725,22 +4921,22 @@ function WithdrawalRequests() {
                                                 className: "flex justify-center",
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Loader$2f$Loader$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 323,
+                                                    lineNumber: 325,
                                                     columnNumber: 25
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                lineNumber: 322,
+                                                lineNumber: 324,
                                                 columnNumber: 23
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 321,
+                                            lineNumber: 323,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                        lineNumber: 320,
+                                        lineNumber: 322,
                                         columnNumber: 19
                                     }, this) : requests.length > 0 ? requests.map((request)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                             className: "hover:bg-gray-50 transition",
@@ -4760,12 +4956,12 @@ function WithdrawalRequests() {
                                                                     className: "w-full h-full object-cover"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                    lineNumber: 336,
+                                                                    lineNumber: 338,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                lineNumber: 335,
+                                                                lineNumber: 337,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4779,7 +4975,7 @@ function WithdrawalRequests() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                        lineNumber: 345,
+                                                                        lineNumber: 347,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4790,24 +4986,24 @@ function WithdrawalRequests() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                        lineNumber: 348,
+                                                                        lineNumber: 350,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                lineNumber: 344,
+                                                                lineNumber: 346,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                        lineNumber: 334,
+                                                        lineNumber: 336,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 333,
+                                                    lineNumber: 335,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4818,7 +5014,7 @@ function WithdrawalRequests() {
                                                             children: request.organizer?.email || '-'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                            lineNumber: 353,
+                                                            lineNumber: 355,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4826,13 +5022,13 @@ function WithdrawalRequests() {
                                                             children: request.organizer?.phone_number ? `+${request.organizer.country_code || ''} ${request.organizer.phone_number}` : '-'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                            lineNumber: 354,
+                                                            lineNumber: 356,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 352,
+                                                    lineNumber: 354,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4843,7 +5039,7 @@ function WithdrawalRequests() {
                                                             children: request.amount
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                            lineNumber: 359,
+                                                            lineNumber: 361,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4851,13 +5047,13 @@ function WithdrawalRequests() {
                                                             children: request.currency || 'SAR'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                            lineNumber: 360,
+                                                            lineNumber: 362,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 358,
+                                                    lineNumber: 360,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4872,7 +5068,7 @@ function WithdrawalRequests() {
                                                             })
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                            lineNumber: 363,
+                                                            lineNumber: 365,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4883,13 +5079,13 @@ function WithdrawalRequests() {
                                                             })
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                            lineNumber: 370,
+                                                            lineNumber: 372,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 362,
+                                                    lineNumber: 364,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4897,7 +5093,7 @@ function WithdrawalRequests() {
                                                     children: getStatusBadge(request.status)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 377,
+                                                    lineNumber: 379,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4910,33 +5106,33 @@ function WithdrawalRequests() {
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                         onClick: ()=>handleApprove(request),
                                                                         className: "p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition",
-                                                                        title: "Approve",
+                                                                        title: t("withdrawal.approve"),
                                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaCheckCircle"], {
                                                                             size: 20
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                            lineNumber: 389,
+                                                                            lineNumber: 391,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                        lineNumber: 384,
+                                                                        lineNumber: 386,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                         onClick: ()=>handleReject(request),
                                                                         className: "p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition",
-                                                                        title: "Reject",
+                                                                        title: t("withdrawal.reject"),
                                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaTimesCircle"], {
                                                                             size: 20
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                            lineNumber: 396,
+                                                                            lineNumber: 398,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                        lineNumber: 391,
+                                                                        lineNumber: 393,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
@@ -4947,34 +5143,34 @@ function WithdrawalRequests() {
                                                                 // Could open a view details modal
                                                                 },
                                                                 className: "p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition",
-                                                                title: "View Details",
+                                                                title: t("withdrawal.viewDetails"),
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaEye"], {
                                                                     size: 20
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                    lineNumber: 409,
+                                                                    lineNumber: 411,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                                lineNumber: 401,
+                                                                lineNumber: 403,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                        lineNumber: 381,
+                                                        lineNumber: 383,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                    lineNumber: 380,
+                                                    lineNumber: 382,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, request._id, true, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 329,
+                                            lineNumber: 331,
                                             columnNumber: 21
                                         }, this)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4987,60 +5183,60 @@ function WithdrawalRequests() {
                                                         className: "text-6xl text-gray-300"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                        lineNumber: 420,
+                                                        lineNumber: 422,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "text-gray-500 text-lg font-medium",
-                                                        children: "No Withdrawal Requests Found"
+                                                        children: t("withdrawal.noRequestsFound")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                        lineNumber: 421,
+                                                        lineNumber: 423,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                         className: "text-gray-400 text-sm",
-                                                        children: "Try adjusting your filters"
+                                                        children: t("withdrawal.tryAdjustingFilters")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                        lineNumber: 422,
+                                                        lineNumber: 424,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                                lineNumber: 419,
+                                                lineNumber: 421,
                                                 columnNumber: 23
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                            lineNumber: 418,
+                                            lineNumber: 420,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                        lineNumber: 417,
+                                        lineNumber: 419,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                                    lineNumber: 318,
+                                    lineNumber: 320,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                            lineNumber: 307,
+                            lineNumber: 309,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                        lineNumber: 306,
+                        lineNumber: 308,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                    lineNumber: 305,
+                    lineNumber: 307,
                     columnNumber: 9
                 }, this),
                 totalCount > itemsPerPage && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5052,12 +5248,12 @@ function WithdrawalRequests() {
                         itemsPerPage: itemsPerPage
                     }, void 0, false, {
                         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                        lineNumber: 435,
+                        lineNumber: 437,
                         columnNumber: 13
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                    lineNumber: 434,
+                    lineNumber: 436,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Modals$2f$WithdrawalActionModal$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -5068,22 +5264,26 @@ function WithdrawalRequests() {
                     actionType: actionType
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-                    lineNumber: 445,
+                    lineNumber: 447,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-            lineNumber: 183,
+            lineNumber: 185,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/(AfterLogin)/withdrawal-requests/page.js",
-        lineNumber: 182,
+        lineNumber: 184,
         columnNumber: 5
     }, this);
 }
-_s(WithdrawalRequests, "n/qHsVw4BGkfo847W9E4q1mK9C0=");
+_s(WithdrawalRequests, "sP40jn9Rp/J//ExYNPXOJ3gTD7I=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"]
+    ];
+});
 _c = WithdrawalRequests;
 var _c;
 __turbopack_refresh__.register(_c, "WithdrawalRequests");

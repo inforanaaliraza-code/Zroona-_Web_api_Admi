@@ -54,7 +54,7 @@ export default function MyEventsPage() {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [isReserving, setIsReserving] = useState(false);
-  const [activeTab, setActiveTab] = useState("approved"); // approved, pending, rejected
+  const [activeTab, setActiveTab] = useState("all"); // all, approved, pending, rejected
 
   // Status mapping for colors and icons
   // Backend book_status: 1 = Pending (waiting for host), 2 = Approved/Confirmed, 3 = Cancelled, 4 = Rejected
@@ -194,7 +194,24 @@ export default function MyEventsPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (activeTab === "pending") {
+    if (activeTab === "all") {
+      // All tab: Show all bookings
+      filtered = [...bookings];
+      // Sort by date: upcoming first, then past
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.event?.event_date || 0);
+        const dateB = new Date(b.event?.event_date || 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const aIsUpcoming = dateA >= today;
+        const bIsUpcoming = dateB >= today;
+        
+        if (aIsUpcoming && !bIsUpcoming) return -1;
+        if (!aIsUpcoming && bIsUpcoming) return 1;
+        // If both same type, sort by date
+        return dateA - dateB;
+      });
+    } else if (activeTab === "pending") {
       // Pending tab: Show bookings waiting for host approval (status = 1)
       // These are bookings that user has made but host hasn't approved yet
       filtered = bookings.filter(booking => {
@@ -365,15 +382,17 @@ export default function MyEventsPage() {
     <>
       <Header bgColor="#fff" />
       <GuestNavbar search={search} setSearch={setSearch} setPage={setPage} />
-      <div className="min-h-screen bg-white pt-32 pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className={`text-center mb-8 ${textAlign}`}>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {getTranslation(t, "sidemenu.tab4", "My Bookings")}
-            </h1>
-            <p className="mt-2 text-lg text-gray-600">
-              {getTranslation(t, "events.viewYourBookings", "View and manage your event bookings")}
-            </p>
+      <div className="min-h-screen bg-white pt-32 pb-8 px-4 sm:px-6 lg:px-8" style={{ overscrollBehavior: 'contain' }}>
+        <div className="max-w-[95%] sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%] xl:max-w-7xl mx-auto">
+          <div className={`mb-8 ${textAlign}`}>
+            <div className="mb-6">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                {getTranslation(t, "sidemenu.tab4", "My Bookings")}
+              </h1>
+              <p className="mt-2 text-lg text-gray-600">
+                {getTranslation(t, "events.viewYourBookings", "View and manage your event bookings")}
+              </p>
+            </div>
             
             {/* Booking Flow Guide */}
             <div className="mt-6 bg-gradient-to-r from-[#a797cc]/10 to-orange-50 rounded-xl p-6 border border-[#a797cc]/20">
@@ -404,24 +423,34 @@ export default function MyEventsPage() {
             </div>
           </div>
 
-        {/* Requirement #1: Tabs - Only Approved, Pending, Rejected */}
-        <div className="mb-6 flex justify-center">
-          <div className={`inline-flex rounded-md shadow-sm bg-white border border-gray-200 overflow-hidden ${flexDirection}`}>
+        {/* Requirement #1: Tabs - All, Approved, Pending, Rejected */}
+        <div className="mb-8 flex justify-start">
+          <div className={`inline-flex rounded-lg shadow-md bg-white border border-gray-200 overflow-hidden ${flexDirection}`}>
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-6 py-3 text-sm font-semibold transition-all duration-300 ${
+                activeTab === "all"
+                  ? "bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              } ${isRTL ? "rounded-r-lg" : "rounded-l-lg"}`}
+            >
+              {getTranslation(t, "events.all", "All")}
+            </button>
             <button
               onClick={() => setActiveTab("approved")}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${
+              className={`px-6 py-3 text-sm font-semibold transition-all duration-300 ${isRTL ? "border-r" : "border-l"} ${isRTL ? "border-l" : "border-r"} border-gray-200 ${
                 activeTab === "approved"
-                  ? "bg-[#a797cc] text-white"
+                  ? "bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg"
                   : "bg-white text-gray-700 hover:bg-gray-50"
-              } ${isRTL ? "rounded-r-md" : "rounded-l-md"}`}
+              }`}
             >
               {getTranslation(t, "events.approved", "Approved")}
             </button>
             <button
               onClick={() => setActiveTab("pending")}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${isRTL ? "border-r" : "border-l"} ${isRTL ? "border-l" : "border-r"} border-gray-200 ${
+              className={`px-6 py-3 text-sm font-semibold transition-all duration-300 ${isRTL ? "border-r" : "border-l"} ${isRTL ? "border-l" : "border-r"} border-gray-200 ${
                 activeTab === "pending"
-                  ? "bg-[#a797cc] text-white"
+                  ? "bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg"
                   : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
             >
@@ -429,11 +458,11 @@ export default function MyEventsPage() {
             </button>
             <button
               onClick={() => setActiveTab("rejected")}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${
+              className={`px-6 py-3 text-sm font-semibold transition-all duration-300 ${
                 activeTab === "rejected"
-                  ? "bg-[#a797cc] text-white"
+                  ? "bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg"
                   : "bg-white text-gray-700 hover:bg-gray-50"
-              } ${isRTL ? "rounded-l-md" : "rounded-r-md"}`}
+              } ${isRTL ? "rounded-l-lg" : "rounded-r-lg"}`}
             >
               {getTranslation(t, "events.rejected", "Rejected")}
             </button>
@@ -451,6 +480,7 @@ export default function MyEventsPage() {
               {getTranslation(t, "events.noBookings", "No bookings found")}
             </h3>
             <p className="mt-1 text-sm text-gray-500">
+              {activeTab === "all" && getTranslation(t, "events.noBookings", "No bookings found")}
               {activeTab === "approved" && getTranslation(t, "events.noApprovedBookings", "No approved bookings found")}
               {activeTab === "pending" && getTranslation(t, "events.noPendingBookings", "No pending bookings found")}
               {activeTab === "rejected" && getTranslation(t, "events.noRejectedBookings", "No rejected bookings found")}
@@ -465,7 +495,7 @@ export default function MyEventsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredBookings.map((booking) => {
               // Check if event is upcoming or past
               const eventDate = new Date(booking.event?.event_date || 0);

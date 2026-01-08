@@ -10,51 +10,67 @@ import Image from "next/image";
 import { NumberInput } from "@/components/ui/number-input";
 import ProfileImageUpload from "@/components/ProfileImageUpload/ProfileImageUpload";
 import Loader from "@/components/Loader/Loader";
-import Link from "next/link";
 import { useRTL } from "@/utils/rtl";
 import { OrganizerSignUpApi } from "@/app/api/setting";
 import { Icon } from "@iconify/react";
+import axios from "axios";
+import { BASE_API_URL } from "@/until";
+import { motion } from "framer-motion";
+import TermsOfServiceModal from "@/components/Modal/TermsOfServiceModal";
+import PrivacyPolicyModal from "@/components/Modal/PrivacyPolicyModal";
+import CitySearchSelect from "@/components/ui/CitySearchSelect";
 
 const BasicInfoForm = ({ onSuccess }) => {
   const { t, i18n } = useTranslation();
   const { isRTL, textAlign, flexDirection, marginStart, marginEnd } = useRTL();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showVerificationStep, setShowVerificationStep] = useState(false);
+  const [organizerId, setOrganizerId] = useState(null);
+  const [userEmail, setUserEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
   const formik = useFormik({
     initialValues: {
       // Account creation essentials
       email: "",
-      password: "",
-      confirmPassword: "",
       profile_image: "",
       first_name: "",
       last_name: "",
       country_code: "+966",
       phone_number: "",
+      city: "",
       acceptTerms: false,
       acceptPrivacy: false,
     },
     validationSchema: Yup.object({
       // Account credentials
       email: Yup.string()
-        .email(t("auth.emailInvalid") || t("auth.invalidEmail") || "Invalid email")
-        .required(t("signup.tab16") || "Email is required"),
-      password: Yup.string()
-        .required(t("auth.passwordRequired") || "Password is required")
-        .min(8, t("auth.passwordMinLength") || "Password must be at least 8 characters")
-        .matches(
-          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-          t("auth.passwordStrength") || "Password must contain uppercase, lowercase, and number"
-        ),
-      confirmPassword: Yup.string()
-        .required(t("auth.confirmPasswordRequired") || "Please confirm your password")
-        .oneOf([Yup.ref("password")], t("auth.passwordsMustMatch") || "Passwords must match"),
+        .required(t("signup.tab16") || "Email is required")
+        .test('gmail-only', "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+          if (!value) return true;
+          const emailLower = value.toLowerCase().trim();
+          return emailLower.endsWith('@gmail.com');
+        })
+        .test('gmail-format', "Invalid Gmail address format", function(value) {
+          if (!value) return true;
+          const emailLower = value.toLowerCase().trim();
+          const localPart = emailLower.split('@')[0];
+          if (!localPart) return false;
+          return /^[a-z0-9.+]+$/.test(localPart);
+        })
+        .email(t("auth.emailInvalid") || t("auth.invalidEmail") || "Invalid email"),
       // Basic identification
       profile_image: Yup.string().required(t("signup.tab16") || "Profile image is required"),
       first_name: Yup.string().required(t("signup.tab16") || "First name is required"),
       last_name: Yup.string().required(t("signup.tab16") || "Last name is required"),
       phone_number: Yup.string().required(t("signup.tab16") || "Phone number is required"),
+      city: Yup.string().required(t("signup.tab16") || "City is required"),
       // Terms acceptance
       acceptTerms: Yup.boolean()
         .oneOf([true], t("signup.tab23") || "You must accept the terms and conditions")
@@ -96,24 +112,6 @@ const BasicInfoForm = ({ onSuccess }) => {
         return;
       }
 
-      if (!values.password || values.password.trim() === "") {
-        setFieldTouched("password", true);
-        toast.error(t("auth.passwordRequired") || "Please enter your password");
-        return;
-      }
-
-      if (!values.confirmPassword || values.confirmPassword.trim() === "") {
-        setFieldTouched("confirmPassword", true);
-        toast.error(t("auth.confirmPasswordRequired") || "Please confirm your password");
-        return;
-      }
-
-      if (values.password !== values.confirmPassword) {
-        setFieldTouched("confirmPassword", true);
-        toast.error(t("auth.passwordsMustMatch") || "Passwords do not match");
-        return;
-      }
-
       if (!values.acceptTerms) {
         setFieldTouched("acceptTerms", true);
         toast.error(t("signup.tab23") || "Please accept the terms and conditions");
@@ -128,16 +126,15 @@ const BasicInfoForm = ({ onSuccess }) => {
 
       setLoading(true);
       try {
-        // Step 1: Create organizer account with basic info
+        // Step 1: Create organizer account with basic info (passwordless)
         const registrationPayload = {
           email: values.email.toLowerCase().trim(),
-          password: values.password,
-          confirmPassword: values.confirmPassword,
           first_name: values.first_name,
           last_name: values.last_name,
           phone_number: values.phone_number,
           country_code: values.country_code,
           profile_image: values.profile_image,
+          city: values.city,
           registration_step: 1, // Step 1: Basic Info only
         };
 
@@ -150,6 +147,9 @@ const BasicInfoForm = ({ onSuccess }) => {
           
           // Store organizer_id for Step 2
           localStorage.setItem("organizer_id", organizerId);
+          setOrganizerId(organizerId);
+          setUserEmail(values.email.toLowerCase().trim());
+          setShowVerificationStep(true);
           
           // Store basic info (without password) for Step 2 reference
           const basicInfoData = {
@@ -160,6 +160,7 @@ const BasicInfoForm = ({ onSuccess }) => {
             email: values.email.toLowerCase().trim(),
             phone_number: values.phone_number,
             country_code: values.country_code,
+            city: values.city,
             registration_step: 1,
           };
           
@@ -168,11 +169,8 @@ const BasicInfoForm = ({ onSuccess }) => {
           toast.success(
             response?.message || 
             t("signup.accountCreated") || 
-            "Account created successfully! Please continue to the next step."
+            "Account created! Please verify your email and phone to continue."
           );
-          
-          // Move to next step (Personal Info & Questions)
-          onSuccess?.();
         } else {
           toast.error(response?.message || t("common.error") || "Failed to create account");
         }
@@ -197,6 +195,254 @@ const BasicInfoForm = ({ onSuccess }) => {
       : "inset-y-0 left-0 pl-3"
   }`;
   const errorClasses = "mt-1 text-xs font-semibold text-red-500";
+
+  const handleResendOtp = async () => {
+    if (!organizerId || !formik.values.phone_number || !formik.values.country_code) {
+      toast.error("Missing information to resend OTP");
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${BASE_API_URL}organizer/resend-signup-otp`,
+        {
+          organizer_id: organizerId,
+          phone_number: formik.values.phone_number,
+          country_code: formik.values.country_code
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            lang: i18n.language || "en",
+          },
+        }
+      );
+      if (response.data?.status === 1 || response.data?.success) {
+        toast.success(response.data.message || "OTP resent successfully!");
+      } else {
+        toast.error(response.data.message || "Failed to resend OTP.");
+      }
+    } catch (error) {
+      console.error("Resend OTP error:", error);
+      toast.error("Failed to resend OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+    if (!organizerId || !formik.values.phone_number || !formik.values.country_code) {
+      toast.error("Missing information to verify OTP");
+      return;
+    }
+    try {
+      setOtpVerifying(true);
+      const response = await axios.post(
+        `${BASE_API_URL}organizer/verify-signup-otp`,
+        {
+          organizer_id: organizerId,
+          phone_number: formik.values.phone_number,
+          country_code: formik.values.country_code,
+          otp: otp
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            lang: i18n.language || "en",
+          },
+        }
+      );
+      if (response.data?.status === 1 || response.data?.success) {
+        setPhoneVerified(true);
+        if (response.data?.data?.organizer?.is_verified) {
+          // Both verified - success!
+          toast.success(response.data.message || "Account verified successfully!");
+          // Proceed to next step
+          onSuccess?.();
+        } else {
+          toast.success(response.data.message || "Phone verified! Please verify your email to continue.");
+        }
+      } else {
+        toast.error(response.data.message || "Invalid OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("Verify OTP error:", error);
+      toast.error(error?.response?.data?.message || "Failed to verify OTP. Please try again.");
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
+  const handleResendEmailVerification = async () => {
+    if (!userEmail) {
+      toast.error("Email not found");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${BASE_API_URL}organizer/resend-verification`,
+        { email: userEmail },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            lang: i18n.language || "en",
+          },
+        }
+      );
+      if (response.data?.status === 1 || response.data?.success) {
+        toast.success(response.data.message || "Verification email sent! Please check your inbox.");
+      } else {
+        toast.error(response.data.message || "Failed to resend verification email");
+      }
+    } catch (error) {
+      console.error("Resend email verification error:", error);
+      toast.error("Failed to resend verification email. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show verification step after registration
+  if (showVerificationStep) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-4xl mx-auto"
+      >
+        <div className="p-8 bg-white shadow-sm rounded-xl">
+          <h2 className={`mb-6 text-2xl font-bold text-[#333333] ${textAlign}`}>
+            {t("steper.tab1") || "Verify Your Account"}
+          </h2>
+          
+          <div className="space-y-6">
+            {/* Verification Status */}
+            <div className="mb-6 space-y-3">
+              {/* Email Verification Status */}
+              <div className={`flex items-center justify-center gap-2 p-3 rounded-lg ${
+                emailVerified ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+              }`}>
+                <Icon 
+                  icon={emailVerified ? "material-symbols:check-circle" : "material-symbols:schedule"} 
+                  className="w-5 h-5" 
+                />
+                <span className="text-sm font-medium">
+                  {emailVerified 
+                    ? "Email Verified ✓" 
+                    : "Check your email and click the verification link"}
+                </span>
+              </div>
+
+              {/* Phone Verification Status */}
+              <div className={`flex items-center justify-center gap-2 p-3 rounded-lg ${
+                phoneVerified ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+              }`}>
+                <Icon 
+                  icon={phoneVerified ? "material-symbols:check-circle" : "material-symbols:schedule"} 
+                  className="w-5 h-5" 
+                />
+                <span className="text-sm font-medium">
+                  {phoneVerified 
+                    ? "Phone Verified ✓" 
+                    : "Enter OTP sent to your phone"}
+                </span>
+              </div>
+            </div>
+
+            {/* OTP Input */}
+            {!phoneVerified && (
+              <div className="mb-6">
+                <label className={`block text-sm font-medium text-gray-700 mb-2 ${textAlign}`}>
+                  {t("Enter OTP") || "Enter OTP"}
+                </label>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtp(value);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-center text-2xl tracking-widest"
+                  placeholder="000000"
+                  maxLength={6}
+                />
+                <button
+                  onClick={handleResendOtp}
+                  disabled={loading}
+                  className="mt-2 text-sm text-[#a797cc] hover:text-[#8ba179] font-medium"
+                >
+                  {t("Resend OTP") || "Resend OTP"}
+                </button>
+              </div>
+            )}
+
+            {/* Email Resend */}
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start">
+                <Icon icon="material-symbols:mail-outline" className="w-5 h-5 text-orange-600 mr-2 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm text-orange-800 mb-2">
+                    {t("verificationEmailSent") || 
+                    `Verification link sent to ${userEmail}`}
+                  </p>
+                  <button
+                    onClick={handleResendEmailVerification}
+                    disabled={loading}
+                    className="text-sm font-semibold text-orange-700 hover:text-orange-900 underline"
+                  >
+                    {loading ? (
+                      <span className="flex items-center">
+                        <Loader /> {t("auth.sending") || "Sending..."}
+                      </span>
+                    ) : (
+                      t("auth.resendVerificationEmail") || "Resend Verification Email"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="space-y-3">
+              {!phoneVerified && (
+                <button 
+                  onClick={handleVerifyOtp}
+                  disabled={otpVerifying || otp.length !== 6}
+                  className="w-full py-3 px-6 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {otpVerifying ? "Verifying..." : t("Verify OTP") || "Verify OTP"}
+                </button>
+              )}
+              
+              {/* Next Button - Show if phone is verified (email verification can be done later) */}
+              {phoneVerified && (
+                <button
+                  onClick={() => onSuccess?.()}
+                  className="w-full py-3 px-6 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>{t("signup.tab21") || "Next"}</span>
+                  <Icon icon="material-symbols:arrow-forward" className="w-5 h-5" />
+                </button>
+              )}
+              
+              {/* Show success message if both verified */}
+              {(emailVerified && phoneVerified) && (
+                <div className="text-center text-sm text-green-600 font-medium">
+                  ✓ {t("auth.allVerified") || "All verifications complete!"}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -317,126 +563,80 @@ const BasicInfoForm = ({ onSuccess }) => {
                   countryCodeField="country_code"
                 />
               </div>
+            </div>
 
-              {/* Password */}
-              <div>
-                <label htmlFor="password" className={labelClasses}>
-                  {t("auth.password") || "Password"} *
-                </label>
-                <div className="relative mt-1">
-                  <span className={iconContainerClasses}>
-                    <Icon
-                      icon="lucide:lock"
-                      className="w-4 h-4 text-[#a797cc]"
-                    />
-                  </span>
-                  <input
-                    type="password"
-                    id="password"
-                    className={`${inputClasses} ${
-                      i18n.language === "ar" ? "pr-10" : "pl-10"
-                    }`}
-                    placeholder={t("auth.enterPassword") || "Enter your password"}
-                    {...formik.getFieldProps("password")}
-                  />
-                </div>
-                {formik.touched.password && formik.errors.password && (
-                  <p className={errorClasses}>{formik.errors.password}</p>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label htmlFor="confirmPassword" className={labelClasses}>
-                  {t("auth.confirmPassword") || "Confirm Password"} *
-                </label>
-                <div className="relative mt-1">
-                  <span className={iconContainerClasses}>
-                    <Icon
-                      icon="lucide:lock"
-                      className="w-4 h-4 text-[#a797cc]"
-                    />
-                  </span>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    className={`${inputClasses} ${
-                      i18n.language === "ar" ? "pr-10" : "pl-10"
-                    }`}
-                    placeholder={t("auth.confirmPasswordPlaceholder") || "Confirm your password"}
-                    {...formik.getFieldProps("confirmPassword")}
-                  />
-                </div>
-                {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-                  <p className={errorClasses}>{formik.errors.confirmPassword}</p>
-                )}
-              </div>
+            {/* City */}
+            <div className="mt-6">
+              <CitySearchSelect
+                value={formik.values.city}
+                onChange={(value) => formik.setFieldValue("city", value)}
+                onBlur={() => formik.setFieldTouched("city", true)}
+                error={formik.errors.city}
+                touched={formik.touched.city}
+                placeholder={t("signup.selectCity") || t("auth.selectCity") || "Select city"}
+                label={t("signup.city") || t("city") || "City"}
+                required={true}
+                isRTL={i18n.language === "ar"}
+              />
             </div>
           </div>
 
-          {/* Terms and Conditions */}
-          <div className="mb-6 space-y-4">
-            {/* Terms and Conditions Checkbox */}
-            <div className={`flex items-start ${flexDirection}`}>
+          {/* Terms and Conditions & Privacy Policy */}
+          <div className="mb-6">
+            <div className="flex items-start gap-3">
               <div className="flex items-center h-5">
                 <input
-                  id="acceptTerms"
+                  id="acceptTermsAndPrivacy"
                   type="checkbox"
                   className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-[#a797cc] text-[#a797cc]"
-                  {...formik.getFieldProps("acceptTerms")}
-                  checked={formik.values.acceptTerms}
+                  checked={formik.values.acceptTerms && formik.values.acceptPrivacy}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    formik.setFieldValue("acceptTerms", isChecked);
+                    formik.setFieldValue("acceptPrivacy", isChecked);
+                    formik.setFieldTouched("acceptTerms", true);
+                    formik.setFieldTouched("acceptPrivacy", true);
+                  }}
                 />
               </div>
-              <div className={`${marginStart(3)} text-sm`}>
+              <div className="ml-3 text-sm">
                 <label
-                  htmlFor="acceptTerms"
-                  className={`font-medium text-gray-900 ${textAlign}`}
+                  htmlFor="acceptTermsAndPrivacy"
+                  className="font-medium text-gray-900 cursor-pointer"
                 >
-                  {t("signup.tab22") || "I accept the"}{" "}
-                  <Link
-                    href="/termsCondition"
-                    target="_blank"
-                    className="text-[#a797cc] hover:underline"
+                  {t("signup.tab22") || "By signing up, you agree to our"}{" "}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsTermsModalOpen(true);
+                    }}
+                    className="text-[#a797cc] hover:underline font-semibold focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-1 rounded"
                   >
-                    {t("signup.tab23") || "Terms & Condition"}
-                  </Link>
-                  {" *"}
-                </label>
-                {formik.touched.acceptTerms && formik.errors.acceptTerms && (
-                  <p className={errorClasses}>{formik.errors.acceptTerms}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Privacy Policy Checkbox */}
-            <div className={`flex items-start ${flexDirection}`}>
-              <div className="flex items-center h-5">
-                <input
-                  id="acceptPrivacy"
-                  type="checkbox"
-                  className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-[#a797cc] text-[#a797cc]"
-                  {...formik.getFieldProps("acceptPrivacy")}
-                  checked={formik.values.acceptPrivacy}
-                />
-              </div>
-              <div className={`${marginStart(3)} text-sm`}>
-                <label
-                  htmlFor="acceptPrivacy"
-                  className={`font-medium text-gray-900 ${textAlign}`}
-                >
-                  {t("signup.tab22") || "I accept the"}{" "}
-                  <Link
-                    href="/privacyPolicy"
-                    target="_blank"
-                    className="text-[#a797cc] hover:underline"
+                    {t("termsAndConditions") || "Terms & Conditions"}
+                  </button>
+                  {" "}{t("signup.tab24") || "and"}{" "}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsPrivacyModalOpen(true);
+                    }}
+                    className="text-[#a797cc] hover:underline font-semibold focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-1 rounded"
                   >
-                    {t("signup.tab25") || "Privacy Policy"}
-                  </Link>
-                  {" *"}
+                    {t("privacyPolicy") || "Privacy Policy"}
+                  </button>
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
-                {formik.touched.acceptPrivacy && formik.errors.acceptPrivacy && (
-                  <p className={errorClasses}>{formik.errors.acceptPrivacy}</p>
-                )}
+                {(formik.touched.acceptTerms && formik.errors.acceptTerms) || 
+                 (formik.touched.acceptPrivacy && formik.errors.acceptPrivacy) ? (
+                  <p className="mt-1 text-sm text-red-600">
+                    {formik.errors.acceptTerms || formik.errors.acceptPrivacy || 
+                     "You must accept the Terms & Conditions and Privacy Policy"}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -445,8 +645,8 @@ const BasicInfoForm = ({ onSuccess }) => {
           <div>
             <button
               type="submit"
-              disabled={loading}
-              className="w-full px-4 py-4 text-white bg-[#a797cc] rounded-xl hover:bg-[#8ba179] transition-colors disabled:opacity-50"
+              disabled={loading || !formik.values.acceptTerms || !formik.values.acceptPrivacy}
+              className="w-full px-4 py-4 text-white bg-[#a797cc] rounded-xl hover:bg-[#8ba179] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <Loader className="w-6 h-6 mx-auto" />
@@ -457,6 +657,9 @@ const BasicInfoForm = ({ onSuccess }) => {
           </div>
         </form>
       </div>
+      {/* Terms & Conditions and Privacy Policy Modals */}
+      <TermsOfServiceModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
+      <PrivacyPolicyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
     </div>
   );
 };

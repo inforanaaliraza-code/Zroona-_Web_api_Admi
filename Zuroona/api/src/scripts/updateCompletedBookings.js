@@ -59,19 +59,28 @@ const updateCompletedBookings = async () => {
                 book_status: 5, // Completed
             });
 
-            // Send notification to user
+            // Send notification to user and schedule review prompt
             try {
                 const event = booking.event || {};
-                await NotificationService.CreateService({
-                    user_id: booking.user_id,
-                    role: 1, // User role
-                    title: 'Event Completed',
-                    description: `The event "${event.event_name || 'your event'}" has been completed. Thank you for attending!`,
-                    isRead: false,
-                    notification_type: 5, // Event completion type
-                    event_id: booking.event_id,
-                    book_id: booking._id,
-                });
+                const UserService = require('../services/userService');
+                const user = await UserService.FindOneService({ _id: booking.user_id });
+                
+                if (user) {
+                    // Send completion notification (in-app only, review prompt will be sent later)
+                    await NotificationService.CreateService({
+                        user_id: booking.user_id,
+                        role: 1, // User role
+                        title: 'Event Completed',
+                        description: `The event "${event.event_name || 'your event'}" has been completed. Thank you for attending!`,
+                        isRead: false,
+                        notification_type: 5, // Event completion type
+                        event_id: booking.event_id,
+                        book_id: booking._id,
+                    });
+                    
+                    // Note: Review prompts will be sent by sendReviewPrompts script at T+6h and T+72h
+                    console.log(`[AUTO-COMPLETE] Booking ${booking._id} marked as completed. Review prompt will be sent at T+6h and T+72h.`);
+                }
             } catch (notifError) {
                 console.error(`[AUTO-COMPLETE] Error sending notification for booking ${booking._id}:`, notifError);
             }

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 import { IoLocationOutline, IoMailOutline, IoCallOutline, IoCloseOutline } from "react-icons/io5";
-import { FaTiktok, FaInstagram, FaSnapchatGhost } from "react-icons/fa";
+import { FaTiktok, FaInstagram, FaSnapchatGhost, FaFacebook } from "react-icons/fa";
 import { RiTwitterXFill } from "react-icons/ri";
 import { useRTL } from "@/utils/rtl";
 import AboutUsModal from "../Modal/AboutUsModal";
@@ -41,18 +41,51 @@ export default function Footer() {
                             {t("footer.tab2")}
                         </p>
                         {/* Social Icons */}
-                        <div className="flex gap-4 pt-4">
-                            <a href="https://www.tiktok.com/@zuroona?_t=ZN-90tyaX4DPnS&_r=1" className="text-gray-400 hover:text-brand-orange transition-colors" target="_blank" rel="noopener noreferrer">
-                                <FaTiktok className="text-xl" />
+                        <div className="flex gap-4 pt-4 flex-wrap">
+                            <a 
+                                href="https://www.instagram.com/zuroona?igsh=MXJvN2s4ZHlvNGR3aQ%3D%3D&utm_source=qr" 
+                                className="text-gray-400 hover:text-brand-orange transition-colors" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                aria-label="Follow us on Instagram"
+                            >
+                                <FaInstagram className="text-xl" />
                             </a>
-                            <a href="https://snapchat.com/t/IQxxW6dK" className="text-gray-400 hover:text-brand-orange transition-colors" target="_blank" rel="noopener noreferrer">
-                                <FaSnapchatGhost className="text-xl" />
-                            </a>
-                            <a href="https://x.com/zuroonaksa?s=11&t=cwvlmHDPVC7mbsMLpqJFkQ" className="text-gray-400 hover:text-brand-orange transition-colors" target="_blank" rel="noopener noreferrer">
+                            <a 
+                                href="https://x.com/zuroonaksa?s=11&t=cwvlmHDPVC7mbsMLpqJFkQ" 
+                                className="text-gray-400 hover:text-brand-orange transition-colors" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                aria-label="Follow us on X (Twitter)"
+                            >
                                 <RiTwitterXFill className="text-xl" />
                             </a>
-                            <a href="https://www.instagram.com/zuroona?igsh=MXJvN2s4ZHlvNGR3aQ%3D%3D&utm_source=qr" className="text-gray-400 hover:text-brand-orange transition-colors" target="_blank" rel="noopener noreferrer">
-                                <FaInstagram className="text-xl" />
+                            <a 
+                                href="https://www.tiktok.com/@zuroona?_t=ZN-90tyaX4DPnS&_r=1" 
+                                className="text-gray-400 hover:text-brand-orange transition-colors" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                aria-label="Follow us on TikTok"
+                            >
+                                <FaTiktok className="text-xl" />
+                            </a>
+                            <a 
+                                href="https://snapchat.com/t/IQxxW6dK" 
+                                className="text-gray-400 hover:text-brand-orange transition-colors" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                aria-label="Add us on Snapchat"
+                            >
+                                <FaSnapchatGhost className="text-xl" />
+                            </a>
+                            <a 
+                                href="https://www.facebook.com/share/1DbUJBjatB/?mibextid=wwXIfr" 
+                                className="text-gray-400 hover:text-brand-orange transition-colors" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                aria-label="Follow us on Facebook"
+                            >
+                                <FaFacebook className="text-xl" />
                             </a>
                         </div>
                     </div>

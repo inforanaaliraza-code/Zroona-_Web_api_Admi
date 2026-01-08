@@ -10,8 +10,10 @@ import { ActiveInActiveUserApi, DeleteUserApi } from "@/api/user/apis";
 import { FaStar, FaTrash, FaBan, FaCheckCircle, FaEdit } from "react-icons/fa";
 import SuspendUserModal from "@/components/Modals/SuspendUserModal";
 import EditUserModal from "@/components/Modals/EditUserModal";
+import { useTranslation } from "react-i18next";
 
 export default function UserDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ export default function UserDetail() {
         .then(() => setLoading(false))
         .catch((err) => {
           setLoading(false);
-          toast.error("Failed to fetch User details");
+          toast.error(t("userDetail.failedToFetch"));
         });
     }
   }, [id, fetchUserDetail]);
@@ -41,15 +43,15 @@ export default function UserDetail() {
     ActiveInActiveUserApi({ userId: detail?.user?._id, isActive: false })
       .then((res) => {
         if (res?.status === 1) {
-          toast.success(res?.message || "Account suspended successfully");
+          toast.success(res?.message || t("userDetail.accountSuspendedSuccess"));
           fetchUserDetail({ id: id });
           setSuspendModalOpen(false);
         } else {
-          toast.error(res?.message || "Failed to suspend account");
+          toast.error(res?.message || t("userDetail.failedToSuspend"));
         }
       })
       .catch((err) => {
-        toast.error("Failed to suspend account");
+        toast.error(t("userDetail.failedToSuspend"));
       })
       .finally(() => {
         setLoading(false);
@@ -58,37 +60,37 @@ export default function UserDetail() {
   };
 
   const handleActivate = () => {
-    if (!confirm("Are you sure you want to activate this account?")) return;
+    if (!confirm(t("userDetail.confirmActivate"))) return;
     setLoading(true);
     ActiveInActiveUserApi({ userId: detail?.user?._id, isActive: true })
       .then((res) => {
         if (res?.status === 1) {
-          toast.success(res?.message || "Account activated successfully");
+          toast.success(res?.message || t("userDetail.accountActivatedSuccess"));
           fetchUserDetail({ id: id });
         } else {
-          toast.error(res?.message || "Failed to activate account");
+          toast.error(res?.message || t("userDetail.failedToActivate"));
         }
       })
       .catch((err) => {
-        toast.error("Failed to activate account");
+        toast.error(t("userDetail.failedToActivate"));
       })
       .finally(() => setLoading(false));
   };
 
   const handleDelete = () => {
-    if (!confirm("Are you sure you want to delete this account? This action cannot be undone.")) return;
+    if (!confirm(t("userDetail.confirmDelete"))) return;
     setLoading(true);
     DeleteUserApi({ userId: detail?.user?._id })
       .then((res) => {
         if (res?.status === 1 || res?.code === 200) {
-          toast.success("Account deleted successfully");
+          toast.success(t("userDetail.accountDeletedSuccess"));
           router.push("/user");
         } else {
-          toast.error(res?.message || "Failed to delete account");
+          toast.error(res?.message || t("userDetail.failedToDelete"));
         }
       })
       .catch((err) => {
-        toast.error("Failed to delete account");
+        toast.error(t("userDetail.failedToDelete"));
       })
       .finally(() => setLoading(false));
   };
@@ -96,13 +98,13 @@ export default function UserDetail() {
   const getStatusClass = (status) => {
     switch (status) {
       case 1:
-        return "Pending";
+        return t("userDetail.pending");
       case 2:
-        return "Approved";
+        return t("userDetail.approved");
       case 3:
-        return "Cancelled";
+        return t("userDetail.cancelled");
       default:
-        return "Unknown Status";
+        return t("userDetail.unknownStatus");
     }
   };
   const getStatusColor = (status) => {
@@ -122,7 +124,7 @@ export default function UserDetail() {
     <DefaultLayout>
       <div className="min-h-screen pb-10">
         <div className="py-5">
-          <h1 className="text-xl font-bold text-black">User Detail</h1>
+          <h1 className="text-xl font-bold text-black">{t("userDetail.title")}</h1>
         </div>
 
         <div className="w-full">
@@ -146,7 +148,7 @@ export default function UserDetail() {
                     {/* Table Row - Organizer ID */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Organizer ID:
+                        {t("userDetail.userId")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.user?._id}
@@ -156,7 +158,7 @@ export default function UserDetail() {
                     {/* Table Row - Name */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Name:
+                        {t("userDetail.name")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.user?.first_name} {detail?.user?.last_name}
@@ -166,7 +168,7 @@ export default function UserDetail() {
                     {/* Table Row - Email */}
                     <tr className="border-b border-gray-300">
                       <td className="flex py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Email Address:
+                        {t("userDetail.emailAddress")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.user?.email}
@@ -176,7 +178,7 @@ export default function UserDetail() {
                     {/* Table Row - Phone No */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Phone No:
+                        {t("userDetail.phoneNo")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.user?.country_code}{" "}
@@ -187,17 +189,17 @@ export default function UserDetail() {
                     {/* Table Row - Gender */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Gender:
+                        {t("userDetail.gender")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
-                        {detail?.user?.gender === 1 ? "Male" : "Female"}
+                        {detail?.user?.gender === 1 ? t("userDetail.male") : t("userDetail.female")}
                       </td>
                     </tr>
 
                     {/* Table Row - Date of birth */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Date of birth:
+                        {t("userDetail.dateOfBirth")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.user?.date_of_birth
@@ -211,7 +213,7 @@ export default function UserDetail() {
                     {/* Table Row - City */}
                     <tr>
                       <td className="flex py-2 xl:py-1 text-left text-sm font-semibold text-gray-800">
-                        City:
+                        {t("userDetail.city")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.user?.address}
@@ -227,14 +229,14 @@ export default function UserDetail() {
               {/* Action Buttons */}
               <div className="bg-white p-6 rounded-lg mb-6">
                 <div className="flex flex-wrap gap-3 items-center justify-between">
-                  <h2 className="font-bold text-lg text-gray-900">Account Actions</h2>
+                  <h2 className="font-bold text-lg text-gray-900">{t("userDetail.accountActions")}</h2>
                   <div className="flex flex-wrap gap-3">
                     {/* Edit User Button */}
                     <button
                       onClick={() => setEditModalOpen(true)}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
                     >
-                      <FaEdit /> Edit User
+                      <FaEdit /> {t("userDetail.editUser")}
                     </button>
                     {/* View Rating Button */}
                     <button
@@ -244,12 +246,12 @@ export default function UserDetail() {
                         if (ratingSection) {
                           ratingSection.scrollIntoView({ behavior: 'smooth' });
                         } else {
-                          toast.info("Rating information will be displayed here");
+                          toast.info(t("userDetail.ratingInfo"));
                         }
                       }}
                       className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
                     >
-                      <FaStar /> View Rating
+                      <FaStar /> {t("userDetail.viewRating")}
                     </button>
                     {/* Suspend/Activate Button */}
                     {detail?.user?.isActive ? (
@@ -257,14 +259,14 @@ export default function UserDetail() {
                         onClick={handleSuspend}
                         className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
                       >
-                        <FaBan /> Suspend Account
+                        <FaBan /> {t("userDetail.suspendAccount")}
                       </button>
                     ) : (
                       <button
                         onClick={handleActivate}
                         className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
                       >
-                        <FaCheckCircle /> Activate Account
+                        <FaCheckCircle /> {t("userDetail.activateAccount")}
                       </button>
                     )}
                     {/* Delete Button */}
@@ -272,7 +274,7 @@ export default function UserDetail() {
                       onClick={handleDelete}
                       className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                     >
-                      <FaTrash /> Delete Account
+                      <FaTrash /> {t("userDetail.deleteAccount")}
                     </button>
                   </div>
                 </div>
@@ -280,7 +282,7 @@ export default function UserDetail() {
 
               {/* Rating Section */}
               <div id="rating-section" className="bg-white p-6 rounded-lg mb-6">
-                <h2 className="font-bold text-lg text-gray-900 mb-4">User Rating</h2>
+                <h2 className="font-bold text-lg text-gray-900 mb-4">{t("userDetail.userRating")}</h2>
                 {detail?.user?.rating || detail?.user?.average_rating ? (
                   <div className="flex items-center gap-4">
                     <div className="flex items-center">
@@ -300,19 +302,19 @@ export default function UserDetail() {
                     </span>
                     {detail?.user?.total_reviews && (
                       <span className="text-sm text-gray-600">
-                        ({detail.user.total_reviews} reviews)
+                        ({detail.user.total_reviews} {t("userDetail.reviews")})
                       </span>
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-600">No ratings available</p>
+                  <p className="text-sm text-gray-600">{t("userDetail.noRatingsAvailable")}</p>
                 )}
               </div>
 
               <div className="bg-white p-6 rounded-lg py-8">
-                <h2 className="font-bold text-lg text-gray-900">Bio:</h2>
+                <h2 className="font-bold text-lg text-gray-900">{t("userDetail.bio")}:</h2>
                 <p className="text-sm text-gray-800 font-semibold mt-2">
-                  {detail?.user?.description || "No bio available"}
+                  {detail?.user?.description || t("userDetail.noBioAvailable")}
                 </p>
                 {/* <p className="text-sm text-gray-800 font-semibold mt-10">
                   consectetur adipisci elit, sed eiusmod tempor incididunt ut
@@ -326,7 +328,7 @@ export default function UserDetail() {
                 </p> */}
               </div>
               <div className="pt-7 pb-3">
-                <h1 className="text-xl font-bold text-black">Booking Events</h1>
+                <h1 className="text-xl font-bold text-black">{t("userDetail.bookingEvents")}</h1>
               </div>
               {/* Table */}
               <div className="bg-white rounded-lg p-5">
@@ -335,22 +337,22 @@ export default function UserDetail() {
                     <thead className="bg-[#f3f7ff]">
                       <tr className="text-sm">
                         <th className="px-2 py-4 text-left font-base text-gray-600">
-                          Event Name
+                          {t("userDetail.eventName")}
                         </th>
                         <th className="px-2 py-4 text-left font-base text-gray-600">
-                          Organizer
+                          {t("userDetail.organizer")}
                         </th>
                         <th className="px-2 py-4 text-left font-base text-gray-600">
-                          Date
+                          {t("userDetail.date")}
                         </th>
                         <th className="px-2 py-4 text-left font-base text-gray-600">
-                          Time
+                          {t("userDetail.time")}
                         </th>
                         <th className="px-2 py-4 text-center font-base text-gray-600">
-                          City
+                          {t("userDetail.city")}
                         </th>
                         <th className="px-2 py-4 text-left font-base text-gray-600">
-                          Status
+                          {t("userDetail.status")}
                         </th>
                       </tr>
                     </thead>

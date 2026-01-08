@@ -132,20 +132,20 @@ export default function AboutUsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
             <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 hover:shadow-xl transition-shadow">
               <div className="text-4xl font-bold text-[#a797cc] mb-2">
-                {t("about.tab16") || "52M+"}
+                100+
               </div>
               <div className="text-sm text-gray-600 font-medium">{t("eventsMain.users") || "Users"}</div>
             </div>
             <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 hover:shadow-xl transition-shadow">
-              <div className="text-4xl font-bold text-[#a797cc] mb-2">{t("about.statsEvents") || "10K+"}</div>
+              <div className="text-4xl font-bold text-[#a797cc] mb-2">100+</div>
               <div className="text-sm text-gray-600 font-medium">{t("eventsMain.events") || "Events"}</div>
             </div>
             <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 hover:shadow-xl transition-shadow">
-              <div className="text-4xl font-bold text-[#a797cc] mb-2">{t("about.statsHosts") || "5K+"}</div>
+              <div className="text-4xl font-bold text-[#a797cc] mb-2">100+</div>
               <div className="text-sm text-gray-600 font-medium">{t("eventsMain.hosts") || "Hosts"}</div>
             </div>
             <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100 hover:shadow-xl transition-shadow">
-              <div className="text-4xl font-bold text-[#a797cc] mb-2">{t("about.statsCities") || "100+"}</div>
+              <div className="text-4xl font-bold text-[#a797cc] mb-2">10+</div>
               <div className="text-sm text-gray-600 font-medium">{t("eventsMain.cities") || "Cities"}</div>
             </div>
           </div>

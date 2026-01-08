@@ -1,3 +1,5 @@
+"use client";
+
 import { MoveRightIcon } from "lucide-react";
 import DropdownUser from "./DropdownUser";
 import PageTitle from "../ui/PageTitle"; // Adjust the path according to your file structure
@@ -8,8 +10,10 @@ import Image from "next/image";
 import Cookies from "js-cookie";
 import NotificationBell from "./NotificationBell";
 import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
-const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage }) => {
+const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage, searchPlaceholder }) => {
+  const { t } = useTranslation();
   const { push } = useRouter();
 
   async function logout(e) {
@@ -57,7 +61,7 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage }) => 
 
           {/* Seach bar */}
           <div className="hidden lg:block animate-fade-in">
-            <SearchBar search={search} setSearch={setSearch} setPage={setPage} />
+            <SearchBar search={search} setSearch={setSearch} setPage={setPage} placeholder={searchPlaceholder} />
           </div>
 
           <div className="flex items-center gap-x-2 sm:gap-x-4 lg:gap-x-3 xl:gap-x-6">
@@ -86,7 +90,7 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage }) => 
                 className="w-full flex items-center justify-center gap-2 p-2 sm:p-2.5 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-brand-pastel-gray-purple-1 to-brand-gray-purple-2 hover:from-brand-gray-purple-2 hover:to-brand-pastel-gray-purple-1 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95"
               >
                 <Image src="/assets/images/home/logout.png" alt="Logout" height={20} width={20} className="w-[16px] sm:w-[20px] transition-transform duration-300 group-hover:rotate-12" />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline">{t("common.logout")}</span>
               </button>
             </div>
           </div>
@@ -94,7 +98,7 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage }) => 
       </header>
 
       <div className="mt-5 block lg:hidden animate-fade-in">
-        <SearchBar />
+        <SearchBar search={search} setSearch={setSearch} setPage={setPage} placeholder={searchPlaceholder} />
       </div>
     </>
   );

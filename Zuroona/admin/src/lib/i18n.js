@@ -9,7 +9,6 @@ import arTranslation from "@/i18n/locales/ar/translation.json";
 const defaultLanguage = "en";
 
 i18n
-	.use(LanguageDetector)
 	.use(initReactI18next)
 	.init({
 		resources: {
@@ -29,24 +28,24 @@ i18n
 		react: {
 			useSuspense: false, // Disable suspense to prevent hydration errors
 		},
-		detection: {
-			order: ["localStorage", "navigator"],
-			caches: ["localStorage"],
-			// Don't detect on init to prevent hydration mismatch
-			lookupLocalStorage: "i18nextLng",
-			checkWhitelist: true,
-		},
+		// DO NOT use LanguageDetector on init - it causes hydration mismatch
+		// Language will be set manually after mount
 	});
 
-// Update language on client-side after initialization
+// Update language on client-side AFTER React hydration is complete
+// Use double requestAnimationFrame to ensure it happens after all hydration
 if (typeof window !== "undefined") {
-	const storedLanguage = localStorage.getItem("i18nextLng");
-	if (storedLanguage && (storedLanguage === "en" || storedLanguage === "ar")) {
-		// Change language after a short delay to ensure it happens after hydration
-		setTimeout(() => {
-			i18n.changeLanguage(storedLanguage);
-		}, 0);
-	}
+	// Wait for React to fully hydrate before changing language
+	requestAnimationFrame(() => {
+		requestAnimationFrame(() => {
+			const storedLanguage = localStorage.getItem("i18nextLng");
+			if (storedLanguage && (storedLanguage === "en" || storedLanguage === "ar")) {
+				if (i18n.language !== storedLanguage) {
+					i18n.changeLanguage(storedLanguage);
+				}
+			}
+		});
+	});
 }
 
 export default i18n;

@@ -15,6 +15,7 @@ import SelectDate from '../common/SelectDate';
 import { getCategoryEventList } from '@/redux/slices/CategoryEventList';
 import { getEventList } from '@/redux/slices/EventList';
 import { useTranslation } from 'react-i18next';
+import { Icon } from '@iconify/react';
 
 const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit }) => {
     const { t } = useTranslation();
@@ -26,11 +27,16 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
     const router = useRouter();
     const [page, setPage] = useState(1);
     const [loading, setLoding] = useState(false);
+    const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [pendingPayload, setPendingPayload] = useState(null);
     const { CategoryEventList } = useSelector((state) => state.CategoryEventData || {});
+    const { profile } = useSelector((state) => state.profileData || {});
     const EventListId = searchParams.get("id");
     const { EventListdetails = {}, loadingDetail } = useSelector(
         (state) => state.EventDetailData || {}
     );
+    const maxEventCapacity = profile?.user?.max_event_capacity || 100; // Get max capacity from settings
 
     useEffect(() => {
         if (eventId) {
@@ -65,17 +71,26 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
             event_type: EventListId ? EventListdetails?.event_type : 2,
             event_for: EventListId ? EventListdetails?.event_for : 3,
             event_category: EventListId ? (Array.isArray(EventListdetails?.event_category) ? EventListdetails?.event_category : [EventListdetails?.event_category].filter(Boolean)) : [],
+            latitude: EventListId ? EventListdetails?.location?.coordinates?.[1] : "",
+            longitude: EventListId ? EventListdetails?.location?.coordinates?.[0] : "",
+            neighborhood: EventListId ? EventListdetails?.area_name || EventListdetails?.neighborhood : "",
         },
         validationSchema: Yup.object({
             event_date: Yup.string().required(t('signup.tab16')),
             event_start_time: Yup.string().required(t('signup.tab16')),
             event_end_time: Yup.string().required(t('signup.tab16')),
-            event_name: Yup.string().required(t('signup.tab16')),
-            event_description: Yup.string().required(t('signup.tab16')),
+            event_name: Yup.string()
+                .required(t('signup.tab16'))
+                .min(3, 'Event title must be at least 3 characters')
+                .max(200, 'Event title cannot exceed 200 characters'),
+            event_description: Yup.string()
+                .required(t('signup.tab16'))
+                .min(20, 'Event description must be at least 20 characters')
+                .max(1000, 'Event description cannot exceed 1000 characters'),
             event_address: Yup.string().required(t('signup.tab16')),
             no_of_attendees: Yup.number()
                 .min(1, "Event capacity must be at least 1")
-                .max(10, "Event capacity cannot exceed 10")
+                .max(maxEventCapacity, `Event capacity cannot exceed ${maxEventCapacity} (your max event capacity setting)`)
                 .required("This field is required"),
             event_price: Yup.number().required(t('signup.tab16')).positive(t('signup.tab16')),
             event_for: Yup.string()
@@ -92,73 +107,100 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                 return;
             }
             
-            setLoding(true);
-            let payload;
-            // Ensure event_category is an array
-            const eventCategoryIds = Array.isArray(values.event_category) 
-                ? values.event_category 
-                : values.event_category ? [values.event_category] : [];
-
-            const basePayload = {
-                event_date: values.event_date,
-                event_start_time: values.event_start_time,
-                event_end_time: values.event_end_time,
-                event_name: values.event_name,
-                event_images: eventImages,
-                event_description: values.event_description || '',
-                event_address: values.event_address,
-                event_type: Number(values.event_type),
-                event_for: Number(values.event_for),
-                event_category: eventCategoryIds,
-                no_of_attendees: Number(values.no_of_attendees),
-                event_price: Number(values.event_price),
-            };
-
-
+            // If editing, proceed directly. If creating, show confirmation first
             if (EventListId) {
-                payload = {
-                    event_id: EventListId,
-                    ...basePayload,
-                };
+                await submitEvent(values, resetForm);
             } else {
-                payload = basePayload;
-            }
-            if (EventListId) {
-                EditEventListApi(payload).then((res) => {
-                    setLoding(false);
-                    if (res?.status == 1) {
-                        toast.success(res?.message);
-                        onClose();
-                        dispatch(getEventListDetail({ id: EventListId }));
-                    }
-                    if (res.status == 0) {
-                        toast.error(res?.message);
-                    }
-                    console.log("res", res);
-                });
-            } else {
-                AddEventListApi(payload).then((res) => {
-                    setLoding(false);
-                    if (res?.status == 1) {
-                        toast.success(res?.message);
-                        onClose();
-                        dispatch(getEventList({ event_type: 2, page: eventpage, limit: eventlimit }));
-                        resetForm();
-                    }
-                    if (res.status == 0) {
-                        toast.error(res?.message);
-                    }
-                    console.log("res", res);
-                });
+                setPendingPayload({ values, resetForm });
+                setShowCreateConfirm(true);
             }
         },
     });
 
+    const submitEvent = async (valuesOrPayload, resetForm) => {
+        const values = valuesOrPayload?.values || valuesOrPayload;
+        const actualResetForm = valuesOrPayload?.resetForm || resetForm;
+        
+        setLoding(true);
+        let payload;
+        // Ensure event_category is an array
+        const eventCategoryIds = Array.isArray(values.event_category) 
+            ? values.event_category 
+            : values.event_category ? [values.event_category] : [];
+
+        const basePayload = {
+            event_date: values.event_date,
+            event_start_time: values.event_start_time,
+            event_end_time: values.event_end_time,
+            event_name: values.event_name,
+            event_images: eventImages,
+            event_description: values.event_description || '',
+            event_address: values.event_address,
+            event_type: Number(values.event_type),
+            event_for: Number(values.event_for),
+            event_category: eventCategoryIds,
+            no_of_attendees: Number(values.no_of_attendees),
+            event_price: Number(values.event_price),
+            ...(values.latitude && values.longitude && {
+                latitude: Number(values.latitude),
+                longitude: Number(values.longitude),
+            }),
+            ...(values.neighborhood && {
+                area_name: values.neighborhood, // Save area name from map
+            }),
+        };
+
+        if (EventListId) {
+            payload = {
+                event_id: EventListId,
+                ...basePayload,
+            };
+        } else {
+            payload = basePayload;
+        }
+        
+        if (EventListId) {
+            EditEventListApi(payload).then((res) => {
+                setLoding(false);
+                if (res?.status == 1) {
+                    toast.success(res?.message);
+                    onClose();
+                    dispatch(getEventListDetail({ id: EventListId }));
+                }
+                if (res.status == 0) {
+                    toast.error(res?.message);
+                }
+            });
+        } else {
+            AddEventListApi(payload).then((res) => {
+                setLoding(false);
+                if (res?.status == 1) {
+                    // Show success popup for new events
+                    setShowSuccessPopup(true);
+                    setShowCreateConfirm(false);
+                    // Close modal and reset after a delay
+                    setTimeout(() => {
+                        onClose();
+                        dispatch(getEventList({ event_type: 2, page: eventpage, limit: eventlimit }));
+                        if (actualResetForm) actualResetForm();
+                        setEventImages([]);
+                        setPreviewUrls([]);
+                        setShowSuccessPopup(false);
+                    }, 3000);
+                }
+                if (res.status == 0) {
+                    toast.error(res?.message);
+                    setShowCreateConfirm(false);
+                }
+            });
+        }
+    };
+
     const handleFile = async (file) => {
         if (!file) return;
         
-        if (eventImages.length >= 6) {
-            toast.error("Maximum 6 images allowed");
+        if (eventImages.length >= 5) {
+            toast.error("Maximum 5 images allowed");
             return;
         }
 
@@ -222,6 +264,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
     };
 
     return (
+        <>
         <Modal isOpen={isOpen} onClose={onClose} width="xl">
             <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900 text-center">
@@ -320,8 +363,12 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                                 type="text"
                                 placeholder={t('add.tab3')}
                                 {...formik.getFieldProps('event_name')}
+                                maxLength={200}
                                 className="w-full pl-10 py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm"
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                                ({formik.values.event_name?.length || 0}/200 characters)
+                            </p>
                         </div>
                         {formik.touched.event_name && formik.errors.event_name ? (
                             <p className="text-red-500 text-xs mt-1 font-semibold">
@@ -331,7 +378,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                     </div>
                     <div className='mb-4'>
                         <label className="block text-gray-700 text-sm font-semibold mb-2">
-                            {t('add.tab4')} ({previewUrls.length}/6)
+                            {t('add.tab4')} ({previewUrls.length}/5)
                         </label>
 
                         {/* Image Preview Grid */}
@@ -357,7 +404,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                         )}
 
                         {/* Upload Box */}
-                        {previewUrls.length < 6 && (
+                        {previewUrls.length < 5 && (
                             <div className="w-full cursor-pointer">
                                 <div className="w-full h-36 border-2 border-dashed bg-[#fdfdfd] border-orange-300 rounded-lg flex items-center justify-center hover:border-orange-400 transition-colors">
                                     <label htmlFor="file-upload" className="flex justify-center flex-col items-center cursor-pointer w-full h-full">
@@ -374,7 +421,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                                                     alt="Upload Icon"
                                                 />
                                                 <p className="text-gray-500 text-xs mt-2 font-medium">
-                                                    {t('add.tab4')} (Max 6 images)
+                                                    {t('add.tab4')} (Max 5 images)
                                                 </p>
                                             </>
                                         )}
@@ -387,7 +434,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                                     accept="image/*"
                                     multiple
                                     className="hidden"
-                                    disabled={imageLoading || previewUrls.length >= 6}
+                                    disabled={imageLoading || previewUrls.length >= 5}
                                 />
                             </div>
                         )}
@@ -413,9 +460,13 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                             <textarea
                                 placeholder={t('add.tab6')}
                                 {...formik.getFieldProps('event_description')}
+                                maxLength={1000}
                                 className="w-full pl-10 py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm"
                                 rows="5"
                             />
+                            <p className="text-xs text-gray-500 mt-1">
+                                ({formik.values.event_description?.length || 0}/1000 characters)
+                            </p>
                         </div>
                         {formik.touched.event_description && formik.errors.event_description ? (
                             <p className="text-red-500 text-xs mt-1 font-semibold">
@@ -450,31 +501,39 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                         ) : null}
                     </div>
                     <div className="col-span-full mb-4">
-                        <label className="block text-gray-700 text-sm font-semibold">
-                            {t('add.tab8')} (Multi-select)
+                        <label className="block text-gray-700 text-sm font-semibold mb-3">
+                            {t('add.tab8')} <span className="text-red-500">*</span>
                         </label>
-                        <div className="relative mt-1">
-                            <select
-                                multiple
-                                value={Array.isArray(formik.values.event_category) ? formik.values.event_category : []}
-                                onChange={(e) => {
-                                    const selected = Array.from(e.target.selectedOptions, option => option.value);
-                                    formik.setFieldValue('event_category', selected);
-                                }}
-                                className="w-full pl-10 py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm appearance-none min-h-[100px]"
-                                size={Math.min(CategoryEventList.length || 1, 5)}
-                            >
-                                {CategoryEventList.length > 0 ? (
-                                    CategoryEventList.map((category) => (
-                                        <option key={category._id} value={category._id}>
+                        <div className="flex flex-wrap gap-2">
+                            {CategoryEventList.length > 0 ? (
+                                CategoryEventList.map((category) => {
+                                    const selectedCategories = Array.isArray(formik.values.event_category) ? formik.values.event_category : [];
+                                    const isSelected = selectedCategories.includes(category._id);
+                                    return (
+                                        <button
+                                            key={category._id}
+                                            type="button"
+                                            onClick={() => {
+                                                const currentCategories = Array.isArray(formik.values.event_category) ? formik.values.event_category : [];
+                                                if (isSelected) {
+                                                    formik.setFieldValue('event_category', currentCategories.filter(id => id !== category._id));
+                                                } else {
+                                                    formik.setFieldValue('event_category', [...currentCategories, category._id]);
+                                                }
+                                            }}
+                                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                                                isSelected
+                                                    ? 'bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-md shadow-[#a797cc]/30'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                                            }`}
+                                        >
                                             {category.name}
-                                        </option>
-                                    ))
-                                ) : (
-                                    <option value="" disabled>No Categories Available</option>
-                                )}
-                            </select>
-                            <p className="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple categories</p>
+                                        </button>
+                                    );
+                                })
+                            ) : (
+                                <p className="text-sm text-gray-500">No Categories Available</p>
+                            )}
                         </div>
                         {formik.touched.event_category && formik.errors.event_category ? (
                             <p className="text-red-500 text-xs mt-1 font-semibold">
@@ -484,7 +543,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                     </div>
                 </div>
 
-                <div className="mb-4">
+                <div className="mb-4 hidden">
                     <label className="block text-gray-700 text-sm font-semibold">{t('events.eventType', 'Event Type')}</label>
                     <div className="flex flex-col sm:flex-row gap-4 mt-1">
                         {['tab10', 'tab11', 'tab12'].map((tab, index) => {
@@ -540,10 +599,15 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
 
                             <input
                                 type="number"
-                                placeholder="Enter No. of Attendess"
+                                min="1"
+                                max={maxEventCapacity}
+                                placeholder={`Enter No. of Attendees (Max: ${maxEventCapacity})`}
                                 {...formik.getFieldProps('no_of_attendees')}
                                 className="w-full pl-10 py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm"
                             />
+                            <p className="text-gray-500 text-xs mt-1">
+                                {t('settings.maxCapacity') || `Maximum capacity: ${maxEventCapacity}`}
+                            </p>
                         </div>
                         {formik.touched.no_of_attendees && formik.errors.no_of_attendees ? (
                             <p className="text-red-500 text-xs mt-1 font-semibold">
@@ -592,6 +656,62 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                 </form>
             </div>
         </Modal>
+        
+        {/* Create Event Confirmation Modal */}
+        {showCreateConfirm && (
+            <Modal isOpen={showCreateConfirm} onClose={() => setShowCreateConfirm(false)} width="md">
+                <div className="p-6 text-center">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-full flex items-center justify-center mb-4">
+                        <Icon icon="lucide:alert-circle" className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                        {t('ConfirmCreateEvent') || 'Are you sure you want to create this event?'}
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                        {t('ConfirmCreateEventDesc') || 'Once submitted, your event will be reviewed by our team before being published.'}
+                    </p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setShowCreateConfirm(false)}
+                            className="flex-1 py-3 px-6 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
+                        >
+                            {t('common.cancel') || 'Cancel'}
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (pendingPayload) {
+                                    submitEvent(pendingPayload.values, pendingPayload.resetForm);
+                                }
+                            }}
+                            className="flex-1 py-3 px-6 bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white rounded-lg font-semibold hover:shadow-lg transition"
+                        >
+                            {t('common.yes') || 'Yes, Create Event'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+        )}
+
+        {/* Success Popup - Event Submitted for Review */}
+        {showSuccessPopup && (
+            <Modal isOpen={showSuccessPopup} onClose={() => setShowSuccessPopup(false)} width="md">
+                <div className="p-8 text-center">
+                    <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mb-6 shadow-lg">
+                        <Icon icon="lucide:check-circle" className="w-12 h-12 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                        {t('eventSubmitted') || 'Event Submitted for Review'}
+                    </h3>
+                    <p className="text-gray-600 mb-2">
+                        {t('Event Submitted Desc') || 'Your event has been submitted for review. Once it is approved, you will be notified via email.'}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-4">
+                        {t('Check Email') || 'Please check your email for confirmation.'}
+                    </p>
+                </div>
+            </Modal>
+        )}
+        </>
     );
 };
 

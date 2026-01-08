@@ -1,4 +1,8 @@
+"use client";
+
 import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setLanguage, toggleLanguage } from '@/redux/slices/language';
 import i18n from '../../lib/i18n'; 
 import { TOKEN_NAME } from '@/until';
 import Cookies from 'js-cookie';
@@ -7,24 +11,20 @@ import { HiOutlineGlobeAlt } from 'react-icons/hi';
 import { IoLanguageOutline } from 'react-icons/io5';
 
 export default function LanguageSwitcher({ChangeLanguage }) {
-    const [currentLang, setCurrentLang] = useState('ar'); // Default to match server
+    const dispatch = useDispatch();
+    const { currentLanguage, isRTL } = useSelector((state) => state.language);
     const [isHovered, setIsHovered] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    const toggleLanguage = () => {
-        const newLang = currentLang === 'en' ? 'ar' : 'en';
+    const toggleLanguageHandler = () => {
+        // Dispatch Redux action to toggle language
+        dispatch(toggleLanguage());
+        
+        // Get the new language from Redux state (will be updated by reducer)
+        const newLang = currentLanguage === 'en' ? 'ar' : 'en';
         
         // Change language in i18n (this will trigger languageChanged event)
         i18n.changeLanguage(newLang);
-        
-        // Ensure language is saved to localStorage immediately
-        try {
-            if (typeof localStorage !== "undefined") {
-                localStorage.setItem("i18nextLng", newLang);
-            }
-        } catch (error) {
-            console.warn("Failed to save language to localStorage:", error);
-        }
         
         // Update document direction immediately
         if (typeof document !== "undefined" && document.documentElement) {
@@ -43,18 +43,43 @@ export default function LanguageSwitcher({ChangeLanguage }) {
         if (token && ChangeLanguage) {
           ChangeLanguage(newLang);
         }
-        
-        setCurrentLang(newLang);
     };
 
     useEffect(() => {
-        // Set mounted to true and sync language from i18n
+        // Set mounted to true and sync language from Redux
         setMounted(true);
-        setCurrentLang(i18n.language || 'ar');
         
+        // Sync i18n with Redux state on mount
+        if (i18n.language !== currentLanguage) {
+            i18n.changeLanguage(currentLanguage);
+        }
+        
+        // Update document direction based on Redux state
+        if (typeof document !== "undefined" && document.documentElement) {
+            document.documentElement.setAttribute("dir", isRTL ? 'rtl' : 'ltr');
+            document.documentElement.setAttribute("lang", currentLanguage);
+            
+            if (document.body) {
+                document.body.classList.remove("rtl", "ltr");
+                document.body.classList.add(isRTL ? 'rtl' : 'ltr');
+            }
+        }
+        
+        // Listen for language changes from i18n and sync with Redux
         const handleLanguageChange = (lang) => {
-            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-            setCurrentLang(lang);
+            if (lang !== currentLanguage) {
+                dispatch(setLanguage(lang));
+            }
+            
+            if (typeof document !== "undefined" && document.documentElement) {
+                document.documentElement.setAttribute("dir", lang === 'ar' ? 'rtl' : 'ltr');
+                document.documentElement.setAttribute("lang", lang);
+                
+                if (document.body) {
+                    document.body.classList.remove("rtl", "ltr");
+                    document.body.classList.add(lang === 'ar' ? 'rtl' : 'ltr');
+                }
+            }
         };
 
         i18n.on('languageChanged', handleLanguageChange);
@@ -62,13 +87,13 @@ export default function LanguageSwitcher({ChangeLanguage }) {
         return () => {
             i18n.off('languageChanged', handleLanguageChange);
         };
-    }, []);
+    }, [dispatch, currentLanguage, isRTL]);
 
     return (
         <div className="relative">
             <button
                 className="group flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-all duration-300 ease-in-out shadow-sm hover:shadow-md border border-white/30"
-                onClick={toggleLanguage}
+                onClick={toggleLanguageHandler}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
@@ -85,7 +110,7 @@ export default function LanguageSwitcher({ChangeLanguage }) {
                     />
                 </div>
                 <span className="text-sm font-medium text-white group-hover:text-white/90">
-                    {!mounted ? 'العربية' : (currentLang === 'en' ? 'العربية' : 'English')}
+                    {!mounted ? 'English' : (currentLanguage === 'en' ? 'العربية' : 'English')}
                 </span>
                 <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full`} />
             </button>

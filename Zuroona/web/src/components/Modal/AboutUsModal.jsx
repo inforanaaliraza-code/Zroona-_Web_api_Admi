@@ -3,9 +3,26 @@
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 import Modal from "../common/Modal";
+import { useDataStore } from "@/app/api/store/store";
+import { useEffect } from "react";
+import { useRTL } from "@/utils/rtl";
 
 export default function AboutUsModal({ isOpen, onClose }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { isRTL, textAlign } = useRTL();
+  const CMSDetail = useDataStore((store) => store.CMSDetail);
+  const { fetchCMSDetail } = useDataStore();
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCMSDetail({ type: 3 }); // Type 3 = About Us
+    }
+  }, [isOpen, i18n.language, fetchCMSDetail]);
+
+  // Get content based on language - ONLY from CMS (Admin Portal is source of truth)
+  const content = i18n.language === 'ar' 
+    ? CMSDetail?.description_ar 
+    : CMSDetail?.description;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} width="2xl">
@@ -34,129 +51,39 @@ export default function AboutUsModal({ isOpen, onClose }) {
 
         {/* Main Content */}
         <div className="px-4 md:px-6 py-6 space-y-6">
-          {/* Mission Section - Enhanced */}
-          <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-6 md:p-8 border border-gray-200/80 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-start gap-5 mb-5">
-              <div className="w-14 h-14 bg-gradient-to-br from-brand-gray-purple-2 to-primary rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0 transform transition-transform hover:scale-110">
-                <Icon icon="lucide:target" className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-                  {t("about.tab2") || "Our Mission"}
-                </h2>
-                <div className="h-1 w-20 bg-gradient-to-r from-brand-gray-purple-2 to-primary rounded-full mb-4"></div>
-                <p className="text-base md:text-lg text-gray-700 leading-relaxed">
-                  {t("about.content") || "Zuroona connects people through authentic Saudi experiences. We support Vision 2030 by creating meaningful cultural connections between hosts and guests."}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Vision & Values Grid - Enhanced */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Vision Card */}
-            <div className="bg-gradient-to-br from-brand-pastel-gray-purple-1/40 via-brand-gray-purple-2/20 to-transparent rounded-2xl shadow-xl p-6 md:p-7 border-2 border-brand-pastel-gray-purple-1/60 hover:border-brand-gray-purple-2/80 transition-all duration-300 hover:shadow-2xl">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-brand-gray-purple-2 to-primary rounded-xl flex items-center justify-center shadow-lg">
-                  <Icon icon="lucide:eye" className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900">
-                  {t("about.tab3") || "Our Vision"}
-                </h3>
-              </div>
-              <div className="h-0.5 w-16 bg-gradient-to-r from-brand-gray-purple-2 to-primary rounded-full mb-4"></div>
-              <p className="text-sm md:text-base text-gray-700 leading-relaxed">
-                {t("eventsMain.toBecomeLeading") || "To become the leading platform for authentic cultural experiences in Saudi Arabia, connecting millions of people through meaningful interactions and shared moments."}
-              </p>
-            </div>
-
-            {/* Values Card */}
-            <div className="bg-gradient-to-br from-brand-light-orange-1/50 via-brand-light-orange-2/30 to-transparent rounded-2xl shadow-xl p-6 md:p-7 border-2 border-brand-light-orange-1/60 hover:border-brand-light-orange-2/80 transition-all duration-300 hover:shadow-2xl">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary to-brand-gray-green-2 rounded-xl flex items-center justify-center shadow-lg">
-                  <Icon icon="lucide:heart" className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900">
-                  {t("about.tab4") || "Our Values"}
-                </h3>
-              </div>
-              <div className="h-0.5 w-16 bg-gradient-to-r from-primary to-brand-gray-green-2 rounded-full mb-4"></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { icon: "lucide:sparkles", text: t("eventsMain.authenticityCultural") || "Authenticity & Cultural Preservation", color: "green" },
-                  { icon: "lucide:users-round", text: t("eventsMain.communityBuilding") || "Community Building", color: "purple" },
-                  { icon: "lucide:target", text: t("eventsMain.supportingVision2030") || "Supporting Vision 2030", color: "purple" },
-                  { icon: "lucide:rocket", text: t("eventsMain.empoweringSaudiYouth") || "Empowering Saudi Youth", color: "purple" }
-                ].map((value, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-white/60 rounded-lg border border-brand-light-orange-1/30 hover:border-primary/50 hover:bg-white hover:shadow-md transition-all duration-300 group">
-                    <div className={`w-10 h-10 bg-gradient-to-br ${value.color === "green" ? "from-green-500 to-green-600" : "from-primary to-brand-gray-purple-2"} rounded-lg flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform`}>
-                      <Icon icon={value.icon} className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-sm md:text-base text-gray-700 font-medium group-hover:text-gray-900 transition-colors">{value.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Section - Enhanced */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { value: t("about.tab16") || "52M+", label: "Users", icon: "lucide:users" },
-              { value: t("about.statsEvents") || "10K+", label: "Events", icon: "lucide:calendar" },
-              { value: t("about.statsHosts") || "5K+", label: "Hosts", icon: "lucide:user-check" },
-              { value: t("about.statsCities") || "100+", label: "Cities", icon: "lucide:map-pin" }
-            ].map((stat, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-lg p-5 text-center border-2 border-gray-100 hover:border-[#a797cc]/50 transition-all duration-300 hover:shadow-xl hover:scale-105 group">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#a797cc] to-primary rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                  <Icon icon={stat.icon} className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-2xl md:text-3xl font-bold text-[#a797cc] mb-1 group-hover:text-[#8b7bb8] transition-colors">
-                  {stat.value}
-                </div>
-                <div className="text-xs md:text-sm text-gray-600 font-medium">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* How It Works - Enhanced */}
+          {/* Content Section - ONLY from CMS */}
           <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-6 md:p-8 border border-gray-200/80">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-                {t("eventsMain.howZuroonaWorks") || "How Zuroona Works"}
-              </h2>
-              <div className="h-1 w-24 bg-gradient-to-r from-brand-gray-purple-2 to-primary rounded-full mx-auto"></div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { 
-                  icon: "lucide:user-plus", 
-                  title: t("eventsMain.joinAsHost") || "Join as Host",
-                  desc: t("eventsMain.createProfileShare") || "Create your profile and start sharing your passion with the community"
-                },
-                { 
-                  icon: "lucide:calendar-plus", 
-                  title: t("eventsMain.createEvents") || "Create Events",
-                  desc: t("eventsMain.organizeUnique") || "Organize unique experiences that showcase Saudi culture and traditions"
-                },
-                { 
-                  icon: "lucide:users", 
-                  title: t("eventsMain.connectGrow") || "Connect & Grow",
-                  desc: t("eventsMain.buildMeaningful") || "Build meaningful connections and grow your community through shared experiences"
-                }
-              ].map((step, index) => (
-                <div key={index} className="text-center group">
-                  <div className="w-20 h-20 bg-gradient-to-br from-brand-gray-purple-2 to-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl group-hover:scale-110 transition-all duration-300">
-                    <Icon icon={step.icon} className="w-10 h-10 text-white" />
-                  </div>
-                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 group-hover:text-[#a797cc] transition-colors">
-                    {step.title}
-                  </h3>
-                  <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                    {step.desc}
-                  </p>
+            <div className="prose prose-lg max-w-none">
+              {content ? (
+                <div
+                  className={`text-gray-700 leading-relaxed ${textAlign}
+                    [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-8 [&_h1]:mb-6 [&_h1]:text-gray-900 [&_h1]:border-b-2 [&_h1]:border-[#a797cc] [&_h1]:pb-3
+                    [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-8 [&_h2]:mb-5 [&_h2]:text-gray-900
+                    [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-4 [&_h3]:text-gray-800
+                    [&_h4]:text-lg [&_h4]:font-semibold [&_h4]:mt-5 [&_h4]:mb-3 [&_h4]:text-gray-800
+                    [&_p]:mb-5 [&_p]:text-gray-700 [&_p]:leading-relaxed [&_p]:text-justify [&_p]:text-base
+                    [&_ul]:list-none [&_ul]:ml-0 [&_ul]:space-y-3 [&_ul]:mb-5
+                    [&_ol]:list-none [&_ol]:ml-0 [&_ol]:space-y-3 [&_ol]:mb-5
+                    [&_li]:mb-3 [&_li]:text-gray-700 [&_li]:leading-relaxed [&_li]:p-3 [&_li]:bg-white [&_li]:rounded-lg [&_li]:border-l-4 [&_li]:border-[#a797cc] [&_li]:hover:shadow-md [&_li]:transition-all
+                    [&_ul_li]:flex [&_ul_li]:items-start [&_ul_li]:gap-3
+                    [&_ol_li]:flex [&_ol_li]:items-start [&_ol_li]:gap-3
+                    [&_ul_li]:before:content-[''] [&_ul_li]:before:w-0 [&_ul_li]:before:h-0
+                    [&_ol_li]:before:content-[''] [&_ol_li]:before:w-0 [&_ol_li]:before:h-0
+                    [&_strong]:font-bold [&_strong]:text-gray-900
+                    [&_a]:text-[#a797cc] [&_a]:hover:text-[#8b7bb8] [&_a]:underline [&_a]:font-medium [&_a]:transition-colors
+                    [&_blockquote]:border-l-4 [&_blockquote]:border-[#a797cc] [&_blockquote]:pl-5 [&_blockquote]:pr-4 [&_blockquote]:py-3 [&_blockquote]:italic [&_blockquote]:text-gray-600 [&_blockquote]:bg-gray-50 [&_blockquote]:rounded-r [&_blockquote]:my-5
+                    [&_table]:w-full [&_table]:border-collapse [&_table]:mb-5 [&_table]:shadow-md [&_table]:rounded-lg [&_table]:overflow-hidden
+                    [&_th]:bg-gradient-to-r [&_th]:from-[#a797cc] [&_th]:to-[#8b7bb8] [&_th]:text-white [&_th]:p-4 [&_th]:text-left [&_th]:font-semibold
+                    [&_td]:border [&_td]:border-gray-300 [&_td]:p-4 [&_td]:text-gray-700 [&_td]:bg-white
+                    [&_tr:nth-child(even)_td]:bg-gray-50
+                  `}
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>{t("common.loading") || "Loading content..."}</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

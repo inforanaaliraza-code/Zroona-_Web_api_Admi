@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { FaUserCircle } from "react-icons/fa";
 import ClickOutside from "./ClickOutside";
 import Cookies from "js-cookie";
 import { TOKEN_NAME } from "@/until";
@@ -19,14 +19,12 @@ const DropdownUser = () => {
           const admin = res?.data || res;
           setAdminData({
             admin_name: `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || "Admin",
-            profile_image: admin.image || "/assets/images/home/Profile.png",
           });
         }
       } catch (error) {
         console.error("Error fetching admin data:", error);
         setAdminData({
           admin_name: "Admin",
-          profile_image: "/assets/images/home/Profile.png",
         });
       }
     };
@@ -55,14 +53,8 @@ const DropdownUser = () => {
             {adminData?.admin_name || "Admin"}
           </h1>
         </span>
-        <span className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-brand-pastel-gray-purple-1/30 overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-brand-pastel-gray-purple-1 transition-all duration-300 group-hover:scale-105">
-          <Image
-            width={120}
-            height={120}
-            src={adminData?.profile_image || "/assets/images/home/Profile.png"}
-            alt="Admin"
-            className="w-full h-auto object-cover"
-          />
+        <span className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-[#a797cc] to-[#8b7ab8] flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 border-2 border-brand-pastel-gray-purple-1/30 group-hover:border-brand-pastel-gray-purple-1">
+          <FaUserCircle className="text-white text-2xl sm:text-3xl" />
         </span>
       </Link>
       {/* <!-- Dropdown End --> */}

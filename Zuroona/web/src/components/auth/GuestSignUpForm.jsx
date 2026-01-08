@@ -16,8 +16,13 @@ import { NumberInput } from "@/components/ui/number-input";
 import ProfileImageUpload from "../ProfileImageUpload/ProfileImageUpload";
 import Loader from "../Loader/Loader";
 import LoginModal from "../Modal/LoginModal";
+import TermsOfServiceModal from "../Modal/TermsOfServiceModal";
+import PrivacyPolicyModal from "../Modal/PrivacyPolicyModal";
 import { TOKEN_NAME, BASE_API_URL } from "@/until";
 import useAuthStore from "@/store/useAuthStore";
+import CitySearchSelect from "@/components/ui/CitySearchSelect";
+import { useRTL } from "@/utils/rtl";
+import { useEmailValidation } from "@/hooks/useEmailValidation";
 
 const countries = [
     { code: "AF", name: "Afghanistan" }, { code: "AL", name: "Albania" }, { code: "DZ", name: "Algeria" },
@@ -90,6 +95,7 @@ const countries = [
 export default function GuestSignUpForm() {
     const { t, i18n } = useTranslation();
     const router = useRouter();
+    const { isRTL } = useRTL();
     const [loading, setLoading] = useState(false);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [showVerificationStep, setShowVerificationStep] = useState(false);
@@ -99,6 +105,11 @@ export default function GuestSignUpForm() {
     const [otpVerifying, setOtpVerifying] = useState(false);
     const [emailVerified, setEmailVerified] = useState(false);
     const [phoneVerified, setPhoneVerified] = useState(false);
+    const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+    const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+
+    // Email validation hook
+    const { emailStatus, checkEmailDebounced, resetEmailStatus } = useEmailValidation();
 
     const validationSchema = Yup.object({
         first_name: Yup.string()
@@ -109,6 +120,18 @@ export default function GuestSignUpForm() {
             .min(2, t("auth.lastNameMin") || "Last name must be at least 2 characters"),
         email: Yup.string()
             .required(t("auth.emailRequired") || "Email is required")
+            .test('gmail-only', "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+                if (!value) return true; // Let required handle empty
+                const emailLower = value.toLowerCase().trim();
+                return emailLower.endsWith('@gmail.com');
+            })
+            .test('gmail-format', "Invalid Gmail address format", function(value) {
+                if (!value) return true;
+                const emailLower = value.toLowerCase().trim();
+                const localPart = emailLower.split('@')[0];
+                if (!localPart) return false;
+                return /^[a-z0-9.+]+$/.test(localPart);
+            })
             .email(t("auth.emailInvalid") || "Invalid email address"),
         phone_number: Yup.string()
             .required(t("auth.phoneRequired") || "Phone number is required")
@@ -128,10 +151,12 @@ export default function GuestSignUpForm() {
             .max(new Date(), t("auth.dobFuture") || "Date of birth cannot be in the future"),
         nationality: Yup.string()
             .required(t("auth.nationalityRequired") || "Nationality is required"),
+        city: Yup.string()
+            .required(t("cityRequired") || "City is required"),
         acceptPrivacy: Yup.boolean()
             .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
         acceptTerms: Yup.boolean()
-            .oneOf([true], t("auth.termsRequired") || "You must accept the terms and conditions"),
+            .oneOf([true], t("termsRequired") || "You must accept the terms and conditions"),
     });
 
     const formik = useFormik({
@@ -144,6 +169,7 @@ export default function GuestSignUpForm() {
             gender: "", // Empty string for select dropdown
             date_of_birth: "", // Keep as string for date input
             nationality: "SA", // Default to Saudi Arabia
+            city: "",
             acceptPrivacy: false,
             acceptTerms: false,
         },
@@ -315,13 +341,6 @@ export default function GuestSignUpForm() {
                     </p>
                 </div>
 
-                {/* Progress */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
-                        <Icon icon="material-symbols:schedule" className="w-5 h-5" />
-                        <span>{t("auth.aboutMinutes", { minutes: 2 }) || "About 2 minutes"}</span>
-                    </div>
-                </div>
 
                 {/* Form */}
                 <form onSubmit={formik.handleSubmit} className="space-y-6">
@@ -385,21 +404,58 @@ export default function GuestSignUpForm() {
                     {/* Email */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t("auth.email") || "Email"} *
+                            {t("auth.email") || "Email"} * <span className="text-xs text-gray-500">(Gmail only)</span>
                         </label>
                         <input
                             type="email"
                             name="email"
                             value={formik.values.email}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={(e) => {
+                                formik.handleChange(e);
+                                // Real-time email validation
+                                checkEmailDebounced(e.target.value, 'user');
+                            }}
+                            onBlur={(e) => {
+                                formik.handleBlur(e);
+                                // Final check on blur
+                                if (e.target.value) {
+                                    checkEmailDebounced(e.target.value, 'user');
+                                }
+                            }}
                             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
                                 formik.touched.email && formik.errors.email
                                     ? "border-red-500"
+                                    : emailStatus.status === 'valid'
+                                    ? "border-green-500"
+                                    : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
+                                    ? "border-red-500"
                                     : "border-gray-300"
                             }`}
-                            placeholder={t("auth.emailPlaceholder") || "your.email@example.com"}
+                            placeholder="your.email@gmail.com"
                         />
+                        {/* Real-time status message */}
+                        {formik.values.email && (
+                            <div className="mt-1">
+                                {emailStatus.isChecking && (
+                                    <p className="text-sm text-blue-600 flex items-center gap-1">
+                                        <span className="animate-spin">⏳</span> Checking email...
+                                    </p>
+                                )}
+                                {!emailStatus.isChecking && emailStatus.message && (
+                                    <p className={`text-sm ${
+                                        emailStatus.status === 'valid'
+                                            ? "text-green-600"
+                                            : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
+                                            ? "text-red-600"
+                                            : "text-gray-600"
+                                    }`}>
+                                        {emailStatus.status === 'valid' && '✓ '}
+                                        {emailStatus.message}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        {/* Formik validation error */}
                         {formik.touched.email && formik.errors.email && (
                             <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
                         )}
@@ -501,71 +557,85 @@ export default function GuestSignUpForm() {
                         )}
                     </div>
 
-                    {/* Privacy and Terms Checkboxes */}
-                    <div className="space-y-4">
-                        <div className="flex items-start gap-3">
-                            <input
-                                type="checkbox"
-                                name="acceptPrivacy"
-                                id="acceptPrivacy"
-                                checked={formik.values.acceptPrivacy}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className="mt-1 w-5 h-5 text-[#a797cc] border-gray-300 rounded focus:ring-[#a797cc] cursor-pointer"
-                            />
-                            <label htmlFor="acceptPrivacy" className="text-sm text-gray-700 cursor-pointer">
-                                {t("auth.acceptPrivacy") || "I accept the"}{" "}
-                                <a href="/privacy-policy" target="_blank" className="text-[#a797cc] hover:text-[#8ba179] underline font-semibold">
-                                    {t("auth.privacyPolicy") || "Privacy Policy"}
-                                </a>
-                                {" *"}
-                            </label>
-                        </div>
-                        {formik.touched.acceptPrivacy && formik.errors.acceptPrivacy && (
-                            <p className="mt-1 text-sm text-red-600 ml-8">{formik.errors.acceptPrivacy}</p>
-                        )}
-
-                        <div className="flex items-start gap-3">
-                            <input
-                                type="checkbox"
-                                name="acceptTerms"
-                                id="acceptTerms"
-                                checked={formik.values.acceptTerms}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className="mt-1 w-5 h-5 text-[#a797cc] border-gray-300 rounded focus:ring-[#a797cc] cursor-pointer"
-                            />
-                            <label htmlFor="acceptTerms" className="text-sm text-gray-700 cursor-pointer">
-                                {t("auth.acceptTerms") || "I accept the"}{" "}
-                                <a href="/terms-and-conditions" target="_blank" className="text-[#a797cc] hover:text-[#8ba179] underline font-semibold">
-                                    {t("auth.termsAndConditions") || "Terms and Conditions"}
-                                </a>
-                                {" *"}
-                            </label>
-                        </div>
-                        {formik.touched.acceptTerms && formik.errors.acceptTerms && (
-                            <p className="mt-1 text-sm text-red-600 ml-8">{formik.errors.acceptTerms}</p>
-                        )}
+                    {/* City */}
+                    <div>
+                        <CitySearchSelect
+                            value={formik.values.city}
+                            onChange={(value) => formik.setFieldValue("city", value)}
+                            onBlur={() => formik.setFieldTouched("city", true)}
+                            error={formik.errors.city}
+                            touched={formik.touched.city}
+                            placeholder={t("selectCity") || "Select city"}
+                            label={t("city") || "City"}
+                            required={true}
+                            isRTL={isRTL}
+                        />
                     </div>
 
-                    {/* Debug info (remove in production) */}
-                    {process.env.NODE_ENV === 'development' && (
-                        <div className="text-xs text-gray-500 mb-2 p-2 bg-gray-100 rounded">
-                            <p>Form Valid: {formik.isValid ? 'Yes' : 'No'}</p>
-                            <p>Errors Count: {Object.keys(formik.errors).length}</p>
-                            {Object.keys(formik.errors).length > 0 && (
-                                <details>
-                                    <summary className="cursor-pointer">Show Errors</summary>
-                                    <pre className="mt-1 text-xs">{JSON.stringify(formik.errors, null, 2)}</pre>
-                                </details>
-                            )}
+                    {/* Terms and Conditions & Privacy Policy */}
+                    <div className="mb-6">
+                        <div className="flex items-start gap-3">
+                            <div className="flex items-center h-5">
+                                <input
+                                    id="acceptTermsAndPrivacy"
+                                    type="checkbox"
+                                    className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-[#a797cc] text-[#a797cc]"
+                                    checked={formik.values.acceptTerms && formik.values.acceptPrivacy}
+                                    onChange={(e) => {
+                                        const isChecked = e.target.checked;
+                                        formik.setFieldValue("acceptTerms", isChecked);
+                                        formik.setFieldValue("acceptPrivacy", isChecked);
+                                        formik.setFieldTouched("acceptTerms", true);
+                                        formik.setFieldTouched("acceptPrivacy", true);
+                                    }}
+                                />
+                            </div>
+                            <div className="ml-3 text-sm">
+                                <label
+                                    htmlFor="acceptTermsAndPrivacy"
+                                    className="font-medium text-gray-900 cursor-pointer"
+                                >
+                                    {t("signup.tab22") || "By signing up, you agree to our"}{" "}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setIsTermsModalOpen(true);
+                                        }}
+                                        className="text-[#a797cc] hover:underline font-semibold focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-1 rounded"
+                                    >
+                                        {t("termsAndConditions") || "Terms & Conditions"}
+                                    </button>
+                                    {" "}{t("signup.tab24") || "and"}{" "}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setIsPrivacyModalOpen(true);
+                                        }}
+                                        className="text-[#a797cc] hover:underline font-semibold focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-1 rounded"
+                                    >
+                                        {t("privacyPolicy") || "Privacy Policy"}
+                                    </button>
+                                    <span className="text-red-500 ml-1">*</span>
+                            </label>
+                                {(formik.touched.acceptTerms && formik.errors.acceptTerms) || 
+                                 (formik.touched.acceptPrivacy && formik.errors.acceptPrivacy) ? (
+                                    <p className="mt-1 text-sm text-red-600">
+                                        {formik.errors.acceptTerms || formik.errors.acceptPrivacy || 
+                                         "You must accept the Terms & Conditions and Privacy Policy"}
+                                    </p>
+                                ) : null}
                         </div>
-                    )}
+                        </div>
+                    </div>
 
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={loading || !formik.isValid}
+                        disabled={loading || !formik.values.acceptTerms || !formik.values.acceptPrivacy}
                         className="w-full py-4 px-6 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                     >
                         {loading ? (
@@ -590,7 +660,7 @@ export default function GuestSignUpForm() {
                             onClick={() => setIsLoginModalOpen(true)}
                             className="text-[#a797cc] hover:text-[#8ba179] font-semibold"
                         >
-                            {t("auth.login") || "Login"}
+                            <span suppressHydrationWarning>{t("auth.login") || "Login"}</span>
                         </button>
                     </p>
                     <p className="text-gray-600 mt-2">
@@ -599,7 +669,7 @@ export default function GuestSignUpForm() {
                             onClick={() => router.push("/signup/host")}
                             className="text-[#a797cc] hover:text-[#8ba179] font-semibold"
                         >
-                            {t("auth.signupAsHost") || "Signup as Host"}
+                            {t("auth.signupAsHostOrGuest") || "Join as Host or Guest"}
                         </button>
                     </p>
                 </div>
@@ -621,7 +691,7 @@ export default function GuestSignUpForm() {
 
                             {/* Title */}
                             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                {t("auth.verifyYourAccount") || "Verify Your Account"}
+                                {t("verifyYourAccount") || "Verify Your Account"}
                             </h2>
 
                             {/* Verification Status */}
@@ -661,7 +731,7 @@ export default function GuestSignUpForm() {
                             {!phoneVerified && (
                                 <div className="mb-6">
                                     <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                                        {t("auth.enterOTP") || "Enter OTP"}
+                                        {t("EnterOTP") || "Enter OTP"}
                                     </label>
                                     <input
                                         type="text"
@@ -679,7 +749,7 @@ export default function GuestSignUpForm() {
                                         disabled={loading}
                                         className="mt-2 text-sm text-[#a797cc] hover:text-[#8ba179] font-medium"
                                     >
-                                        {t("auth.resendOTP") || "Resend OTP"}
+                                        {t("Resend OTP") || "Resend OTP"}
                                     </button>
                                 </div>
                             )}
@@ -692,7 +762,7 @@ export default function GuestSignUpForm() {
                                         disabled={otpVerifying || otp.length !== 6}
                                         className="w-full py-3 px-4 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                                     >
-                                        {otpVerifying ? "Verifying..." : t("auth.verifyOTP") || "Verify OTP"}
+                                        {otpVerifying ? "Verifying..." : t("Verify OTP") || "Verify OTP"}
                                     </button>
                                 )}
 
@@ -700,7 +770,19 @@ export default function GuestSignUpForm() {
                                     onClick={handleResendVerification}
                                     className="w-full py-3 px-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-colors"
                                 >
-                                    {t("auth.resendVerificationEmail") || "Resend Verification Email"}
+                                    {t("Resend Verification Email") || "Resend Verification Email"}
+                                </button>
+
+                                {/* Login Button - Always Visible */}
+                                <button
+                                    onClick={() => {
+                                        setShowVerificationStep(false);
+                                        setIsLoginModalOpen(true);
+                                    }}
+                                    className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Icon icon="material-symbols:login" className="w-5 h-5" />
+                                    <span>{t("auth.login") || "Login"}</span>
                                 </button>
 
                                 {(emailVerified && phoneVerified) && (
@@ -708,7 +790,7 @@ export default function GuestSignUpForm() {
                                         onClick={() => router.push("/login")}
                                         className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
                                     >
-                                        {t("auth.goToLogin") || "Go to Login"}
+                                        {t("goToLogin") || "Go to Login"}
                                     </button>
                                 )}
 
@@ -716,7 +798,7 @@ export default function GuestSignUpForm() {
                                     onClick={() => setShowVerificationStep(false)}
                                     className="w-full py-2 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium"
                                 >
-                                    {t("auth.close") || "Close"}
+                                    {t("close") || "Close"}
                                 </button>
                             </div>
                         </div>
@@ -729,6 +811,10 @@ export default function GuestSignUpForm() {
                 isOpen={isLoginModalOpen} 
                 onClose={() => setIsLoginModalOpen(false)} 
             />
+
+            {/* Terms & Conditions and Privacy Policy Modals */}
+            <TermsOfServiceModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
+            <PrivacyPolicyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
         </motion.div>
     );
 }

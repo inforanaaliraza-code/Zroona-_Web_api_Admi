@@ -134,11 +134,42 @@ export default function BookingModal({
 
 			// Safely clear previous form only if element is still in DOM
 			try {
-				moyasarFormRef.current.innerHTML = "";
-				console.log("[PAYMENT-FORM] Cleared previous form content");
+				if (moyasarFormRef.current && moyasarFormRef.current.parentNode && moyasarFormRef.current.isConnected) {
+					// Use textContent instead of innerHTML for safer clearing
+					// This avoids issues with event listeners and nested elements
+					const formElement = moyasarFormRef.current;
+					
+					// First, try to remove children safely
+					try {
+						while (formElement.firstChild) {
+							const child = formElement.firstChild;
+							// Double check the child is still a child of this element
+							if (child.parentNode === formElement && formElement.contains(child)) {
+								formElement.removeChild(child);
+							} else {
+								// If not, break to avoid infinite loop
+								break;
+							}
+						}
+					} catch (removeError) {
+						// If removeChild fails, use textContent as fallback
+						console.warn("[PAYMENT-FORM] removeChild failed, using textContent:", removeError);
+						formElement.textContent = "";
+					}
+					
+					console.log("[PAYMENT-FORM] Cleared previous form content");
+				}
 			} catch (error) {
 				console.warn("[PAYMENT-FORM] Error clearing form:", error);
-				return;
+				// Final fallback: try textContent
+				try {
+					if (moyasarFormRef.current && moyasarFormRef.current.isConnected) {
+						moyasarFormRef.current.textContent = "";
+					}
+				} catch (fallbackError) {
+					console.warn("[PAYMENT-FORM] All cleanup methods failed:", fallbackError);
+				}
+				// Don't return here, continue with initialization
 			}
 
 			// Validate amount
@@ -310,12 +341,48 @@ export default function BookingModal({
 		return () => {
 			clearTimeout(timeoutId);
 			// Cleanup: Clear Moyasar form if element still exists
-			if (moyasarFormRef.current && moyasarFormRef.current.parentNode) {
+			if (moyasarFormRef.current) {
 				try {
-					moyasarFormRef.current.innerHTML = "";
-					console.log('[PAYMENT-MODAL] Cleaned up Moyasar form');
+					const formElement = moyasarFormRef.current;
+					
+					// Check if element is still connected to DOM
+					if (formElement.isConnected && formElement.parentNode) {
+						// Safely remove all child nodes
+						try {
+							while (formElement.firstChild) {
+								const child = formElement.firstChild;
+								// Verify the child is still a child of this element
+								if (child.parentNode === formElement && formElement.contains(child)) {
+									formElement.removeChild(child);
+								} else {
+									// Child is no longer a child, break to avoid infinite loop
+									break;
+								}
+							}
+							console.log('[PAYMENT-MODAL] Cleaned up Moyasar form');
+						} catch (removeError) {
+							// If removeChild fails, use textContent as safer alternative
+							console.warn("removeChild failed, using textContent:", removeError);
+							try {
+								formElement.textContent = "";
+							} catch (textError) {
+								console.warn("textContent also failed:", textError);
+							}
+						}
+					} else {
+						// Element is no longer in DOM, just log
+						console.log('[PAYMENT-MODAL] Form element no longer in DOM, skipping cleanup');
+					}
 				} catch (error) {
 					console.warn("Error cleaning up Moyasar form:", error);
+					// Final fallback: try textContent
+					try {
+						if (moyasarFormRef.current && moyasarFormRef.current.isConnected) {
+							moyasarFormRef.current.textContent = "";
+						}
+					} catch (fallbackError) {
+						console.warn("All cleanup methods failed:", fallbackError);
+					}
 				}
 			}
 		};
@@ -582,102 +649,157 @@ export default function BookingModal({
 						)}
 
 						{step === "payment" && (
-							<div className="space-y-4 sm:space-y-6">
-								{/* Payment Summary - Premium Design */}
-								<div className="relative overflow-hidden bg-gradient-to-br from-[#a797cc]/15 via-white to-[#8ba179]/10 rounded-3xl p-4 sm:p-6 md:p-8 border-2 border-[#a797cc]/30 shadow-2xl backdrop-blur-sm">
-									{/* Decorative Background Elements */}
-									<div className="absolute top-0 right-0 w-32 h-32 bg-[#a797cc]/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
-									<div className="absolute bottom-0 left-0 w-24 h-24 bg-[#8ba179]/5 rounded-full blur-2xl -ml-12 -mb-12"></div>
+							<div className="space-y-5 sm:space-y-7">
+								{/* Ultra Premium Payment Summary Card */}
+								<div className="relative overflow-hidden group">
+									{/* Animated Gradient Background */}
+									<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc]/20 via-purple-50/30 to-[#8ba179]/20 rounded-[2rem] opacity-100"></div>
+									<div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent rounded-[2rem]"></div>
 									
-									<div className="relative z-10">
-										<div className="flex items-center justify-between mb-6">
-											<div className="flex flex-col space-y-2">
-												<span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-													{getTranslation(t, "events.totalAmount", "Total Amount")}
-												</span>
-												<div className="flex items-baseline gap-2">
-													<span className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-[#a797cc] to-[#8ba179] bg-clip-text text-transparent tracking-tight">
+									{/* Animated Orbs */}
+									<div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#a797cc]/10 to-purple-300/10 rounded-full blur-3xl -mr-20 -mt-20 animate-pulse"></div>
+									<div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-[#8ba179]/10 to-emerald-300/10 rounded-full blur-2xl -ml-16 -mb-16 animate-pulse" style={{ animationDelay: '1s' }}></div>
+									
+									{/* Shimmer Effect */}
+									<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+									
+									<div className="relative z-10 p-5 sm:p-6 md:p-8 border border-white/50 backdrop-blur-xl bg-white/70 rounded-[2rem] shadow-[0_8px_32px_rgba(167,151,204,0.15)] overflow-hidden">
+										{/* Header with Icon */}
+										<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+											<div className="flex-1 min-w-0 w-full sm:w-auto">
+												<div className="flex items-center gap-2 sm:gap-3 mb-3">
+													<div className="relative flex-shrink-0">
+														<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-2xl blur-md opacity-50 animate-pulse"></div>
+														<div className="relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#a797cc] via-purple-500 to-[#8ba179] rounded-2xl shadow-xl transform hover:scale-110 transition-all duration-300">
+															<Icon icon="lucide:receipt" className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+														</div>
+													</div>
+													<div className="min-w-0">
+														<span className="text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+															{getTranslation(t, "events.totalAmount", "Total Amount")}
+														</span>
+													</div>
+												</div>
+												
+												{/* Amount Display - Ultra Premium with proper wrapping */}
+												<div className="flex flex-wrap items-baseline gap-2 sm:gap-3 mb-2">
+													<span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black bg-gradient-to-r from-[#a797cc] via-purple-600 to-[#8ba179] bg-clip-text text-transparent tracking-tight leading-none break-words">
 														{totalAmount.toFixed(2)}
 													</span>
-													<span className="text-lg sm:text-xl md:text-2xl font-bold text-gray-600">SAR</span>
+													<span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-700 whitespace-nowrap">SAR</span>
 												</div>
+												<p className="text-xs sm:text-sm text-gray-500 font-medium">Including all fees and taxes</p>
 											</div>
-											<div className="relative">
-												<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-2xl blur-lg opacity-30 animate-pulse"></div>
-												<div className="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-2xl shadow-lg transform hover:scale-110 transition-transform duration-300">
-													<Icon icon="lucide:wallet" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white" />
+											
+											{/* Premium Wallet Icon */}
+											<div className="relative flex-shrink-0 ml-0 sm:ml-4">
+												<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-3xl blur-xl opacity-40 animate-pulse"></div>
+												<div className="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-br from-[#a797cc] via-purple-500 to-[#8ba179] rounded-3xl shadow-2xl transform hover:scale-110 hover:rotate-3 transition-all duration-500">
+													<Icon icon="lucide:wallet" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white drop-shadow-lg" />
 												</div>
 											</div>
 										</div>
-										<div className="pt-6 border-t-2 border-gradient-to-r from-[#a797cc]/30 to-transparent">
-											<div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-xl px-4 py-3 border border-green-200/50">
-												<div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-md">
-													<Icon icon="lucide:shield-check" className="w-6 h-6 text-white" />
+										
+										{/* Security Badge - Enhanced */}
+										<div className="pt-5 sm:pt-6 border-t border-gradient-to-r from-[#a797cc]/20 via-transparent to-[#8ba179]/20">
+											<div className="relative overflow-hidden bg-gradient-to-r from-emerald-50 via-green-50/80 to-emerald-50 rounded-2xl p-3 sm:p-4 border border-emerald-200/60 shadow-lg backdrop-blur-sm">
+												{/* Animated Background Pattern */}
+												<div className="absolute inset-0 opacity-5">
+													<div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIiBmaWxsPSIjMTA3YzQwIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')]"></div>
 												</div>
-												<div className="flex-1">
-													<p className="text-sm font-semibold text-gray-800">
-														{getTranslation(t, "events.securePayment", "Secure payment powered by Moyasar")}
-													</p>
-													<p className="text-xs text-gray-500 mt-0.5">256-bit SSL encryption</p>
+												<div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+													<div className="relative flex-shrink-0">
+														<div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl blur-md opacity-50"></div>
+														<div className="relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 rounded-xl shadow-xl">
+															<Icon icon="lucide:shield-check" className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-md" />
+														</div>
+													</div>
+													<div className="flex-1 min-w-0">
+														<p className="text-xs sm:text-sm font-bold text-gray-800 mb-1.5 sm:mb-1 flex flex-wrap items-center gap-2">
+															<span className="break-words">{getTranslation(t, "events.securePayment", "Secure payment powered by Moyasar")}</span>
+															<span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap flex-shrink-0">
+																<Icon icon="lucide:lock" className="w-3 h-3 mr-1" />
+																Secure
+															</span>
+														</p>
+														<p className="text-xs text-gray-600 font-medium flex flex-wrap items-center gap-1.5 sm:gap-2">
+															<Icon icon="lucide:shield" className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+															<span className="break-words">256-bit SSL encryption • PCI DSS compliant</span>
+														</p>
+													</div>
 												</div>
 											</div>
 										</div>
 									</div>
 								</div>
 
-								{/* Payment Form Container - Premium Enhanced */}
+								{/* Ultra Premium Payment Form Container */}
 								<div className="relative">
-									{/* Header Section */}
-									<div className="mb-4 sm:mb-5">
-										<div className="flex items-center gap-2 sm:gap-3 mb-2">
-											<div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-xl shadow-lg">
-												<Icon icon="lucide:credit-card" className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+									{/* Section Header - Enhanced */}
+									<div className="mb-4 sm:mb-5 md:mb-6">
+										<div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+											<div className="relative flex-shrink-0">
+												<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-xl blur-lg opacity-30"></div>
+												<div className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-gradient-to-br from-[#a797cc] via-purple-500 to-[#8ba179] rounded-xl shadow-xl">
+													<Icon icon="lucide:credit-card" className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+												</div>
 											</div>
-											<h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
-												{getTranslation(t, "events.paymentDetails", "Payment Details")}
-											</h3>
+											<div className="flex-1 min-w-0">
+												<h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-gray-900 tracking-tight break-words">
+													{getTranslation(t, "events.paymentDetails", "Payment Details")}
+												</h3>
+												<p className="text-xs sm:text-sm text-gray-500 font-medium mt-1 break-words">
+													{getTranslation(t, "events.enterCardInfo", "Enter your card information to complete the payment")}
+												</p>
+											</div>
 										</div>
-										<p className="text-xs sm:text-sm text-gray-500 ml-[36px] sm:ml-[52px]">
-											{getTranslation(t, "events.enterCardInfo", "Enter your card information to complete the payment")}
-										</p>
 									</div>
 
-									{/* Form Container with Premium Styling */}
+									{/* Form Container - Ultra Premium */}
 									<div className="relative group">
-										{/* Glow Effect */}
-										<div className="absolute -inset-0.5 bg-gradient-to-r from-[#a797cc] via-[#8ba179] to-[#a797cc] rounded-3xl opacity-20 group-hover:opacity-30 blur-xl transition-opacity duration-300"></div>
+										{/* Multi-layer Glow Effect */}
+										<div className="absolute -inset-1 bg-gradient-to-r from-[#a797cc] via-purple-500 to-[#8ba179] rounded-[2rem] opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500"></div>
+										<div className="absolute -inset-0.5 bg-gradient-to-r from-[#8ba179] via-emerald-400 to-[#a797cc] rounded-[2rem] opacity-10 blur-xl"></div>
 										
 										<div
 											ref={moyasarFormRef}
 											id="moyasar-payment-form"
-											className="relative w-full min-h-[320px] sm:min-h-[360px] md:min-h-[380px] bg-white rounded-3xl p-4 sm:p-6 md:p-10 shadow-2xl border-2 border-gray-100 transition-all duration-500 group-hover:border-[#a797cc]/40 focus-within:border-[#a797cc] focus-within:shadow-[0_0_30px_rgba(167,151,204,0.2)]"
-											style={{ minHeight: '320px' }}
+											className="relative w-full min-h-[360px] sm:min-h-[400px] md:min-h-[420px] bg-white rounded-[2rem] p-4 sm:p-6 md:p-8 lg:p-12 shadow-[0_20px_60px_rgba(167,151,204,0.15)] border-2 border-gray-100/80 transition-all duration-700 group-hover:border-[#a797cc]/50 group-hover:shadow-[0_25px_70px_rgba(167,151,204,0.25)] focus-within:border-[#a797cc] focus-within:shadow-[0_0_40px_rgba(167,151,204,0.3)] overflow-hidden"
+											style={{ minHeight: '360px' }}
 										>
-											{/* Loading Placeholder - Premium */}
+											{/* Premium Loading Placeholder */}
 											{(!moyasarFormRef.current?.innerHTML || moyasarFormRef.current.innerHTML.trim() === "") && (
-												<div className="flex flex-col justify-center items-center min-h-[320px] sm:min-h-[360px] md:min-h-[380px] space-y-4 sm:space-y-6">
+												<div className="flex flex-col justify-center items-center min-h-[360px] sm:min-h-[400px] md:min-h-[420px] space-y-6">
 													<div className="relative">
-														{/* Animated Rings */}
+														{/* Animated Gradient Rings */}
 														<div className="absolute inset-0 bg-gradient-to-r from-[#a797cc] to-[#8ba179] rounded-full animate-ping opacity-20"></div>
-														<div className="absolute inset-0 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-full animate-pulse opacity-30"></div>
-														{/* Icon Container */}
-														<div className="relative z-10 flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-2xl shadow-2xl transform rotate-3 hover:rotate-6 transition-transform duration-300">
+														<div className="absolute inset-0 bg-gradient-to-r from-[#8ba179] to-purple-500 rounded-full animate-pulse opacity-30" style={{ animationDelay: '0.5s' }}></div>
+														<div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-[#a797cc] rounded-full animate-pulse opacity-25" style={{ animationDelay: '1s' }}></div>
+														
+														{/* Icon Container with 3D Effect */}
+														<div className="relative z-10 flex items-center justify-center w-28 h-28 bg-gradient-to-br from-[#a797cc] via-purple-500 to-[#8ba179] rounded-3xl shadow-2xl transform rotate-3 hover:rotate-6 transition-transform duration-500">
+															<div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent rounded-3xl"></div>
 															<Icon
 																icon="lucide:credit-card"
-																className="w-12 h-12 text-white"
+																className="w-14 h-14 text-white drop-shadow-lg relative z-10"
 															/>
 														</div>
 													</div>
-													<div className="text-center space-y-4">
-														<p className="text-lg font-bold text-gray-800">
-															{getTranslation(t, "events.loadingPaymentForm", "Loading secure payment form...")}
-														</p>
-														<div className="flex justify-center gap-2">
-															<div className="w-3 h-3 bg-gradient-to-r from-[#a797cc] to-[#8ba179] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
-															<div className="w-3 h-3 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '150ms' }}></div>
-															<div className="w-3 h-3 bg-gradient-to-r from-[#a797cc] to-[#8ba179] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
+													
+													<div className="text-center space-y-5 px-2">
+														<div>
+															<p className="text-lg sm:text-xl font-black text-gray-800 mb-2 break-words">
+																{getTranslation(t, "events.loadingPaymentForm", "Loading secure payment form...")}
+															</p>
+															<p className="text-xs sm:text-sm text-gray-500 font-medium break-words">Please wait while we securely load the payment gateway</p>
 														</div>
-														<p className="text-xs text-gray-500">Please wait while we securely load the payment gateway</p>
+														
+														{/* Premium Loading Dots */}
+														<div className="flex justify-center gap-2.5">
+															<div className="w-3 h-3 bg-gradient-to-r from-[#a797cc] to-purple-500 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
+															<div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-[#8ba179] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '150ms' }}></div>
+															<div className="w-3 h-3 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
+														</div>
 													</div>
 												</div>
 											)}
@@ -685,26 +807,56 @@ export default function BookingModal({
 									</div>
 								</div>
 
-								{/* Accepted Payment Methods Info - Premium */}
-								<div className="relative overflow-hidden bg-gradient-to-r from-gray-50 via-white to-gray-50 rounded-2xl p-5 border-2 border-gray-200/50 shadow-lg">
-									{/* Background Pattern */}
-									<div className="absolute inset-0 opacity-5">
-										<div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSIjYWFhIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')]"></div>
+								{/* Ultra Premium Payment Methods Card */}
+								<div className="relative overflow-hidden group">
+									{/* Background Effects */}
+									<div className="absolute inset-0 bg-gradient-to-r from-gray-50 via-white to-gray-50 rounded-[2rem]"></div>
+									<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc]/5 via-transparent to-[#8ba179]/5 rounded-[2rem]"></div>
+									
+									{/* Subtle Pattern */}
+									<div className="absolute inset-0 opacity-[0.03]">
+										<div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxLjUiIGZpbGw9IiM2NjYiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYSkiLz48L3N2Zz4=')]"></div>
 									</div>
-									<div className="relative z-10 flex items-center justify-center gap-4">
-										<div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-md">
-											<Icon icon="lucide:lock" className="w-6 h-6 text-white" />
-										</div>
-										<div className="flex-1">
-											<p className="text-sm font-bold text-gray-800 mb-1">
-												{getTranslation(t, "events.acceptedCards", "We accept Visa, Mastercard, Mada, and AMEX")}
-											</p>
-											<p className="text-xs text-gray-500">All major credit and debit cards supported</p>
-										</div>
-										{/* Card Icons */}
-										<div className="flex items-center gap-2">
-											<div className="w-10 h-6 bg-gradient-to-r from-blue-500 to-blue-700 rounded flex items-center justify-center text-white text-xs font-bold shadow-md">VISA</div>
-											<div className="w-10 h-6 bg-gradient-to-r from-red-500 to-orange-600 rounded flex items-center justify-center text-white text-xs font-bold shadow-md">MC</div>
+									
+									<div className="relative z-10 p-4 sm:p-6 md:p-7 border border-gray-200/60 rounded-[2rem] shadow-xl backdrop-blur-sm bg-white/80 overflow-hidden">
+										<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-5">
+											{/* Left Section - Lock Icon & Text */}
+											<div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+												<div className="relative flex-shrink-0">
+													<div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl blur-md opacity-40"></div>
+													<div className="relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 rounded-xl shadow-xl">
+														<Icon icon="lucide:lock" className="w-6 h-6 sm:w-7 sm:h-7 text-white drop-shadow-md" />
+													</div>
+												</div>
+												<div className="flex-1 min-w-0">
+													<p className="text-xs sm:text-sm font-black text-gray-800 mb-1 sm:mb-1.5 break-words">
+														{getTranslation(t, "events.acceptedCards", "We accept Visa, Mastercard, Mada, and AMEX")}
+													</p>
+													<p className="text-xs text-gray-600 font-medium break-words">All major credit and debit cards supported</p>
+												</div>
+											</div>
+											
+											{/* Right Section - Card Icons - Enhanced */}
+											<div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-start sm:justify-end w-full sm:w-auto">
+												<div className="relative group/card flex-shrink-0">
+													<div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg blur-sm opacity-50 group-hover/card:opacity-75 transition-opacity"></div>
+													<div className="relative w-12 h-8 sm:w-14 sm:h-9 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white text-[10px] sm:text-xs font-black shadow-lg transform group-hover/card:scale-110 transition-transform">
+														<span className="drop-shadow-md">VISA</span>
+													</div>
+												</div>
+												<div className="relative group/card flex-shrink-0">
+													<div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-600 rounded-lg blur-sm opacity-50 group-hover/card:opacity-75 transition-opacity"></div>
+													<div className="relative w-12 h-8 sm:w-14 sm:h-9 bg-gradient-to-r from-red-500 via-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white text-[10px] sm:text-xs font-black shadow-lg transform group-hover/card:scale-110 transition-transform">
+														<span className="drop-shadow-md">MC</span>
+													</div>
+												</div>
+												<div className="relative group/card flex-shrink-0">
+													<div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg blur-sm opacity-50 group-hover/card:opacity-75 transition-opacity"></div>
+													<div className="relative w-12 h-8 sm:w-14 sm:h-9 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white text-[10px] sm:text-xs font-black shadow-lg transform group-hover/card:scale-110 transition-transform">
+														<span className="drop-shadow-md">MADA</span>
+													</div>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>

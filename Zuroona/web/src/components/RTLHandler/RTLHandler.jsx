@@ -36,10 +36,10 @@ export default function RTLHandler() {
       // Get language from i18n first, then fallback to localStorage, then default
       const lang = i18n.language || 
                    (typeof localStorage !== "undefined" ? localStorage.getItem("i18nextLng") : null) || 
-                   "ar";
+                   "en";
       
       // Ensure language is valid
-      const validLang = (lang === "ar" || lang === "en") ? lang : "ar";
+      const validLang = (lang === "ar" || lang === "en") ? lang : "en";
       const rtl = validLang === "ar";
       
       // Update document direction and language immediately

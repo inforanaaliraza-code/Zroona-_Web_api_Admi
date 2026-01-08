@@ -1,15 +1,33 @@
 const User = require('../models/userModel.js');
+const { ensureConnection } = require('../config/database');
 
 const UserService = {
     CreateService: async (value) => {
-        return new Promise((res, rej) => {
-            User.create(value).then((result) => {
-                res(result);
-            }).catch((error) => {
-                console.error(error.message);
-                rej('could not create');
+        try {
+            // Ensure database connection before creating
+            await ensureConnection();
+            
+            console.log('[USER:SERVICE] Creating user with data:', {
+                email: value.email,
+                phone_number: value.phone_number,
+                country_code: value.country_code,
+                role: value.role
             });
-        });
+            
+            const result = await User.create(value);
+            
+            console.log('[USER:SERVICE] User created successfully:', {
+                id: result._id,
+                email: result.email,
+                phone_number: result.phone_number
+            });
+            
+            return result;
+        } catch (error) {
+            console.error('[USER:SERVICE] Error creating user:', error.message);
+            console.error('[USER:SERVICE] Full error:', error);
+            throw new Error(`Failed to create user: ${error.message}`);
+        }
     },
 
     FindOneService: async (query) => {

@@ -1,4 +1,4 @@
-import { DeleteParams, getData, postRawData, putRawData } from "../index";
+import { DeleteParams, getData, postRawData, putRawData, putFormData } from "../index";
 
 // Admin Management CRUD
 export const GetAllAdminsApi = async (payload) => {
@@ -20,9 +20,56 @@ export const CreateAdminApi = async (payload) => {
 };
 
 export const UpdateAdminApi = async (payload) => {
-  return putRawData("admin/update", payload).then((data) => {
-    return data;
-  });
+  // Separate file upload from other data
+  const hasFile = payload.profile_image && payload.profile_image instanceof File;
+  
+  if (hasFile) {
+    // Step 1: Upload image first
+    try {
+      const { postFormData } = require("../index");
+      const uploadPayload = {
+        file: payload.profile_image,
+        dirName: "Zuroona/Admin"
+      };
+      
+      const uploadRes = await postFormData("uploadFile", uploadPayload);
+      
+      if (uploadRes?.status === 1 && uploadRes?.data?.location) {
+        // Step 2: Update admin with image URL
+        const updatePayload = { ...payload };
+        updatePayload.profile_image = uploadRes.data.location;
+        delete updatePayload.profile_image; // Remove File object
+        return putRawData("admin/update", updatePayload).then((data) => {
+          return data;
+        });
+      } else {
+        // If upload fails, continue without image
+        console.warn("Image upload failed, updating without image");
+        const updatePayload = { ...payload };
+        delete updatePayload.profile_image;
+        return putRawData("admin/update", updatePayload).then((data) => {
+          return data;
+        });
+      }
+    } catch (uploadError) {
+      console.error("Error uploading image:", uploadError);
+      // Continue with update without image
+      const updatePayload = { ...payload };
+      delete updatePayload.profile_image;
+      return putRawData("admin/update", updatePayload).then((data) => {
+        return data;
+      });
+    }
+  } else {
+    // No file, use regular JSON
+    const jsonPayload = { ...payload };
+    if (!jsonPayload.profile_image || jsonPayload.profile_image === null || jsonPayload.profile_image === '') {
+      delete jsonPayload.profile_image;
+    }
+    return putRawData("admin/update", jsonPayload).then((data) => {
+      return data;
+    });
+  }
 };
 
 export const DeleteAdminApi = async (payload) => {

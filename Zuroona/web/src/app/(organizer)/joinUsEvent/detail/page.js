@@ -13,8 +13,6 @@ import { useTranslation } from "react-i18next";
 import LocationMap from "@/components/Details/LocationMap";
 import Audience from "@/components/Details/Audience";
 import Loader from "@/components/Loader/Loader";
-import CancelConfirmDialog from "@/components/ui/CancelConfirmDialog";
-import { CancelEventApi } from "@/app/api/myBookings/apis";
 import { DeleteEventsApi } from "@/app/api/events/apis";
 import { toast } from "react-toastify";
 import { Icon } from "@iconify/react";
@@ -28,8 +26,6 @@ export default function JoinUsDetail() {
   const { isRTL } = useRTL();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [isCancelling, setIsCancelling] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -61,39 +57,6 @@ export default function JoinUsDetail() {
       dispatch(getEventListDetail({ id: EventListId }));
     }
   }, [EventListId, dispatch]);
-
-  const handleCancelEvent = async (reason) => {
-    if (!reason || !reason.trim()) {
-      toast.error(t("events.cancellationReasonRequired", "Cancellation reason is required"));
-      return;
-    }
-
-    setIsCancelling(true);
-    try {
-      const response = await CancelEventApi({
-        event_id: EventListId,
-        reason: reason.trim(),
-      });
-
-      if (response?.status === 1) {
-        toast.success(response?.message || t("events.eventCancelledSuccessfully", "Event cancelled successfully"));
-        setIsCancelDialogOpen(false);
-        // Refresh event data
-        dispatch(getEventListDetail({ id: EventListId }));
-        // Optionally redirect to events list
-        setTimeout(() => {
-          router.push("/joinUsEvent");
-        }, 2000);
-      } else {
-        toast.error(response?.message || t("common.error", "Failed to cancel event"));
-      }
-    } catch (error) {
-      console.error("[CANCEL-EVENT] Error:", error);
-      toast.error(error?.response?.data?.message || t("common.error", "Failed to cancel event"));
-    } finally {
-      setIsCancelling(false);
-    }
-  };
 
   const handleDeleteEvent = async () => {
     if (!EventListId) {
@@ -153,7 +116,7 @@ export default function JoinUsDetail() {
                 
                 {/* Action Buttons - Professional Design */}
                 <div className={`mt-8 flex flex-wrap gap-4 ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
-                  {/* View Analytics Button */}
+                  {/* View Analytics Button - Show for all events (primary button) */}
                   <Link
                     href={`/joinUsEvent/analytics?id=${EventListId}`}
                     className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white rounded-xl hover:from-[#8ba179] hover:to-[#7a9069] transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
@@ -162,23 +125,23 @@ export default function JoinUsDetail() {
                     <span>{t("events.viewAnalytics", "View Analytics")}</span>
                   </Link>
                   
-                  {/* Edit Event Button */}
-                  <button
-                    onClick={() => setIsEditModalOpen(true)}
-                    className={`group flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                  {/* View Bookings Button - Alternative way to manage bookings */}
+                  <Link
+                    href={`/myBookings${EventListId ? `?event_id=${EventListId}` : ''}`}
+                    className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
                   >
-                    <Icon icon="lucide:edit" className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-                    <span>{t("detail.tab15", "Edit Event")}</span>
-                  </button>
+                    <Icon icon="lucide:clipboard-list" className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                    <span>{t("hostNavbar.myBookings", "View Bookings")}</span>
+                  </Link>
                   
-                  {/* Cancel Event Button - Only show if event is approved */}
+                  {/* Edit Event Button - Orange color (replaced Cancel Event) */}
                   {detailData?.is_approved === 1 && (
                     <button
-                      onClick={() => setIsCancelDialogOpen(true)}
+                      onClick={() => setIsEditModalOpen(true)}
                       className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
                     >
-                      <Icon icon="lucide:x-circle" className="h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
-                      <span>{t("events.cancelEvent", "Cancel Event")}</span>
+                      <Icon icon="lucide:edit" className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+                      <span>{t("detail.tab15", "Edit Event")}</span>
                     </button>
                   )}
                   
@@ -208,16 +171,6 @@ export default function JoinUsDetail() {
       <RegistrationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-      />
-
-      {/* Cancel Event Dialog */}
-      <CancelConfirmDialog
-        isOpen={isCancelDialogOpen}
-        onClose={() => setIsCancelDialogOpen(false)}
-        onConfirm={handleCancelEvent}
-        isLoading={isCancelling}
-        type="event"
-        showRefundWarning={false}
       />
 
       {/* Delete Event Modal */}

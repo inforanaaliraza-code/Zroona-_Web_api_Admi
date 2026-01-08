@@ -335,6 +335,19 @@ export default function EventDetailsPage() {
 
 	// This function is called when the user submits the booking modal
 	const handleReservation = async (noOfAttendees) => {
+		// Prevent double submission
+		if (isReserving) {
+			console.warn("[BOOKING] Already processing reservation, ignoring duplicate request");
+			return;
+		}
+
+		// Check if already booked to prevent duplicate
+		if (event.booked_event || event.book_status === 0 || event.book_status === 1) {
+			toast.info(getTranslation(t, "events.alreadyBooked", "You already have a pending booking for this event"));
+			setIsBookingModalOpen(false);
+			return;
+		}
+
 		try {
 			setIsReserving(true);
 			const payload = {
@@ -342,21 +355,28 @@ export default function EventDetailsPage() {
 				no_of_attendees: noOfAttendees,
 			};
 
-		const response = await AddBookNowApi(payload);
+			console.log("[BOOKING] Creating booking request:", payload);
+			const response = await AddBookNowApi(payload);
 
-		if (response.status) {
-			toast.success(getTranslation(t, "events.reservationRequested", "Booking request sent! Waiting for approval"));
-			setReservationStatus("pending");
-			event.book_status = 1; // Set to pending (1) initially
-		} else {
-			toast.error(response.message || getTranslation(t, "events.reservationFailed", "Failed to book event. Please try again"));
-		}
-	} catch (error) {
-		console.error("Reservation error:", error);
-		toast.error(getTranslation(t, "events.reservationFailed", "Failed to book event. Please try again"));
-	} finally {
+			if (response.status) {
+				toast.success(getTranslation(t, "events.reservationRequested", "Booking request sent! Waiting for approval"));
+				setReservationStatus("pending");
+				event.book_status = 1; // Set to pending (1) initially
+				// Close modal after successful booking
+				setIsBookingModalOpen(false);
+			} else {
+				// Handle duplicate booking error from backend
+				if (response.message && (response.message.includes("already") || response.message.includes("duplicate") || response.message.includes("pending"))) {
+					toast.warning(response.message || getTranslation(t, "events.alreadyBooked", "You already have a pending booking for this event"));
+				} else {
+					toast.error(response.message || getTranslation(t, "events.reservationFailed", "Failed to book event. Please try again"));
+				}
+			}
+		} catch (error) {
+			console.error("Reservation error:", error);
+			toast.error(getTranslation(t, "events.reservationFailed", "Failed to book event. Please try again"));
+		} finally {
 			setIsReserving(false);
-			setIsBookingModalOpen(false);
 		}
 	};
 

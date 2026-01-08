@@ -93,10 +93,7 @@ const PersonalInfoQuestionsForm = ({ onSuccess }) => {
       city: Yup.string().required(t("signup.tab16") || "City is required"),
       bio: Yup.string().required(t("signup.tab16") || "Biography is required"),
       // Interview Questions validation
-      "1": Yup.string().required(t("signup.tab16") || "Answer is required").min(10, t("interview.minLength") || "Answer must be at least 10 characters"),
-      "2": Yup.string().required(t("signup.tab16") || "Answer is required").min(10, t("interview.minLength") || "Answer must be at least 10 characters"),
-      "3": Yup.string().required(t("signup.tab16") || "Answer is required").min(10, t("interview.minLength") || "Answer must be at least 10 characters"),
-      "4": Yup.string().required(t("signup.tab16") || "Answer is required").min(10, t("interview.minLength") || "Answer must be at least 10 characters"),
+     
     }),
     onSubmit: async (values) => {
       setLoading(true);

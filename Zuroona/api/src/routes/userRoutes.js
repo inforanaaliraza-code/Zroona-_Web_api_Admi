@@ -18,6 +18,7 @@ router.post("/uploadFile", uploadLimiter, commonController.uploadFile);
 
 // ===== EMAIL-BASED AUTHENTICATION =====
 const { authLimiter } = require("../middleware/rateLimiter");
+router.post("/check-email", userController.checkEmailFormat); // Check email format and existence
 router.post("/register", authLimiter, userController.userRegistration); // Email verification
 router.post("/login", authLimiter, userController.userLoginByEmailPhone); // Email + password login (unified for guest and host)
 router.post("/login/by-email-phone", authLimiter, userController.userLoginByEmailPhone); // Alias for backward compatibility

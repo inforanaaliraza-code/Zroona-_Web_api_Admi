@@ -84,6 +84,10 @@ const bookEventSchema = new mongoose.Schema(
 			type: Date,
 			default: null,
 		},
+		hold_expires_at: {
+			type: Date,
+			default: null,
+		},
 	},
 	{ timestamps: true }
 );

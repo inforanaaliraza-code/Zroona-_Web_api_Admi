@@ -10,6 +10,7 @@ import OrganizerSignUpForm from "@/components/EditProfile/OrganizerSignUpForm";
 import UploadId from "@/components/EditProfile/UploadId";
 import BankDetails from "@/components/EditProfile/BankDetails";
 import InterviewQ from "@/components/EditProfile/InterviewQ";
+import Settings from "@/components/EditProfile/Settings";
 import { useTranslation } from "react-i18next";
 
 export default function EditProfile() {
@@ -18,6 +19,7 @@ export default function EditProfile() {
     () => ({
       PERSONAL: "personal",
       BANK: "bank",
+      SETTINGS: "settings",
     }),
     []
   );
@@ -58,6 +60,11 @@ export default function EditProfile() {
                 <BankDetails
                   title={t('signup.tab43')}
                   buttonName={t('signup.tab57')}
+                />
+              ) : activeSection === sections.SETTINGS ? (
+                <Settings
+                  title="Settings"
+                  buttonText="Save Settings"
                 />
               ) : null}
             </div>

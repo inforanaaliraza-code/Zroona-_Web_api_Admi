@@ -1,0 +1,3 @@
+{
+  "/(AfterLogin)/organizer/detail/[id]/page": "app/(AfterLogin)/organizer/detail/[id]/page.js"
+}

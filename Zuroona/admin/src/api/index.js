@@ -329,17 +329,64 @@ export const putFormData = async (url = "", data = {}) => {
     const token = await Cookies.get(TOKEN_NAME);
     const formData = new FormData();
 
+    // Append all fields to FormData - simplified approach
     for (let key in data) {
-      formData.append(key, data[key]);
+      const value = data[key];
+      
+      // Skip null, undefined, or empty strings
+      if (value === null || value === undefined || value === '') {
+        continue;
+      }
+      
+      // If it's a File object, append as-is with proper name
+      if (value instanceof File) {
+        formData.append(key, value, value.name);
+      } else if (typeof value === 'object') {
+        // Skip objects (except File) - they cause issues
+        console.warn(`[putFormData] Skipping object value for key: ${key}`);
+        continue;
+      } else {
+        // Convert other values to string
+        formData.append(key, String(value));
+      }
     }
+    
+    // Check if FormData has any entries
+    let hasEntries = false;
+    for (let pair of formData.entries()) {
+      hasEntries = true;
+      break;
+    }
+    
+    if (!hasEntries) {
+      console.warn('[putFormData] FormData is empty, falling back to JSON');
+      return putRawData(url, data);
+    }
+    
     const response = await axios.put(BASE_API_URL + url, formData, {
-      headers: { Authorization: token ? token : "" },
+      headers: { 
+        Authorization: token ? token : "",
+        // Let axios set Content-Type automatically with boundary for FormData
+      },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      timeout: 60000, // 60 seconds timeout for file uploads
     });
 
     return response.data;
   } catch (error) {
-    // toast.error(error.response.data);
-    return error.response.data;
+    console.error('[putFormData] Error:', error);
+    console.error('[putFormData] Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers
+      }
+    });
+    return error.response?.data || { status: 0, message: error.message };
   }
 };
 

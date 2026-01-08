@@ -11,7 +11,7 @@ const UserService = require('../services/userService');
 // ==================================================
 const fs = require('fs');
 const path = require('path');
-const { uploadToCloudinary, extractPublicId } = require('../utils/cloudinary');
+const { uploadToS3, extractKey } = require('../utils/awsS3');
 
 require('dotenv').config();
 
@@ -135,23 +135,22 @@ const commonController = {
             // return Response.ok(res, { location: url, key }, 200, 'File uploaded successfully');
             // ==================================================
 
-            // ========== CLOUDINARY UPLOAD ==========
+            // ========== AWS S3 UPLOAD ==========
             const dirName = req.body.dirName || 'Zuroona';
             
-            // Check Cloudinary credentials
-            const hasCloudinaryUrl = !!process.env.CLOUDINARY_URL;
-            const hasIndividualCreds = process.env.CLOUDINARY_CLOUD_NAME && 
-                                      process.env.CLOUDINARY_API_KEY && 
-                                      process.env.CLOUDINARY_API_SECRET;
+            // Check AWS S3 credentials
+            const hasAwsCredentials = process.env.AWS_ACCESS_KEY_ID && 
+                                     process.env.AWS_SECRET_ACCESS_KEY && 
+                                     process.env.AWS_BUCKET_NAME;
             
-            if (!hasCloudinaryUrl && !hasIndividualCreds) {
+            if (!hasAwsCredentials) {
                 return Response.badRequestResponse(
                     res,
-                    'Cloudinary credentials not configured. Please set CLOUDINARY_URL or individual CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.'
+                    'AWS S3 credentials not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME, and AWS_REGION environment variables.'
                 );
             }
 
-            // Check file size before upload (Cloudinary free tier limit is 10 MB)
+            // Check file size before upload (AWS S3 allows larger files, but we'll keep 10 MB limit for now)
             const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
             const fileSize = fileData.length;
             
@@ -164,8 +163,8 @@ const commonController = {
                 );
             }
 
-            // Upload to Cloudinary
-            console.log('📤 Starting Cloudinary upload:', {
+            // Upload to AWS S3
+            console.log('📤 Starting AWS S3 upload:', {
                 dirName,
                 originalName,
                 mimetype: uploaded.mimetype,
@@ -173,15 +172,15 @@ const commonController = {
                 fileSizeMB: (fileData.length / (1024 * 1024)).toFixed(2)
             });
             
-            const cloudinaryResult = await uploadToCloudinary(
+            const s3Result = await uploadToS3(
                 fileData,
                 dirName,
                 originalName,
                 uploaded.mimetype || 'image/jpeg'
             );
             
-            if (!cloudinaryResult || !cloudinaryResult.secure_url) {
-                throw new Error('Cloudinary upload failed: No URL returned');
+            if (!s3Result || !s3Result.url) {
+                throw new Error('AWS S3 upload failed: No URL returned');
             }
 
             // Clean up temp file if it was used
@@ -193,18 +192,20 @@ const commonController = {
                 }
             }
 
-            // Return Cloudinary URL
+            // Return S3 URL (using secure_url for compatibility with existing code)
             return Response.ok(
                 res,
                 {
-                    location: cloudinaryResult.secure_url,
-                    url: cloudinaryResult.secure_url,
-                    public_id: cloudinaryResult.public_id,
-                    format: cloudinaryResult.format,
-                    bytes: cloudinaryResult.bytes,
+                    location: s3Result.url,
+                    url: s3Result.url,
+                    secure_url: s3Result.url, // For compatibility
+                    public_id: s3Result.key, // For compatibility
+                    key: s3Result.key,
+                    format: s3Result.format,
+                    bytes: s3Result.bytes,
                 },
                 200,
-                'File uploaded successfully to Cloudinary'
+                'File uploaded successfully to AWS S3'
             );
             // ==================================================
         } catch (error) {
@@ -226,37 +227,40 @@ const commonController = {
                 );
             }
 
-            // Handle Cloudinary-specific errors
-            if (error?.http_code) {
-                let userMessage = 'File upload failed';
-                if (error.http_code === 401) {
-                    userMessage = 'Cloudinary authentication failed. Please check your API credentials.';
-                } else if (error.http_code === 400) {
-                    // Check if it's a file size error
-                    if (error.message && (error.message.includes('File size too large') || error.message.includes('Maximum is'))) {
-                        return Response.badRequestResponse(
-                            res,
-                            error.message || 'File size exceeds the maximum allowed limit of 10 MB. Please compress or resize your image before uploading.'
-                        );
-                    }
-                    userMessage = `Cloudinary upload failed: ${error.message || 'Invalid request'}`;
-                } else if (error.http_code === 403) {
-                    userMessage = 'Cloudinary access denied. Please check your API key permissions.';
-                } else if (error.http_code === 404) {
-                    userMessage = 'Cloudinary resource not found. Please check your cloud name.';
-                } else if (error.http_code === 499 || error.name === 'TimeoutError') {
-                    userMessage = 'File upload timeout: The upload took too long. Please try again with a smaller file or check your internet connection.';
-                } else {
-                    userMessage = `Cloudinary upload failed (HTTP ${error.http_code}): ${error.message || 'Unknown error'}`;
-                }
-                return Response.serverErrorResponse(res, userMessage);
+            // Handle AWS S3-specific errors
+            if (error?.name === 'CredentialsProviderError' || error?.message?.includes('credentials')) {
+                return Response.badRequestResponse(
+                    res,
+                    'AWS S3 credentials error. Please check your AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME, and AWS_REGION environment variables.'
+                );
+            }
+
+            if (error?.name === 'PermanentRedirect' || error?.message?.includes('region mismatch')) {
+                return Response.badRequestResponse(
+                    res,
+                    error.message || 'AWS S3 region mismatch. Please check your AWS_REGION environment variable matches your bucket region.'
+                );
+            }
+
+            if (error?.name === 'NoSuchBucket' || error?.message?.includes('bucket')) {
+                return Response.badRequestResponse(
+                    res,
+                    'AWS S3 bucket not found. Please check your AWS_BUCKET_NAME environment variable.'
+                );
+            }
+
+            if (error?.name === 'AccessDenied' || error?.message?.includes('Access Denied')) {
+                return Response.badRequestResponse(
+                    res,
+                    'AWS S3 access denied. Please check your IAM user permissions and bucket policy.'
+                );
             }
 
             // Handle credential errors
-            if (error?.message && error.message.includes('Cloudinary') && error.message.includes('not configured')) {
+            if (error?.message && error.message.includes('AWS S3') && error.message.includes('not configured')) {
                 return Response.badRequestResponse(
                     res,
-                    'Cloudinary credentials not configured. Please set CLOUDINARY_URL or individual CLOUDINARY_* environment variables.'
+                    'AWS S3 credentials not configured. Please set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_BUCKET_NAME, and AWS_REGION environment variables.'
                 );
             }
 
@@ -338,10 +342,12 @@ const commonController = {
                 return Response.badRequestResponse(res, resp_messages(lang).cmsTypeRequired)
             }
             const matchStage = { $match: { type: type } };
+            // Return both description and description_ar so frontend can switch languages dynamically
             const projectStage = {
                 $project: {
                     type: 1,
-                    description: lang === "ar" ? "$description_ar" : "$description"
+                    description: 1,
+                    description_ar: 1
                 }
             };
             const result = await CmsService.AggregateService([matchStage, projectStage]);

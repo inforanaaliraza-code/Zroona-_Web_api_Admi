@@ -353,47 +353,56 @@ const menuGroups = [
             {
                 icon: "/assets/images/menu/event-org.png",
                 label: "Manage Hosts",
+                translationKey: "sidebar.manageHosts",
                 route: "/organizer"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Guests Management",
+                translationKey: "sidebar.guestsManagement",
                 route: "/user"
             },
             {
                 icon: "/assets/images/menu/event.png",
                 label: "Manage Events",
+                translationKey: "sidebar.manageEvents",
                 route: "/events"
             },
             {
                 icon: "/assets/images/menu/cms.png",
                 label: "Manage CMS",
+                translationKey: "sidebar.manageCMS",
                 route: "/cms"
             },
             {
                 icon: "/assets/images/menu/settings-line.png",
                 hoverIcon: "/assets/images/menu/settings-line.png",
                 label: "Settings",
+                translationKey: "sidebar.settings",
                 route: "/setting"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Admin Management",
+                translationKey: "sidebar.adminManagement",
                 route: "/admin-management"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Wallet",
+                translationKey: "sidebar.wallet",
                 route: "/wallet"
             },
             {
                 icon: "/assets/images/menu/withdrawal.png",
                 label: "Host Withdrawal Requests",
+                translationKey: "sidebar.hostWithdrawalRequests",
                 route: "/withdrawal-requests"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Guest Invoices",
+                translationKey: "sidebar.guestInvoices",
                 route: "/guest-invoices"
             }
         ]
@@ -726,18 +735,60 @@ const putFormData = async (url = "", data = {})=>{
     try {
         const token = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TOKEN_NAME"]);
         const formData = new FormData();
+        // Append all fields to FormData - simplified approach
         for(let key in data){
-            formData.append(key, data[key]);
+            const value = data[key];
+            // Skip null, undefined, or empty strings
+            if (value === null || value === undefined || value === '') {
+                continue;
+            }
+            // If it's a File object, append as-is with proper name
+            if (value instanceof File) {
+                formData.append(key, value, value.name);
+            } else if (typeof value === 'object') {
+                // Skip objects (except File) - they cause issues
+                console.warn(`[putFormData] Skipping object value for key: ${key}`);
+                continue;
+            } else {
+                // Convert other values to string
+                formData.append(key, String(value));
+            }
+        }
+        // Check if FormData has any entries
+        let hasEntries = false;
+        for (let pair of formData.entries()){
+            hasEntries = true;
+            break;
+        }
+        if (!hasEntries) {
+            console.warn('[putFormData] FormData is empty, falling back to JSON');
+            return putRawData(url, data);
         }
         const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].put(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["BASE_API_URL"] + url, formData, {
             headers: {
                 Authorization: token ? token : ""
-            }
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            timeout: 60000
         });
         return response.data;
     } catch (error) {
-        // toast.error(error.response.data);
-        return error.response.data;
+        console.error('[putFormData] Error:', error);
+        console.error('[putFormData] Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: {
+                url: error.config?.url,
+                method: error.config?.method,
+                headers: error.config?.headers
+            }
+        });
+        return error.response?.data || {
+            status: 0,
+            message: error.message
+        };
     }
 };
 const putFormDataURLIncoded = async (url = "", data = {})=>{
@@ -1510,24 +1561,38 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
-const TextEditor = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/TextEditor/TextEditor.jsx [app-client] (ecmascript, async loader)")(__turbopack_import__), {
+const EnhancedTextEditor = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/CMS/EnhancedTextEditor.jsx [app-client] (ecmascript, async loader)")(__turbopack_import__), {
     loadableGenerated: {
         modules: [
-            "src/components/CMS/TermsConditions.jsx -> " + "@/components/TextEditor/TextEditor"
+            "src/components/CMS/TermsConditions.jsx -> " + "@/components/CMS/EnhancedTextEditor"
         ]
     },
-    ssr: false
+    ssr: false,
+    loading: ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "h-32 bg-gray-100 rounded animate-pulse"
+        }, void 0, false, {
+            fileName: "[project]/src/components/CMS/TermsConditions.jsx",
+            lineNumber: 13,
+            columnNumber: 18
+        }, this)
 });
-_c = TextEditor;
-const TextEditorAr = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/TextEditorAr/TextEditorAr.jsx [app-client] (ecmascript, async loader)")(__turbopack_import__), {
+_c = EnhancedTextEditor;
+const EnhancedTextEditorAr = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/CMS/EnhancedTextEditorAr.jsx [app-client] (ecmascript, async loader)")(__turbopack_import__), {
     loadableGenerated: {
         modules: [
-            "src/components/CMS/TermsConditions.jsx -> " + "@/components/TextEditorAr/TextEditorAr"
+            "src/components/CMS/TermsConditions.jsx -> " + "@/components/CMS/EnhancedTextEditorAr"
         ]
     },
-    ssr: false
+    ssr: false,
+    loading: ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "h-32 bg-gray-100 rounded animate-pulse"
+        }, void 0, false, {
+            fileName: "[project]/src/components/CMS/TermsConditions.jsx",
+            lineNumber: 18,
+            columnNumber: 18
+        }, this)
 });
-_c1 = TextEditorAr;
+_c1 = EnhancedTextEditorAr;
 function TermsConditions(props) {
     _s();
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -1540,8 +1605,8 @@ function TermsConditions(props) {
         });
     }, []);
     const initialValues = {
-        content: props.status ? CMSDetail?.description : "",
-        content_ar: props.status ? CMSDetail?.description_ar : ""
+        content: props.status ? CMSDetail?.description || "" : "",
+        content_ar: props.status ? CMSDetail?.description_ar || "" : ""
     };
     const formik = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$formik$2f$dist$2f$formik$2e$esm$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useFormik"])({
         initialValues: initialValues,
@@ -1578,11 +1643,19 @@ function TermsConditions(props) {
         className: "flex flex-col items-center",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "flex justify-center mb-4 w-full",
+                className: "flex justify-center mb-6 w-full",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "mb-4 max-w-5xl w-5/6",
+                    className: "mb-4 max-w-6xl w-full px-4",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(TextEditor, {
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                            className: "block text-sm font-semibold text-gray-700 mb-2",
+                            children: "English Content"
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/CMS/TermsConditions.jsx",
+                            lineNumber: 72,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(EnhancedTextEditor, {
                             ref: quillRef,
                             name: "content",
                             value: formik.values.content,
@@ -1590,34 +1663,42 @@ function TermsConditions(props) {
                             formik: formik
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                            lineNumber: 70,
+                            lineNumber: 75,
                             columnNumber: 11
                         }, this),
                         formik.errors.content && formik.touched.content && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "text-red-500",
+                            className: "text-red-500 mt-2",
                             children: formik.errors.content
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                            lineNumber: 78,
+                            lineNumber: 83,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                    lineNumber: 69,
+                    lineNumber: 71,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                lineNumber: 68,
+                lineNumber: 70,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "flex justify-center mb-4 w-full",
+                className: "flex justify-center mb-6 w-full",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "mb-4 max-w-5xl w-5/6",
+                    className: "mb-4 max-w-6xl w-full px-4",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(TextEditorAr, {
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                            className: "block text-sm font-semibold text-gray-700 mb-2",
+                            children: "Arabic Content (المحتوى العربي)"
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/CMS/TermsConditions.jsx",
+                            lineNumber: 89,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(EnhancedTextEditorAr, {
                             ref: quillRef,
                             name: "content_ar",
                             value: formik.values.content_ar,
@@ -1625,26 +1706,26 @@ function TermsConditions(props) {
                             formik: formik
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                            lineNumber: 84,
+                            lineNumber: 92,
                             columnNumber: 11
                         }, this),
                         formik.errors.content_ar && formik.touched.content_ar && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "text-red-500",
+                            className: "text-red-500 mt-2",
                             children: formik.errors.content_ar
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                            lineNumber: 92,
+                            lineNumber: 100,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                    lineNumber: 83,
+                    lineNumber: 88,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                lineNumber: 82,
+                lineNumber: 87,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1656,23 +1737,23 @@ function TermsConditions(props) {
                         color: "#fff"
                     }, void 0, false, {
                         fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                        lineNumber: 102,
+                        lineNumber: 110,
                         columnNumber: 13
                     }, this) : props.status ? "Update" : "Save"
                 }, void 0, false, {
                     fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                    lineNumber: 97,
+                    lineNumber: 105,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                lineNumber: 96,
+                lineNumber: 104,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-        lineNumber: 67,
+        lineNumber: 69,
         columnNumber: 5
     }, this);
 }
@@ -1686,8 +1767,8 @@ _s(TermsConditions, "Qe3VVOPK+x5CYSQVY9It7iEbh7E=", false, function() {
 _c2 = TermsConditions;
 const __TURBOPACK__default__export__ = TermsConditions;
 var _c, _c1, _c2;
-__turbopack_refresh__.register(_c, "TextEditor");
-__turbopack_refresh__.register(_c1, "TextEditorAr");
+__turbopack_refresh__.register(_c, "EnhancedTextEditor");
+__turbopack_refresh__.register(_c1, "EnhancedTextEditorAr");
 __turbopack_refresh__.register(_c2, "TermsConditions");
 
 })()),

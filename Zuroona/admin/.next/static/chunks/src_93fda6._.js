@@ -353,47 +353,56 @@ const menuGroups = [
             {
                 icon: "/assets/images/menu/event-org.png",
                 label: "Manage Hosts",
+                translationKey: "sidebar.manageHosts",
                 route: "/organizer"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Guests Management",
+                translationKey: "sidebar.guestsManagement",
                 route: "/user"
             },
             {
                 icon: "/assets/images/menu/event.png",
                 label: "Manage Events",
+                translationKey: "sidebar.manageEvents",
                 route: "/events"
             },
             {
                 icon: "/assets/images/menu/cms.png",
                 label: "Manage CMS",
+                translationKey: "sidebar.manageCMS",
                 route: "/cms"
             },
             {
                 icon: "/assets/images/menu/settings-line.png",
                 hoverIcon: "/assets/images/menu/settings-line.png",
                 label: "Settings",
+                translationKey: "sidebar.settings",
                 route: "/setting"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Admin Management",
+                translationKey: "sidebar.adminManagement",
                 route: "/admin-management"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Wallet",
+                translationKey: "sidebar.wallet",
                 route: "/wallet"
             },
             {
                 icon: "/assets/images/menu/withdrawal.png",
                 label: "Host Withdrawal Requests",
+                translationKey: "sidebar.hostWithdrawalRequests",
                 route: "/withdrawal-requests"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Guest Invoices",
+                translationKey: "sidebar.guestInvoices",
                 route: "/guest-invoices"
             }
         ]
@@ -726,18 +735,60 @@ const putFormData = async (url = "", data = {})=>{
     try {
         const token = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TOKEN_NAME"]);
         const formData = new FormData();
+        // Append all fields to FormData - simplified approach
         for(let key in data){
-            formData.append(key, data[key]);
+            const value = data[key];
+            // Skip null, undefined, or empty strings
+            if (value === null || value === undefined || value === '') {
+                continue;
+            }
+            // If it's a File object, append as-is with proper name
+            if (value instanceof File) {
+                formData.append(key, value, value.name);
+            } else if (typeof value === 'object') {
+                // Skip objects (except File) - they cause issues
+                console.warn(`[putFormData] Skipping object value for key: ${key}`);
+                continue;
+            } else {
+                // Convert other values to string
+                formData.append(key, String(value));
+            }
+        }
+        // Check if FormData has any entries
+        let hasEntries = false;
+        for (let pair of formData.entries()){
+            hasEntries = true;
+            break;
+        }
+        if (!hasEntries) {
+            console.warn('[putFormData] FormData is empty, falling back to JSON');
+            return putRawData(url, data);
         }
         const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].put(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["BASE_API_URL"] + url, formData, {
             headers: {
                 Authorization: token ? token : ""
-            }
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            timeout: 60000
         });
         return response.data;
     } catch (error) {
-        // toast.error(error.response.data);
-        return error.response.data;
+        console.error('[putFormData] Error:', error);
+        console.error('[putFormData] Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: {
+                url: error.config?.url,
+                method: error.config?.method,
+                headers: error.config?.headers
+            }
+        });
+        return error.response?.data || {
+            status: 0,
+            message: error.message
+        };
     }
 };
 const putFormDataURLIncoded = async (url = "", data = {})=>{
@@ -1456,16 +1507,31 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/link.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/navigation.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-client] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/users.js [app-client] (ecmascript) <export default as Users>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$user$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__UserCircle$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/circle-user.js [app-client] (ecmascript) <export default as UserCircle>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Calendar$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/calendar.js [app-client] (ecmascript) <export default as Calendar>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/file-text.js [app-client] (ecmascript) <export default as FileText>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$settings$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Settings$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/settings.js [app-client] (ecmascript) <export default as Settings>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/shield.js [app-client] (ecmascript) <export default as Shield>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$wallet$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Wallet$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/wallet.js [app-client] (ecmascript) <export default as Wallet>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$arrow$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowDownCircle$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/circle-arrow-down.js [app-client] (ecmascript) <export default as ArrowDownCircle>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$receipt$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Receipt$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/receipt.js [app-client] (ecmascript) <export default as Receipt>");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
 var _s = __turbopack_refresh__.signature();
+"use client";
+;
+;
 ;
 ;
 ;
 ;
 const SidebarItem = ({ item, pageName, setPageName, index = 0 })=>{
     _s();
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
     const [isHovered, setIsHovered] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [isMobile, setIsMobile] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const handleClick = ()=>{
@@ -1481,6 +1547,102 @@ const SidebarItem = ({ item, pageName, setPageName, index = 0 })=>{
         return false;
     };
     const isItemActive = isActive(item);
+    // Icon mapping for menu items
+    const getIcon = ()=>{
+        const iconProps = {
+            className: `transition-all duration-300 ${isItemActive ? "text-purple-600" : "text-gray-500 group-hover:text-purple-500"}`,
+            size: 20
+        };
+        const label = item.label?.toLowerCase() || "";
+        if (label.includes("host") || label.includes("organizer")) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$users$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Users$3e$__["Users"], {
+                ...iconProps
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 59,
+                columnNumber: 14
+            }, this);
+        } else if (label.includes("guest") || label.includes("user")) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$user$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__UserCircle$3e$__["UserCircle"], {
+                ...iconProps
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 61,
+                columnNumber: 14
+            }, this);
+        } else if (label.includes("event")) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Calendar$3e$__["Calendar"], {
+                ...iconProps
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 63,
+                columnNumber: 14
+            }, this);
+        } else if (label.includes("cms") || label.includes("content")) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
+                ...iconProps
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 65,
+                columnNumber: 14
+            }, this);
+        } else if (label.includes("setting")) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$settings$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Settings$3e$__["Settings"], {
+                ...iconProps
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 67,
+                columnNumber: 14
+            }, this);
+        } else if (label.includes("admin")) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Shield$3e$__["Shield"], {
+                ...iconProps
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 69,
+                columnNumber: 14
+            }, this);
+        } else if (label.includes("wallet") && !label.includes("withdrawal")) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$wallet$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Wallet$3e$__["Wallet"], {
+                ...iconProps
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 71,
+                columnNumber: 14
+            }, this);
+        } else if (label.includes("withdrawal")) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$arrow$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowDownCircle$3e$__["ArrowDownCircle"], {
+                ...iconProps
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 73,
+                columnNumber: 14
+            }, this);
+        } else if (label.includes("invoice")) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$receipt$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Receipt$3e$__["Receipt"], {
+                ...iconProps
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 75,
+                columnNumber: 14
+            }, this);
+        }
+        // Fallback: try to use image icon if available
+        if (item.icon) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                src: item.icon,
+                alt: item.label,
+                width: 20,
+                height: 20,
+                className: `transition-all duration-300 ${isItemActive ? "opacity-100 brightness-110" : "opacity-70 group-hover:opacity-100"}`
+            }, void 0, false, {
+                fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
+                lineNumber: 81,
+                columnNumber: 9
+            }, this);
+        }
+        return null;
+    };
     // Check if the screen width is mobile
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         const handleResize = ()=>{
@@ -1505,85 +1667,72 @@ const SidebarItem = ({ item, pageName, setPageName, index = 0 })=>{
             onMouseEnter: ()=>!isMobile && setIsHovered(true),
             onMouseLeave: ()=>!isMobile && setIsHovered(false),
             className: `
-          group relative flex items-center gap-3 rounded-xl py-2.5 px-3 font-medium text-white text-sm
-          transition-all duration-300 ease-in-out w-full min-w-0
-          ${isItemActive ? "bg-white/30 shadow-lg shadow-white/20 backdrop-blur-sm" : "bg-white/0 hover:bg-white/20"}
-          ${!isMobile ? "hover:shadow-lg hover:shadow-white/20 hover:backdrop-blur-sm hover:scale-[1.01]" : ""}
-          ${isItemActive ? "scale-[1.01]" : ""}
+          group relative flex items-center rounded-xl py-3 px-4 font-medium text-sm
+          transition-all duration-300 ease-in-out w-full min-w-0 overflow-hidden
+          ${isItemActive ? "bg-gradient-to-r from-purple-100 via-purple-50 to-green-100 shadow-md shadow-purple-200/50 border-2 border-purple-400" : "bg-white/70 hover:bg-purple-50/50 border-2 border-purple-100/50 hover:border-purple-300"}
+          ${!isMobile ? "hover:shadow-md hover:shadow-purple-200/40 hover:scale-[1.02]" : ""}
+          ${isItemActive ? "scale-[1.02]" : ""}
         `,
             children: [
                 isItemActive && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-brand-green to-brand-gray-green-2 rounded-r-full animate-scale-in"
+                    className: "absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-green-500 via-purple-500 to-green-500 rounded-r-full shadow-md"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 69,
+                    lineNumber: 137,
                     columnNumber: 11
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: `
-            absolute inset-0 rounded-xl bg-gradient-to-r from-white/0 via-white/10 to-white/0
-            opacity-0 transition-opacity duration-300
-            ${isHovered || isItemActive ? "opacity-100" : ""}
+            absolute inset-0 rounded-xl bg-gradient-to-r from-purple-50/0 via-purple-100/0 to-purple-50/0
+            transition-all duration-500
+            ${isHovered || isItemActive ? "from-purple-100/60 via-purple-50/40 to-purple-100/60" : ""}
           `
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 73,
+                    lineNumber: 141,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: `
-          relative z-10 transition-all duration-300 flex-shrink-0
-          ${isItemActive ? "scale-105" : "group-hover:scale-105"}
-          ${isHovered || isItemActive ? "brightness-110" : ""}
-        `,
-                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                        src: item.icon,
-                        alt: item.label,
-                        width: 20,
-                        height: 20,
-                        className: "transition-transform duration-300"
-                    }, void 0, false, {
-                        fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                        lineNumber: 87,
-                        columnNumber: 11
-                    }, this)
+                    className: "relative z-10 mr-3 flex-shrink-0",
+                    children: getIcon()
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 82,
+                    lineNumber: 150,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                     className: `
           relative z-10 transition-all duration-300 flex-1 text-left leading-tight
-          ${isItemActive ? "font-semibold" : "font-medium"}
+          ${isItemActive ? "font-semibold text-purple-700" : "font-medium text-gray-700 group-hover:text-purple-600"}
         `,
-                    children: item.label
+                    children: item.translationKey ? t(item.translationKey) : item.label
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 97,
+                    lineNumber: 155,
                     columnNumber: 9
                 }, this),
-                isHovered && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute inset-0 rounded-xl shimmer opacity-30"
+                isItemActive && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-gradient-to-r from-green-500 to-purple-500 shadow-sm"
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-                    lineNumber: 106,
+                    lineNumber: 167,
                     columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-            lineNumber: 51,
+            lineNumber: 119,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Sidebar/SidebarItem.jsx",
-        lineNumber: 47,
+        lineNumber: 115,
         columnNumber: 5
     }, this);
 };
-_s(SidebarItem, "x+n+rv9YvEIUxjm91kKJ+YNn9ZQ=", false, function() {
+_s(SidebarItem, "ZBp1HFSRQnOzqSsm32719PV16cc=", false, function() {
     return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"]
     ];
 });
@@ -1696,7 +1845,7 @@ function useLocalStorage(key, initialValue) {
         setStoredValue
     ];
 }
-_s(useLocalStorage, "E4FYgWHiGR6T2hKNHeDxqQf/QGU=");
+_s(useLocalStorage, "1rasLt+G1piOAr2hoSRhvsO2DC8=");
 const __TURBOPACK__default__export__ = useLocalStorage;
 
 })()),
@@ -1712,6 +1861,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navi
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/link.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$log$2d$out$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LogOutIcon$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/log-out.js [app-client] (ecmascript) <export default as LogOutIcon>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-redux/dist/react-redux.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Sidebar$2f$SidebarItem$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Sidebar/SidebarItem.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$ClickOutside$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/ClickOutside.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/hooks/useLocalStorage.jsx [app-client] (ecmascript)");
@@ -1731,65 +1881,88 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
+;
 const Sidebar = ({ sidebarOpen, setSidebarOpen })=>{
     _s();
     const [pageName, setPageName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])("selectedMenu", "dashboard");
+    const { isRTL } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"])((state)=>state.language);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$ClickOutside$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
         onClick: ()=>setSidebarOpen(false),
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
-            className: `fixed left-0 top-0 z-[9999] flex h-screen w-[320px] flex-col bg-gradient-to-br from-brand-gray-purple-2 via-brand-pastel-gray-purple-1 to-brand-gray-purple-3 shadow-2xl duration-300 ease-in-out lg:translate-x-0 overflow-y-auto ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`,
+            className: `fixed top-0 z-[9999] flex h-screen w-[320px] flex-col shadow-2xl duration-300 ease-in-out lg:translate-x-0 overflow-y-auto border-r-2 border-purple-200/40 ${isRTL ? 'right-0' : 'left-0'} ${sidebarOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"}`,
             style: {
-                background: "linear-gradient(135deg, #a797cc 0%, #b0a0df 50%, #a08ec8 100%)"
+                background: "linear-gradient(180deg, #faf5ff 0%, #ffffff 50%, #faf5ff 100%)"
             },
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/5 pointer-events-none"
+                    className: "absolute inset-0 opacity-40 pointer-events-none",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "absolute inset-0",
+                        style: {
+                            backgroundImage: `radial-gradient(circle at 20% 50%, rgba(167, 151, 204, 0.12) 0%, transparent 50%),
+                             radial-gradient(circle at 80% 80%, rgba(196, 181, 253, 0.08) 0%, transparent 50%),
+                             radial-gradient(circle at 40% 20%, rgba(167, 151, 204, 0.1) 0%, transparent 50%)`
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/src/components/Sidebar/index.jsx",
+                        lineNumber: 33,
+                        columnNumber: 11
+                    }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 28,
+                    lineNumber: 32,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "flex items-center justify-center mt-6 mb-4 px-5 relative z-10 animate-fade-in flex-shrink-0",
+                    className: "flex items-center justify-center mt-8 mb-6 px-5 relative z-10 animate-fade-in flex-shrink-0 border-b-2 border-purple-200/60 pb-6",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                         href: "/",
-                        className: "group relative",
+                        className: "group relative block",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "absolute inset-0 bg-white/20 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"
+                                className: "absolute -inset-2 bg-gradient-to-r from-purple-200/40 via-green-200/40 to-purple-200/40 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar/index.jsx",
-                                lineNumber: 33,
+                                lineNumber: 44,
                                 columnNumber: 13
                             }, this),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                width: 140,
-                                height: 45,
-                                src: "/assets/images/main-logo.png",
-                                alt: "Zuroona Logo",
-                                className: "object-contain relative z-10 transform group-hover:scale-105 transition-transform duration-300 w-auto h-auto max-h-[50px]"
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "relative z-10 p-4 rounded-xl bg-white shadow-md border-2 border-purple-200 group-hover:border-purple-400 group-hover:shadow-lg group-hover:shadow-purple-200/50 transition-all duration-300 group-hover:scale-105",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                                    width: 280,
+                                    height: 80,
+                                    src: "/assets/images/x_F_logo.png",
+                                    alt: "Zuroona Logo",
+                                    className: "object-contain relative z-10 transform transition-transform duration-300 w-full h-auto max-h-[70px]",
+                                    priority: true
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/Sidebar/index.jsx",
+                                    lineNumber: 48,
+                                    columnNumber: 15
+                                }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Sidebar/index.jsx",
-                                lineNumber: 34,
+                                lineNumber: 47,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/Sidebar/index.jsx",
-                        lineNumber: 32,
+                        lineNumber: 42,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 31,
+                    lineNumber: 41,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "flex flex-col flex-grow relative z-10 w-full px-5 min-w-0",
+                    className: "flex flex-col flex-grow relative z-10 w-full px-4 min-w-0",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
                         className: "py-2 w-full scroll-smooth",
                         style: {
-                            scrollbarWidth: "thin"
+                            scrollbarWidth: "thin",
+                            scrollbarColor: "rgba(167, 151, 204, 0.5) transparent"
                         },
                         children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["menuGroups"].map((group, groupIndex)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "animate-fade-in w-full",
@@ -1797,7 +1970,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen })=>{
                                     animationDelay: `${groupIndex * 0.1}s`
                                 },
                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
-                                    className: "mb-2 flex flex-col gap-2 w-full",
+                                    className: "mb-3 flex flex-col gap-2 w-full",
                                     children: group.menuItems.map((menuItem, menuIndex)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Sidebar$2f$SidebarItem$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                             item: menuItem,
                                             pageName: pageName,
@@ -1805,66 +1978,67 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen })=>{
                                             index: menuIndex
                                         }, menuIndex, false, {
                                             fileName: "[project]/src/components/Sidebar/index.jsx",
-                                            lineNumber: 58,
+                                            lineNumber: 77,
                                             columnNumber: 21
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                                    lineNumber: 56,
+                                    lineNumber: 75,
                                     columnNumber: 17
                                 }, this)
                             }, groupIndex, false, {
                                 fileName: "[project]/src/components/Sidebar/index.jsx",
-                                lineNumber: 51,
+                                lineNumber: 70,
                                 columnNumber: 15
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/components/Sidebar/index.jsx",
-                        lineNumber: 46,
+                        lineNumber: 62,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 45,
+                    lineNumber: 61,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "mt-auto px-5 py-4 relative z-10 border-t border-white/20 flex-shrink-0",
+                    className: "mt-auto px-5 py-5 relative z-10 flex-shrink-0 border-t-2 border-purple-200/60 bg-white/60",
                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: "flex items-center justify-center",
                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                            className: "text-xs text-white/80 font-medium text-center",
+                            className: "text-xs font-medium text-center text-purple-700/70",
                             children: "© 2024 All Rights Reserved"
                         }, void 0, false, {
                             fileName: "[project]/src/components/Sidebar/index.jsx",
-                            lineNumber: 75,
+                            lineNumber: 94,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/Sidebar/index.jsx",
-                        lineNumber: 74,
+                        lineNumber: 93,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Sidebar/index.jsx",
-                    lineNumber: 73,
+                    lineNumber: 92,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Sidebar/index.jsx",
-            lineNumber: 19,
+            lineNumber: 21,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Sidebar/index.jsx",
-        lineNumber: 18,
+        lineNumber: 20,
         columnNumber: 5
     }, this);
 };
-_s(Sidebar, "ovyRBlmxW6EOKjEShFY25lSAh/g=", false, function() {
+_s(Sidebar, "nmYkqXVghCtUs+5/B64zxWaapIc=", false, function() {
     return [
-        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"]
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$hooks$2f$useLocalStorage$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"]
     ];
 });
 _c = Sidebar;
@@ -1914,9 +2088,61 @@ const CreateAdminApi = async (payload)=>{
 };
 _c2 = CreateAdminApi;
 const UpdateAdminApi = async (payload)=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", payload).then((data)=>{
-        return data;
-    });
+    // Separate file upload from other data
+    const hasFile = payload.profile_image && payload.profile_image instanceof File;
+    if (hasFile) {
+        // Step 1: Upload image first
+        try {
+            const { postFormData } = __turbopack_require__("[project]/src/api/index.js [app-client] (ecmascript)");
+            const uploadPayload = {
+                file: payload.profile_image,
+                dirName: "Zuroona/Admin"
+            };
+            const uploadRes = await postFormData("uploadFile", uploadPayload);
+            if (uploadRes?.status === 1 && uploadRes?.data?.location) {
+                // Step 2: Update admin with image URL
+                const updatePayload = {
+                    ...payload
+                };
+                updatePayload.profile_image = uploadRes.data.location;
+                delete updatePayload.profile_image; // Remove File object
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                    return data;
+                });
+            } else {
+                // If upload fails, continue without image
+                console.warn("Image upload failed, updating without image");
+                const updatePayload = {
+                    ...payload
+                };
+                delete updatePayload.profile_image;
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                    return data;
+                });
+            }
+        } catch (uploadError) {
+            console.error("Error uploading image:", uploadError);
+            // Continue with update without image
+            const updatePayload = {
+                ...payload
+            };
+            delete updatePayload.profile_image;
+            return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                return data;
+            });
+        }
+    } else {
+        // No file, use regular JSON
+        const jsonPayload = {
+            ...payload
+        };
+        if (!jsonPayload.profile_image || jsonPayload.profile_image === null || jsonPayload.profile_image === '') {
+            delete jsonPayload.profile_image;
+        }
+        return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", jsonPayload).then((data)=>{
+            return data;
+        });
+    }
 };
 _c3 = UpdateAdminApi;
 const DeleteAdminApi = async (payload)=>{
@@ -2005,7 +2231,7 @@ __turbopack_esm__({
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/link.js [app-client] (ecmascript)");
-var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/image.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$ClickOutside$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/ClickOutside.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/js-cookie/dist/js.cookie.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/until/index.js [app-client] (ecmascript)");
@@ -2032,15 +2258,13 @@ const DropdownUser = ()=>{
                 if (res?.status === 1 || res?.code === 200) {
                     const admin = res?.data || res;
                     setAdminData({
-                        admin_name: `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || "Admin",
-                        profile_image: admin.image || "/assets/images/home/Profile.png"
+                        admin_name: `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || "Admin"
                     });
                 }
             } catch (error) {
                 console.error("Error fetching admin data:", error);
                 setAdminData({
-                    admin_name: "Admin",
-                    profile_image: "/assets/images/home/Profile.png"
+                    admin_name: "Admin"
                 });
             }
         };
@@ -2068,7 +2292,7 @@ const DropdownUser = ()=>{
                             children: getGreeting()
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                            lineNumber: 51,
+                            lineNumber: 49,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -2076,42 +2300,38 @@ const DropdownUser = ()=>{
                             children: adminData?.admin_name || "Admin"
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                            lineNumber: 54,
+                            lineNumber: 52,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                    lineNumber: 50,
+                    lineNumber: 48,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                    className: "h-10 w-10 sm:h-12 sm:w-12 rounded-full border-2 border-brand-pastel-gray-purple-1/30 overflow-hidden shadow-md group-hover:shadow-lg group-hover:border-brand-pastel-gray-purple-1 transition-all duration-300 group-hover:scale-105",
-                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                        width: 120,
-                        height: 120,
-                        src: adminData?.profile_image || "/assets/images/home/Profile.png",
-                        alt: "Admin",
-                        className: "w-full h-auto object-cover"
+                    className: "h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-[#a797cc] to-[#8b7ab8] flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 border-2 border-brand-pastel-gray-purple-1/30 group-hover:border-brand-pastel-gray-purple-1",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaUserCircle"], {
+                        className: "text-white text-2xl sm:text-3xl"
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                        lineNumber: 59,
+                        lineNumber: 57,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/Header/DropdownUser.jsx",
-                    lineNumber: 58,
+                    lineNumber: 56,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Header/DropdownUser.jsx",
-            lineNumber: 45,
+            lineNumber: 43,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/Header/DropdownUser.jsx",
-        lineNumber: 44,
+        lineNumber: 42,
         columnNumber: 5
     }, this);
 };
@@ -2224,7 +2444,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 ;
 ;
 ;
-const SearchBar = ({ search, setSearch, setPage })=>{
+const SearchBar = ({ search, setSearch, setPage, placeholder })=>{
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex gap-x-3",
         children: [
@@ -2249,7 +2469,7 @@ const SearchBar = ({ search, setSearch, setPage })=>{
                             setSearch(e.target.value);
                             setPage(1); // Reset to first page on search
                         },
-                        placeholder: "Search by Organizer name/ID..",
+                        placeholder: placeholder || "Search by Guest Name / Email ID",
                         className: "w-full p-2.5 outline-none text-sm text-gray-800 placeholder:text-gray-400 placeholder:text-xs bg-transparent"
                     }, void 0, false, {
                         fileName: "[project]/src/components/ui/Searchbar.jsx",
@@ -2588,6 +2808,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-client] (ecmascript) <module evaluation>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-redux/dist/react-redux.mjs [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$redux$2f$slices$2f$language$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/redux/slices/language.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
@@ -2596,9 +2818,13 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
+;
+;
 const LanguageSwitcher = ()=>{
     _s();
     const { i18n, t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
+    const dispatch = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDispatch"])();
+    const { currentLanguage, isRTL } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"])((state)=>state.language);
     const [isOpen, setIsOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const dropdownRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"])(null);
     const languages = [
@@ -2615,17 +2841,54 @@ const LanguageSwitcher = ()=>{
             flag: "🇸🇦"
         }
     ];
-    const currentLanguage = languages.find((lang)=>lang.code === i18n.language) || languages[0];
+    const currentLang = languages.find((lang)=>lang.code === currentLanguage) || languages[0];
     const changeLanguage = (langCode)=>{
+        // Dispatch Redux action to set language
+        dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$redux$2f$slices$2f$language$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["setLanguage"])(langCode));
+        // Update i18n
         i18n.changeLanguage(langCode);
-        localStorage.setItem("i18nextLng", langCode);
-        // Update document direction
-        document.documentElement.dir = langCode === "ar" ? "rtl" : "ltr";
-        document.documentElement.lang = langCode;
+        // Update document direction immediately
+        if (typeof document !== "undefined" && document.documentElement) {
+            document.documentElement.dir = langCode === "ar" ? "rtl" : "ltr";
+            document.documentElement.lang = langCode;
+            // Update body class
+            if (document.body) {
+                document.body.classList.remove("rtl", "ltr");
+                document.body.classList.add(langCode === "ar" ? "rtl" : "ltr");
+            }
+        }
         setIsOpen(false);
-        // Reload page to apply direction changes properly and prevent hydration issues
-        window.location.reload();
+    // NO PAGE RELOAD - Language switching is instant now!
     };
+    // Sync i18n with Redux on mount and language changes
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (i18n.language !== currentLanguage) {
+            i18n.changeLanguage(currentLanguage);
+        }
+        // Update document direction based on Redux state
+        if (typeof document !== "undefined" && document.documentElement) {
+            document.documentElement.dir = isRTL ? "rtl" : "ltr";
+            document.documentElement.lang = currentLanguage;
+            if (document.body) {
+                document.body.classList.remove("rtl", "ltr");
+                document.body.classList.add(isRTL ? "rtl" : "ltr");
+            }
+        }
+        // Listen for language changes from i18n and sync with Redux
+        const handleLanguageChange = (lang)=>{
+            if (lang !== currentLanguage) {
+                dispatch((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$redux$2f$slices$2f$language$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["setLanguage"])(lang));
+            }
+        };
+        i18n.on("languageChanged", handleLanguageChange);
+        return ()=>{
+            i18n.off("languageChanged", handleLanguageChange);
+        };
+    }, [
+        dispatch,
+        currentLanguage,
+        isRTL
+    ]);
     // Close dropdown when clicking outside
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
         const handleClickOutside = (event)=>{
@@ -2649,23 +2912,23 @@ const LanguageSwitcher = ()=>{
                         className: "w-4 h-4"
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 53,
+                        lineNumber: 98,
                         columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "hidden sm:inline",
-                        children: currentLanguage.flag
+                        children: currentLang.flag
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 54,
+                        lineNumber: 99,
                         columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "hidden md:inline",
-                        children: currentLanguage.nativeName
+                        children: currentLang.nativeName
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 55,
+                        lineNumber: 100,
                         columnNumber: 5
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
@@ -2680,32 +2943,32 @@ const LanguageSwitcher = ()=>{
                             d: "M19 9l-7 7-7-7"
                         }, void 0, false, {
                             fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                            lineNumber: 62,
+                            lineNumber: 107,
                             columnNumber: 6
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 56,
+                        lineNumber: 101,
                         columnNumber: 5
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                lineNumber: 48,
+                lineNumber: 93,
                 columnNumber: 4
             }, this),
             isOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50",
                 children: languages.map((lang)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                         onClick: ()=>changeLanguage(lang.code),
-                        className: `w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${currentLanguage.code === lang.code ? "bg-[#a797cc]/10 text-[#a797cc] font-medium" : "text-gray-700"}`,
+                        className: `w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${currentLanguage === lang.code ? "bg-[#a797cc]/10 text-[#a797cc] font-medium" : "text-gray-700"}`,
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                 className: "text-xl",
                                 children: lang.flag
                             }, void 0, false, {
                                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                lineNumber: 83,
+                                lineNumber: 128,
                                 columnNumber: 8
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2715,7 +2978,7 @@ const LanguageSwitcher = ()=>{
                                         children: lang.nativeName
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                        lineNumber: 85,
+                                        lineNumber: 130,
                                         columnNumber: 9
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2723,16 +2986,16 @@ const LanguageSwitcher = ()=>{
                                         children: lang.name
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                        lineNumber: 86,
+                                        lineNumber: 131,
                                         columnNumber: 9
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                lineNumber: 84,
+                                lineNumber: 129,
                                 columnNumber: 8
                             }, this),
-                            currentLanguage.code === lang.code && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+                            currentLanguage === lang.code && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
                                 className: "w-4 h-4 ml-auto text-[#a797cc]",
                                 fill: "currentColor",
                                 viewBox: "0 0 20 20",
@@ -2742,35 +3005,37 @@ const LanguageSwitcher = ()=>{
                                     clipRule: "evenodd"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                    lineNumber: 94,
+                                    lineNumber: 139,
                                     columnNumber: 10
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                                lineNumber: 89,
+                                lineNumber: 134,
                                 columnNumber: 9
                             }, this)
                         ]
                     }, lang.code, true, {
                         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                        lineNumber: 74,
+                        lineNumber: 119,
                         columnNumber: 7
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-                lineNumber: 72,
+                lineNumber: 117,
                 columnNumber: 5
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx",
-        lineNumber: 47,
+        lineNumber: 92,
         columnNumber: 3
     }, this);
 };
-_s(LanguageSwitcher, "YbtBu5uKDQknLVJNkWQN024LUlQ=", false, function() {
+_s(LanguageSwitcher, "KMiytdIv/jO+C3BQoA6vTsP7F38=", false, function() {
     return [
-        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"]
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDispatch"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"]
     ];
 });
 _c = LanguageSwitcher;
@@ -2796,9 +3061,12 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$imag
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/js-cookie/dist/js.cookie.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$NotificationBell$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/NotificationBell.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$LanguageSwitcher$2f$LanguageSwitcher$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/LanguageSwitcher/LanguageSwitcher.jsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-client] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
 var _s = __turbopack_refresh__.signature();
+"use client";
 ;
 ;
 ;
@@ -2809,8 +3077,10 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
-const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
+;
+const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage, searchPlaceholder })=>{
     _s();
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
     const { push } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
     async function logout(e) {
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].remove(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TOKEN_NAME"]);
@@ -2842,27 +3112,27 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                                     className: `relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-brand-pastel-gray-purple-1 delay-[0] duration-200 ease-in-out transition-all ${!sidebarOpen && "!w-full delay-300"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 36,
+                                                    lineNumber: 40,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: `relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-brand-pastel-gray-purple-1 delay-150 duration-200 ease-in-out transition-all ${!sidebarOpen && "delay-400 !w-full"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 39,
+                                                    lineNumber: 43,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: `relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-brand-pastel-gray-purple-1 delay-200 duration-200 ease-in-out transition-all ${!sidebarOpen && "!w-full delay-500"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 42,
+                                                    lineNumber: 46,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Header/index.jsx",
-                                            lineNumber: 35,
+                                            lineNumber: 39,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2872,36 +3142,36 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                                     className: `absolute left-2.5 top-0 block h-full w-0.5 rounded-sm bg-brand-pastel-gray-purple-1 delay-300 duration-200 ease-in-out transition-all ${!sidebarOpen && "!h-0 !delay-[0]"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 47,
+                                                    lineNumber: 51,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: `delay-400 absolute left-0 top-2.5 block h-0.5 w-full rounded-sm bg-brand-pastel-gray-purple-1 duration-200 ease-in-out transition-all ${!sidebarOpen && "!h-0 !delay-200"}`
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/Header/index.jsx",
-                                                    lineNumber: 50,
+                                                    lineNumber: 54,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/Header/index.jsx",
-                                            lineNumber: 46,
+                                            lineNumber: 50,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 34,
+                                    lineNumber: 38,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header/index.jsx",
-                                lineNumber: 26,
+                                lineNumber: 30,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/index.jsx",
-                            lineNumber: 24,
+                            lineNumber: 28,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2909,15 +3179,16 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Searchbar$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                 search: search,
                                 setSearch: setSearch,
-                                setPage: setPage
+                                setPage: setPage,
+                                placeholder: searchPlaceholder
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Header/index.jsx",
-                                lineNumber: 60,
+                                lineNumber: 64,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Header/index.jsx",
-                            lineNumber: 59,
+                            lineNumber: 63,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2930,12 +3201,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$LanguageSwitcher$2f$LanguageSwitcher$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 67,
+                                        lineNumber: 71,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 66,
+                                    lineNumber: 70,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2945,12 +3216,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$NotificationBell$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 72,
+                                        lineNumber: 76,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 71,
+                                    lineNumber: 75,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2960,12 +3231,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$DropdownUser$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 77,
+                                        lineNumber: 81,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 76,
+                                    lineNumber: 80,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2987,62 +3258,68 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage })=>{
                                                 className: "w-[16px] sm:w-[20px] transition-transform duration-300 group-hover:rotate-12"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Header/index.jsx",
-                                                lineNumber: 88,
+                                                lineNumber: 92,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "hidden sm:inline",
-                                                children: "Logout"
+                                                children: t("common.logout")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/Header/index.jsx",
-                                                lineNumber: 89,
+                                                lineNumber: 93,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/Header/index.jsx",
-                                        lineNumber: 82,
+                                        lineNumber: 86,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Header/index.jsx",
-                                    lineNumber: 81,
+                                    lineNumber: 85,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/Header/index.jsx",
-                            lineNumber: 63,
+                            lineNumber: 67,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Header/index.jsx",
-                    lineNumber: 23,
+                    lineNumber: 27,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/Header/index.jsx",
-                lineNumber: 22,
+                lineNumber: 26,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "mt-5 block lg:hidden animate-fade-in",
-                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Searchbar$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Searchbar$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                    search: search,
+                    setSearch: setSearch,
+                    setPage: setPage,
+                    placeholder: searchPlaceholder
+                }, void 0, false, {
                     fileName: "[project]/src/components/Header/index.jsx",
-                    lineNumber: 97,
+                    lineNumber: 101,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/Header/index.jsx",
-                lineNumber: 96,
+                lineNumber: 100,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true);
 };
-_s(Header, "qsDkn33CqmlEcFEENil8IeDjAvk=", false, function() {
+_s(Header, "j6SrKCj52YvmKvGTdP0q7pnlgAE=", false, function() {
     return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"]
     ];
 });
@@ -3060,6 +3337,7 @@ __turbopack_esm__({
 });
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-redux/dist/react-redux.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Sidebar$2f$index$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Sidebar/index.jsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$index$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/Header/index.jsx [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
@@ -3069,9 +3347,11 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
-function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPage }) {
+;
+function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPage, searchPlaceholder }) {
     _s();
     const [sidebarOpen, setSidebarOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const { isRTL } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"])((state)=>state.language);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             className: "flex min-h-screen bg-[#b0a0df] transition-all duration-300",
@@ -3081,11 +3361,11 @@ function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPag
                     setSidebarOpen: setSidebarOpen
                 }, void 0, false, {
                     fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                    lineNumber: 14,
+                    lineNumber: 16,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "overflow-auto relative flex flex-1 flex-col lg:ml-[320px] px-4 sm:px-6 transition-all duration-300",
+                    className: `overflow-auto relative flex flex-1 flex-col px-4 sm:px-6 transition-all duration-300 ${isRTL ? 'lg:mr-[320px]' : 'lg:ml-[320px]'}`,
                     children: [
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Header$2f$index$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                             sidebarOpen: sidebarOpen,
@@ -3094,10 +3374,11 @@ function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPag
                             breadcrumbs: breadcrumbs,
                             search: search,
                             setSearch: setSearch,
-                            setPage: setPage
+                            setPage: setPage,
+                            searchPlaceholder: searchPlaceholder
                         }, void 0, false, {
                             fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                            lineNumber: 20,
+                            lineNumber: 24,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -3109,34 +3390,38 @@ function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPag
                                     children: children
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                                    lineNumber: 34,
+                                    lineNumber: 39,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                                lineNumber: 33,
+                                lineNumber: 38,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                            lineNumber: 32,
+                            lineNumber: 37,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-                    lineNumber: 18,
+                    lineNumber: 20,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/Layouts/DefaultLayout.jsx",
-            lineNumber: 12,
+            lineNumber: 14,
             columnNumber: 7
         }, this)
     }, void 0, false);
 }
-_s(DefaultLayout, "5rGDkYpGQ8fHM9RkMWnKOwsxadk=");
+_s(DefaultLayout, "BziAQXBDEJHLLyRPFDSclb7JysY=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$redux$2f$dist$2f$react$2d$redux$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSelector"]
+    ];
+});
 _c = DefaultLayout;
 var _c;
 __turbopack_refresh__.register(_c, "DefaultLayout");
@@ -3414,7 +3699,6 @@ const exportEventsToCSV = (data)=>{
         "Event ID",
         "Event Name",
         "Organizer",
-        "Event Type",
         "Event Category",
         "Attendees",
         "Date",
@@ -3429,7 +3713,6 @@ const exportEventsToCSV = (data)=>{
                 event.id || event._id || "N/A",
                 `"${event.event_name || "N/A"}"`,
                 `"${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}"`.trim() || "N/A",
-                formatEventTypes(event.event_types),
                 `"${formatEventCategories(event.event_category_details)}"`,
                 event.no_of_attendees || 0,
                 event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
@@ -3505,7 +3788,6 @@ const exportEventsToPDF = (data)=>{
         "Event ID",
         "Event Name",
         "Organizer",
-        "Event Type",
         "Event Category",
         "Attendees",
         "Date",
@@ -3519,7 +3801,6 @@ const exportEventsToPDF = (data)=>{
             event.id || event._id || "N/A",
             event.event_name || "N/A",
             `${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}`.trim() || "N/A",
-            formatEventTypes(event.event_types),
             formatEventCategories(event.event_category_details),
             event.no_of_attendees || 0,
             event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
@@ -3651,6 +3932,8 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-toastify/dist/react-toastify.esm.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-icons/fa/index.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$exportUtils$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/utils/exportUtils.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$module__evaluation$3e$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/index.js [app-client] (ecmascript) <module evaluation>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/node_modules/react-i18next/dist/es/useTranslation.js [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
 var _s = __turbopack_refresh__.signature();
@@ -3666,11 +3949,14 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
+;
 function UserManagement() {
     _s();
+    const { t } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"])();
     const [activeTab, setActiveTab] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("Active");
     const handleTabChange = (tab)=>{
         setActiveTab(tab);
+        setPage(1); // Reset to first page when changing tabs
     };
     const [search, setSearch] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [page, setPage] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(1);
@@ -3680,11 +3966,22 @@ function UserManagement() {
     const handlePage = (value)=>{
         setPage(value);
     };
+    // Build params based on active tab
     const params = {
         page: page,
         limit: 10,
-        isActive: status === "1" ? true : false,
-        search: search
+        search: search,
+        ...activeTab === "Active" ? {
+            status: "Active"
+        } : activeTab === "Inactive" ? {
+            status: "Inactive"
+        } : activeTab === "Suspended" ? {
+            status: "Suspended"
+        } : activeTab === "Deleted" ? {
+            status: "Deleted"
+        } : {
+            isActive: status === "1" ? true : false
+        }
     };
     const GetAllUser = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$store$2f$store$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDataStore"])((store)=>store.GetAllUser);
     const { fetchGetAllUser } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$store$2f$store$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDataStore"])();
@@ -3695,25 +3992,30 @@ function UserManagement() {
         });
     }, [
         page,
-        status,
+        activeTab,
         search
     ]);
     const ChangeStatus = (data)=>{
-        if (!confirm("Are you sure you want to change status?")) return;
+        if (!confirm(t("common.changeStatus"))) return;
         setLoading(true);
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$user$2f$apis$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ActiveInActiveUserApi"])(data).then((res)=>{
             if (res?.status === 1) {
                 __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(res?.message);
-                fetchGetAllUser(params);
-                setLoading(false);
+                fetchGetAllUser(params).then(()=>{
+                    setLoading(false);
+                });
             } else {
                 __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(res?.message);
                 setLoading(false);
             }
+        }).catch((error)=>{
+            console.error("Error changing status:", error);
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(t("users.failedToChangeStatus") || "Failed to change status");
+            setLoading(false);
         });
     };
     const handleDelete = (id)=>{
-        if (!confirm("Are you sure you want to delete this user?")) return;
+        if (!confirm(t("users.confirmDeleteUser"))) return;
         // Assuming DeleteUserApi exists and takes ID
         // If not imported, check api/user/apis.
         // Based on imports above, it is imported.
@@ -3722,10 +4024,10 @@ function UserManagement() {
             userId: id
         }).then((res)=>{
             if (res?.status === 1 || res?.code === 200) {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success("User deleted successfully");
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(t("users.userDeleted"));
                 fetchGetAllUser(params);
             } else {
-                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(res?.message || "Failed to delete");
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$toastify$2f$dist$2f$react$2d$toastify$2e$esm$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(res?.message || t("users.failedToDeleteUser"));
             }
             setLoading(false);
         }).catch((err)=>{
@@ -3736,14 +4038,14 @@ function UserManagement() {
     const exportToCSV = ()=>{
         const data = GetAllUser?.data || [];
         const headers = [
-            "User ID",
-            "Name",
-            "Mobile No.",
-            "Gender",
-            "Email ID",
-            "Date of Birth",
-            "City",
-            "Nationality"
+            t("users.userId"),
+            t("users.name"),
+            t("users.mobileNo"),
+            t("users.gender"),
+            t("users.emailId"),
+            t("users.dateOfBirth"),
+            t("users.city"),
+            t("users.nationality")
         ];
         const csvContent = [
             headers.join(","),
@@ -3751,7 +4053,7 @@ function UserManagement() {
                     user.id,
                     `"${user.first_name} ${user.last_name}"`,
                     `"${user.country_code} ${user.phone_number}"`,
-                    user.gender === 1 ? "Male" : "Female",
+                    user.gender === 1 ? t("users.male") : t("users.female"),
                     user.email,
                     user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : "N/A",
                     `"${user.address || ""}"`,
@@ -3781,6 +4083,7 @@ function UserManagement() {
         search: search,
         setSearch: setSearch,
         setPage: setPage,
+        searchPlaceholder: t("users.searchPlaceholder") || "Search by Guests",
         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
             children: [
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3790,15 +4093,15 @@ function UserManagement() {
                             className: "flex lg:w-[40%] items-end mb-4 sm:mb-0",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                                 className: "text-xl font-bold text-black",
-                                children: "Guests Management"
+                                children: t("users.guestsManagement")
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                lineNumber: 124,
+                                lineNumber: 142,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                            lineNumber: 123,
+                            lineNumber: 141,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3810,14 +4113,15 @@ function UserManagement() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaFileExcel"], {}, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                            lineNumber: 131,
+                                            lineNumber: 149,
                                             columnNumber: 15
                                         }, this),
-                                        " Export CSV"
+                                        " ",
+                                        t("users.exportCSV")
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                    lineNumber: 130,
+                                    lineNumber: 148,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3826,14 +4130,15 @@ function UserManagement() {
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaPrint"], {}, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                            lineNumber: 134,
+                                            lineNumber: 152,
                                             columnNumber: 15
                                         }, this),
-                                        " Export PDF"
+                                        " ",
+                                        t("users.exportPDF")
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                    lineNumber: 133,
+                                    lineNumber: 151,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3842,37 +4147,55 @@ function UserManagement() {
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             onClick: ()=>handleTabChange("Active"),
                                             className: `px-4 py-3 text-sm w-28 font-medium rounded-s-lg ${activeTab === "Active" ? "bg-green-600 text-white" : "bg-white text-green-600 border-2 border-green-600"}`,
-                                            children: "Active"
+                                            children: t("users.active")
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                            lineNumber: 138,
+                                            lineNumber: 156,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             onClick: ()=>handleTabChange("Inactive"),
-                                            className: `px-4 py-3 text-sm w-28 font-medium rounded-e-lg ${activeTab === "Inactive" ? "bg-red-600 text-white" : "bg-white border-2 text-red-600 border-red-600"}`,
-                                            children: "Inactive"
+                                            className: `px-4 py-3 text-sm w-28 font-medium rounded-none border-l-0 ${activeTab === "Inactive" ? "bg-red-600 text-white" : "bg-white border-2 text-red-600 border-red-600"}`,
+                                            children: t("users.inactive")
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                            lineNumber: 147,
+                                            lineNumber: 165,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                            onClick: ()=>handleTabChange("Suspended"),
+                                            className: `px-4 py-3 text-sm w-28 font-medium rounded-none border-l-0 ${activeTab === "Suspended" ? "bg-yellow-600 text-white" : "bg-white border-2 text-yellow-600 border-yellow-600"}`,
+                                            children: t("users.suspended") || "Suspended"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/(AfterLogin)/user/page.js",
+                                            lineNumber: 174,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                            onClick: ()=>handleTabChange("Deleted"),
+                                            className: `px-4 py-3 text-sm w-28 font-medium rounded-e-lg ${activeTab === "Deleted" ? "bg-gray-600 text-white" : "bg-white border-2 text-gray-600 border-gray-600"}`,
+                                            children: t("users.deleted") || "Deleted"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/app/(AfterLogin)/user/page.js",
+                                            lineNumber: 183,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                    lineNumber: 137,
+                                    lineNumber: 155,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                            lineNumber: 128,
+                            lineNumber: 146,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                    lineNumber: 121,
+                    lineNumber: 139,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3889,93 +4212,93 @@ function UserManagement() {
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "User ID"
+                                                children: t("users.userId")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 166,
+                                                lineNumber: 202,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Name"
+                                                children: t("users.name")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 169,
+                                                lineNumber: 205,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Mobile No."
+                                                children: t("users.mobileNo")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 172,
+                                                lineNumber: 208,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Gender"
+                                                children: t("users.gender")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 175,
+                                                lineNumber: 211,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Email ID"
+                                                children: t("users.emailId")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 178,
+                                                lineNumber: 214,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Date of Birth"
+                                                children: t("users.dateOfBirth")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 181,
+                                                lineNumber: 217,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "City"
+                                                children: t("users.city")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 184,
+                                                lineNumber: 220,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Nationality"
+                                                children: t("users.nationality")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 187,
+                                                lineNumber: 223,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-left font-base text-gray-600",
-                                                children: "Status"
+                                                children: t("users.status")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 190,
+                                                lineNumber: 226,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                 className: "px-2 py-4 text-center font-base text-gray-600",
-                                                children: "Action"
+                                                children: t("users.action")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 193,
+                                                lineNumber: 229,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                        lineNumber: 165,
+                                        lineNumber: 201,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                    lineNumber: 164,
+                                    lineNumber: 200,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -3985,17 +4308,17 @@ function UserManagement() {
                                             className: "py-3",
                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Loader$2f$Loader$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                lineNumber: 202,
+                                                lineNumber: 238,
                                                 columnNumber: 23
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                            lineNumber: 201,
+                                            lineNumber: 237,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                        lineNumber: 200,
+                                        lineNumber: 236,
                                         columnNumber: 19
                                     }, this) : GetAllUser?.data?.length > 0 ? GetAllUser?.data?.map((user, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                             className: "border-b last:border-0 text-sm font-medium text-black whitespace-nowrap",
@@ -4005,7 +4328,7 @@ function UserManagement() {
                                                     children: user.id
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 211,
+                                                    lineNumber: 247,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4021,12 +4344,12 @@ function UserManagement() {
                                                                 className: "w-full h-full object-cover"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                                lineNumber: 214,
+                                                                lineNumber: 250,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                            lineNumber: 213,
+                                                            lineNumber: 249,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4037,13 +4360,13 @@ function UserManagement() {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                            lineNumber: 226,
+                                                            lineNumber: 262,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 212,
+                                                    lineNumber: 248,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4055,15 +4378,15 @@ function UserManagement() {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 230,
+                                                    lineNumber: 266,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                     className: "px-2 py-2",
-                                                    children: user.gender === 1 ? "Male" : "Female"
+                                                    children: user.gender === 1 ? t("users.male") : t("users.female")
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 233,
+                                                    lineNumber: 269,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4071,7 +4394,7 @@ function UserManagement() {
                                                     children: user.email
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 236,
+                                                    lineNumber: 272,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4079,7 +4402,7 @@ function UserManagement() {
                                                     children: user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : "N/A"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 237,
+                                                    lineNumber: 273,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4087,7 +4410,7 @@ function UserManagement() {
                                                     children: user.address || "N/A"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 242,
+                                                    lineNumber: 278,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4095,22 +4418,22 @@ function UserManagement() {
                                                     children: user.nationality || "N/A"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 243,
+                                                    lineNumber: 279,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                     className: "px-2 py-2",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: `text-sm font-semibold px-3 py-1 rounded-full border ${user.isActive ? "bg-green-100 text-green-700 border-green-300" : "bg-red-100 text-red-700 border-red-300"}`,
-                                                        children: user.isActive ? "Active" : "Inactive"
+                                                        className: `text-sm font-semibold px-3 py-1 rounded-full border ${user.is_delete === 1 ? "bg-gray-100 text-gray-700 border-gray-300" : user.is_suspended ? "bg-yellow-100 text-yellow-700 border-yellow-300" : user.isActive ? "bg-green-100 text-green-700 border-green-300" : "bg-red-100 text-red-700 border-red-300"}`,
+                                                        children: user.is_delete === 1 ? t("users.deleted") || "Deleted" : user.is_suspended ? t("users.suspended") || "Suspended" : user.isActive ? t("users.active") : t("users.inactive")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                        lineNumber: 245,
+                                                        lineNumber: 281,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 244,
+                                                    lineNumber: 280,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4121,114 +4444,159 @@ function UserManagement() {
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                                                 href: `/user/detail/${user._id}`,
                                                                 className: "text-[#a797cc] hover:text-[#a08ec8]",
-                                                                title: "View Details",
+                                                                title: t("users.viewDetails"),
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$image$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                                                     src: "/assets/images/home/eye-outline.png",
-                                                                    alt: "",
+                                                                    alt: t("users.viewDetails"),
                                                                     height: 20,
                                                                     width: 20
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                                    lineNumber: 258,
+                                                                    lineNumber: 306,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                                lineNumber: 253,
+                                                                lineNumber: 301,
                                                                 columnNumber: 27
                                                             }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                                                onClick: ()=>ChangeStatus({
+                                                            user.is_delete === 1 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                onClick: ()=>{
+                                                                    // Reactivate deleted account
+                                                                    ChangeStatus({
                                                                         userId: user._id,
-                                                                        isActive: !user.isActive
-                                                                    }),
-                                                                className: `${user.isActive ? 'text-red-500' : 'text-green-500'} hover:opacity-80`,
-                                                                title: user.isActive ? "Suspend" : "Activate",
-                                                                children: user.isActive ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaBan"], {
+                                                                        reactivate: true
+                                                                    });
+                                                                },
+                                                                className: "text-green-500 hover:opacity-80",
+                                                                title: t("users.reactivate") || "Reactivate Account",
+                                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaCheckCircle"], {
                                                                     size: 18
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                                    lineNumber: 275,
-                                                                    columnNumber: 46
+                                                                    lineNumber: 327,
+                                                                    columnNumber: 31
+                                                                }, this)
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/app/(AfterLogin)/user/page.js",
+                                                                lineNumber: 319,
+                                                                columnNumber: 29
+                                                            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                onClick: ()=>{
+                                                                    if (user.is_suspended) {
+                                                                        // Unsuspend: set isSuspended to false and isActive to true
+                                                                        ChangeStatus({
+                                                                            userId: user._id,
+                                                                            isSuspended: false,
+                                                                            isActive: true
+                                                                        });
+                                                                    } else if (!user.isActive) {
+                                                                        // Activate: set isActive to true
+                                                                        ChangeStatus({
+                                                                            userId: user._id,
+                                                                            isActive: true
+                                                                        });
+                                                                    } else {
+                                                                        // Suspend: set isSuspended to true
+                                                                        ChangeStatus({
+                                                                            userId: user._id,
+                                                                            isSuspended: true
+                                                                        });
+                                                                    }
+                                                                },
+                                                                className: `${user.is_suspended ? 'text-yellow-500' : user.isActive ? 'text-red-500' : 'text-green-500'} hover:opacity-80`,
+                                                                title: user.is_suspended ? t("users.unsuspend") || "Unsuspend" : user.isActive ? t("users.suspend") : t("users.activate"),
+                                                                children: user.is_suspended ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaBan"], {
+                                                                    size: 18
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/src/app/(AfterLogin)/user/page.js",
+                                                                    lineNumber: 359,
+                                                                    columnNumber: 35
+                                                                }, this) : user.isActive ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaBan"], {
+                                                                    size: 18
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/src/app/(AfterLogin)/user/page.js",
+                                                                    lineNumber: 361,
+                                                                    columnNumber: 35
                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaCheckCircle"], {
                                                                     size: 18
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                                    lineNumber: 275,
-                                                                    columnNumber: 68
+                                                                    lineNumber: 362,
+                                                                    columnNumber: 35
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                                lineNumber: 270,
-                                                                columnNumber: 27
+                                                                lineNumber: 330,
+                                                                columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                 onClick: ()=>handleDelete(user._id),
                                                                 className: "text-red-600 hover:text-red-800",
-                                                                title: "Delete",
+                                                                title: t("users.delete"),
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$icons$2f$fa$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FaTrash"], {
                                                                     size: 16
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                                    lineNumber: 282,
+                                                                    lineNumber: 370,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                                lineNumber: 277,
+                                                                lineNumber: 365,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                        lineNumber: 252,
+                                                        lineNumber: 300,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                                    lineNumber: 251,
+                                                    lineNumber: 299,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, i, true, {
                                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                            lineNumber: 207,
+                                            lineNumber: 243,
                                             columnNumber: 21
                                         }, this)) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                         className: "text-center",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                             colSpan: 13,
                                             className: "pt-2",
-                                            children: "No Data Found"
+                                            children: t("users.noDataFound")
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                            lineNumber: 290,
+                                            lineNumber: 378,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                        lineNumber: 289,
+                                        lineNumber: 377,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                                    lineNumber: 198,
+                                    lineNumber: 234,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                            lineNumber: 163,
+                            lineNumber: 199,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                        lineNumber: 162,
+                        lineNumber: 198,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                    lineNumber: 160,
+                    lineNumber: 196,
                     columnNumber: 9
                 }, this),
                 GetAllUser?.data?.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$Paginations$2f$Pagination$2e$jsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -4238,23 +4606,24 @@ function UserManagement() {
                     itemsPerPage: itemsPerPage
                 }, void 0, false, {
                     fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-                    lineNumber: 300,
+                    lineNumber: 388,
                     columnNumber: 11
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-            lineNumber: 120,
+            lineNumber: 138,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/(AfterLogin)/user/page.js",
-        lineNumber: 119,
+        lineNumber: 132,
         columnNumber: 5
     }, this);
 }
-_s(UserManagement, "yNj/elkthc14/rBlLJaLGZ+ryvI=", false, function() {
+_s(UserManagement, "ZCN6WetgCgehjDkCSShMbSb0/SE=", false, function() {
     return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2d$i18next$2f$dist$2f$es$2f$useTranslation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useTranslation"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$store$2f$store$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDataStore"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$store$2f$store$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDataStore"]
     ];

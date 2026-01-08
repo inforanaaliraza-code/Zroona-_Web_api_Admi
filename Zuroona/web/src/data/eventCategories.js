@@ -1,28 +1,28 @@
 export const eventCategories = {
     joinUs: {
         en: [
-            { name: 'Entertainment & Shows', icon: 'material-symbols:theater-comedy' },
+            { name: 'Cultural & Traditional Events', icon: 'material-symbols:celebration' },
             { name: 'Outdoor & Adventure', icon: 'material-symbols:hiking' },
             { name: 'Educational & Workshops', icon: 'material-symbols:school' },
             { name: 'Sports & Fitness', icon: 'material-symbols:fitness-center' },
             { name: 'Music & Arts', icon: 'material-symbols:palette' },
-            { name: 'Social & Networking', icon: 'material-symbols:groups' },
             { name: 'Family & Kids Activities', icon: 'material-symbols:family-restroom' },
-            { name: 'Food & Dining Experiences', icon: 'material-symbols:restaurant' },
-            { name: 'Gaming', icon: 'material-symbols:sports-esports' },
-            { name: 'Wellness & Mindfulness', icon: 'material-symbols:spa' },
+            { name: 'Food & Culinary Experiences', icon: 'material-symbols:restaurant' },
+            { name: 'Wellness & Relaxation', icon: 'material-symbols:spa' },
+            { name: 'Heritage & History Tours', icon: 'material-symbols:museum' },
+            { name: 'Nightlife & Entertainment', icon: 'material-symbols:nightlife' },
         ],
         ar: [
-            { name: 'الترفيه والعروض', icon: 'material-symbols:theater-comedy' },
+            { name: 'الفعاليات الثقافية والتقليدية', icon: 'material-symbols:celebration' },
             { name: 'المغامرات والأنشطة الخارجية', icon: 'material-symbols:hiking' },
             { name: 'الفعاليات التعليمية وورش العمل', icon: 'material-symbols:school' },
             { name: 'الرياضة واللياقة البدنية', icon: 'material-symbols:fitness-center' },
             { name: 'الموسيقى والفنون', icon: 'material-symbols:palette' },
-            { name: 'الفعاليات الاجتماعية والتواصل', icon: 'material-symbols:groups' },
             { name: 'أنشطة العائلة والأطفال', icon: 'material-symbols:family-restroom' },
-            { name: 'تجارب الطعام وتناول الطعام', icon: 'material-symbols:restaurant' },
-            { name: 'الألعاب والرياضات الإلكترونية', icon: 'material-symbols:sports-esports' },
-            { name: 'العافية والتأمل', icon: 'material-symbols:spa' },
+            { name: 'تجارب الطعام والطهي', icon: 'material-symbols:restaurant' },
+            { name: 'العافية والاسترخاء', icon: 'material-symbols:spa' },
+            { name: 'جولات التراث والتاريخ', icon: 'material-symbols:museum' },
+            { name: 'الحياة الليلية والترفيه', icon: 'material-symbols:nightlife' },
         ]
     },
     welcomeEvents: {

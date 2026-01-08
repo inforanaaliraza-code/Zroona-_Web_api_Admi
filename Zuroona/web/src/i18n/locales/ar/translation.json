@@ -854,6 +854,7 @@
     "approved": "موافق عليه",
     "pending": "قيد الانتظار",
     "rejected": "مرفوض",
+    "completed": "مكتمل",
     "manageYourEvents": "إدارة وتنظيم فعالياتك",
     "noEventsFound": "لم يتم العثور على فعاليات",
     "createFirstEvent": "أنشئ فعاليتك الأولى للبدء ومشاركة تجارب مذهلة مع الآخرين",
@@ -973,6 +974,7 @@
     "noReviewsDesc": "كن أول من يترك تقييمًا!"
   },
   "hostNavbar": {
+    "myBookings": "حجوزاتي",
     "myEvents": "فعالياتي",
     "myWallet": "محفظتي",
     "myRatings": "تقييماتي",

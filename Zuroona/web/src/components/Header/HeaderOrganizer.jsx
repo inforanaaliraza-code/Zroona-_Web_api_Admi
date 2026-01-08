@@ -100,7 +100,7 @@ const HeaderOrganizer = ({ bgColor, hideLogo = false }) => {
                             <>
                                 {/* Desktop Logo - Bigger sizes */}
                                 <div className="hidden sm:block flex items-center h-full pt-1">
-                                    <Link href="#" className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105">
+                                    <Link href="/joinUsEvent" className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105">
                                         <Image
                                             src="/assets/images/x_F_logo.png"
                                             width={300}
@@ -116,7 +116,7 @@ const HeaderOrganizer = ({ bgColor, hideLogo = false }) => {
 
                                 {/* Mobile Logo - Bigger sizes */}
                                 <div className="block sm:hidden flex items-center h-full pt-1">
-                                    <Link href="/" className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105">
+                                    <Link href="/joinUsEvent" className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105">
                                         <Image
                                             src="/assets/images/x_F_logo.png"
                                             width={200}

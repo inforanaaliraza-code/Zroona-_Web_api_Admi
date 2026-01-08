@@ -594,24 +594,38 @@ var _s = __turbopack_refresh__.signature();
 ;
 ;
 ;
-const TextEditor = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/TextEditor/TextEditor.jsx [app-client] (ecmascript, async loader)")(__turbopack_import__), {
+const EnhancedTextEditor = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/CMS/EnhancedTextEditor.jsx [app-client] (ecmascript, async loader)")(__turbopack_import__), {
     loadableGenerated: {
         modules: [
-            "src/components/CMS/PrivacyPolicy.jsx -> " + "@/components/TextEditor/TextEditor"
+            "src/components/CMS/PrivacyPolicy.jsx -> " + "@/components/CMS/EnhancedTextEditor"
         ]
     },
-    ssr: false
+    ssr: false,
+    loading: ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "h-32 bg-gray-100 rounded animate-pulse"
+        }, void 0, false, {
+            fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
+            lineNumber: 13,
+            columnNumber: 18
+        }, this)
 });
-_c = TextEditor;
-const TextEditorAr = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/TextEditorAr/TextEditorAr.jsx [app-client] (ecmascript, async loader)")(__turbopack_import__), {
+_c = EnhancedTextEditor;
+const EnhancedTextEditorAr = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/CMS/EnhancedTextEditorAr.jsx [app-client] (ecmascript, async loader)")(__turbopack_import__), {
     loadableGenerated: {
         modules: [
-            "src/components/CMS/PrivacyPolicy.jsx -> " + "@/components/TextEditorAr/TextEditorAr"
+            "src/components/CMS/PrivacyPolicy.jsx -> " + "@/components/CMS/EnhancedTextEditorAr"
         ]
     },
-    ssr: false
+    ssr: false,
+    loading: ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "h-32 bg-gray-100 rounded animate-pulse"
+        }, void 0, false, {
+            fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
+            lineNumber: 18,
+            columnNumber: 18
+        }, this)
 });
-_c1 = TextEditorAr;
+_c1 = EnhancedTextEditorAr;
 function PrivacyPolicy(props) {
     _s();
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -662,11 +676,19 @@ function PrivacyPolicy(props) {
         className: "flex flex-col items-center",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "flex justify-center mb-4 w-full",
+                className: "flex justify-center mb-6 w-full",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "mb-4 max-w-5xl w-5/6",
+                    className: "mb-4 max-w-6xl w-full px-4",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(TextEditor, {
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                            className: "block text-sm font-semibold text-gray-700 mb-2",
+                            children: "English Content"
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
+                            lineNumber: 71,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(EnhancedTextEditor, {
                             ref: quillRef,
                             name: "content",
                             value: formik.values.content,
@@ -674,34 +696,42 @@ function PrivacyPolicy(props) {
                             formik: formik
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                            lineNumber: 69,
+                            lineNumber: 74,
                             columnNumber: 11
                         }, this),
                         formik.errors.content && formik.touched.content && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "text-red-500",
+                            className: "text-red-500 mt-2",
                             children: formik.errors.content
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                            lineNumber: 77,
+                            lineNumber: 82,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                    lineNumber: 68,
+                    lineNumber: 70,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                lineNumber: 67,
+                lineNumber: 69,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "flex justify-center mb-4 w-full",
+                className: "flex justify-center mb-6 w-full",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "mb-4 max-w-5xl w-5/6",
+                    className: "mb-4 max-w-6xl w-full px-4",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(TextEditorAr, {
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                            className: "block text-sm font-semibold text-gray-700 mb-2",
+                            children: "Arabic Content (المحتوى العربي)"
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
+                            lineNumber: 88,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(EnhancedTextEditorAr, {
                             ref: quillRef,
                             name: "content_ar",
                             value: formik.values.content_ar,
@@ -709,26 +739,26 @@ function PrivacyPolicy(props) {
                             formik: formik
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                            lineNumber: 83,
+                            lineNumber: 91,
                             columnNumber: 11
                         }, this),
                         formik.errors.content_ar && formik.touched.content_ar && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "text-red-500",
+                            className: "text-red-500 mt-2",
                             children: formik.errors.content_ar
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                            lineNumber: 91,
+                            lineNumber: 99,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                    lineNumber: 82,
+                    lineNumber: 87,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                lineNumber: 81,
+                lineNumber: 86,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -740,23 +770,23 @@ function PrivacyPolicy(props) {
                         color: "#fff"
                     }, void 0, false, {
                         fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                        lineNumber: 101,
+                        lineNumber: 109,
                         columnNumber: 13
                     }, this) : props.status ? "Update" : "Save"
                 }, void 0, false, {
                     fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                    lineNumber: 96,
+                    lineNumber: 104,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-                lineNumber: 95,
+                lineNumber: 103,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/CMS/PrivacyPolicy.jsx",
-        lineNumber: 66,
+        lineNumber: 68,
         columnNumber: 5
     }, this);
 }
@@ -770,8 +800,8 @@ _s(PrivacyPolicy, "Qe3VVOPK+x5CYSQVY9It7iEbh7E=", false, function() {
 _c2 = PrivacyPolicy;
 const __TURBOPACK__default__export__ = PrivacyPolicy;
 var _c, _c1, _c2;
-__turbopack_refresh__.register(_c, "TextEditor");
-__turbopack_refresh__.register(_c1, "TextEditorAr");
+__turbopack_refresh__.register(_c, "EnhancedTextEditor");
+__turbopack_refresh__.register(_c1, "EnhancedTextEditorAr");
 __turbopack_refresh__.register(_c2, "PrivacyPolicy");
 
 })()),

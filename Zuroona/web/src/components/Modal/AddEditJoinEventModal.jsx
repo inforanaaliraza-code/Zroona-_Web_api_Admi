@@ -19,6 +19,256 @@ import { format } from 'date-fns';
 import { BASE_API_URL } from '@/until';
 import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 import { getCategoryEventList } from '@/redux/slices/CategoryEventList';
+import { Icon } from '@iconify/react';
+
+// Professional Time Picker Component with Buttons
+const TimePicker = ({ value, onChange, minTime, error, errorMessage }) => {
+    const [hours, setHours] = useState(9);
+    const [minutes, setMinutes] = useState(0);
+    const [isAM, setIsAM] = useState(true);
+    const [isOpen, setIsOpen] = useState(false);
+
+    // Parse initial value
+    useEffect(() => {
+        if (value) {
+            const [h, m] = value.split(':').map(Number);
+            if (h !== undefined && m !== undefined) {
+                if (h === 0) {
+                    setHours(12);
+                    setIsAM(true);
+                } else if (h < 12) {
+                    setHours(h);
+                    setIsAM(true);
+                } else if (h === 12) {
+                    setHours(12);
+                    setIsAM(false);
+                } else {
+                    setHours(h - 12);
+                    setIsAM(false);
+                }
+                setMinutes(m);
+            }
+        }
+    }, [value]);
+
+    // Helper to format 24h string
+    const getTimeString = (h, m, am) => {
+        let h24 = h;
+        if (h === 12) {
+            h24 = am ? 0 : 12;
+        } else {
+            h24 = am ? h : h + 12;
+        }
+        return `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    };
+
+    // Update parent when time changes (only when value actually changes to avoid loops)
+    useEffect(() => {
+        if (!onChange) return;
+        const next = getTimeString(hours, minutes, isAM);
+        if (next !== value) {
+            onChange(next);
+        }
+    }, [hours, minutes, isAM, value]); // exclude onChange to avoid new fn identity causing re-run
+
+    const incrementHours = () => {
+        setHours(prev => {
+            if (prev === 12) return 1;
+            return prev + 1;
+        });
+    };
+
+    const decrementHours = () => {
+        setHours(prev => {
+            if (prev === 1) return 12;
+            return prev - 1;
+        });
+    };
+
+    const incrementMinutes = () => {
+        setMinutes(prev => {
+            if (prev === 59) return 0;
+            const next = prev + 5;
+            return next > 59 ? 0 : next;
+        });
+    };
+
+    const decrementMinutes = () => {
+        setMinutes(prev => {
+            if (prev === 0) return 55;
+            return prev - 5;
+        });
+    };
+
+    const toggleAMPM = () => {
+        setIsAM(prev => !prev);
+    };
+
+    const formatDisplayTime = () => {
+        if (!value) return '--:-- --';
+        const [h, m] = value.split(':').map(Number);
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        const ampm = h < 12 ? 'AM' : 'PM';
+        return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+    };
+
+    return (
+        <div className="relative">
+            {/* Time Display Button */}
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full px-4 py-3.5 bg-white border-2 rounded-xl transition-all duration-300 flex items-center justify-between ${
+                    error 
+                        ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200' 
+                        : 'border-gray-300 hover:border-[#a797cc] focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc]/20'
+                } shadow-sm hover:shadow-md`}
+            >
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-[#a797cc]/10 to-[#a3cc69]/10 rounded-lg">
+                        <Icon icon="lucide:clock" className="w-5 h-5 text-[#a797cc]" />
+                    </div>
+                    <div className="text-left">
+                        <div className="text-xs text-gray-500 font-medium">Select Time</div>
+                        <div className="text-lg font-bold text-gray-900">
+                            {formatDisplayTime()}
+                        </div>
+                    </div>
+                </div>
+                <Icon 
+                    icon={isOpen ? "lucide:chevron-up" : "lucide:chevron-down"} 
+                    className="w-5 h-5 text-gray-400 transition-transform"
+                />
+            </button>
+
+            {/* Time Picker Dropdown */}
+            {isOpen && (
+                <>
+                    <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setIsOpen(false)}
+                    ></div>
+                    <div className="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border-2 border-gray-200 p-4 animate-slideDown">
+                        <div className="flex items-center justify-center gap-4 sm:gap-6">
+                            {/* Hours */}
+                            <div className="flex flex-col items-center">
+                                <div className="text-xs font-semibold text-gray-500 mb-2">Hours</div>
+                                <button
+                                    type="button"
+                                    onClick={incrementHours}
+                                    className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#a797cc] to-[#a3cc69] text-white font-bold text-lg hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center mb-2"
+                                >
+                                    <Icon icon="lucide:chevron-up" className="w-5 h-5" />
+                                </button>
+                                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-50 to-white border-2 border-[#a797cc] flex items-center justify-center mb-2">
+                                    <span className="text-3xl font-bold text-gray-900">{String(hours).padStart(2, '0')}</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={decrementHours}
+                                    className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#a797cc] to-[#a3cc69] text-white font-bold text-lg hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
+                                >
+                                    <Icon icon="lucide:chevron-down" className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Separator */}
+                            <div className="text-3xl font-bold text-gray-300">:</div>
+
+                            {/* Minutes */}
+                            <div className="flex flex-col items-center">
+                                <div className="text-xs font-semibold text-gray-500 mb-2">Minutes</div>
+                                <button
+                                    type="button"
+                                    onClick={incrementMinutes}
+                                    className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#a797cc] to-[#a3cc69] text-white font-bold text-lg hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center mb-2"
+                                >
+                                    <Icon icon="lucide:chevron-up" className="w-5 h-5" />
+                                </button>
+                                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-50 to-white border-2 border-[#a797cc] flex items-center justify-center mb-2">
+                                    <span className="text-3xl font-bold text-gray-900">{String(minutes).padStart(2, '0')}</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={decrementMinutes}
+                                    className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#a797cc] to-[#a3cc69] text-white font-bold text-lg hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
+                                >
+                                    <Icon icon="lucide:chevron-down" className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* AM/PM Toggle */}
+                            <div className="flex flex-col items-center ml-2">
+                                <div className="text-xs font-semibold text-gray-500 mb-2">Period</div>
+                                <button
+                                    type="button"
+                                    onClick={toggleAMPM}
+                                    className={`w-16 sm:w-20 h-16 sm:h-20 rounded-xl font-bold text-sm sm:text-lg transition-all duration-200 ${
+                                        isAM 
+                                            ? 'bg-gradient-to-br from-[#a797cc] to-[#a3cc69] text-white shadow-lg scale-105' 
+                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    AM
+                                </button>
+                                <div className="h-2"></div>
+                                <button
+                                    type="button"
+                                    onClick={toggleAMPM}
+                                    className={`w-16 sm:w-20 h-16 sm:h-20 rounded-xl font-bold text-sm sm:text-lg transition-all duration-200 ${
+                                        !isAM 
+                                            ? 'bg-gradient-to-br from-[#a797cc] to-[#a3cc69] text-white shadow-lg scale-105' 
+                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    PM
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* Quick Time Buttons */}
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="text-xs font-semibold text-gray-500 mb-2">Quick Select</div>
+                            <div className="grid grid-cols-4 gap-2">
+                                {['09:00', '12:00', '15:00', '18:00'].map((quickTime) => (
+                                    <button
+                                        key={quickTime}
+                                        type="button"
+                                        onClick={() => {
+                                            const [h, m] = quickTime.split(':').map(Number);
+                                            if (h < 12) {
+                                                setHours(h === 0 ? 12 : h);
+                                                setIsAM(true);
+                                            } else {
+                                                setHours(h === 12 ? 12 : h - 12);
+                                                setIsAM(false);
+                                            }
+                                            setMinutes(m);
+                                        }}
+                                        className="px-2 sm:px-3 py-2 text-xs font-semibold bg-gray-100 hover:bg-gradient-to-r hover:from-[#a797cc] hover:to-[#a3cc69] hover:text-white rounded-lg transition-all duration-200"
+                                    >
+                                        {quickTime}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Error Message */}
+            {error && errorMessage && (
+                <p className="text-red-500 text-xs mt-2 font-medium flex items-center gap-1">
+                    <Icon icon="lucide:alert-circle" className="w-4 h-4" />
+                    {errorMessage}
+                </p>
+            )}
+        </div>
+    );
+};
+
+// Keep libraries constant to avoid Google Maps reload warnings
+const GOOGLE_MAP_LIBRARIES = ['places'];
 
 const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit }) => {
     const { t } = useTranslation();
@@ -35,24 +285,40 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
     const [autocomplete, setAutocomplete] = useState(null);
     const [activeSection, setActiveSection] = useState('basic');
     const [mapError, setMapError] = useState(null);
-    const GOOGLE_MAPS_API_KEY = "AIzaSyC6cKp791aygkeF6blRdhoWR0EEl8WwLTk";
+    const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+    const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+    const [pendingPayload, setPendingPayload] = useState(null);
+    // Get API key from environment variable (must be set in .env.local)
+    const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     
-    // Load Google Maps API - libraries array should be static to avoid reload warnings
-    const libraries = ['places'];
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-        libraries,
+        googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
+        libraries: GOOGLE_MAP_LIBRARIES,
     });
     const { profile } = useSelector((state) => state.profileData || {});
+
+    // Surface missing key or load errors clearly
+    useEffect(() => {
+        if (!GOOGLE_MAPS_API_KEY) {
+            setMapError('Google Maps API key missing. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in web/.env.local and restart the dev server.');
+        }
+    }, [GOOGLE_MAPS_API_KEY]);
+
+    useEffect(() => {
+        if (loadError) {
+            setMapError(loadError.message || 'Google Maps failed to load. Check console for details.');
+        }
+    }, [loadError]);
     const EventListId = searchParams.get("id");
     const { EventListdetails = {}, loadingDetail } = useSelector(
         (state) => state.EventDetailData || {}
     );
-    const { CategoryEventList = [] } = useSelector(
+    const { CategoryEventList = [], loadingCategory = false } = useSelector(
         (state) => state.CategoryEventData || {}
     );
     const hostGender = profile?.user?.gender; // 1 = male, 2 = female
+    const maxEventCapacity = profile?.user?.max_event_capacity || 100; // Get max capacity from settings
 
     useEffect(() => {
         if (eventId) {
@@ -66,8 +332,24 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
 
     // Fetch event categories from backend
     useEffect(() => {
-        dispatch(getCategoryEventList({ page: 1, limit: 100 }));
+        console.log('[MODAL] Fetching categories...');
+        dispatch(getCategoryEventList({ page: 1, limit: 100 }))
+            .then((result) => {
+                console.log('[MODAL] Categories fetch result:', result);
+            })
+            .catch((error) => {
+                console.error('[MODAL] Categories fetch error:', error);
+            });
     }, [dispatch]);
+    
+    // Debug: Log category list changes
+    useEffect(() => {
+        console.log('[MODAL] CategoryEventList updated:', {
+            length: CategoryEventList?.length || 0,
+            loading: loadingCategory,
+            categories: CategoryEventList
+        });
+    }, [CategoryEventList, loadingCategory]);
 
     // Helper function to get proper image URL
     // Now supports both Cloudinary URLs and local storage URLs
@@ -139,9 +421,14 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             event_type: EventListId ? EventListdetails?.event_type : 1,
             event_for: EventListId ? EventListdetails?.event_for : 3,
             event_category: EventListId ? (() => {
-                // Get category value from event details (single value now)
-                // Support both old ObjectId format and new string format
+                // Get category value from event details
+                // Support both single category and array of categories
                 let category = EventListdetails?.event_category;
+                
+                // Check for event_categories array first (new format)
+                if (EventListdetails?.event_categories && Array.isArray(EventListdetails.event_categories) && EventListdetails.event_categories.length > 0) {
+                    category = EventListdetails.event_categories[0];
+                }
                 
                 // If it's an array, get the first item (for backward compatibility)
                 if (Array.isArray(category) && category.length > 0) {
@@ -182,7 +469,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 .required(t('common.required') || 'Start time is required'),
             event_end_time: Yup.string()
                 .required(t('common.required') || 'End time is required')
-                .test('after-start', t('events.endTimeAfterStart') || 'End time must be after start time', function(value) {
+                .test('after-start', t('End Time AfterStart') || 'End time must be after start time', function(value) {
                     const { event_start_time, event_date } = this.parent;
                     if (!value || !event_start_time || !event_date) return true;
                     
@@ -202,16 +489,17 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             event_name: Yup.string()
                 .required(t('common.required') || 'Event title is required')
                 .min(3, 'Event title must be at least 3 characters')
-                .max(100, 'Event title cannot exceed 100 characters'),
+                .max(200, 'Event title cannot exceed 200 characters'),
             event_description: Yup.string()
                 .required(t('common.required') || 'Event description is required')
                 .min(20, 'Event description must be at least 20 characters')
-                .max(2000, 'Event description cannot exceed 2000 characters'),
+                .max(1000, 'Event description cannot exceed 1000 characters'),
             event_address: Yup.string()
                 .required(t('common.required') || 'Event address is required')
                 .min(5, 'Event address must be at least 5 characters'),
             no_of_attendees: Yup.number()
                 .min(1, "Event capacity must be at least 1")
+                .max(maxEventCapacity, `Event capacity cannot exceed ${maxEventCapacity} (your max event capacity setting)`)
                 .required("Event capacity is required")
                 .integer("Event capacity must be a whole number")
                 .positive("Event capacity must be a positive number"),
@@ -266,37 +554,106 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 }
             }
             
-            setLoding(true);
-            setSubmitting(true);
-            let payload;
-            // Validate event_category is a valid ObjectId
-            const eventCategory = values.event_category || "";
-            
-            // Check if it's a valid MongoDB ObjectId
-            const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(eventCategory);
-            const categoryExists = CategoryEventList.some(cat => cat._id === eventCategory);
-
-            if (!eventCategory || (!isValidObjectId && !categoryExists)) {
-                toast.error('Please select a valid event category');
-                setLoding(false);
+            // If editing, proceed directly. If creating, show confirmation first
+            if (EventListId) {
+                // Edit mode - proceed directly
+                await submitEvent(values, resetForm, setSubmitting);
+            } else {
+                // Create mode - show confirmation first
+                setPendingPayload({ values, resetForm, setSubmitting });
+                setShowCreateConfirm(true);
                 setSubmitting(false);
+            }
+        },
+    });
+
+    // Prevent redundant Formik updates to avoid infinite loops
+    const setFieldIfChanged = (field, nextValue) => {
+        if (formik.values[field] !== nextValue) {
+            formik.setFieldValue(field, nextValue);
+        }
+    };
+
+    const submitEvent = async (valuesOrPayload, resetForm, setSubmitting) => {
+        // Handle both direct call and confirmation call
+        const values = valuesOrPayload?.values || valuesOrPayload;
+        const actualResetForm = valuesOrPayload?.resetForm || resetForm;
+        const actualSetSubmitting = valuesOrPayload?.setSubmitting || setSubmitting;
+        
+        setLoding(true);
+        if (actualSetSubmitting) actualSetSubmitting(true);
+        let payload;
+            // Validate event_category - must be a valid MongoDB ObjectId
+            let eventCategory = (values.event_category || "").toString().trim();
+
+            if (!eventCategory) {
+                toast.error('Event category is required');
+                setLoding(false);
+                if (actualSetSubmitting) actualSetSubmitting(false);
                 return;
+            }
+
+            // Validate that it's a valid MongoDB ObjectId (24 hex characters)
+            // This ensures we're sending a valid format that the backend expects
+            const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(eventCategory);
+            
+            if (!isValidObjectId) {
+                // If it's not a valid ObjectId, try to find the category by name or slug
+                // This handles cases where the category might have been set incorrectly
+                if (CategoryEventList && CategoryEventList.length > 0) {
+                    // Try to find by matching the value to category name (case-insensitive)
+                    const categoryByName = CategoryEventList.find(cat => {
+                        const catName = (cat.name || "").toLowerCase().trim();
+                        const searchValue = eventCategory.toLowerCase().trim();
+                        // Check if it matches the name or a slugified version
+                        const slugifiedName = catName.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                        return catName === searchValue || slugifiedName === searchValue || 
+                               catName.includes(searchValue) || searchValue.includes(catName);
+                    });
+                    
+                    if (categoryByName && categoryByName._id) {
+                        // Found a matching category, use its ID
+                        eventCategory = categoryByName._id;
+                        console.log('[EVENT-SUBMIT] Category converted from name/slug to ID:', eventCategory);
+                    } else {
+                        // No matching category found
+                        toast.error('Please select a valid event category from the list. The selected category is invalid.');
+                        setLoding(false);
+                        if (actualSetSubmitting) actualSetSubmitting(false);
+                        return;
+                    }
+                } else {
+                    // Categories not loaded yet
+                    toast.error('Please select a valid event category from the list. Categories are still loading.');
+                    setLoding(false);
+                    if (actualSetSubmitting) actualSetSubmitting(false);
+                    return;
+                }
+            }
+
+            // Final validation: If categories are loaded, verify the selected category exists in the list
+            // This prevents using invalid/outdated category IDs
+            if (CategoryEventList && CategoryEventList.length > 0) {
+                const categoryExists = CategoryEventList.some(cat => {
+                    // Compare both as strings to handle ObjectId vs string comparison
+                    return String(cat._id) === String(eventCategory);
+                });
+                if (!categoryExists) {
+                    toast.error('Please select a valid event category from the list. The selected category ID is not found.');
+                    setLoding(false);
+                    if (actualSetSubmitting) actualSetSubmitting(false);
+                    return;
+                }
             }
 
             console.log('[EVENT-SUBMIT] Category being sent:', eventCategory);
-
-            // Validate required fields before creating payload
-            if (!eventCategory || eventCategory.trim() === '') {
-                toast.error('Event category is required');
-                setLoding(false);
-                setSubmitting(false);
-                return;
-            }
+            console.log('[EVENT-SUBMIT] Category type:', typeof eventCategory);
+            console.log('[EVENT-SUBMIT] Is valid ObjectId:', /^[0-9a-fA-F]{24}$/.test(eventCategory));
 
             if (!eventImages || eventImages.length === 0) {
                 toast.error('At least one event image is required');
                 setLoding(false);
-                setSubmitting(false);
+                if (actualSetSubmitting) actualSetSubmitting(false);
                 return;
             }
 
@@ -305,7 +662,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             if (isNaN(eventPrice) || eventPrice <= 0) {
                 toast.error('Event price must be a valid number greater than 0');
                 setLoding(false);
-                setSubmitting(false);
+                if (actualSetSubmitting) actualSetSubmitting(false);
                 return;
             }
 
@@ -314,7 +671,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             if (isNaN(noOfAttendees) || noOfAttendees < 1) {
                 toast.error('Number of attendees must be at least 1');
                 setLoding(false);
-                setSubmitting(false);
+                if (actualSetSubmitting) actualSetSubmitting(false);
                 return;
             }
 
@@ -331,6 +688,8 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 }
             }
 
+            // Ensure event_category is sent as a string (backend handles both string and array)
+            // Backend will convert it to array internally for event_categories field
             const basePayload = {
                 event_date: eventDate,
                 event_start_time: values.event_start_time,
@@ -341,7 +700,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 event_address: values.event_address,
                 event_type: Number(values.event_type),
                 event_for: Number(values.event_for),
-                event_category: eventCategory,
+                event_category: String(eventCategory), // Ensure it's a string
                 no_of_attendees: noOfAttendees,
                 event_price: eventPrice,
                 dos_instruction: values.dos_instruction || '',
@@ -349,6 +708,9 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 ...(values.latitude && values.longitude && {
                     latitude: Number(values.latitude),
                     longitude: Number(values.longitude),
+                }),
+                ...(values.neighborhood && {
+                    area_name: values.neighborhood, // Save area name from map
                 }),
             };
 
@@ -367,7 +729,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 if (EventListId) {
                     const res = await EditEventListApi(payload);
                     setLoding(false);
-                    setSubmitting(false);
+                    if (actualSetSubmitting) actualSetSubmitting(false);
                     if (res?.status == 1) {
                         toast.success(res?.message || t('events.eventUpdated') || 'Event updated successfully');
                         onClose();
@@ -380,17 +742,24 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 } else {
                     const res = await AddEventListApi(payload);
                     setLoding(false);
-                    setSubmitting(false);
+                    if (actualSetSubmitting) actualSetSubmitting(false);
                     if (res?.status == 1) {
-                        toast.success(res?.message || t('events.eventCreated') || 'Event created successfully');
-                        onClose();
-                        dispatch(getEventList({ event_type: 1, page: eventpage, limit: eventlimit }));
-                        resetForm();
-                        setEventImages([]);
-                        setPreviewUrls([]);
-                        setImageLoading(false);
+                        // Show success popup for new events
+                        setShowSuccessPopup(true);
+                        setShowCreateConfirm(false);
+                        // Close modal and reset after a delay
+                        setTimeout(() => {
+                            onClose();
+                            dispatch(getEventList({ event_type: 1, page: eventpage, limit: eventlimit }));
+                            if (actualResetForm) actualResetForm();
+                            setEventImages([]);
+                            setPreviewUrls([]);
+                            setImageLoading(false);
+                            setShowSuccessPopup(false);
+                        }, 3000);
                     } else {
                         toast.error(res?.message || t('common.error') || 'Failed to create event');
+                        setShowCreateConfirm(false);
                     }
                 }
             } catch (error) {
@@ -398,7 +767,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 console.error("[EVENT-SUBMIT] Error response:", error?.response?.data);
                 console.error("[EVENT-SUBMIT] Error status:", error?.response?.status);
                 setLoding(false);
-                setSubmitting(false);
+                if (actualSetSubmitting) actualSetSubmitting(false);
                 
                 // Show detailed error message
                 const errorMessage = error?.response?.data?.message || 
@@ -408,8 +777,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                    'An error occurred. Please try again.';
                 toast.error(errorMessage);
             }
-        },
-    });
+    };
 
     // Initialize marker position from form values
     useEffect(() => {
@@ -534,8 +902,8 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
     const handleFile = async (file) => {
         if (!file) return;
         
-        if (eventImages.length >= 6) {
-            toast.error("Maximum 6 images allowed");
+        if (eventImages.length >= 5) {
+            toast.error("Maximum 5 images allowed");
             return;
         }
 
@@ -627,40 +995,53 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} width="2xl">
-            <div className="space-y-6 max-h-[90vh] overflow-y-auto">
-                {/* Enhanced Header */}
-                <div className="sticky top-0 bg-white z-10 pb-4 border-b-2 border-gray-200">
-                    <div className="mb-4">
-                        <h2 className="text-3xl font-bold text-gray-900">
-                            {EventListId ? t('add.tab21') || 'Edit Event' : t('add.tab1') || 'Create Event'}
-                        </h2>
-                        <p className="text-sm text-gray-500 mt-1">
-                            {EventListId ? 'Update your event details' : 'Fill in all the details to create an amazing event'}
-                        </p>
-                    </div>
-                    
-                    {/* Section Navigation Tabs */}
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                        {[
-                            { id: 'basic', label: 'Basic Info' },
-                            { id: 'details', label: 'Details' },
-                            { id: 'location', label: 'Location' },
-                            { id: 'instructions', label: 'Instructions' },
-                        ].map((section) => (
-                            <button
-                                key={section.id}
-                                type="button"
-                                onClick={() => setActiveSection(section.id)}
-                                className={`px-5 py-2.5 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
-                                    activeSection === section.id
-                                        ? 'bg-[#a797cc] text-white shadow-sm'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                }`}
-                            >
-                                {section.label}
-                            </button>
-                        ))}
+        <>
+        <Modal isOpen={isOpen} onClose={onClose} width="landscape">
+            <div className="space-y-0" style={{ overscrollBehavior: 'contain' }}>
+                {/* Professional Header with Gradient */}
+                <div className="sticky top-0 bg-gradient-to-r from-[#8b7bb8] via-[#a797cc] to-[#a3cc69] z-10 pb-0 shadow-lg">
+                    <div className="bg-white/95 backdrop-blur-sm px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+                        <div className="flex items-start justify-between mb-4 sm:mb-6">
+                            <div>
+                                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+                                    {EventListId ? t('add.tab21') || 'Edit Event' : t('add.tab1') || 'Add Event'}
+                                </h2>
+                                <p className="text-xs sm:text-sm text-gray-600">
+                                    {EventListId ? 'Update your event details' : 'Fill in all the details to create an amazing event'}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {/* Professional Tab Navigation with Icons */}
+                        <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-2 -mb-4">
+                            {[
+                                { id: 'basic', label: 'Basic Info', icon: 'lucide:file-text' },
+                                { id: 'details', label: 'Details', icon: 'lucide:info' },
+                                { id: 'location', label: 'Location', icon: 'lucide:map-pin' },
+                                { id: 'instructions', label: 'Instructions', icon: 'lucide:list-checks' },
+                            ].map((section) => (
+                                <button
+                                    key={section.id}
+                                    type="button"
+                                    onClick={() => setActiveSection(section.id)}
+                                    className={`group relative px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 rounded-t-lg sm:rounded-t-xl font-semibold text-xs sm:text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-1 sm:gap-2 ${
+                                        activeSection === section.id
+                                            ? 'bg-white text-[#a797cc] shadow-lg shadow-[#a797cc]/20 border-t-2 border-x-2 border-[#a797cc]'
+                                            : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-800'
+                                    }`}
+                                >
+                                    <Icon 
+                                        icon={section.icon} 
+                                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform ${activeSection === section.id ? 'scale-110' : 'group-hover:scale-105'}`}
+                                    />
+                                    <span className="hidden sm:inline">{section.label}</span>
+                                    <span className="sm:hidden">{section.label.split(' ')[0]}</span>
+                                    {activeSection === section.id && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#a797cc] to-[#a3cc69]"></div>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
                 
@@ -668,13 +1049,21 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
 
                 {/* Basic Information Section */}
                 {activeSection === 'basic' && (
-                    <div className="space-y-5 p-6 bg-white rounded-lg border border-gray-200">
-                        <div className="mb-5">
-                            <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+                    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-gray-50 to-white">
+                        <div className="mb-6 pb-4 border-b border-gray-200">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gradient-to-br from-[#a797cc]/10 to-[#a3cc69]/10 rounded-lg">
+                                    <Icon icon="lucide:file-text" className="w-5 h-5 text-[#a797cc]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">Basic Information</h3>
+                                    <p className="text-sm text-gray-500 mt-0.5">Set the date, time, and title for your event</p>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Calendar */}
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                             <label className="block text-gray-700 text-sm font-semibold mb-3">
                                 {t('detail.tab5') || 'Event Date'} <span className="text-red-500">*</span>
                             </label>
@@ -719,93 +1108,45 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             )}
                         </div>
 
-                        {/* Time Selection */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Professional Time Selection with Buttons */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                            {/* Start Time Picker */}
                             <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2">
+                                <label className="block text-gray-700 text-sm font-semibold mb-3">
                                     {t('eventTime') || 'Event Start Time'} <span className="text-red-500">*</span>
                                 </label>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-[1]">
-                                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#a797cc]/10 to-orange-50 border border-[#a797cc]/20 shadow-sm group-hover:shadow-md transition-all">
-                                            <Image
-                                                src="/assets/images/icons/time.png"
-                                                height={18}
-                                                width={18}
-                                                alt="Start Time"
-                                                className="opacity-80 group-hover:opacity-100 transition-opacity"
-                                            />
-                                        </div>
-                                    </span>
-                                    <input
-                                        type="time"
-                                        {...formik.getFieldProps('event_start_time')}
-                                        onChange={(e) => {
-                                            formik.setFieldValue('event_start_time', e.target.value);
-                                            if (formik.values.event_end_time) {
-                                                setTimeout(() => {
-                                                    formik.validateField('event_end_time');
-                                                }, 100);
-                                            }
-                                        }}
-                                        className="relative z-[2] w-full pl-14 pr-4 py-3 border bg-white border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 text-sm transition-all cursor-pointer shadow-sm hover:border-[#a797cc]/30"
-                                    />
-                                </div>
-                                {formik.touched.event_start_time && formik.errors.event_start_time ? (
-                                    <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        {formik.errors.event_start_time}
-                                    </p>
-                                ) : null}
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 text-sm font-semibold mb-2">
-                                    {t('add.tab13') || 'Event End Time'} <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-[1]">
-                                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#a797cc]/10 to-orange-50 border border-[#a797cc]/20 shadow-sm group-hover:shadow-md transition-all">
-                                            <Image
-                                                src="/assets/images/icons/time.png"
-                                                height={18}
-                                                width={18}
-                                                alt="End Time"
-                                                className="opacity-80 group-hover:opacity-100 transition-opacity"
-                                            />
-                                        </div>
-                                    </span>
-                                    <input
-                                        type="time"
-                                        {...formik.getFieldProps('event_end_time')}
-                                        min={formik.values.event_start_time ? (() => {
-                                            if (formik.values.event_start_time) {
-                                                const [hours, minutes] = formik.values.event_start_time.split(':').map(Number);
-                                                const totalMinutes = hours * 60 + minutes + 1;
-                                                const minHours = Math.floor(totalMinutes / 60);
-                                                const minMins = totalMinutes % 60;
-                                                return `${String(minHours).padStart(2, '0')}:${String(minMins).padStart(2, '0')}`;
-                                            }
-                                            return undefined;
-                                        })() : undefined}
-                                        onChange={(e) => {
-                                            formik.setFieldValue('event_end_time', e.target.value);
+                                <TimePicker
+                                    value={formik.values.event_start_time}
+                                    onChange={(time) => {
+                                        setFieldIfChanged('event_start_time', time);
+                                        if (formik.values.event_end_time) {
                                             setTimeout(() => {
                                                 formik.validateField('event_end_time');
                                             }, 100);
-                                        }}
-                                        className="relative z-[2] w-full pl-14 pr-4 py-3 border bg-white border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 text-sm transition-all cursor-pointer shadow-sm hover:border-[#a797cc]/30"
-                                    />
-                                </div>
-                                {formik.touched.event_end_time && formik.errors.event_end_time ? (
-                                    <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        {formik.errors.event_end_time}
-                                    </p>
-                                ) : null}
+                                        }
+                                    }}
+                                    error={formik.touched.event_start_time && formik.errors.event_start_time}
+                                    errorMessage={formik.errors.event_start_time}
+                                />
+                            </div>
+                            
+                            {/* End Time Picker */}
+                            <div>
+                                <label className="block text-gray-700 text-sm font-semibold mb-3">
+                                    {t('add.tab13') || 'Event End Time'} <span className="text-red-500">*</span>
+                                </label>
+                                <TimePicker
+                                    value={formik.values.event_end_time}
+                                    onChange={(time) => {
+                                        setFieldIfChanged('event_end_time', time);
+                                        setTimeout(() => {
+                                            formik.validateField('event_end_time');
+                                        }, 100);
+                                    }}
+                                    minTime={formik.values.event_start_time}
+                                    error={formik.touched.event_end_time && formik.errors.event_end_time}
+                                    errorMessage={formik.errors.event_end_time}
+                                />
                             </div>
                         </div>
 
@@ -814,7 +1155,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             <label className="block text-gray-700 text-sm font-semibold mb-2">
                                 {t('add.tab2') || 'Event Title'} <span className="text-red-500">*</span>
                                 <span className="text-gray-400 text-xs font-normal ml-2">
-                                    ({formik.values.event_name?.length || 0}/100 characters)
+                                    ({formik.values.event_name?.length || 0}/200 characters)
                                 </span>
                             </label>
                             <div className="relative">
@@ -830,7 +1171,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                     type="text"
                                     placeholder={t('add.tab2') || 'Enter event title'}
                                     {...formik.getFieldProps('event_name')}
-                                    maxLength={100}
+                                    maxLength={200}
                                     className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all"
                                 />
                             </div>
@@ -848,7 +1189,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             <label className="block text-gray-700 text-sm font-semibold mb-2">
                                 {t('add.tab4') || 'Event Images'} <span className="text-red-500">*</span>
                                 <span className="text-gray-400 text-xs font-normal ml-2">
-                                    ({previewUrls.length}/6 uploaded)
+                                    ({previewUrls.length}/5 uploaded)
                                 </span>
                             </label>
                             
@@ -882,7 +1223,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             )}
 
                             {/* Upload Box */}
-                            {previewUrls.length < 6 && (
+                            {previewUrls.length < 5 && (
                                 <div className="w-full cursor-pointer">
                                     <div className="w-full h-40 border-2 border-dashed border-gray-300 bg-gray-50 rounded-lg flex items-center justify-center hover:border-[#a797cc] hover:bg-gray-100 transition-all">
                                         <label htmlFor="file-upload" className="flex justify-center flex-col items-center cursor-pointer w-full h-full py-4">
@@ -903,7 +1244,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                                         {t('add.tab4') || 'Event Images'}
                                                     </p>
                                                     <p className="text-gray-400 text-xs mt-1">
-                                                        Max 6 images
+                                                        Max 5 images
                                                     </p>
                                                 </>
                                             )}
@@ -916,7 +1257,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                         accept="image/*"
                                         multiple
                                         className="hidden"
-                                        disabled={imageLoading || previewUrls.length >= 6}
+                                        disabled={imageLoading || previewUrls.length >= 5}
                                     />
                                 </div>
                             )}
@@ -934,9 +1275,17 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
 
                 {/* Details Section */}
                 {activeSection === 'details' && (
-                    <div className="space-y-5 p-6 bg-white rounded-lg border border-gray-200">
-                        <div className="mb-5">
-                            <h3 className="text-lg font-semibold text-gray-900">Event Details</h3>
+                    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-gray-50 to-white">
+                        <div className="mb-6 pb-4 border-b border-gray-200">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gradient-to-br from-[#a797cc]/10 to-[#a3cc69]/10 rounded-lg">
+                                    <Icon icon="lucide:info" className="w-5 h-5 text-[#a797cc]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">Event Details</h3>
+                                    <p className="text-sm text-gray-500 mt-0.5">Describe your event and set pricing details</p>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Event Description */}
@@ -944,7 +1293,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             <label className="block text-gray-700 text-sm font-semibold mb-2">
                                 {t('add.tab3') || 'Event Description'} <span className="text-red-500">*</span>
                                 <span className="text-gray-400 text-xs font-normal ml-2">
-                                    ({formik.values.event_description?.length || 0}/2000 characters)
+                                    ({formik.values.event_description?.length || 0}/1000 characters)
                                 </span>
                             </label>
                             <div className="relative">
@@ -959,7 +1308,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                 <textarea
                                     placeholder={t('add.tab3') || 'Describe your event...'}
                                     {...formik.getFieldProps('event_description')}
-                                    maxLength={2000}
+                                    maxLength={1000}
                                     className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y"
                                     rows="6"
                                 />
@@ -974,52 +1323,48 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             ) : null}
                         </div>
 
-                        {/* Event Category */}
+                        {/* Event Category - Pill Selection */}
                         <div>
-                            <label className="block text-gray-700 text-sm font-semibold mb-2">
+                            <label className="block text-gray-700 text-sm font-semibold mb-3">
                                 {t('add.tab8') || t('add.tab56') || 'Event Categories'} <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                    </svg>
-                                </div>
-                                <select
-                                    {...formik.getFieldProps('event_category')}
-                                    className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] text-gray-900 text-sm"
-                                >
-                                    <option value="">Select a category</option>
-                                    {CategoryEventList && CategoryEventList.length > 0 ? (
-                                        CategoryEventList.map((category) => (
-                                            <option key={category._id} value={category._id}>
+                            <div className="flex flex-wrap gap-2">
+                                {loadingCategory ? (
+                                    <div className="w-full py-4 text-center text-gray-500 text-sm">
+                                        <Icon icon="lucide:loader-2" className="w-5 h-5 animate-spin inline-block mr-2" />
+                                        Loading categories...
+                                    </div>
+                                ) : CategoryEventList && CategoryEventList.length > 0 ? (
+                                    CategoryEventList.map((category) => {
+                                        const isSelected = formik.values.event_category === category._id;
+                                        return (
+                                            <button
+                                                key={category._id}
+                                                type="button"
+                                                onClick={() => formik.setFieldValue('event_category', category._id)}
+                                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                                                    isSelected
+                                                        ? 'bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-md shadow-[#a797cc]/30'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                                                }`}
+                                            >
                                                 {category.name || 'Unnamed Category'}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        // Fallback to static categories if backend categories not loaded yet
-                                        [
-                                            { _id: 'cultural-traditional', name: 'Cultural & Traditional Events' },
-                                            { _id: 'outdoor-adventure', name: 'Outdoor & Adventure' },
-                                            { _id: 'educational-workshops', name: 'Educational & Workshops' },
-                                            { _id: 'sports-fitness', name: 'Sports & Fitness' },
-                                            { _id: 'music-arts', name: 'Music & Arts' },
-                                            { _id: 'family-kids', name: 'Family & Kids Activities' },
-                                            { _id: 'food-culinary', name: 'Food & Culinary Experiences' },
-                                            { _id: 'wellness-relaxation', name: 'Wellness & Relaxation' },
-                                            { _id: 'heritage-history', name: 'Heritage & History Tours' },
-                                            { _id: 'nightlife-entertainment', name: 'Nightlife & Entertainment' },
-                                            { _id: 'eco-sustainable', name: 'Eco & Sustainable Tourism' },
-                                            { _id: 'business-networking', name: 'Business & Networking' },
-                                            { _id: 'volunteering', name: 'Volunteering' },
-                                            { _id: 'photography-sightseeing', name: 'Photography & Sightseeing' },
-                                        ].map((category) => (
-                                            <option key={category._id} value={category._id}>
-                                                {category.name}
-                                            </option>
-                                        ))
-                                    )}
-                                </select>
+                                            </button>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="w-full py-4 text-center text-gray-500 text-sm">
+                                        <Icon icon="lucide:alert-circle" className="w-5 h-5 inline-block mr-2" />
+                                        No categories available. Please try refreshing the page.
+                                        <button
+                                            type="button"
+                                            onClick={() => dispatch(getCategoryEventList({ page: 1, limit: 100 }))}
+                                            className="ml-2 text-[#a797cc] hover:underline"
+                                        >
+                                            Retry
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             {formik.touched.event_category && formik.errors.event_category ? (
                                 <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
@@ -1145,7 +1490,9 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                         <label className="block text-gray-800 text-base font-bold">
                                             {t('add.tab10') || 'Event Capacity'} <span className="text-red-500">*</span>
                                         </label>
-                                        <p className="text-gray-500 text-xs mt-0.5">Enter maximum number of attendees</p>
+                                        <p className="text-gray-500 text-xs mt-0.5">
+                                            Enter maximum number of attendees (Max: {maxEventCapacity})
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="relative">
@@ -1159,7 +1506,8 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                     <input
                                         type="number"
                                         min="1"
-                                        placeholder="Enter number of people"
+                                        max={maxEventCapacity}
+                                        placeholder={`Enter number of people (Max: ${maxEventCapacity})`}
                                         {...formik.getFieldProps('no_of_attendees')}
                                         className="w-full pl-16 pr-4 py-4 bg-white border-2 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-500 text-gray-900 font-semibold text-base shadow-sm hover:border-green-300 transition-all"
                                     />
@@ -1190,9 +1538,17 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
 
                 {/* Location Section */}
                 {activeSection === 'location' && (
-                    <div className="space-y-5 p-6 bg-white rounded-lg border border-gray-200">
-                        <div className="mb-5">
-                            <h3 className="text-lg font-semibold text-gray-900">Event Location</h3>
+                    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-gray-50 to-white">
+                        <div className="mb-6 pb-4 border-b border-gray-200">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gradient-to-br from-[#a797cc]/10 to-[#a3cc69]/10 rounded-lg">
+                                    <Icon icon="lucide:map-pin" className="w-5 h-5 text-[#a797cc]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">Event Location</h3>
+                                    <p className="text-sm text-gray-500 mt-0.5">Set where your event will take place</p>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Event Address with Google Maps */}
@@ -1449,10 +1805,17 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
 
                 {/* Instructions Section */}
                 {activeSection === 'instructions' && (
-                    <div className="space-y-5 p-6 bg-white rounded-lg border border-gray-200">
-                        <div className="mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900">Event Instructions</h3>
-                            <p className="text-xs text-gray-500 mt-1">Optional: Add guidelines for attendees</p>
+                    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-gray-50 to-white">
+                        <div className="mb-6 pb-4 border-b border-gray-200">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gradient-to-br from-[#a797cc]/10 to-[#a3cc69]/10 rounded-lg">
+                                    <Icon icon="lucide:list-checks" className="w-5 h-5 text-[#a797cc]" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">Event Instructions</h3>
+                                    <p className="text-sm text-gray-500 mt-0.5">Optional: Add guidelines for attendees</p>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Do's Instructions */}
@@ -1511,10 +1874,10 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                     </div>
                 )}
 
-                    {/* Navigation and Submit Section */}
-                    <div className="sticky bottom-0 bg-white pt-6 border-t-2 border-gray-200 mt-8">
-                        {/* Section Navigation */}
-                        <div className="flex justify-between items-center mb-4">
+                    {/* Professional Navigation and Submit Section */}
+                    <div className="sticky bottom-0 bg-white pt-4 sm:pt-6 pb-3 sm:pb-4 px-4 sm:px-6 border-t-2 border-gray-200 mt-6 sm:mt-8 shadow-lg">
+                        {/* Section Navigation with Progress Indicator */}
+                        <div className="flex justify-between items-center mb-6 px-2">
                             <button
                                 type="button"
                                 onClick={() => {
@@ -1525,25 +1888,38 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                     }
                                 }}
                                 disabled={activeSection === 'basic' || !activeSection}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                className="group px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-[#a797cc] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
+                                <Icon icon="lucide:chevron-left" className="w-4 h-4" />
                                 Previous
                             </button>
-                            <div className="flex gap-1">
-                                {['basic', 'details', 'location', 'instructions'].map((section, index) => (
-                                    <div
-                                        key={section}
-                                        className={`w-2 h-2 rounded-full ${
-                                            activeSection === section || (!activeSection && index === 0)
-                                                ? 'bg-[#a797cc] w-6'
-                                                : 'bg-gray-300'
-                                        } transition-all`}
-                                    />
-                                ))}
+                            
+                            {/* Progress Dots */}
+                            <div className="flex items-center gap-2">
+                                {['basic', 'details', 'location', 'instructions'].map((section, index) => {
+                                    const currentIndex = ['basic', 'details', 'location', 'instructions'].indexOf(activeSection);
+                                    const isActive = activeSection === section;
+                                    const isCompleted = index < currentIndex;
+                                    
+                                    return (
+                                        <div key={section} className="flex items-center">
+                                            <div className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                                                isActive 
+                                                    ? 'bg-[#a797cc] w-8 h-2 shadow-md shadow-[#a797cc]/30' 
+                                                    : isCompleted
+                                                    ? 'bg-[#a3cc69] w-3 h-3'
+                                                    : 'bg-gray-300 w-3 h-3'
+                                            }`} />
+                                            {index < 3 && (
+                                                <div className={`w-8 h-0.5 mx-1 transition-colors ${
+                                                    isCompleted ? 'bg-[#a3cc69]' : 'bg-gray-200'
+                                                }`} />
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
+                            
                             <button
                                 type="button"
                                 onClick={() => {
@@ -1554,49 +1930,45 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                     }
                                 }}
                                 disabled={activeSection === 'instructions'}
-                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                className="group px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-[#a797cc] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2 shadow-sm hover:shadow-md"
                             >
                                 Next
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
+                                <Icon icon="lucide:chevron-right" className="w-4 h-4" />
                             </button>
                         </div>
 
-                        {/* Submit Buttons */}
-                        <div className="flex gap-3">
+                        {/* Professional Submit Buttons */}
+                        <div className="flex gap-4">
                             <button 
                                 type='button'
                                 onClick={onClose}
-                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3.5 px-6 rounded-lg transition-all"
+                                className="flex-1 group px-6 py-3.5 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-xl transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                             >
+                                <Icon icon="lucide:x" className="w-4 h-4" />
                                 {t('delete.tab4') || 'Cancel'}
                             </button>
                             <button 
                                 type='submit' 
-                                className="flex-1 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold py-3.5 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
+                                className="flex-1 group relative px-6 py-3.5 bg-gradient-to-r from-[#a797cc] to-[#a3cc69] hover:from-[#8b7bb8] hover:to-[#8ba179] text-white font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:shadow-md overflow-hidden" 
                                 disabled={formik.isSubmitting || loading || eventImages.length === 0}
                             >
+                                <div className="absolute inset-0 bg-gradient-to-r from-[#a3cc69] to-[#a797cc] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                 {loading || formik.isSubmitting ? (
                                     <>
                                         <Loader color="#fff" height="20" width="20" />
-                                        <span>{EventListId ? t('common.updating') || 'Updating...' : t('common.creating') || 'Creating...'}</span>
+                                        <span className="relative z-10">{EventListId ? t('common.updating') || 'Updating...' : t('common.creating') || 'Creating...'}</span>
                                     </>
                                 ) : (
                                     <>
                                         {EventListId ? (
                                             <>
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                {t('add.tab22') || t('add.tab21') || 'Update Event'}
+                                                <Icon icon="lucide:check-circle" className="w-5 h-5 relative z-10" />
+                                                <span className="relative z-10">{t('add.tab22') || t('add.tab21') || 'Update Event'}</span>
                                             </>
                                         ) : (
                                             <>
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                </svg>
-                                                {t('add.tab1') || 'Create Event'}
+                                                <Icon icon="lucide:plus-circle" className="w-5 h-5 relative z-10" />
+                                                <span className="relative z-10">{t('add.tab1') || 'Add Event'}</span>
                                             </>
                                         )}
                                     </>
@@ -1612,6 +1984,60 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 </form>
             </div>
         </Modal>
+        
+        {/* Create Event Confirmation Modal */}
+        {showCreateConfirm && (
+            <Modal isOpen={showCreateConfirm} onClose={() => setShowCreateConfirm(false)} width="md">
+                <div className="p-6 text-center">
+                    <div className="w-16 h-16 mx-auto bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-full flex items-center justify-center mb-4">
+                        <Icon icon="lucide:alert-circle" className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                        {t('Confirm Create Event') || 'Are you sure you want to create this event?'}
+                    </h3>
+                    
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setShowCreateConfirm(false)}
+                            className="flex-1 py-3 px-6 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
+                        >
+                            {t('common.cancel') || 'Cancel'}
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (pendingPayload) {
+                                    submitEvent(pendingPayload.values, pendingPayload.resetForm, pendingPayload.setSubmitting);
+                                }
+                            }}
+                            className="flex-1 py-3 px-6 bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white rounded-lg font-semibold hover:shadow-lg transition"
+                        >
+                            {t('common.yes') || 'Yes, Create Event'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+        )}
+
+        {/* Success Popup - Event Submitted for Review */}
+        {showSuccessPopup && (
+            <Modal isOpen={showSuccessPopup} onClose={() => setShowSuccessPopup(false)} width="md">
+                <div className="p-8 text-center">
+                    <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mb-6 shadow-lg">
+                        <Icon icon="lucide:check-circle" className="w-12 h-12 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                        {t('Event Submitted') || 'Event Submitted for Review'}
+                    </h3>
+                    <p className="text-gray-600 mb-2">
+                        {t('Event Submitted Desc') || 'Your event has been submitted for review. Once it is approved, you will be notified via email.'}
+                    </p>
+                    <p className="text-sm text-gray-500 mt-4">
+                        {t('Check Email') || 'Please check your email for confirmation.'}
+                    </p>
+                </div>
+            </Modal>
+        )}
+        </>
     );
 };
 

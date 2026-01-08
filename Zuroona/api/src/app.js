@@ -16,6 +16,9 @@ const commonController = require("./controllers/commonController");
 const autoCloseGroupChats = require("./scripts/autoCloseGroupChats.js");
 const updateCompletedBookings = require("./scripts/updateCompletedBookings.js");
 const autoCancelUnpaidBookings = require("./scripts/autoCancelUnpaidBookings.js");
+const sendHostResponseReminders = require("./scripts/sendHostResponseReminders.js");
+const sendHoldExpiredNotifications = require("./scripts/sendHoldExpiredNotifications.js");
+const sendReviewPrompts = require("./scripts/sendReviewPrompts.js");
 // const createTestUsers = require("./scripts/createTestUsers.js"); // Disabled - run manually with: npm run script:create-users
 const initSentry = require("./config/sentry.js");
 const logger = require("./helpers/logger.js");
@@ -134,9 +137,11 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static invoice files
 app.use('/invoices', express.static(path.join(__dirname, '../invoices')));
 
-// Rate limiting - Apply to all API routes
-const { apiLimiter } = require("./middleware/rateLimiter");
-app.use('/api/', apiLimiter);
+// Rate limiting - DISABLED: Removed global API rate limiter to prevent "Too Many Requests" errors
+// Both web and mobile app share the same backend/IP, causing rate limit conflicts
+// Specific rate limiters (auth, upload) are still applied to critical endpoints
+// const { apiLimiter } = require("./middleware/rateLimiter");
+// app.use('/api/', apiLimiter);
 
 // Serve static files from uploads directory (for local file uploads)
 const uploadsPath = path.join(__dirname, "uploads");
@@ -256,6 +261,7 @@ app.post("/api/common/user/uploadFile", commonController.uploadFile);
 // Handle 404 - must be before error handler
 app.all("*", (req, res) => {
 	return handleNotFound(req, res);
+
 });
 
 // Global error handling middleware - must be last
@@ -298,6 +304,9 @@ process.on("unhandledRejection", (err, promise) => {
 	console.error("Promise:", promise);
 	
 	// Log error details
+
+
+	
 	if (err?.http_code) {
 		console.error(`HTTP Code: ${err.http_code}, Name: ${err.name || 'Unknown'}`);
 	}
@@ -386,6 +395,63 @@ if (process.env.ENABLE_AUTO_CANCEL_UNPAID_BOOKINGS !== 'false') {
     }, 60 * 60 * 1000); // 1 hour in milliseconds
     
     console.log('[AUTO-CANCEL-UNPAID] Scheduled task enabled - will run every hour');
+}
+
+// Schedule host response reminders task (runs every hour)
+if (process.env.ENABLE_HOST_RESPONSE_REMINDERS !== 'false') {
+    // Run immediately on startup (after 120 seconds to ensure DB is connected)
+    setTimeout(() => {
+        sendHostResponseReminders().catch(err => {
+            console.error('[HOST-REMINDER] Error in scheduled task:', err);
+        });
+    }, 120000);
+
+    // Then run every hour
+    setInterval(() => {
+        sendHostResponseReminders().catch(err => {
+            console.error('[HOST-REMINDER] Error in scheduled task:', err);
+        });
+    }, 60 * 60 * 1000); // 1 hour in milliseconds
+    
+    console.log('[HOST-REMINDER] Scheduled task enabled - will run every hour');
+}
+
+// Schedule hold expired notifications task (runs every 15 minutes)
+if (process.env.ENABLE_HOLD_EXPIRED_NOTIFICATIONS !== 'false') {
+    // Run immediately on startup (after 150 seconds to ensure DB is connected)
+    setTimeout(() => {
+        sendHoldExpiredNotifications().catch(err => {
+            console.error('[HOLD-EXPIRED] Error in scheduled task:', err);
+        });
+    }, 150000);
+
+    // Then run every 15 minutes
+    setInterval(() => {
+        sendHoldExpiredNotifications().catch(err => {
+            console.error('[HOLD-EXPIRED] Error in scheduled task:', err);
+        });
+    }, 15 * 60 * 1000); // 15 minutes in milliseconds
+    
+    console.log('[HOLD-EXPIRED] Scheduled task enabled - will run every 15 minutes');
+}
+
+// Schedule review prompts task (runs every hour)
+if (process.env.ENABLE_REVIEW_PROMPTS !== 'false') {
+    // Run immediately on startup (after 180 seconds to ensure DB is connected)
+    setTimeout(() => {
+        sendReviewPrompts().catch(err => {
+            console.error('[REVIEW-PROMPT] Error in scheduled task:', err);
+        });
+    }, 180000);
+
+    // Then run every hour
+    setInterval(() => {
+        sendReviewPrompts().catch(err => {
+            console.error('[REVIEW-PROMPT] Error in scheduled task:', err);
+        });
+    }, 60 * 60 * 1000); // 1 hour in milliseconds
+    
+    console.log('[REVIEW-PROMPT] Scheduled task enabled - will run every hour');
 }
 
 // Create test users on startup (DISABLED - run manually with: npm run script:create-users)

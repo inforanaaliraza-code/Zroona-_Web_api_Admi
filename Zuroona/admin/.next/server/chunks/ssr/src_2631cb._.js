@@ -498,21 +498,35 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$yup$2f$index
 ;
 ;
 ;
-const TextEditor = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/TextEditor/TextEditor.jsx [app-ssr] (ecmascript, async loader)")(__turbopack_import__), {
+const EnhancedTextEditor = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/CMS/EnhancedTextEditor.jsx [app-ssr] (ecmascript, async loader)")(__turbopack_import__), {
     loadableGenerated: {
         modules: [
-            "src/components/CMS/TermsConditions.jsx -> " + "@/components/TextEditor/TextEditor"
+            "src/components/CMS/TermsConditions.jsx -> " + "@/components/CMS/EnhancedTextEditor"
         ]
     },
-    ssr: false
+    ssr: false,
+    loading: ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "h-32 bg-gray-100 rounded animate-pulse"
+        }, void 0, false, {
+            fileName: "[project]/src/components/CMS/TermsConditions.jsx",
+            lineNumber: 13,
+            columnNumber: 18
+        }, this)
 });
-const TextEditorAr = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/TextEditorAr/TextEditorAr.jsx [app-ssr] (ecmascript, async loader)")(__turbopack_import__), {
+const EnhancedTextEditorAr = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$shared$2f$lib$2f$app$2d$dynamic$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["default"])(()=>__turbopack_require__("[project]/src/components/CMS/EnhancedTextEditorAr.jsx [app-ssr] (ecmascript, async loader)")(__turbopack_import__), {
     loadableGenerated: {
         modules: [
-            "src/components/CMS/TermsConditions.jsx -> " + "@/components/TextEditorAr/TextEditorAr"
+            "src/components/CMS/TermsConditions.jsx -> " + "@/components/CMS/EnhancedTextEditorAr"
         ]
     },
-    ssr: false
+    ssr: false,
+    loading: ()=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "h-32 bg-gray-100 rounded animate-pulse"
+        }, void 0, false, {
+            fileName: "[project]/src/components/CMS/TermsConditions.jsx",
+            lineNumber: 18,
+            columnNumber: 18
+        }, this)
 });
 function TermsConditions(props) {
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
@@ -525,8 +539,8 @@ function TermsConditions(props) {
         });
     }, []);
     const initialValues = {
-        content: props.status ? CMSDetail?.description : "",
-        content_ar: props.status ? CMSDetail?.description_ar : ""
+        content: props.status ? CMSDetail?.description || "" : "",
+        content_ar: props.status ? CMSDetail?.description_ar || "" : ""
     };
     const formik = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$formik$2f$dist$2f$formik$2e$esm$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useFormik"])({
         initialValues: initialValues,
@@ -563,11 +577,19 @@ function TermsConditions(props) {
         className: "flex flex-col items-center",
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "flex justify-center mb-4 w-full",
+                className: "flex justify-center mb-6 w-full",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "mb-4 max-w-5xl w-5/6",
+                    className: "mb-4 max-w-6xl w-full px-4",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(TextEditor, {
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                            className: "block text-sm font-semibold text-gray-700 mb-2",
+                            children: "English Content"
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/CMS/TermsConditions.jsx",
+                            lineNumber: 72,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(EnhancedTextEditor, {
                             ref: quillRef,
                             name: "content",
                             value: formik.values.content,
@@ -575,34 +597,42 @@ function TermsConditions(props) {
                             formik: formik
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                            lineNumber: 70,
+                            lineNumber: 75,
                             columnNumber: 11
                         }, this),
                         formik.errors.content && formik.touched.content && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "text-red-500",
+                            className: "text-red-500 mt-2",
                             children: formik.errors.content
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                            lineNumber: 78,
+                            lineNumber: 83,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                    lineNumber: 69,
+                    lineNumber: 71,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                lineNumber: 68,
+                lineNumber: 70,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "flex justify-center mb-4 w-full",
+                className: "flex justify-center mb-6 w-full",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                    className: "mb-4 max-w-5xl w-5/6",
+                    className: "mb-4 max-w-6xl w-full px-4",
                     children: [
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(TextEditorAr, {
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                            className: "block text-sm font-semibold text-gray-700 mb-2",
+                            children: "Arabic Content (المحتوى العربي)"
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/CMS/TermsConditions.jsx",
+                            lineNumber: 89,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(EnhancedTextEditorAr, {
                             ref: quillRef,
                             name: "content_ar",
                             value: formik.values.content_ar,
@@ -610,26 +640,26 @@ function TermsConditions(props) {
                             formik: formik
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                            lineNumber: 84,
+                            lineNumber: 92,
                             columnNumber: 11
                         }, this),
                         formik.errors.content_ar && formik.touched.content_ar && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                            className: "text-red-500",
+                            className: "text-red-500 mt-2",
                             children: formik.errors.content_ar
                         }, void 0, false, {
                             fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                            lineNumber: 92,
+                            lineNumber: 100,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                    lineNumber: 83,
+                    lineNumber: 88,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                lineNumber: 82,
+                lineNumber: 87,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$future$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -641,23 +671,23 @@ function TermsConditions(props) {
                         color: "#fff"
                     }, void 0, false, {
                         fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                        lineNumber: 102,
+                        lineNumber: 110,
                         columnNumber: 13
                     }, this) : props.status ? "Update" : "Save"
                 }, void 0, false, {
                     fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                    lineNumber: 97,
+                    lineNumber: 105,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-                lineNumber: 96,
+                lineNumber: 104,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/CMS/TermsConditions.jsx",
-        lineNumber: 67,
+        lineNumber: 69,
         columnNumber: 5
     }, this);
 }

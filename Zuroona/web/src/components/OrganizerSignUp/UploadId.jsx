@@ -11,6 +11,8 @@ import * as Yup from "yup";
 import Loader from "../Loader/Loader";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import TermsOfServiceModal from "@/components/Modal/TermsOfServiceModal";
+import PrivacyPolicyModal from "@/components/Modal/PrivacyPolicyModal";
 
 // Image compression utility
 const compressImage = (file, maxWidth = 1920, quality = 0.8) => {
@@ -77,33 +79,34 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 	
 	// Refs to store file objects
 	const fileRefFront = useRef(null);
-	const fileRefBack = useRef(null);
 	
 	// Preview URLs (object URLs for instant preview)
 	const [previewUrlFront, setPreviewUrlFront] = useState(null);
-	const [previewUrlBack, setPreviewUrlBack] = useState(null);
 	
 	// Server URLs (after upload)
 	const [serverUrlFront, setServerUrlFront] = useState(null);
-	const [serverUrlBack, setServerUrlBack] = useState(null);
 	
 	// Loading states
 	const [fileLoadingFront, setFileLoadingFront] = useState(false);
-	const [fileLoadingBack, setFileLoadingBack] = useState(false);
 	const [loading, setLoding] = useState(false);
 	
 	// File names
 	const [fileNameFront, setFileNameFront] = useState(null);
-	const [fileNameBack, setFileNameBack] = useState(null);
+	
+	// Terms modals
+	const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+	const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
 
 	const formik = useFormik({
 		initialValues: {
 			govt_id_front: "",
-			govt_id_back: "",
+			acceptTerms: false,
+			acceptPrivacy: false,
 		},
 		validationSchema: Yup.object({
 			govt_id_front: Yup.string().required(t("signup.tab16") || "CNIC Front is required"),
-			govt_id_back: Yup.string().required(t("signup.tab16") || "CNIC Back is required"),
+			acceptTerms: Yup.boolean().oneOf([true], t("signup.tab16") || "You must accept the Terms & Conditions"),
+			acceptPrivacy: Yup.boolean().oneOf([true], t("signup.tab16") || "You must accept the Privacy Policy"),
 		}),
 		onSubmit: async (values, { setFieldTouched, setFieldError }) => {
 			// Pre-submit validation with specific error messages
@@ -114,10 +117,10 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 				return;
 			}
 
-			if (!values.govt_id_back || values.govt_id_back.trim() === "") {
-				setFieldTouched("govt_id_back", true);
-				setFieldError("govt_id_back", t("signup.govtIdBackRequired") || "Please upload back side of your ID");
-				toast.error(t("signup.govtIdBackRequired") || "Please upload back side of your ID");
+			if (!values.acceptTerms || !values.acceptPrivacy) {
+				setFieldTouched("acceptTerms", true);
+				setFieldTouched("acceptPrivacy", true);
+				toast.error(t("signup.tab16") || "You must accept the Terms & Conditions and Privacy Policy");
 				return;
 			}
 
@@ -130,7 +133,7 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 					return;
 				}
 				
-				const govt_id = `${values.govt_id_front},${values.govt_id_back}`;
+				const govt_id = values.govt_id_front; // Only front side now
 				const payload = {
 					organizer_id: organizerId,
 					govt_id: govt_id,
@@ -149,13 +152,6 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 							URL.revokeObjectURL(previewUrlFront);
 						} catch (error) {
 							console.warn("UploadId: Error revoking front URL after upload", error);
-						}
-					}
-					if (previewUrlBack && typeof URL !== "undefined" && URL.revokeObjectURL) {
-						try {
-							URL.revokeObjectURL(previewUrlBack);
-						} catch (error) {
-							console.warn("UploadId: Error revoking back URL after upload", error);
 						}
 					}
 					// Clear localStorage items used during registration
@@ -177,7 +173,7 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 	});
 
 	// Optimized file handler with compression
-	const handleFile = useCallback(async (file, type) => {
+	const handleFile = useCallback(async (file) => {
 		if (!file) {
 			toast.error(t("signup.selectFile") || "Please select a file");
 			return;
@@ -197,39 +193,22 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 			return;
 		}
 
-		// Set loading state
-		if (type === "front") {
-			setFileLoadingFront(true);
-			setFileNameFront(file.name);
-			fileRefFront.current = file;
-		} else {
-			setFileLoadingBack(true);
-			setFileNameBack(file.name);
-			fileRefBack.current = file;
-		}
+		// Set loading state (only front now)
+		setFileLoadingFront(true);
+		setFileNameFront(file.name);
+		fileRefFront.current = file;
 
 		// Create instant preview URL
 		const previewUrl = createPreviewUrl(file);
-		if (type === "front") {
-			// Revoke old URL if exists
-			if (previewUrlFront && typeof URL !== "undefined" && URL.revokeObjectURL) {
-				try {
-					URL.revokeObjectURL(previewUrlFront);
-				} catch (error) {
-					console.warn("UploadId: Error revoking old front URL", error);
-				}
+		// Revoke old URL if exists
+		if (previewUrlFront && typeof URL !== "undefined" && URL.revokeObjectURL) {
+			try {
+				URL.revokeObjectURL(previewUrlFront);
+			} catch (error) {
+				console.warn("UploadId: Error revoking old front URL", error);
 			}
-			setPreviewUrlFront(previewUrl);
-		} else {
-			if (previewUrlBack && typeof URL !== "undefined" && URL.revokeObjectURL) {
-				try {
-					URL.revokeObjectURL(previewUrlBack);
-				} catch (error) {
-					console.warn("UploadId: Error revoking old back URL", error);
-				}
-			}
-			setPreviewUrlBack(previewUrl);
 		}
+		setPreviewUrlFront(previewUrl);
 
 		try {
 			// Compress image before upload (only for images, not PDFs)
@@ -247,37 +226,23 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 				// Store server URL for form submission, but keep previewUrl for display
 				// Preview URL (blob) will be used until form is successfully submitted
 				
-				if (type === "front") {
-					// Store server URL in formik for form submission
-					formik.setFieldValue("govt_id_front", imageUrl);
-					setServerUrlFront(imageUrl);
-					setFileLoadingFront(false);
-					
-					// Update localStorage with server URL for persistence
-					const cnicData = JSON.parse(localStorage.getItem("organizer_cnic") || "{}");
-					cnicData.front = imageUrl;
-					localStorage.setItem("organizer_cnic", JSON.stringify(cnicData));
-					
-					toast.success(t("signup.cnicFrontUploaded") || "CNIC Front uploaded successfully");
-					// Note: previewUrlFront is kept for display - it will be cleared only when form is submitted successfully
-				} else {
-					// Store server URL in formik for form submission
-					formik.setFieldValue("govt_id_back", imageUrl);
-					setServerUrlBack(imageUrl);
-					setFileLoadingBack(false);
-					
-					const cnicData = JSON.parse(localStorage.getItem("organizer_cnic") || "{}");
-					cnicData.back = imageUrl;
-					localStorage.setItem("organizer_cnic", JSON.stringify(cnicData));
-					
-					toast.success(t("signup.cnicBackUploaded") || "CNIC Back uploaded successfully");
-					// Note: previewUrlBack is kept for display - it will be cleared only when form is submitted successfully
-				}
+				// Store server URL in formik for form submission
+				formik.setFieldValue("govt_id_front", imageUrl);
+				setServerUrlFront(imageUrl);
+				setFileLoadingFront(false);
+				
+				// Update localStorage with server URL for persistence
+				const cnicData = JSON.parse(localStorage.getItem("organizer_cnic") || "{}");
+				cnicData.front = imageUrl;
+				localStorage.setItem("organizer_cnic", JSON.stringify(cnicData));
+				
+				toast.success(t("signup.cnicFrontUploaded") || "CNIC Front uploaded successfully");
+				// Note: previewUrlFront is kept for display - it will be cleared only when form is submitted successfully
 			} else {
 				throw new Error(resp?.message || resp?.error || "Upload failed");
 			}
 		} catch (error) {
-			console.error(`[CNIC-UPLOAD] ${type} upload error:`, error);
+			console.error(`[CNIC-UPLOAD] upload error:`, error);
 			const errorMsg = error?.response?.data?.message || 
 							error?.response?.data?.error || 
 							error?.message || 
@@ -285,24 +250,17 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 			toast.error(errorMsg);
 			
 			// Reset state on error
-			if (type === "front") {
-				setFileLoadingFront(false);
-				setFileNameFront(null);
-				setPreviewUrlFront(null);
-				fileRefFront.current = null;
-			} else {
-				setFileLoadingBack(false);
-				setFileNameBack(null);
-				setPreviewUrlBack(null);
-				fileRefBack.current = null;
-			}
+			setFileLoadingFront(false);
+			setFileNameFront(null);
+			setPreviewUrlFront(null);
+			fileRefFront.current = null;
 		}
-	}, [previewUrlFront, previewUrlBack, formik]);
+	}, [previewUrlFront, formik]);
 
-	const handleFileChange = useCallback((e, type) => {
+	const handleFileChange = useCallback((e) => {
 		const file = e.target.files?.[0];
-		if (file) {
-			handleFile(file, type);
+			if (file) {
+			handleFile(file);
 		}
 		// Reset input to allow selecting same file again
 		e.target.value = '';
@@ -389,16 +347,8 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 					console.warn("UploadId: Error revoking front preview URL", error);
 				}
 			}
-			if (previewUrlBack && typeof URL !== "undefined" && URL.revokeObjectURL) {
-				try {
-					URL.revokeObjectURL(previewUrlBack);
-				} catch (error) {
-					// Silently handle errors (e.g., URL already revoked)
-					console.warn("UploadId: Error revoking back preview URL", error);
-				}
-			}
 		};
-	}, [previewUrlFront, previewUrlBack]);
+	}, [previewUrlFront]);
 
 	// Helper function to convert relative path to absolute URL
 	const getImageUrl = (url) => {
@@ -424,10 +374,6 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 		return url ? getImageUrl(url) : null;
 	}, [previewUrlFront, serverUrlFront]);
 	
-	const displayUrlBack = useMemo(() => {
-		const url = previewUrlBack || serverUrlBack;
-		return url ? getImageUrl(url) : null;
-	}, [previewUrlBack, serverUrlBack]);
 
 	return (
 		<div className="flex-grow bg-white h-max p-5 sm:p-7 rounded-xl">
@@ -496,7 +442,7 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 							type="file"
 							accept="image/*,application/pdf"
 							className="hidden"
-							onChange={(e) => handleFileChange(e, "front")}
+							onChange={handleFileChange}
 							disabled={fileLoadingFront}
 						/>
 					</label>
@@ -507,77 +453,64 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 					)}
 				</div>
 
-				{/* CNIC Back Upload */}
-				<div className="mb-4">
-					<label className="block text-gray-700 text-sm font-semibold mb-2">
-						{t("signup.cnicBack") || "CNIC Back"} *
-					</label>
-
-					<label htmlFor="file-upload-back" className="w-full cursor-pointer">
-						<div className="w-full h-52 border-2 bg-[#fdfdfd] border-[#a797cc] rounded-lg flex items-center justify-center mb-2 overflow-hidden">
-							<div className="text-center w-full h-full">
-								{fileLoadingBack ? (
-									<div className="w-full h-full flex items-center justify-center">
-										<Loader height="30" />
-									</div>
-								) : (
-									<div className="flex flex-col items-center justify-center h-full">
-										{fileNameBack?.toLowerCase().endsWith(".pdf") ? (
-											<Image
-												src="/assets/images/icons/pdf.png"
-												height={35}
-												width={35}
-												alt="PDF Icon"
-												priority
-											/>
-										) : displayUrlBack ? (
-											<div className="relative w-full h-full max-h-[200px] flex items-center justify-center">
-												{/* Use regular img tag for uploaded images (blob URLs or server URLs) */}
-												<img
-													key={displayUrlBack}
-													src={getImageUrl(displayUrlBack) || displayUrlBack}
-													alt="CNIC Back"
-													className="max-w-full max-h-full object-contain rounded"
-													loading="eager"
-													onError={(e) => {
-														// Fallback to upload icon if image fails to load
-														e.target.style.display = "none";
-														e.target.nextElementSibling?.style?.removeProperty("display");
-													}}
-												/>
-											</div>
-										) : (
-											<Icon
-												icon="lucide:upload"
-												className="w-24 h-16 text-[#a797cc]"
-											/>
-										)}
-										<p className="text-gray-500 text-sm mt-3">
-											{t("signup.uploadCnicBack") || "Upload CNIC Back Side"}
-										</p>
-									</div>
-								)}
-								{fileNameBack?.toLowerCase().endsWith(".pdf") && (
-									<p className="text-gray-600 text-xs mt-2">
-										{t("signup.uploaded") || "Uploaded"}: {fileNameBack}
-									</p>
-								)}
-							</div>
+				{/* Terms and Conditions & Privacy Policy - Moved to last step */}
+				<div className="mb-6">
+					<div className="flex items-start gap-3">
+						<div className="flex items-center h-5">
+							<input
+								id="acceptTermsAndPrivacy"
+								type="checkbox"
+								className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-[#a797cc] text-[#a797cc]"
+								checked={formik.values.acceptTerms && formik.values.acceptPrivacy}
+								onChange={(e) => {
+									const isChecked = e.target.checked;
+									formik.setFieldValue("acceptTerms", isChecked);
+									formik.setFieldValue("acceptPrivacy", isChecked);
+									formik.setFieldTouched("acceptTerms", true);
+									formik.setFieldTouched("acceptPrivacy", true);
+								}}
+							/>
 						</div>
-						<input
-							id="file-upload-back"
-							type="file"
-							accept="image/*,application/pdf"
-							className="hidden"
-							onChange={(e) => handleFileChange(e, "back")}
-							disabled={fileLoadingBack}
-						/>
-					</label>
-					{formik.errors.govt_id_back && formik.touched.govt_id_back && (
-						<p className="text-red-500 text-xs mt-1 font-semibold">
-							{formik.errors.govt_id_back}
-						</p>
-					)}
+						<div className="ml-3 text-sm">
+							<label
+								htmlFor="acceptTermsAndPrivacy"
+								className="font-medium text-gray-900 cursor-pointer"
+							>
+								{t("signup.tab22") || "By signing up, you agree to our"}{" "}
+								<button
+									type="button"
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										setIsTermsModalOpen(true);
+									}}
+									className="text-[#a797cc] hover:underline font-semibold focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-1 rounded"
+								>
+									{t("signup.tab23") || "Terms & Conditions"}
+								</button>
+								{" "}{t("signup.tab24") || "and"}{" "}
+								<button
+									type="button"
+									onClick={(e) => {
+										e.preventDefault();
+										e.stopPropagation();
+										setIsPrivacyModalOpen(true);
+									}}
+									className="text-[#a797cc] hover:underline font-semibold focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-1 rounded"
+								>
+									{t("signup.tab25") || "Privacy Policy"}
+								</button>
+								<span className="text-red-500 ml-1">*</span>
+							</label>
+							{(formik.touched.acceptTerms && formik.errors.acceptTerms) || 
+							 (formik.touched.acceptPrivacy && formik.errors.acceptPrivacy) ? (
+								<p className="text-red-500 text-xs mt-1 font-semibold">
+									{formik.errors.acceptTerms || formik.errors.acceptPrivacy || 
+									 "You must accept the Terms & Conditions and Privacy Policy"}
+								</p>
+							) : null}
+						</div>
+					</div>
 				</div>
 
 				{/* Submit Button */}
@@ -585,7 +518,7 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 					<button
 						type="submit"
 						className="w-full py-4 bg-[#a797cc] text-white font-semibold rounded-xl hover:bg-[#8ba179] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-						disabled={loading || fileLoadingFront || fileLoadingBack}
+						disabled={loading || fileLoadingFront}
 					>
 						{loading ? (
 							<Loader color="#fff" height="30" />
@@ -595,6 +528,10 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 					</button>
 				</div>
 			</form>
+			
+			{/* Terms & Conditions and Privacy Policy Modals */}
+			<TermsOfServiceModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
+			<PrivacyPolicyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
 		</div>
 	);
 };

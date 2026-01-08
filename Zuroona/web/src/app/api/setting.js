@@ -134,6 +134,12 @@ export const OrganizerEditProfileApi = async (payload) => {
 	});
 };
 
+export const DeactivateOrganizerApi = async (payload) => {
+	return putRawData("organizer/deactivate", payload).then((data) => {
+		return data;
+	});
+};
+
 export const resetPasswordApi = async (payload) => {
 	return postRawData("reset-password", payload).then((data) => {
 		return data;
@@ -333,7 +339,8 @@ export const UpdatePaymentApi = async (payload) => {
 };
 
 export const GetUserBookingsApi = async () => {
-	return getData("user/bookings").then((data) => {
+	// Fetch all bookings (pending, approved, rejected, paid/unpaid)
+	return getData("user/bookings", { book_status: "all" }).then((data) => {
 		return data;
 	});
 };

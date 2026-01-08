@@ -17,6 +17,7 @@ import UserNotificatonListReducer from "./slices/UserNotificaton";
 import UserNotificatonCountReducer from "./slices/UserNotificatonCount";
 import EarningReducer from "./slices/Earning";
 import WithdrawalListReducer from "./slices/WithdrawalList";
+import languageReducer from "./slices/language";
 
 export const store = configureStore({
   reducer: {
@@ -36,5 +37,6 @@ export const store = configureStore({
     UserBookingDetailData: UserBookingdetailsReducer,
     UserNotificatonListData: UserNotificatonListReducer,
     UserNotificatonCountData: UserNotificatonCountReducer,
+    language: languageReducer,
   },
 });

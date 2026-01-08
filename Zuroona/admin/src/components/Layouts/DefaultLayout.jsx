@@ -1,10 +1,12 @@
 "use client";
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 
-export default function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPage }) {
+export default function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPage, searchPlaceholder }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isRTL } = useSelector((state) => state.language);
 
   return (
     <>
@@ -15,7 +17,9 @@ export default function DefaultLayout({ children, title, breadcrumbs, search, se
         {/* <!-- ===== Sidebar End ===== --> */}
 
         {/* <!-- ===== Content Area Start ===== --> */}
-        <div className="overflow-auto relative flex flex-1 flex-col lg:ml-[320px] px-4 sm:px-6 transition-all duration-300">
+        <div className={`overflow-auto relative flex flex-1 flex-col px-4 sm:px-6 transition-all duration-300 ${
+          isRTL ? 'lg:mr-[320px]' : 'lg:ml-[320px]'
+        }`}>
           {/* <!-- ===== Header Start ===== --> */}
           <Header 
             sidebarOpen={sidebarOpen} 
@@ -24,7 +28,8 @@ export default function DefaultLayout({ children, title, breadcrumbs, search, se
             breadcrumbs={breadcrumbs} 
             search={search}
             setSearch={setSearch}
-            setPage={setPage} 
+            setPage={setPage}
+            searchPlaceholder={searchPlaceholder}
           />
           {/* <!-- ===== Header End ===== --> */}
 

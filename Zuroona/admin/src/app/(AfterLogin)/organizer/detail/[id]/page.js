@@ -9,8 +9,10 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { ChangeStatusOrganizerApi } from "@/api/organizer/apis";
 import RejectOrganizerModal from "@/components/Modals/RejectOrganizerModal";
+import { useTranslation } from "react-i18next";
 
 export default function EventOrganizerDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -51,7 +53,7 @@ export default function EventOrganizerDetail() {
         }
       })
       .catch((err) => {
-        toast.error("Failed to update status");
+        toast.error(t("organizerDetail.failedToUpdateStatus"));
       })
       .finally(() => setLoading(false));
   };
@@ -66,7 +68,7 @@ export default function EventOrganizerDetail() {
         <div className="flex justify-between py-5">
           {/* Header */}
           <div className="flex w-[60%] items-end">
-            <h1 className="text-xl font-bold text-black">Organizer Detail</h1>
+            <h1 className="text-xl font-bold text-black">{t("organizerDetail.title")}</h1>
           </div>
         </div>
 
@@ -103,7 +105,7 @@ export default function EventOrganizerDetail() {
                     {/* Table Row - Organizer ID */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Organizer ID:
+                        {t("organizerDetail.organizerId")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         #{detail?._id}
@@ -113,7 +115,7 @@ export default function EventOrganizerDetail() {
                     {/* Table Row - Name */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Name:
+                        {t("organizerDetail.name")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.first_name} {detail?.last_name}
@@ -123,7 +125,7 @@ export default function EventOrganizerDetail() {
                     {/* Table Row - Email */}
                     <tr className="border-b border-gray-300">
                       <td className="flex py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Email Address:
+                        {t("organizerDetail.emailAddress")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.email}
@@ -133,7 +135,7 @@ export default function EventOrganizerDetail() {
                     {/* Table Row - Phone No */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Phone No:
+                        {t("organizerDetail.phoneNo")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.country_code} {detail?.phone_number}
@@ -143,17 +145,17 @@ export default function EventOrganizerDetail() {
                     {/* Table Row - Gender */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Gender:
+                        {t("organizerDetail.gender")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
-                        {detail?.gender === 1 ? "Male" : "Female"}
+                        {detail?.gender === 1 ? t("organizerDetail.male") : t("organizerDetail.female")}
                       </td>
                     </tr>
 
                     {/* Table Row - Date of birth */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Date of birth:
+                        {t("organizerDetail.dateOfBirth")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.date_of_birth
@@ -165,7 +167,7 @@ export default function EventOrganizerDetail() {
                     {/* Table Row - City */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        City:
+                        {t("organizerDetail.city")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         {detail?.address}
@@ -174,7 +176,7 @@ export default function EventOrganizerDetail() {
                     {/* Table Row - Registration Type */}
                     <tr className="border-b border-gray-300">
                       <td className="w-2/5 py-2 xl:py-1 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                        Registration Type:
+                        {t("organizerDetail.registrationType")}:
                       </td>
                       <td className="py-2 xl:py-1 text-left text-sm text-gray-600 font-semibold break-all">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -194,15 +196,15 @@ export default function EventOrganizerDetail() {
             {/* Bio Section */}
             <div className="col-span-full lg:col-span-full xl:col-span-3">
               <div className="bg-white p-6 rounded-lg py-8">
-                <h2 className="font-bold text-lg text-gray-900">Bio:</h2>
+                <h2 className="font-bold text-lg text-gray-900">{t("organizerDetail.bio")}:</h2>
                 <p className="text-sm text-gray-800 font-semibold mt-2">
-                  {detail?.bio}
+                  {detail?.bio || t("organizerDetail.noBioAvailable")}
                 </p>
               </div>
               {/* Govt. ID Section with Image Preview */}
               <div className="bg-white p-6 rounded-lg mt-8">
                 <h3 className="font-semibold text-xl text-gray-900 mb-4">
-                  Government ID
+                  {t("organizerDetail.governmentId")}
                 </h3>
                 {detail?.govt_id && (() => {
                   // Handle comma-separated URLs (front,back) or single URL
@@ -242,7 +244,7 @@ export default function EventOrganizerDetail() {
                     try {
                       const fullUrl = getFullUrl(url);
                       if (!fullUrl) {
-                        toast.error('Invalid file URL');
+                        toast.error(t("organizerDetail.invalidFileUrl"));
                         return;
                       }
                       
@@ -255,7 +257,7 @@ export default function EventOrganizerDetail() {
                       document.body.removeChild(link);
                     } catch (error) {
                       console.error('Download error:', error);
-                      toast.error('Failed to download file. Please try again.');
+                      toast.error(t("organizerDetail.failedToDownload"));
                     }
                   };
                   
@@ -272,20 +274,20 @@ export default function EventOrganizerDetail() {
                             <div className="p-3 border-b border-gray-200 bg-white">
                               <div className="flex items-center justify-between">
                                 <h4 className="text-sm font-semibold text-gray-700">
-                                  {govtIdUrls.length > 1 ? `${index === 0 ? 'Front' : 'Back'} ID` : 'Government ID'}
+                                  {govtIdUrls.length > 1 ? (index === 0 ? t("organizerDetail.frontId") : t("organizerDetail.backId")) : t("organizerDetail.governmentId")}
                                 </h4>
                                 <button
                                   onClick={() => handleDownload(url, index)}
                                   className="flex items-center gap-1 px-3 py-1.5 bg-[#a797cc] text-white rounded hover:bg-[#8b7bb3] transition-colors text-xs font-medium"
-                                  title="Download"
+                                  title={t("organizerDetail.download")}
                                 >
                                   <Image
                                     src="/assets/images/home/download.png"
                                     height={16}
                                     width={16}
-                                    alt="Download"
+                                    alt={t("organizerDetail.download")}
                                   />
-                                  Download
+                                  {t("organizerDetail.download")}
                                 </button>
                               </div>
                             </div>
@@ -316,7 +318,7 @@ export default function EventOrganizerDetail() {
                                     onClick={() => window.open(fullUrl, '_blank')}
                                     className="mt-2 text-xs text-[#a797cc] hover:underline hover:text-[#a08ec8]"
                                   >
-                                    View Document
+                                    {t("organizerDetail.viewDocument")}
                                   </button>
                                 </div>
                               )}
@@ -328,14 +330,14 @@ export default function EventOrganizerDetail() {
                   );
                 })()}
                 {!detail?.govt_id && (
-                  <p className="text-sm text-gray-500 italic">No government ID uploaded</p>
+                  <p className="text-sm text-gray-500 italic">{t("organizerDetail.noGovtIdUploaded")}</p>
                 )}
               </div>
 
               {/* Questions Answered Section */}
               {detail?.questions && detail?.questions?.length > 0 && (
                 <div className="bg-white p-6 rounded-lg mt-8">
-                  <h2 className="font-bold text-lg text-gray-900 mb-4">Questions Answered</h2>
+                  <h2 className="font-bold text-lg text-gray-900 mb-4">{t("organizerDetail.questionsAnswered")}</h2>
                   <div className="space-y-4">
                     {detail.questions.map((question, index) => (
                       <div key={index} className="border-b border-gray-200 pb-3 last:border-0">
@@ -354,13 +356,13 @@ export default function EventOrganizerDetail() {
               {/* Bank Information Section */}
               {(detail?.bank_account || detail?.bank_name || detail?.account_number || detail?.iban || detail?.bank_info) && (
                 <div className="bg-white p-6 rounded-lg mt-8">
-                  <h2 className="font-bold text-lg text-gray-900 mb-4">Bank Information</h2>
+                  <h2 className="font-bold text-lg text-gray-900 mb-4">{t("organizerDetail.bankInformation")}</h2>
                   <table className="table-auto w-full">
                     <tbody>
                       {detail?.bank_name && (
                         <tr className="border-b border-gray-300">
                           <td className="w-2/5 py-2 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                            Bank Name:
+                            {t("organizerDetail.bankName")}:
                           </td>
                           <td className="py-2 text-left text-sm text-gray-600 font-semibold break-all">
                             {detail.bank_name}
@@ -370,7 +372,7 @@ export default function EventOrganizerDetail() {
                       {detail?.account_number && (
                         <tr className="border-b border-gray-300">
                           <td className="w-2/5 py-2 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                            Account Number:
+                            {t("organizerDetail.accountNumber")}:
                           </td>
                           <td className="py-2 text-left text-sm text-gray-600 font-semibold break-all">
                             {detail.account_number}
@@ -380,7 +382,7 @@ export default function EventOrganizerDetail() {
                       {detail?.iban && (
                         <tr className="border-b border-gray-300">
                           <td className="w-2/5 py-2 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                            IBAN:
+                            {t("organizerDetail.iban")}:
                           </td>
                           <td className="py-2 text-left text-sm text-gray-600 font-semibold break-all">
                             {detail.iban}
@@ -390,7 +392,7 @@ export default function EventOrganizerDetail() {
                       {detail?.account_holder_name && (
                         <tr className="border-b border-gray-300">
                           <td className="w-2/5 py-2 text-left text-sm font-semibold text-gray-800 whitespace-nowrap">
-                            Account Holder Name:
+                            {t("organizerDetail.accountHolderName")}:
                           </td>
                           <td className="py-2 text-left text-sm text-gray-600 font-semibold break-all">
                             {detail.account_holder_name}
@@ -427,13 +429,13 @@ export default function EventOrganizerDetail() {
                     onClick={() => ChangeStatus(2)} // Approve
                     className="bg-green-600 text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold hover:bg-green-700 transition-colors duration-300"
                   >
-                    Accept It
+                    {t("organizerDetail.acceptIt")}
                   </button>
                   <button
                     onClick={() => setShowRejectModal(true)} // Show reject modal with reason
                     className="bg-red-600 text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold hover:bg-red-700 transition-colors duration-300"
                   >
-                    Reject It
+                    {t("organizerDetail.rejectIt")}
                   </button>
                 </>
               )}
@@ -442,7 +444,7 @@ export default function EventOrganizerDetail() {
                   className="bg-[#a797cc] text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold hover:bg-[#a08ec8] transition"
                   disabled
                 >
-                  Accepted
+                  {t("organizerDetail.accepted")}
                 </button>
               )}
               {detail?.is_approved === 3 && (
@@ -450,7 +452,7 @@ export default function EventOrganizerDetail() {
                   className="bg-[#e94e2e] text-white py-3 px-24 sm:px-28 rounded-lg text-lg font-semibold"
                   disabled
                 >
-                  Rejected
+                  {t("organizerDetail.rejected")}
                 </button>
               )}
             </div>

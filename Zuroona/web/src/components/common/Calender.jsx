@@ -1,20 +1,36 @@
 // components/Calendar.js
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths } from 'date-fns';
 import Image from 'next/image';
 import { useTranslation } from 'react-i18next';
 
 export default function Calendar({ onDateChange }) {
   const { t } = useTranslation();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  // Use null initially to prevent hydration mismatch, set in useEffect
+  const [currentMonth, setCurrentMonth] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  
+  // Initialize dates on client side only to prevent hydration mismatch
+  useEffect(() => {
+    if (currentMonth === null) {
+      setCurrentMonth(new Date());
+    }
+    if (selectedDate === null) {
+      setSelectedDate(new Date());
+    }
+  }, []);
 
   const onDateClick = (day) => {
     setSelectedDate(day);
     onDateChange(day); // Pass selected day back to parent component
   };
+  
+  // Guard against null during initial render
+  if (!currentMonth || !selectedDate) {
+    return <div>Loading...</div>;
+  }
   
   const monthIndex = currentMonth.getMonth(); // Get the month index (0-11)
   const year = format(currentMonth, "yyyy");

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import * as Yup from "yup";
-import { RegisterApi } from "../../api/auth";
+import { SignUpApi } from "@/app/api/setting";
 
 // List of countries for the nationality dropdown
 const countries = [
@@ -211,25 +211,34 @@ const UnifiedRegisterForm = () => {
 		firstName: "",
 		lastName: "",
 		email: "",
-		password: "",
-		confirmPassword: "",
 		phoneNumber: "",
 		nationality: "",
+		country_code: "+966",
 	});
 
 	const validationSchema = Yup.object().shape({
 		firstName: Yup.string().required("First name is required"),
 		lastName: Yup.string().required("Last name is required"),
 		email: Yup.string()
-			.email("Invalid email")
-			.required("Email is required"),
-		password: Yup.string()
-			.min(8, "Password must be at least 8 characters")
-			.required("Password is required"),
-		confirmPassword: Yup.string()
-			.oneOf([Yup.ref("password"), null], "Passwords must match")
-			.required("Confirm password is required"),
-		phoneNumber: Yup.string().required("Phone number is required"),
+			.required("Email is required")
+			.test('gmail-only', "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+				if (!value) return true;
+				const emailLower = value.toLowerCase().trim();
+				return emailLower.endsWith('@gmail.com');
+			})
+			.test('gmail-format', "Invalid Gmail address format", function(value) {
+				if (!value) return true;
+				const emailLower = value.toLowerCase().trim();
+				const localPart = emailLower.split('@')[0];
+				if (!localPart) return false;
+				return /^[a-z0-9.+]+$/.test(localPart);
+			})
+			.email("Invalid email"),
+		phoneNumber: Yup.string()
+			.required("Phone number is required")
+			.matches(/^[0-9]+$/, "Phone number must contain only digits")
+			.min(9, "Phone number must be at least 9 digits")
+			.max(9, "Phone number must be at most 9 digits"),
 		nationality: Yup.string().required("Nationality is required"),
 	});
 
@@ -274,13 +283,13 @@ const UnifiedRegisterForm = () => {
 			// Validate all form data
 			await validationSchema.validate(formData, { abortEarly: false });
 
-			// Make API call with nationality included
-			const response = await RegisterApi({
+			// Make API call (passwordless)
+			const response = await SignUpApi({
 				first_name: formData.firstName,
 				last_name: formData.lastName,
 				email: formData.email,
-				password: formData.password,
-				phone: formData.phoneNumber,
+				phone_number: parseInt(formData.phoneNumber),
+				country_code: formData.country_code || "+966",
 				nationality: formData.nationality,
 			});
 
@@ -392,61 +401,6 @@ const UnifiedRegisterForm = () => {
 				)}
 			</div>
 
-			{/* Password */}
-			<div className="mb-4">
-				<label
-					htmlFor="password"
-					className="block mb-2 text-sm font-medium text-gray-700"
-				>
-					{t("auth.password")}
-				</label>
-				<input
-					type="password"
-					id="password"
-					name="password"
-					value={formData.password}
-					onChange={handleChange}
-					className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc] ${
-						errors.password && touched.password
-							? "border-red-500"
-							: "border-gray-300"
-					}`}
-					placeholder={t("auth.enterPassword")}
-				/>
-				{errors.password && touched.password && (
-					<p className="mt-1 text-sm text-red-500">
-						{errors.password}
-					</p>
-				)}
-			</div>
-
-			{/* Confirm Password */}
-			<div className="mb-4">
-				<label
-					htmlFor="confirmPassword"
-					className="block mb-2 text-sm font-medium text-gray-700"
-				>
-					{t("auth.confirmPassword")}
-				</label>
-				<input
-					type="password"
-					id="confirmPassword"
-					name="confirmPassword"
-					value={formData.confirmPassword}
-					onChange={handleChange}
-					className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc] ${
-						errors.confirmPassword && touched.confirmPassword
-							? "border-red-500"
-							: "border-gray-300"
-					}`}
-					placeholder={t("auth.confirmYourPassword")}
-				/>
-				{errors.confirmPassword && touched.confirmPassword && (
-					<p className="mt-1 text-sm text-red-500">
-						{errors.confirmPassword}
-					</p>
-				)}
-			</div>
 
 			{/* Phone Number */}
 			<div className="mb-4">

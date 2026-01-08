@@ -353,47 +353,56 @@ const menuGroups = [
             {
                 icon: "/assets/images/menu/event-org.png",
                 label: "Manage Hosts",
+                translationKey: "sidebar.manageHosts",
                 route: "/organizer"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Guests Management",
+                translationKey: "sidebar.guestsManagement",
                 route: "/user"
             },
             {
                 icon: "/assets/images/menu/event.png",
                 label: "Manage Events",
+                translationKey: "sidebar.manageEvents",
                 route: "/events"
             },
             {
                 icon: "/assets/images/menu/cms.png",
                 label: "Manage CMS",
+                translationKey: "sidebar.manageCMS",
                 route: "/cms"
             },
             {
                 icon: "/assets/images/menu/settings-line.png",
                 hoverIcon: "/assets/images/menu/settings-line.png",
                 label: "Settings",
+                translationKey: "sidebar.settings",
                 route: "/setting"
             },
             {
                 icon: "/assets/images/menu/user.png",
                 label: "Admin Management",
+                translationKey: "sidebar.adminManagement",
                 route: "/admin-management"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Wallet",
+                translationKey: "sidebar.wallet",
                 route: "/wallet"
             },
             {
                 icon: "/assets/images/menu/withdrawal.png",
                 label: "Host Withdrawal Requests",
+                translationKey: "sidebar.hostWithdrawalRequests",
                 route: "/withdrawal-requests"
             },
             {
                 icon: "/assets/images/menu/wallet.png",
                 label: "Guest Invoices",
+                translationKey: "sidebar.guestInvoices",
                 route: "/guest-invoices"
             }
         ]
@@ -726,18 +735,60 @@ const putFormData = async (url = "", data = {})=>{
     try {
         const token = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$js$2d$cookie$2f$dist$2f$js$2e$cookie$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].get(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TOKEN_NAME"]);
         const formData = new FormData();
+        // Append all fields to FormData - simplified approach
         for(let key in data){
-            formData.append(key, data[key]);
+            const value = data[key];
+            // Skip null, undefined, or empty strings
+            if (value === null || value === undefined || value === '') {
+                continue;
+            }
+            // If it's a File object, append as-is with proper name
+            if (value instanceof File) {
+                formData.append(key, value, value.name);
+            } else if (typeof value === 'object') {
+                // Skip objects (except File) - they cause issues
+                console.warn(`[putFormData] Skipping object value for key: ${key}`);
+                continue;
+            } else {
+                // Convert other values to string
+                formData.append(key, String(value));
+            }
+        }
+        // Check if FormData has any entries
+        let hasEntries = false;
+        for (let pair of formData.entries()){
+            hasEntries = true;
+            break;
+        }
+        if (!hasEntries) {
+            console.warn('[putFormData] FormData is empty, falling back to JSON');
+            return putRawData(url, data);
         }
         const response = await __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$axios$2f$lib$2f$axios$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"].put(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$until$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["BASE_API_URL"] + url, formData, {
             headers: {
                 Authorization: token ? token : ""
-            }
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            timeout: 60000
         });
         return response.data;
     } catch (error) {
-        // toast.error(error.response.data);
-        return error.response.data;
+        console.error('[putFormData] Error:', error);
+        console.error('[putFormData] Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            config: {
+                url: error.config?.url,
+                method: error.config?.method,
+                headers: error.config?.headers
+            }
+        });
+        return error.response?.data || {
+            status: 0,
+            message: error.message
+        };
     }
 };
 const putFormDataURLIncoded = async (url = "", data = {})=>{
@@ -957,9 +1008,61 @@ const CreateAdminApi = async (payload)=>{
 };
 _c2 = CreateAdminApi;
 const UpdateAdminApi = async (payload)=>{
-    return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", payload).then((data)=>{
-        return data;
-    });
+    // Separate file upload from other data
+    const hasFile = payload.profile_image && payload.profile_image instanceof File;
+    if (hasFile) {
+        // Step 1: Upload image first
+        try {
+            const { postFormData } = __turbopack_require__("[project]/src/api/index.js [app-client] (ecmascript)");
+            const uploadPayload = {
+                file: payload.profile_image,
+                dirName: "Zuroona/Admin"
+            };
+            const uploadRes = await postFormData("uploadFile", uploadPayload);
+            if (uploadRes?.status === 1 && uploadRes?.data?.location) {
+                // Step 2: Update admin with image URL
+                const updatePayload = {
+                    ...payload
+                };
+                updatePayload.profile_image = uploadRes.data.location;
+                delete updatePayload.profile_image; // Remove File object
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                    return data;
+                });
+            } else {
+                // If upload fails, continue without image
+                console.warn("Image upload failed, updating without image");
+                const updatePayload = {
+                    ...payload
+                };
+                delete updatePayload.profile_image;
+                return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                    return data;
+                });
+            }
+        } catch (uploadError) {
+            console.error("Error uploading image:", uploadError);
+            // Continue with update without image
+            const updatePayload = {
+                ...payload
+            };
+            delete updatePayload.profile_image;
+            return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", updatePayload).then((data)=>{
+                return data;
+            });
+        }
+    } else {
+        // No file, use regular JSON
+        const jsonPayload = {
+            ...payload
+        };
+        if (!jsonPayload.profile_image || jsonPayload.profile_image === null || jsonPayload.profile_image === '') {
+            delete jsonPayload.profile_image;
+        }
+        return (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$api$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["putRawData"])("admin/update", jsonPayload).then((data)=>{
+            return data;
+        });
+    }
 };
 _c3 = UpdateAdminApi;
 const DeleteAdminApi = async (payload)=>{
