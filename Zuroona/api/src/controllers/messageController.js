@@ -24,57 +24,99 @@ const MessageController = {
                 ? { user_id: userId, is_group: false, status: 'active' }
                 : { organizer_id: userId, is_group: false, status: 'active' };
 
-            // Get one-on-one conversations
-            const oneOnOneConversations = await ConversationService.FindService(oneOnOneQuery, parseInt(page), parseInt(limit));
+            // Get one-on-one conversations - fetch more to ensure we have space for group chats
+            const oneOnOneConversations = await ConversationService.FindService(oneOnOneQuery, 1, parseInt(limit) * 2);
 
-            n
             // For group chats - different logic for guests vs organizers
             let groupConversations = [];
             
             if (role === 1) {
-                // GUEST: Only show group chats where booking payment_status = 1 (paid)
-                // Use aggregation to join with book_event and filter by payment_status
+                // GUEST: Show group chats for events where user has paid bookings
+                // Strategy: First find all paid bookings, then get group chats for those events
                 const BookEvent = require('../models/eventBookModel');
                 
-                // First, get all group chats where user is a participant
-                const allGroupChats = await ConversationService.FindService({
-                    is_group: true,
-                    status: 'active',
-                    'participants.user_id': userId,
-                    'participants.left_at': null
-                }, 1, 1000); // Get all to filter properly
+                // Step 1: Find all paid bookings for this user
+                const paidBookings = await BookEvent.find({
+                    user_id: new mongoose.Types.ObjectId(userId),
+                    payment_status: 1, // Only paid bookings
+                    book_status: { $in: [1, 2] } // Pending or Confirmed (not cancelled/rejected)
+                }).select('event_id').lean();
                 
-                // Get event IDs from group chats
-                const eventIds = allGroupChats.map(chat => chat.event_id?._id || chat.event_id).filter(Boolean);
+                // Get event IDs from paid bookings
+                const paidEventIds = paidBookings
+                    .map(booking => booking.event_id?.toString())
+                    .filter(Boolean);
                 
-                if (eventIds.length > 0) {
-                    // Find paid bookings for these events by this user
-                    const paidBookings = await BookEvent.find({
-                        user_id: new mongoose.Types.ObjectId(userId),
-                        event_id: { $in: eventIds },
-                        payment_status: 1, // Only paid bookings
-                        book_status: { $in: [1, 2] } // Pending or Confirmed (not cancelled/rejected)
-                    }).select('event_id').lean();
+                console.log(`[CONVERSATIONS-GUEST] Found ${paidBookings.length} paid bookings for user ${userId}`);
+                console.log(`[CONVERSATIONS-GUEST] Event IDs with paid bookings:`, paidEventIds);
+                
+                if (paidEventIds.length > 0) {
+                    // Step 2: Get all group chats for these events
+                    const eventObjectIds = paidEventIds.map(id => new mongoose.Types.ObjectId(id));
                     
-                    // Create set of event IDs with paid bookings
-                    const paidEventIds = new Set(
-                        paidBookings.map(booking => booking.event_id?.toString())
-                    );
+                    // Find group chats for these events
+                    const allGroupChatsForEvents = await ConversationService.FindService({
+                        is_group: true,
+                        status: 'active',
+                        event_id: { $in: eventObjectIds }
+                    }, 1, 10000);
                     
-                    // Filter group chats to only those with paid bookings
-                    groupConversations = allGroupChats.filter(chat => {
-                        const eventId = (chat.event_id?._id || chat.event_id)?.toString();
-                        return paidEventIds.has(eventId);
-                    });
+                    console.log(`[CONVERSATIONS-GUEST] Found ${allGroupChatsForEvents.length} group chats for paid events`);
+                    
+                    // Step 3: Filter to only group chats where user is a participant OR add them if not
+                    groupConversations = [];
+                    
+                    for (const groupChat of allGroupChatsForEvents) {
+                        const eventId = (groupChat.event_id?._id || groupChat.event_id)?.toString();
+                        
+                        // Check if user is already a participant
+                        const isParticipant = groupChat.participants?.some(p => {
+                            if (!p || p.left_at) return false;
+                            const participantUserId = p.user_id?._id ? p.user_id._id : p.user_id;
+                            return participantUserId && participantUserId.toString() === userId.toString();
+                        });
+                        
+                        if (isParticipant) {
+                            // User is already a participant, include this group chat
+                            groupConversations.push(groupChat);
+                        } else {
+                            // User is not a participant yet, but has paid booking
+                            // This can happen if payment was completed but participant wasn't added
+                            // Try to add them now, then include the group chat
+                            try {
+                                console.log(`[CONVERSATIONS-GUEST] User ${userId} not in participants for event ${eventId}, attempting to add...`);
+                                await ConversationService.AddParticipantToGroupService(
+                                    groupChat.event_id?._id || groupChat.event_id,
+                                    userId,
+                                    1 // Role: User/Guest
+                                );
+                                // Re-fetch the group chat to get updated participants
+                                const updatedGroupChat = await ConversationService.GetGroupChatByEventService(
+                                    groupChat.event_id?._id || groupChat.event_id
+                                );
+                                if (updatedGroupChat) {
+                                    groupConversations.push(updatedGroupChat);
+                                    console.log(`[CONVERSATIONS-GUEST] Successfully added user ${userId} to group chat for event ${eventId}`);
+                                }
+                            } catch (addError) {
+                                // If adding fails (e.g., already added), still include the group chat
+                                console.warn(`[CONVERSATIONS-GUEST] Could not add user to group chat, but including it anyway:`, addError.message);
+                                groupConversations.push(groupChat);
+                            }
+                        }
+                    }
+                    
+                    console.log(`[CONVERSATIONS-GUEST] Final group conversations count: ${groupConversations.length}`);
                 }
             } else {
-                // ORGANIZER: Show all group chats (no payment filter)
+                // ORGANIZER: Show ALL group chats (no pagination limit for hosts)
                 const groupChatQuery = {
                     is_group: true,
                     status: 'active',
                     organizer_id: userId
                 };
-                groupConversations = await ConversationService.FindService(groupChatQuery, parseInt(page), parseInt(limit));
+                // Fetch all group chats for organizers (no limit)
+                groupConversations = await ConversationService.FindService(groupChatQuery, 1, 10000);
             }
       
             // Combine and sort by last_message_at
@@ -83,8 +125,11 @@ const MessageController = {
                     const dateA = new Date(a.last_message_at || a.createdAt);
                     const dateB = new Date(b.last_message_at || b.createdAt);
                     return dateB - dateA; // Most recent first
-                })
-                .slice(0, parseInt(limit)); // Limit combined results
+                });
+            
+            // Apply limit only if specified, otherwise return all
+            const finalLimit = parseInt(limit) || 1000;
+            const limitedConversations = allConversations.slice(0, finalLimit);
 
             // Get total count
             const oneOnOneTotal = await ConversationService.CountService(oneOnOneQuery);
@@ -102,13 +147,19 @@ const MessageController = {
             }
             const total = oneOnOneTotal + groupTotal;
 
+            // Debug logging
+            console.log(`[CONVERSATIONS] Role: ${role === 1 ? 'Guest' : 'Organizer'}, UserId: ${userId}`);
+            console.log(`[CONVERSATIONS] One-on-one: ${oneOnOneConversations.length}, Group chats: ${groupConversations.length}`);
+            console.log(`[CONVERSATIONS] Total conversations: ${allConversations.length}, Limited: ${limitedConversations.length}`);
+            console.log(`[CONVERSATIONS] Group chat event IDs:`, groupConversations.map(c => c.event_id?._id || c.event_id));
+
             return Response.ok(res, {
-                conversations: allConversations,
+                conversations: limitedConversations,
                 pagination: {
                     page: parseInt(page),
-                    limit: parseInt(limit),
+                    limit: finalLimit,
                     total,
-                    totalPages: Math.ceil(total / parseInt(limit))
+                    totalPages: Math.ceil(total / finalLimit)
                 }
             }, 200, 'Conversations fetched successfully');
 

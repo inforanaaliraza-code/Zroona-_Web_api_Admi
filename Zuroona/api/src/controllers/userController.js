@@ -2486,16 +2486,32 @@ const UserController = {
 	bookEventList: async (req, res) => {
 		try {
 			const { userId } = req;
-			const {
-				book_status = "all", // allow frontend to fetch all bookings by default
+			if (!userId) {
+				return Response.badRequestResponse(
+					res,
+					"User ID is required"
+				);
+			}
+
+			let {
+				book_status,
 				event_date,
 				search,
 				page = 1,
 				limit = 10,
 			} = req.query;
 
-			const pageNum = parseInt(page, 10);
-			const limitNum = parseInt(limit, 10);
+			// Normalize book_status - handle various formats
+			if (book_status === "all" || book_status === "" || book_status === null || book_status === undefined) {
+				book_status = "all";
+			}
+			// Handle malformed query parameters like "all:1"
+			if (typeof book_status === "string" && book_status.includes(":")) {
+				book_status = book_status.split(":")[0]; // Take the first part
+			}
+
+			const pageNum = parseInt(page, 10) || 1;
+			const limitNum = parseInt(limit, 10) || 10;
 
 			const startOfTodayUTC = new Date(
 				Date.UTC(
@@ -3836,8 +3852,12 @@ const UserController = {
 
 			// Add user to group chat ONLY after payment is successful
 			// This ensures guests can only join group chat after they've paid
-			if (event && event.is_approved === 1 && payment_status === 1) {
+			// Check: event exists, event is approved, booking is approved (status 2), and payment is completed
+			console.log(`[GROUP-CHAT] Checking conditions - Event exists: ${!!event}, Event approved: ${event?.is_approved}, Booking status: ${updatedBooking?.book_status}, Payment status: ${updatedBooking?.payment_status}`);
+			
+			if (event && event.is_approved === 1 && updatedBooking.book_status === 2 && updatedBooking.payment_status === 1) {
 				try {
+					console.log(`[GROUP-CHAT] All conditions met! Attempting to add user ${bookingDetails.user_id} to group chat for event: ${event.event_name}`);
 					// Check if event is approved and has a group chat
 					let groupChat = await ConversationService.GetGroupChatByEventService(event._id);
 					
@@ -3853,91 +3873,113 @@ const UserController = {
 					
 					if (groupChat) {
 						// Add paying guest to group chat
-						await ConversationService.AddParticipantToGroupService(
-							event._id,
-							bookingDetails.user_id,
-							1 // Role: User/Guest
-						);
-						console.log(`[GROUP-CHAT] Added user ${bookingDetails.user_id} to group chat for event: ${event.event_name} (Payment successful)`);
+						try {
+							await ConversationService.AddParticipantToGroupService(
+								event._id,
+								bookingDetails.user_id,
+								1 // Role: User/Guest
+							);
+							console.log(`[GROUP-CHAT] Successfully added user ${bookingDetails.user_id} to group chat for event: ${event.event_name} (Payment successful)`);
+						} catch (addParticipantError) {
+							console.error(`[GROUP-CHAT] Error adding participant to group chat:`, addParticipantError);
+							// Check if user is already a participant (this is okay)
+							if (addParticipantError.message && addParticipantError.message.includes('already')) {
+								console.log(`[GROUP-CHAT] User ${bookingDetails.user_id} is already a participant in group chat`);
+							} else {
+								throw addParticipantError; // Re-throw if it's a different error
+							}
+						}
 						
 						// Get user and organizer details for welcome message
 						const guestName = user ? `${user.first_name} ${user.last_name}` : "Guest";
 						const organizerName = organizer ? `${organizer.first_name} ${organizer.last_name}` : "Host";
 						
-						// Send welcome message to group chat
-						try {
-							const MessageService = require("../services/messageService");
-							const userLang = user.language || req.lang || "en";
-							const welcomeMessage = userLang === "ar" 
-								? `تم إضافة ${guestName} إلى محادثة المجموعة بعد إتمام الدفع. مرحباً بك!`
-								: `${guestName} has been added to the group chat after completing payment. Welcome!`;
-							
-							await MessageService.CreateService({
-								conversation_id: groupChat._id,
-								sender_id: organizer._id,
-								sender_role: 2, // Organizer
-								message: welcomeMessage,
-								message_type: "text",
-							});
-							
-							// Update conversation last message
-							await ConversationService.FindByIdAndUpdateService(groupChat._id, {
-								last_message: welcomeMessage,
-								last_message_at: new Date(),
-								last_sender_id: organizer._id,
-								last_sender_role: 2,
-							});
-							
-							// Send notification to guest about being added to group chat
+						// Send welcome message to group chat (only if organizer exists)
+						if (organizer && organizer._id) {
 							try {
-								const { sendEventBookingAcceptNotification } = require("../helpers/pushNotification");
-								const groupChatNotification = {
-									title: userLang === "ar" ? "تمت إضافتك إلى محادثة المجموعة" : "Added to Group Chat",
-									description: userLang === "ar" 
-										? `تمت إضافتك إلى محادثة المجموعة لحدث "${event.event_name}" بعد إتمام الدفع. يمكنك الآن التواصل مع المشاركين الآخرين.`
-										: `You've been added to the group chat for "${event.event_name}" after completing payment. You can now communicate with other participants.`,
-									first_name: organizer.first_name,
-									last_name: organizer.last_name,
-									profile_image: organizer.profile_image || "",
-									userId: organizer._id,
-									event_id: event._id,
-									book_id: booking_id,
-									notification_type: 5, // Group chat notification type
-									status: 2, // Paid status
-								};
+								const MessageService = require("../services/messageService");
+								const userLang = user?.language || req.lang || "en";
+								const welcomeMessage = userLang === "ar" 
+									? `تم إضافة ${guestName} إلى محادثة المجموعة بعد إتمام الدفع. مرحباً بك!`
+									: `${guestName} has been added to the group chat after completing payment. Welcome!`;
 								
-								// Create in-app notification
-								await NotificationService.CreateService({
-									user_id: bookingDetails.user_id,
-									role: 1, // User/Guest role
-									title: groupChatNotification.title,
-									description: groupChatNotification.description,
-									isRead: false,
-									notification_type: 5, // Group chat notification
-									event_id: event._id,
-									book_id: booking_id,
-									profile_image: organizer.profile_image || "",
-									username: `${organizer.first_name} ${organizer.last_name}`,
-									senderId: organizer._id,
+								await MessageService.CreateService({
+									conversation_id: groupChat._id,
+									sender_id: organizer._id,
+									sender_role: 2, // Organizer
+									message: welcomeMessage,
+									message_type: "text",
+								});
+							
+								// Update conversation last message
+								await ConversationService.FindByIdAndUpdateService(groupChat._id, {
+									last_message: welcomeMessage,
+									last_message_at: new Date(),
+									last_sender_id: organizer._id,
+									last_sender_role: 2,
 								});
 								
-								// Send push notification
-								await sendEventBookingAcceptNotification(res, bookingDetails.user_id, groupChatNotification);
-								
-								console.log(`[NOTIFICATION] Sent group chat notification to user ${bookingDetails.user_id} after payment`);
-							} catch (groupNotificationError) {
-								console.error('[NOTIFICATION] Error sending group chat notification:', groupNotificationError);
+								// Send notification to guest about being added to group chat
+								try {
+									const { sendEventBookingAcceptNotification } = require("../helpers/pushNotification");
+									const groupChatNotification = {
+										title: userLang === "ar" ? "تمت إضافتك إلى محادثة المجموعة" : "Added to Group Chat",
+										description: userLang === "ar" 
+											? `تمت إضافتك إلى محادثة المجموعة لحدث "${event.event_name}" بعد إتمام الدفع. يمكنك الآن التواصل مع المشاركين الآخرين.`
+											: `You've been added to the group chat for "${event.event_name}" after completing payment. You can now communicate with other participants.`,
+										first_name: organizer.first_name,
+										last_name: organizer.last_name,
+										profile_image: organizer.profile_image || "",
+										userId: organizer._id,
+										event_id: event._id,
+										book_id: booking_id,
+										notification_type: 5, // Group chat notification type
+										status: 2, // Paid status
+									};
+									
+									// Create in-app notification
+									await NotificationService.CreateService({
+										user_id: bookingDetails.user_id,
+										role: 1, // User/Guest role
+										title: groupChatNotification.title,
+										description: groupChatNotification.description,
+										isRead: false,
+										notification_type: 5, // Group chat notification
+										event_id: event._id,
+										book_id: booking_id,
+										profile_image: organizer.profile_image || "",
+										username: `${organizer.first_name} ${organizer.last_name}`,
+										senderId: organizer._id,
+									});
+									
+									// Send push notification
+									await sendEventBookingAcceptNotification(res, bookingDetails.user_id, groupChatNotification);
+									
+									console.log(`[NOTIFICATION] Sent group chat notification to user ${bookingDetails.user_id} after payment`);
+								} catch (groupNotificationError) {
+									console.error('[NOTIFICATION] Error sending group chat notification:', groupNotificationError);
+								}
+							} catch (messageError) {
+								console.error('[GROUP-CHAT] Error sending welcome message:', messageError);
 							}
-						} catch (messageError) {
-							console.error('[GROUP-CHAT] Error sending welcome message:', messageError);
+						} else {
+							console.warn(`[GROUP-CHAT] Organizer not found for event ${event._id}, skipping welcome message`);
 						}
 					} else {
 						console.log(`[GROUP-CHAT] Failed to create or find group chat for event: ${event.event_name}`);
 					}
 				} catch (groupChatError) {
 					console.error('[GROUP-CHAT] Error adding participant to group chat after payment:', groupChatError);
+					console.error('[GROUP-CHAT] Error details:', {
+						message: groupChatError.message,
+						stack: groupChatError.stack,
+						eventId: event?._id,
+						userId: bookingDetails.user_id
+					});
 					// Don't fail the payment update if group chat addition fails
 				}
+			} else {
+				console.log(`[GROUP-CHAT] Conditions not met - Event: ${event?._id}, Event approved: ${event?.is_approved}, Booking status: ${updatedBooking?.book_status}, Payment status: ${updatedBooking?.payment_status}`);
 			}
 
 			// Create notifications for user and organizer
