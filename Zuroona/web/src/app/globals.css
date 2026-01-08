@@ -138,6 +138,21 @@
   }
 }
 
+@keyframes slideDown {
+  from { 
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.3s ease-out;
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
@@ -287,7 +302,10 @@ input[type="date"] {
   transition: all 0.3s ease !important;
   background-color: #ffffff !important;
   width: 100% !important;
+  max-width: 100% !important;
   box-sizing: border-box !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 /* Custom Scrollbar for Modal */
@@ -337,6 +355,9 @@ input[type="date"] {
   margin-top: 16px !important;
   display: block !important;
   letter-spacing: 0.01em !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
 }
 
 #mysr-form-form-el#mysr-form-form-el#mysr-form-form-el.mysr-form-moyasarForm[payment-form="true"]
@@ -383,6 +404,9 @@ input[type="date"] {
 #mysr-form-form-el#mysr-form-form-el#mysr-form-form-el.mysr-form-moyasarForm[payment-form="true"] {
   padding: 0 !important;
   margin: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  word-wrap: break-word !important;
 }
 
 #mysr-form-form-el#mysr-form-form-el#mysr-form-form-el.mysr-form-moyasarForm[payment-form="true"] .mysr-form-fieldGroup {
@@ -398,17 +422,24 @@ input[type="date"] {
   .mysr-form-form {
   padding: 0 !important;
   margin: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  word-wrap: break-word !important;
 }
 
 /* Field Group Spacing */
 #mysr-form-form-el#mysr-form-form-el#mysr-form-form-el.mysr-form-moyasarForm[payment-form="true"]
   .mysr-form-fieldGroup {
   margin-bottom: 24px !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
 
 #mysr-form-form-el#mysr-form-form-el#mysr-form-form-el.mysr-form-moyasarForm[payment-form="true"]
   .mysr-form-ccInputGroup {
   margin-bottom: 24px !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
 
 /* Card Number Input Group */
@@ -455,6 +486,19 @@ input[type="date"] {
     padding: 12px 20px !important;
     font-size: 15px !important;
   }
+}
+
+/* Payment Form Container Overflow Prevention */
+#moyasar-payment-form {
+  max-width: 100% !important;
+  overflow: hidden !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+#moyasar-payment-form * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* RTL Support */

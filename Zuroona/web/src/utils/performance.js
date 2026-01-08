@@ -78,7 +78,15 @@ export const useLazyImage = (src, placeholder = '/assets/images/placeholder.png'
 
 	React.useEffect(() => {
 		let observer;
-		if (imageRef && imageSrc === placeholder) {
+
+		const canObserve =
+			typeof window !== 'undefined' &&
+			typeof IntersectionObserver !== 'undefined' &&
+			imageRef &&
+			imageRef.nodeType === 1 &&
+			imageSrc === placeholder;
+
+		if (canObserve) {
 			observer = new IntersectionObserver(
 				(entries) => {
 					entries.forEach((entry) => {
@@ -91,9 +99,13 @@ export const useLazyImage = (src, placeholder = '/assets/images/placeholder.png'
 				{ threshold: 0.1 }
 			);
 			observer.observe(imageRef);
+		} else if (imageRef && imageSrc === placeholder) {
+			// Fallback: if we cannot observe, load immediately to avoid crashes
+			setImageSrc(src);
 		}
+
 		return () => {
-			if (observer && observer.unobserve) {
+			if (observer && observer.unobserve && imageRef && imageRef.nodeType === 1) {
 				observer.unobserve(imageRef);
 			}
 		};

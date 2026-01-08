@@ -1,12 +1,14 @@
 "use client";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 function RejectEventModal({ show, onClose, onConfirm, title, message }) {
+  const { t } = useTranslation();
   const [rejectionReason, setRejectionReason] = useState("");
 
   const handleConfirm = () => {
     if (!rejectionReason.trim()) {
-      alert("Please provide a reason for rejection");
+      alert(t("common.rejectionReasonRequired"));
       return;
     }
     onConfirm(rejectionReason);
@@ -26,14 +28,14 @@ function RejectEventModal({ show, onClose, onConfirm, title, message }) {
         
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Rejection Reason <span className="text-red-500">*</span>
+            {t("common.rejectionReason")} <span className="text-red-500">*</span>
           </label>
           <textarea
             value={rejectionReason}
             onChange={(e) => setRejectionReason(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent"
             rows="4"
-            placeholder="Please specify the reason for rejecting this event..."
+            placeholder={t("common.rejectEventPlaceholder")}
             required
           />
         </div>
@@ -43,13 +45,13 @@ function RejectEventModal({ show, onClose, onConfirm, title, message }) {
             onClick={handleClose}
             className="px-4 py-2 bg-gray-300 rounded-lg text-gray-900 hover:bg-gray-400 transition"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             className="px-4 py-2 bg-[#e94e2e] text-white rounded-lg hover:bg-[#d43e1e] transition"
             onClick={handleConfirm}
           >
-            Reject Event
+            {t("common.rejectEvent")}
           </button>
         </div>
       </div>

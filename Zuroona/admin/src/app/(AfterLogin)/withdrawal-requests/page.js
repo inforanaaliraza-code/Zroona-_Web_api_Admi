@@ -13,8 +13,10 @@ import {
   FaFilter, FaEye, FaCalendar, FaSearch, FaDownload 
 } from "react-icons/fa";
 import { GetWithdrawalRequestsApi, UpdateWithdrawalRequestApi, GetWithdrawalStatsApi } from "@/api/admin/apis";
+import { useTranslation } from "react-i18next";
 
 export default function WithdrawalRequests() {
+  const { t } = useTranslation();
   const [requests, setRequests] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -84,7 +86,7 @@ export default function WithdrawalRequests() {
       }
     } catch (error) {
       console.error("Error fetching withdrawal requests:", error);
-      toast.error("Failed to fetch withdrawal requests");
+      toast.error(t("withdrawal.failedToFetchRequests"));
     } finally {
       setLoading(false);
     }
@@ -107,16 +109,16 @@ export default function WithdrawalRequests() {
       const res = await UpdateWithdrawalRequestApi(data);
       
       if (res?.status === 1 || res?.code === 200) {
-        toast.success(`Withdrawal request ${data.status === 1 ? "approved" : "rejected"} successfully`);
+        toast.success(data.status === 1 ? t("withdrawal.requestApprovedSuccess") : t("withdrawal.requestRejectedSuccess"));
         setShowModal(false);
         fetchRequests();
         fetchStats(); // Refresh stats
       } else {
-        toast.error(res?.message || "Failed to update request");
+        toast.error(res?.message || t("withdrawal.failedToUpdateRequest"));
       }
     } catch (error) {
       console.error("Error updating withdrawal request:", error);
-      toast.error("Failed to update request");
+      toast.error(t("withdrawal.failedToUpdateRequest"));
     }
   };
 
@@ -129,8 +131,8 @@ export default function WithdrawalRequests() {
 
   const exportToCSV = () => {
     const headers = [
-      "Request ID", "Host Name", "Email", "Phone", "Amount (SAR)", "Currency",
-      "Request Date", "Status", "Processed Date", "Rejection Reason", "Admin Notes"
+      t("withdrawal.requestId"), t("withdrawal.hostName"), t("common.email"), t("common.phone"), t("withdrawal.amount") + " (SAR)", t("common.currency"),
+      t("withdrawal.requestDate"), t("withdrawal.status"), t("withdrawal.processedDate"), t("withdrawal.rejectionReason"), t("withdrawal.adminNotes")
     ];
     
     const csvContent = [
@@ -143,7 +145,7 @@ export default function WithdrawalRequests() {
         req.amount,
         req.currency || 'SAR',
         new Date(req.createdAt).toLocaleDateString(),
-        req.status === 0 ? "Pending" : req.status === 1 ? "Approved" : "Rejected",
+        req.status === 0 ? t("withdrawal.pending") : req.status === 1 ? t("withdrawal.approved") : t("withdrawal.rejected"),
         req.processed_at ? new Date(req.processed_at).toLocaleDateString() : '',
         `"${req.rejection_reason || ''}"`,
         `"${req.admin_notes || ''}"`
@@ -165,9 +167,9 @@ export default function WithdrawalRequests() {
 
   const getStatusBadge = (status) => {
     const badges = {
-      0: { text: "Pending", class: "bg-yellow-100 text-yellow-800 border border-yellow-300" },
-      1: { text: "Approved", class: "bg-green-100 text-green-800 border border-green-300" },
-      2: { text: "Rejected", class: "bg-red-100 text-red-800 border border-red-300" }
+      0: { text: t("withdrawal.pending"), class: "bg-yellow-100 text-yellow-800 border border-yellow-300" },
+      1: { text: t("withdrawal.approved"), class: "bg-green-100 text-green-800 border border-green-300" },
+      2: { text: t("withdrawal.rejected"), class: "bg-red-100 text-red-800 border border-red-300" }
     };
 
     const badge = badges[status] || badges[0];
@@ -185,9 +187,9 @@ export default function WithdrawalRequests() {
         <div className="flex flex-wrap justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-black">
-              Host Withdrawal Requests
+              {t("withdrawal.hostWithdrawalRequests")}
             </h1>
-            <p className="text-gray-600 mt-1">Manage and process withdrawal requests</p>
+            <p className="text-gray-600 mt-1">{t("withdrawal.manageAndProcess")}</p>
           </div>
 
           <div className="flex gap-3 mt-4 lg:mt-0">
@@ -199,19 +201,19 @@ export default function WithdrawalRequests() {
                   : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <FaFilter /> {showFilters ? 'Hide' : 'Show'} Filters
+              <FaFilter /> {showFilters ? t("withdrawal.hideFilters") : t("withdrawal.showFilters")}
             </button>
             <button
               onClick={exportToCSV}
               className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700 transition shadow-md font-semibold"
             >
-              <FaFileExcel /> Export CSV
+              <FaFileExcel /> {t("withdrawal.exportCSV")}
             </button>
             <button
               onClick={() => window.print()}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition shadow-md font-semibold"
             >
-              <FaPrint /> Print
+              <FaPrint /> {t("withdrawal.print")}
             </button>
           </div>
         </div>
@@ -227,13 +229,13 @@ export default function WithdrawalRequests() {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   <FaSearch className="inline mr-2" />
-                  Search
+                  {t("withdrawal.search")}
                 </label>
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, email, phone..."
+                  placeholder={t("withdrawal.searchPlaceholder")}
                   className="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition"
                 />
               </div>
@@ -241,17 +243,17 @@ export default function WithdrawalRequests() {
               {/* Status Filter */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Status Filter
+                  {t("withdrawal.statusFilter")}
                 </label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="w-full px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition"
                 >
-                  <option value="all">All Status</option>
-                  <option value="0">Pending</option>
-                  <option value="1">Approved</option>
-                  <option value="2">Rejected</option>
+                  <option value="all">{t("withdrawal.allStatus")}</option>
+                  <option value="0">{t("withdrawal.pending")}</option>
+                  <option value="1">{t("withdrawal.approved")}</option>
+                  <option value="2">{t("withdrawal.rejected")}</option>
                 </select>
               </div>
 
@@ -259,7 +261,7 @@ export default function WithdrawalRequests() {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   <FaCalendar className="inline mr-2" />
-                  From Date
+                  {t("withdrawal.fromDate")}
                 </label>
                 <input
                   type="date"
@@ -273,7 +275,7 @@ export default function WithdrawalRequests() {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   <FaCalendar className="inline mr-2" />
-                  To Date
+                  {t("withdrawal.toDate")}
                 </label>
                 <input
                   type="date"
@@ -289,13 +291,13 @@ export default function WithdrawalRequests() {
                 onClick={clearFilters}
                 className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
               >
-                Clear Filters
+                {t("withdrawal.clearFilters")}
               </button>
               <button
                 onClick={fetchRequests}
                 className="px-6 py-2 bg-gradient-to-r from-[#a3cc69] to-[#a797cc] text-white rounded-xl font-semibold hover:opacity-90 transition"
               >
-                Apply Filters
+                {t("withdrawal.applyFilters")}
               </button>
             </div>
           </div>
@@ -307,12 +309,12 @@ export default function WithdrawalRequests() {
             <table className="min-w-full">
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Host</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Contact</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Amount</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Request Date</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">Status</th>
-                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-700">Actions</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.host")}</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.contact")}</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.amount")}</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.requestDate")}</th>
+                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.status")}</th>
+                  <th className="px-6 py-4 text-center text-sm font-bold text-gray-700">{t("withdrawal.actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -384,14 +386,14 @@ export default function WithdrawalRequests() {
                               <button
                                 onClick={() => handleApprove(request)}
                                 className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition"
-                                title="Approve"
+                                title={t("withdrawal.approve")}
                               >
                                 <FaCheckCircle size={20} />
                               </button>
                               <button
                                 onClick={() => handleReject(request)}
                                 className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
-                                title="Reject"
+                                title={t("withdrawal.reject")}
                               >
                                 <FaTimesCircle size={20} />
                               </button>
@@ -404,7 +406,7 @@ export default function WithdrawalRequests() {
                                 // Could open a view details modal
                               }}
                               className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition"
-                              title="View Details"
+                              title={t("withdrawal.viewDetails")}
                             >
                               <FaEye size={20} />
                             </button>
@@ -418,8 +420,8 @@ export default function WithdrawalRequests() {
                     <td colSpan={6} className="py-12 text-center">
                       <div className="flex flex-col items-center gap-3">
                         <FaDownload className="text-6xl text-gray-300" />
-                        <p className="text-gray-500 text-lg font-medium">No Withdrawal Requests Found</p>
-                        <p className="text-gray-400 text-sm">Try adjusting your filters</p>
+                        <p className="text-gray-500 text-lg font-medium">{t("withdrawal.noRequestsFound")}</p>
+                        <p className="text-gray-400 text-sm">{t("withdrawal.tryAdjustingFilters")}</p>
                       </div>
                     </td>
                   </tr>

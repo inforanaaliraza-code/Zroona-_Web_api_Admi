@@ -36,7 +36,7 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
     const phoneValidationSchema = Yup.object({
         phone_number: Yup.string()
             .required(t("auth.phoneRequired") || "Phone number is required")
-            .min(9, t("auth.phoneMinLength") || "Phone number must be at least 9 digits"),
+            .min(9, t("Phone Min Length") || "Phone number must be at least 9 digits"),
         country_code: Yup.string()
             .required(t("auth.countryCodeRequired") || "Country code is required"),
     });
@@ -269,15 +269,18 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
                             className="space-y-4"
                         >
                             {/* Phone Number Field */}
-                            <div>
+                            <div style={{ zIndex: 10, position: 'relative' }}>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    {t("auth.phoneNumber") || "Phone Number"} * (Saudi Arabia Only)
+                                    {t("auth.phoneNumber") || "Phone Number"} * <span className="text-xs font-normal text-gray-500">(Pakistan & Saudi Arabia)</span>
                                 </label>
                                 <NumberInput
                                     formik={phoneFormik}
                                     mobileNumberField="phone_number"
                                     countryCodeField="country_code"
                                     disabled={loading}
+                                    enableSearch={true}
+                                    onlyCountries={['sa', 'pk']}
+                                    countryCodeEditable={false}
                                 />
                             </div>
 

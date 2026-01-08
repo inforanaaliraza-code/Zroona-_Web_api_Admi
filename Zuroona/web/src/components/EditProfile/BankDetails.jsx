@@ -10,10 +10,13 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import Loader from "../Loader/Loader";
 import { Icon } from "@iconify/react";
+import { useDispatch } from "react-redux";
+import { getProfile } from "@/redux/slices/profileInfo";
 
 const BankDetails = ({ title, buttonName, onNext }) => {
     const { t, i18n } = useTranslation();
     const router = useRouter();
+    const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
 
     const detail = useDataStore((store) => store.ProfileDetail);
@@ -23,10 +26,8 @@ const BankDetails = ({ title, buttonName, onNext }) => {
         fetchProfileDetail().then(() => { });
     }, []);
 
-
     const formik = useFormik({
         initialValues: {
-            registration_step: 4,
             account_holder_name: detail?.user?.bank_details?.account_holder_name || "",
             bank_name: detail?.user?.bank_details?.bank_name || "",
             // account_number: detail?.user?.bank_details?.account_number || "",
@@ -37,24 +38,67 @@ const BankDetails = ({ title, buttonName, onNext }) => {
         onSubmit: (values) => {
             setLoading(true);
             const payload = {
-                ...values,
+                account_holder_name: values.account_holder_name || "",
+                bank_name: values.bank_name || "",
+                iban: values.iban || "",
+                // Only include registration_step if we want to trigger that specific logic
+                // For profile editing, we don't need it - backend will detect bank fields
             };
+            
+            console.log("[BANK-DETAILS] Saving bank details payload:", payload);
 
             OrganizerEditProfileApi(payload)
                 .then((res) => {
                     setLoading(false);
                     if (res.status === 1) {
-                        toast.success(res.message);
+                        toast.success(res.message || "Bank details saved successfully");
+                        console.log("[BANK-DETAILS] Save successful, refreshing profile data...");
+                        // Refresh profile data from both stores
+                        fetchProfileDetail().then((updatedDetail) => {
+                            console.log("[BANK-DETAILS] Profile refreshed, updating form values...");
+                            console.log("[BANK-DETAILS] Updated bank details:", updatedDetail?.user?.bank_details);
+                            // Update form values with fresh data
+                            if (updatedDetail?.user?.bank_details) {
+                                formik.setValues({
+                                    account_holder_name: updatedDetail.user.bank_details.account_holder_name || "",
+                                    bank_name: updatedDetail.user.bank_details.bank_name || "",
+                                    iban: updatedDetail.user.bank_details.iban || "",
+                                });
+                            }
+                            // Also update Redux store if needed
+                            dispatch(getProfile());
+                        }).catch((error) => {
+                            console.error("[BANK-DETAILS] Error refreshing profile:", error);
+                        });
                     } else {
-                        toast.error(res.message);
+                        toast.error(res.message || "Failed to save bank details");
+                        console.error("[BANK-DETAILS] Save failed:", res);
                     }
                 })
                 .catch((e) => {
                     setLoading(false);
                     toast.error("An error occurred.");
+                    console.error("Error saving bank details:", e);
                 });
         },
     });
+
+    // Update form values when detail changes (after refresh) - placed after formik initialization
+    useEffect(() => {
+        if (detail?.user?.bank_details && formik) {
+            const bankDetails = detail.user.bank_details;
+            // Only update if values are actually different to avoid unnecessary re-renders
+            if (formik.values.account_holder_name !== (bankDetails.account_holder_name || "")) {
+                formik.setFieldValue('account_holder_name', bankDetails.account_holder_name || "");
+            }
+            if (formik.values.bank_name !== (bankDetails.bank_name || "")) {
+                formik.setFieldValue('bank_name', bankDetails.bank_name || "");
+            }
+            if (formik.values.iban !== (bankDetails.iban || "")) {
+                formik.setFieldValue('iban', bankDetails.iban || "");
+            }
+        }
+    }, [detail?.user?.bank_details]);
 
     return (
         <div className="flex-grow bg-white h-max p-7 rounded-xl">

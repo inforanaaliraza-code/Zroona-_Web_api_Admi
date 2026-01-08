@@ -16,9 +16,15 @@ const PhoneNumberInput = React.forwardRef(({ className, error, onChange, value, 
     const input = phoneInputRef.current?.querySelector('.form-control');
     if (input) {
       const handleKeyDown = (e) => {
-        const inputValue = input.value;
         const cursorPosition = input.selectionStart;
-        const countryCode = '+966';
+        const currentValue = input.value || '';
+        // Detect current country code from input value
+        let countryCode = '+966'; // default
+        if (currentValue.startsWith('+966')) {
+          countryCode = '+966';
+        } else if (currentValue.startsWith('+92')) {
+          countryCode = '+92';
+        }
         
         // If backspace is pressed and cursor is at or before country code
         if (e.key === 'Backspace' && cursorPosition <= countryCode.length) {
@@ -106,9 +112,9 @@ const PhoneNumberInput = React.forwardRef(({ className, error, onChange, value, 
       <PhoneInput
         country={'sa'}
         countryCodeEditable={false}
-        onlyCountries={['sa']}
-        enableSearch={false}
-        disableDropdown={true}
+        onlyCountries={['sa', 'pk']}
+        enableSearch={true}
+        disableDropdown={false}
         onChange={onChange}
         value={value}
         {...props}

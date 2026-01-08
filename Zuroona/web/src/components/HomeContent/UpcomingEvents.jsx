@@ -38,7 +38,7 @@ export default function UpcomingEvents() {
 	const GetAllEvents = useDataStore((store) => store.GetAllEvents);
 	const { fetchGetAllEvents } = useDataStore();
 
-	// Shuffle array function for randomization
+	// Shuffle array function for randomization - only on client side
 	const shuffleArray = (array) => {
 		let shuffled = [...array];
 		for (let i = shuffled.length - 1; i > 0; i--) {
@@ -47,6 +47,13 @@ export default function UpcomingEvents() {
 		}
 		return shuffled;
 	};
+
+	// Track if component has mounted to prevent hydration mismatch
+	const [isMounted, setIsMounted] = useState(false);
+
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
 	useEffect(() => {
 		const fetchEvents = async () => {
@@ -69,6 +76,11 @@ export default function UpcomingEvents() {
 
 	// Filter events: Only show "Everyone" events (event_for = 3) and randomize
 	useEffect(() => {
+		// Only shuffle on client side after mount to prevent hydration mismatch
+		if (!isMounted) {
+			return;
+		}
+
 		// Check if GetAllEvents has data in different possible formats
 		let eventsArray = [];
 		
@@ -87,7 +99,7 @@ export default function UpcomingEvents() {
 				return eventFor === 3;
 			});
 
-			// Randomize the filtered events
+			// Randomize the filtered events only on client side
 			filteredEvents = shuffleArray(filteredEvents);
 
 			setFilteredEvents(filteredEvents);
@@ -97,7 +109,7 @@ export default function UpcomingEvents() {
 				setFilteredEvents([]);
 			}
 		}
-	}, [GetAllEvents, loading]);
+	}, [GetAllEvents, loading, isMounted]);
 
 	// Carousel Settings
 	const settings = {

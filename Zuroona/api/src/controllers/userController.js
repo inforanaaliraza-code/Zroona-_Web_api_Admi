@@ -21,6 +21,7 @@ const FatoraService = require("../helpers/fatoraService");
 const LocalInvoiceGenerator = require("../helpers/localInvoiceGenerator");
 const MoyasarService = require("../helpers/MoyasarService");
 const ConversationService = require("../services/conversationService");
+const notificationHelper = require("../helpers/notificationService");
 
 const custom_log = new PrettyConsole();
 custom_log.clear();
@@ -64,7 +65,8 @@ const UserController = {
 				);
 			}
 
-			// Validate Saudi phone number
+			// Validate phone number
+			console.log(`[USER:REGISTRATION] Received phone_number: "${phone_number}", type: ${typeof phone_number}, length: ${phone_number?.toString().length}, country_code: ${country_code}`);
 			const phoneValidation = validateSaudiPhone(phone_number, country_code);
 			if (!phoneValidation.isValid) {
 				return Response.validationErrorResponse(
@@ -76,6 +78,7 @@ const UserController = {
 			// Clean email - remove invisible/zero-width characters, trim, and lowercase
 			const emailLower = cleanEmail(email);
 			const phoneStr = phoneValidation.cleanPhone;
+			console.log(`[USER:REGISTRATION] After validation - phoneStr: "${phoneStr}", length: ${phoneStr?.length}, original: "${phone_number}"`);
 
 			// Check for existing user by email (including deleted ones for email/phone reuse prevention)
 			const exist_user_email = await UserService.FindOneService({
@@ -96,15 +99,29 @@ const UserController = {
 			if (exist_user_email || exist_organizer_email) {
 				const existingAccount = exist_user_email || exist_organizer_email;
 				
-				// Check if account was deleted - prevent reuse of email/phone
+				// Check if account is deleted or suspended
 				if (existingAccount.is_delete === 1) {
 					return Response.conflictResponse(
 						res,
 						{
 							email: emailLower,
+							account_status: "deleted"
 						},
 						409,
-						"This email was previously used with a deleted account. Please use a different email address."
+						"This email was previously used with a deleted or suspended account. Please use a different email address or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
+					);
+				}
+				
+				// Check if account is suspended
+				if (existingAccount.is_suspended === true) {
+					return Response.conflictResponse(
+						res,
+						{
+							email: emailLower,
+							account_status: "suspended"
+						},
+						409,
+						"This email was previously used with a deleted or suspended account. Please use a different email address or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
 					);
 				}
 				
@@ -121,8 +138,8 @@ const UserController = {
 					);
 				}
 
-				// If not verified, resend verification email
-				console.log("[USER:REGISTRATION] User exists but not verified, resending verification email");
+				// If not verified, resend verification email AND OTP
+				console.log("[USER:REGISTRATION] User exists but not verified, resending verification email and OTP");
 				
 				const emailService = require("../helpers/emailService");
 				const EmailVerificationService = require("../services/emailVerificationService");
@@ -170,6 +187,53 @@ const UserController = {
 					console.error("[USER:REGISTRATION] Failed to send verification email");
 				}
 
+				// IMPORTANT: Also send OTP to phone number for existing unverified user
+				let otpSent = false;
+				let otpValue = null;
+				
+				if (phoneValidation.isValid && phoneValidation.cleanPhone) {
+					try {
+						// Format phone number for MSGATE
+						let fullPhoneNumber;
+						console.log(`[USER:REGISTRATION] Existing user - Phone formatting - phoneStr: "${phoneValidation.cleanPhone}", length: ${phoneValidation.cleanPhone.length}, country: ${country_code}`);
+						
+						if (country_code === "+92") {
+							// Pakistan: MSGATE needs E.164 format
+							// Target: +923054717775 = +92 + 3054717775 (10 digits)
+							if (phoneValidation.cleanPhone.length === 10 && phoneValidation.cleanPhone.startsWith('0')) {
+								// 10 digits with leading 0: Remove 0 and use 9 digits
+								const numberWithoutZero = phoneValidation.cleanPhone.substring(1);
+								fullPhoneNumber = `${country_code}${numberWithoutZero}`;
+							}
+							else if (phoneValidation.cleanPhone.length === 10 && !phoneValidation.cleanPhone.startsWith('0')) {
+								// 10 digits without 0: Use as-is -> +923054717775
+								fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+							}
+							else if (phoneValidation.cleanPhone.length === 9) {
+								// 9 digits: MSGATE needs 10 digits for Pakistan - this format is invalid
+								// Reject 9-digit numbers for Pakistan
+								throw new Error(`Invalid Pakistan phone number format. MSGATE requires 10 digits after +92, but received only ${phoneValidation.cleanPhone.length} digits. Please enter the complete 10-digit number (e.g., 3054717775).`);
+							}
+							else {
+								fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+							}
+						} else {
+							// Saudi numbers: use as is
+							fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+						}
+						
+						console.log(`[USER:REGISTRATION] Existing user - Formatted phone for OTP: ${fullPhoneNumber}`);
+						
+						const { sendSignupOtp } = require("../helpers/otpSend");
+						otpValue = await sendSignupOtp(existingAccount._id.toString(), fullPhoneNumber, 1, lang);
+						otpSent = true;
+						console.log("[USER:REGISTRATION] OTP sent to existing user's phone number via MSGATE");
+					} catch (otpError) {
+						console.error("[USER:REGISTRATION] Error sending OTP to existing user's phone:", otpError.message);
+						// Continue even if OTP fails
+					}
+				}
+
 				return Response.ok(
 					res,
 					{
@@ -181,10 +245,11 @@ const UserController = {
 							is_verified: false,
 						},
 						verification_sent: emailSent,
+						otp_sent: otpSent,
 					},
 					200,
 					resp_messages(lang).verification_email_sent || 
-					"A verification link has been sent to your email. Please verify your account before logging in."
+					"A verification link has been sent to your email and OTP to your phone. Please verify your account."
 				);
 			}
 
@@ -202,15 +267,29 @@ const UserController = {
 			if (exist_user_phone || exist_organizer_phone) {
 				const existingPhoneAccount = exist_user_phone || exist_organizer_phone;
 				
-				// Prevent reuse of phone from deleted accounts
+				// Check if account is deleted or suspended
 				if (existingPhoneAccount.is_delete === 1) {
 					return Response.conflictResponse(
 						res,
 						{
 							phone_number: phone_number,
+							account_status: "deleted"
 						},
 						409,
-						"This phone number was previously used with a deleted account. Please use a different phone number."
+						"This phone number was previously used with a deleted or suspended account. Please use a different phone number or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
+					);
+				}
+				
+				// Check if account is suspended
+				if (existingPhoneAccount.is_suspended === true) {
+					return Response.conflictResponse(
+						res,
+						{
+							phone_number: phone_number,
+							account_status: "suspended"
+						},
+						409,
+						"This phone number was previously used with a deleted or suspended account. Please use a different phone number or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
 					);
 				}
 				
@@ -243,11 +322,69 @@ const UserController = {
 			delete userData.password;
 			delete userData.confirmPassword;
 
-			const user = await UserService.CreateService(userData);
-			console.log("[USER:REGISTRATION] User created:", user._id);
+			// Ensure MongoDB connection before database operations
+			const { ensureConnection } = require("../config/database");
+			await ensureConnection();
 
-			// Send OTP to phone number for verification (via Msegat)
-			const fullPhoneNumber = `${country_code}${phoneStr}`;
+			let user;
+			try {
+				user = await UserService.CreateService(userData);
+				console.log("[USER:REGISTRATION] User created successfully in database:", user._id);
+			} catch (createError) {
+				console.error("[USER:REGISTRATION] Failed to create user in database:", createError.message);
+				console.error("[USER:REGISTRATION] Full error:", createError);
+				return Response.serverErrorResponse(
+					res,
+					"Failed to create user account. Please try again later."
+				);
+			}
+
+			// Send OTP to phone number for verification (via MSGATE)
+			// Format phone number for MSGATE: For Pakistan, ensure proper E.164 format
+			let fullPhoneNumber;
+			console.log(`[USER:REGISTRATION] Phone formatting - phoneStr: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code}`);
+			
+			if (country_code === "+92") {
+				// Pakistan: MSGATE needs E.164 format
+				// Target number format: +923054717775 = +92 + 3054717775 (10 digits)
+				// Valid input formats:
+				// - 10 digits without 0: "3054717775" -> +923054717775 ✅
+				// - 10 digits with 0: "0305471777" -> Remove 0 -> "305471777" (9 digits) -> +92305471777 (might be wrong)
+				// - 9 digits: "305471777" -> +92305471777
+				
+				// The correct format for Pakistan mobile is: +92 + 9 digits (without local leading 0)
+				// OR: +92 + 10 digits (if number already has 0 as part of the actual number)
+				
+				// Test shows: "3054717775" (10 digits) -> +923054717775 ✅ CORRECT
+				// So if 10 digits without leading 0, use as-is
+				// If 10 digits with leading 0, it's actually a 9-digit number with local format
+				
+				if (phoneStr.length === 10 && phoneStr.startsWith('0')) {
+					// 10 digits starting with 0: This is local format (0 + 9 digits)
+					// Remove leading 0 and use 9 digits: +92305471777
+					const numberWithoutZero = phoneStr.substring(1); // Remove leading 0
+					fullPhoneNumber = `${country_code}${numberWithoutZero}`;
+					console.log(`[USER:REGISTRATION] 10-digit number with leading 0: "${phoneStr}" -> Removed 0 -> "${numberWithoutZero}" -> ${fullPhoneNumber}`);
+				}
+				else if (phoneStr.length === 10 && !phoneStr.startsWith('0')) {
+					// 10 digits without leading 0: Use as-is -> +923054717775
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+				}
+				else if (phoneStr.length === 9) {
+					// 9 digits: MSGATE needs 10 digits for Pakistan - reject
+					throw new Error(`Invalid Pakistan phone number format. MSGATE requires 10 digits after +92, but received only ${phoneStr.length} digits. Please enter the complete 10-digit number (e.g., 3054717775).`);
+				}
+				else {
+					// Unexpected length: use as is
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+					console.log(`[USER:REGISTRATION] Warning: Unexpected phone length: ${phoneStr.length} digits`);
+				}
+			} else {
+				// Saudi numbers: use as is
+				fullPhoneNumber = `${country_code}${phoneStr}`;
+			}
+			
+			console.log(`[USER:REGISTRATION] Formatted phone for OTP: ${fullPhoneNumber} (original: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code})`);
 			let otpSent = false;
 			let otpValue = null;
 			
@@ -482,11 +619,11 @@ const UserController = {
 				);
 			}
 
-			// If phone provided, validate country code (Saudi Arabia only)
-			if (phone_number && country_code !== "+966") {
+			// If phone provided, validate country code (Saudi Arabia or Pakistan)
+			if (phone_number && country_code !== "+966" && country_code !== "+92") {
 				return Response.validationErrorResponse(
 					res,
-					resp_messages(lang).invalid_phone || "Only Saudi Arabia phone numbers are supported"
+					resp_messages(lang).invalid_phone || "Only Saudi Arabia (+966) and Pakistan (+92) phone numbers are supported"
 				);
 			}
 
@@ -660,24 +797,56 @@ const UserController = {
 				);
 			}
 
-			// Validate country code (must be Saudi Arabia +966)
-			if (!country_code || country_code !== "+966") {
+			// Validate country code (must be Saudi Arabia +966 or Pakistan +92)
+			if (!country_code || (country_code !== "+966" && country_code !== "+92")) {
 				return Response.validationErrorResponse(
 					res,
-					"Only Saudi Arabia phone numbers (+966) are allowed"
+					"Only Saudi Arabia (+966) and Pakistan (+92) phone numbers are allowed"
 				);
 			}
 
-			// Validate Saudi Arabia phone number format (9 digits after +966)
-			const phoneStr = phone_number.toString().replace(/\s+/g, '');
-			if (!/^\d{9}$/.test(phoneStr)) {
+			// Validate phone number format using validation helper (supports +966 and +92)
+			const { validatePhone } = require("../helpers/validationHelpers");
+			const phoneValidation = validatePhone(phone_number, country_code);
+			if (!phoneValidation.isValid) {
 				return Response.validationErrorResponse(
 					res,
-					"Invalid Saudi Arabia phone number format. Please enter 9 digits (e.g., 501234567)"
+					phoneValidation.message
 				);
 			}
+			const phoneStr = phoneValidation.cleanPhone;
 
-			const fullPhoneNumber = `${country_code}${phoneStr}`;
+			// Format phone number for MSGATE - must match signup formatting
+			let fullPhoneNumber;
+			console.log(`[PHONE:LOGIN] Phone formatting - phoneStr: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code}`);
+			
+			if (country_code === "+92") {
+				// Pakistan: Format exactly as done in registration
+				if (phoneStr.length === 10 && phoneStr.startsWith('0')) {
+					// 10 digits starting with 0: Remove 0 and use 9 digits
+					const numberWithoutZero = phoneStr.substring(1);
+					fullPhoneNumber = `${country_code}${numberWithoutZero}`;
+					console.log(`[PHONE:LOGIN] 10-digit number with leading 0: "${phoneStr}" -> Removed 0 -> "${numberWithoutZero}" -> ${fullPhoneNumber}`);
+				}
+				else if (phoneStr.length === 10 && !phoneStr.startsWith('0')) {
+					// 10 digits without leading 0: Use as-is -> +923054717775
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+				}
+				else if (phoneStr.length === 9) {
+					// 9 digits: MSGATE needs 10 digits for Pakistan - reject
+					throw new Error(`Invalid Pakistan phone number format. MSGATE requires 10 digits after +92, but received only ${phoneStr.length} digits. Please enter the complete 10-digit number (e.g., 3054717775).`);
+				}
+				else {
+					// Unexpected length: use as is
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+					console.log(`[PHONE:LOGIN] Warning: Unexpected phone length: ${phoneStr.length} digits`);
+				}
+			} else {
+				// Saudi numbers: use as is
+				fullPhoneNumber = `${country_code}${phoneStr}`;
+			}
+			
+			console.log(`[PHONE:LOGIN] Formatted phone for OTP: ${fullPhoneNumber} (original: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code})`);
 
 			// Check if user exists with this phone number
 			const User = require("../models/userModel");
@@ -694,6 +863,45 @@ const UserController = {
 				country_code: country_code,
 				is_delete: { $ne: 1 }
 			});
+
+			// Check for deleted or suspended accounts (even if is_delete = 1, we still want to show error)
+			const deletedUser = await User.findOne({
+				phone_number: parseInt(phoneStr),
+				country_code: country_code,
+				is_delete: 1
+			});
+
+			const deletedOrganizer = await Organizer.findOne({
+				phone_number: parseInt(phoneStr),
+				country_code: country_code,
+				is_delete: 1
+			});
+
+			const suspendedUser = await User.findOne({
+				phone_number: parseInt(phoneStr),
+				country_code: country_code,
+				is_suspended: true,
+				is_delete: { $ne: 1 }
+			});
+
+			const suspendedOrganizer = await Organizer.findOne({
+				phone_number: parseInt(phoneStr),
+				country_code: country_code,
+				is_suspended: true,
+				is_delete: { $ne: 1 }
+			});
+
+			if (deletedUser || deletedOrganizer || suspendedUser || suspendedOrganizer) {
+				return Response.conflictResponse(
+					res,
+					{
+						phone_number: phone_number,
+						account_status: deletedUser || deletedOrganizer ? "deleted" : "suspended"
+					},
+					409,
+					"This phone number was previously used with a deleted or suspended account. Please use a different phone number or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
+				);
+			}
 
 			if (!user && !organizer) {
 				return Response.notFoundResponse(
@@ -800,17 +1008,53 @@ const UserController = {
 				);
 			}
 
-			// Validate country code (must be Saudi Arabia +966)
-			if (country_code !== "+966") {
+			// Validate country code (must be Saudi Arabia +966 or Pakistan +92)
+			if (country_code !== "+966" && country_code !== "+92") {
 				return Response.validationErrorResponse(
 					res,
-					"Only Saudi Arabia phone numbers (+966) are allowed"
+					"Only Saudi Arabia (+966) and Pakistan (+92) phone numbers are allowed"
 				);
 			}
 
-			// Format phone number
-			const phoneStr = phone_number.toString().replace(/\s+/g, '');
-			const fullPhoneNumber = `${country_code}${phoneStr}`;
+			// Validate and format phone number
+			const { validatePhone } = require("../helpers/validationHelpers");
+			const phoneValidation = validatePhone(phone_number, country_code);
+			if (!phoneValidation.isValid) {
+				return Response.validationErrorResponse(
+					res,
+					phoneValidation.message
+				);
+			}
+			const phoneStr = phoneValidation.cleanPhone;
+
+			// Format phone number for MSGATE - must match signup formatting
+			let fullPhoneNumber;
+			console.log(`[PHONE:LOGIN:VERIFY] Phone formatting - phoneStr: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code}`);
+			
+			if (country_code === "+92") {
+				// Pakistan: Format exactly as done in registration
+				if (phoneStr.length === 10 && phoneStr.startsWith('0')) {
+					// 10 digits starting with 0: Remove 0 and use 9 digits
+					const numberWithoutZero = phoneStr.substring(1);
+					fullPhoneNumber = `${country_code}${numberWithoutZero}`;
+				}
+				else if (phoneStr.length === 10 && !phoneStr.startsWith('0')) {
+					// 10 digits without leading 0: Use as-is
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+				}
+				else if (phoneStr.length === 9) {
+					// 9 digits: Use as-is
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+				}
+				else {
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+				}
+			} else {
+				// Saudi numbers: use as is
+				fullPhoneNumber = `${country_code}${phoneStr}`;
+			}
+			
+			console.log(`[PHONE:LOGIN:VERIFY] Formatted phone for verification: ${fullPhoneNumber}`);
 
 			// Verify OTP
 			const { verifyLoginOtp } = require("../helpers/otpSend");
@@ -821,11 +1065,55 @@ const UserController = {
 			await ensureConnection();
 
 			// Find user by phone number
+			// Note: Database stores phone_number as integer (parseInt removes leading 0)
+			// So "0305471777" becomes 305471777 in database
 			const User = require("../models/userModel");
 			const Organizer = require("../models/organizerModel");
 
+			// Convert phoneStr to integer for database lookup (matches how it was stored)
+			const phoneNumberForLookup = parseInt(phoneStr);
+
+			// Check for deleted or suspended accounts first
+			const deletedUser = await User.findOne({
+				phone_number: phoneNumberForLookup,
+				country_code: country_code,
+				is_delete: 1
+			});
+
+			const deletedOrganizer = await Organizer.findOne({
+				phone_number: phoneNumberForLookup,
+				country_code: country_code,
+				is_delete: 1
+			});
+
+			const suspendedUser = await User.findOne({
+				phone_number: phoneNumberForLookup,
+				country_code: country_code,
+				is_suspended: true,
+				is_delete: { $ne: 1 }
+			});
+
+			const suspendedOrganizer = await Organizer.findOne({
+				phone_number: phoneNumberForLookup,
+				country_code: country_code,
+				is_suspended: true,
+				is_delete: { $ne: 1 }
+			});
+
+			if (deletedUser || deletedOrganizer || suspendedUser || suspendedOrganizer) {
+				return Response.conflictResponse(
+					res,
+					{
+						phone_number: phone_number,
+						account_status: deletedUser || deletedOrganizer ? "deleted" : "suspended"
+					},
+					409,
+					"This phone number was previously used with a deleted or suspended account. Please use a different phone number or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
+				);
+			}
+
 			let account = await User.findOne({
-				phone_number: parseInt(phoneStr),
+				phone_number: phoneNumberForLookup,
 				country_code: country_code,
 				is_delete: { $ne: 1 }
 			});
@@ -834,7 +1122,7 @@ const UserController = {
 
 			if (!account) {
 				account = await Organizer.findOne({
-					phone_number: parseInt(phoneStr),
+					phone_number: phoneNumberForLookup,
 					country_code: country_code,
 					is_delete: { $ne: 1 }
 				});
@@ -852,46 +1140,55 @@ const UserController = {
 				id: account._id,
 				role: account.role,
 				is_verified: account.is_verified,
+				email_verified_at: account.email_verified_at,
+				phone_verified: account.phone_verified,
 				is_approved: account.is_approved,
 			});
 
-			// Check if account is fully verified (both email AND phone must be verified)
-			if (!account.is_verified) {
-				const needsEmail = !account.email_verified_at;
-				const needsPhone = !account.phone_verified;
+			// Step 1: Check phone verification (phone login requires phone verification)
+			if (!account.phone_verified) {
+				return Response.unauthorizedResponse(
+					res,
+					lang === "ar"
+						? "يرجى التحقق من رقم الهاتف أولاً"
+						: "Please verify your phone number first."
+				);
+			}
+
+			// Step 2: Check email verification (COMPULSORY for both Guest and Host)
+			const emailNotVerified = !account.email_verified_at;
+			
+			if (emailNotVerified) {
+				// Guest User (role 1)
+				if (account.role === 1) {
+					return Response.unauthorizedResponse(
+						res,
+						lang === "ar"
+							? "يرجى التحقق من عنوان بريدك الإلكتروني أولاً"
+							: "Please verify your email address first."
+					);
+				}
 				
-				if (needsEmail && needsPhone) {
+				// Host User (role 2)
+				if (account.role === 2) {
 					return Response.unauthorizedResponse(
 						res,
 						lang === "ar"
-							? "يرجى التحقق من بريدك الإلكتروني ورقم الهاتف أولاً"
-							: "Please verify both your email address and phone number first."
-					);
-				} else if (needsEmail) {
-					return Response.unauthorizedResponse(
-						res,
-						lang === "ar"
-							? "يرجى التحقق من بريدك الإلكتروني أولاً"
-							: "Please verify your email address first. Check your inbox for the verification link."
-					);
-				} else if (needsPhone) {
-					return Response.unauthorizedResponse(
-						res,
-						lang === "ar"
-							? "يرجى التحقق من رقم الهاتف أولاً"
-							: "Please verify your phone number first."
+							? "يرجى التحقق من عنوان بريدك الإلكتروني"
+							: "Please verify your email address."
 					);
 				}
 			}
 
-			// For organizers, check admin approval (COMPULSORY)
+			// Step 3: For Host users, check admin approval (COMPULSORY - only after email verification)
 			if (account.role === 2) {
+				// 1 = pending, 2 = approved, 3 = rejected
 				if (account.is_approved === 1) {
 					return Response.unauthorizedResponse(
 						res,
 						lang === "ar"
-							? "حسابك قيد الموافقة. لا يمكنك تسجيل الدخول حتى تتم الموافقة عليه من قبل المسؤول."
-							: "Your account is pending admin approval. You cannot login until the admin approves your account."
+							? "حسابك في انتظار موافقة المسؤول. يرجى المحاولة مرة أخرى بعد الموافقة."
+							: "Your account is pending admin approval."
 					);
 				}
 
@@ -908,8 +1205,8 @@ const UserController = {
 					return Response.unauthorizedResponse(
 						res,
 						lang === "ar"
-							? "حسابك غير معتمد بعد. يرجى الانتظار حتى تتم الموافقة عليه من قبل المسؤول."
-							: "Your account is not yet approved. Please wait for admin approval."
+							? "حسابك في انتظار موافقة المسؤول. يرجى المحاولة مرة أخرى بعد الموافقة."
+							: "Your account is pending admin approval."
 					);
 				}
 			}
@@ -923,23 +1220,40 @@ const UserController = {
 			const accountResponse = account.toObject ? account.toObject() : { ...account };
 			delete accountResponse.password;
 
+			// Prepare response (only reach here if all checks passed)
+			const responseData = {
+				token,
+				user: role === 1 ? {
+					_id: accountResponse._id,
+					email: accountResponse.email,
+					first_name: accountResponse.first_name,
+					last_name: accountResponse.last_name,
+					phone_number: accountResponse.phone_number,
+					country_code: accountResponse.country_code,
+					role: accountResponse.role,
+					is_verified: accountResponse.is_verified,
+					email_verified_at: accountResponse.email_verified_at,
+					phone_verified: accountResponse.phone_verified,
+					profile_image: accountResponse.profile_image,
+				} : {
+					_id: accountResponse._id,
+					email: accountResponse.email,
+					first_name: accountResponse.first_name,
+					last_name: accountResponse.last_name,
+					phone_number: accountResponse.phone_number,
+					country_code: accountResponse.country_code,
+					role: accountResponse.role,
+					is_verified: accountResponse.is_verified,
+					email_verified_at: accountResponse.email_verified_at,
+					phone_verified: accountResponse.phone_verified,
+					is_approved: accountResponse.is_approved,
+					profile_image: accountResponse.profile_image,
+				},
+			};
+
 			return Response.ok(
 				res,
-				{
-					token,
-					user: {
-						_id: accountResponse._id,
-						email: accountResponse.email,
-						first_name: accountResponse.first_name,
-						last_name: accountResponse.last_name,
-						phone_number: accountResponse.phone_number,
-						country_code: accountResponse.country_code,
-						role: accountResponse.role,
-						is_verified: accountResponse.is_verified,
-						is_approved: accountResponse.is_approved || null,
-						profile_image: accountResponse.profile_image,
-					},
-				},
+				responseData,
 				200,
 				lang === "ar" ? "تم تسجيل الدخول بنجاح" : "Login successful"
 			);
@@ -1425,6 +1739,61 @@ const UserController = {
 			);
 		}
 	},
+	checkEmailFormat: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { email } = req.body;
+
+			if (!email) {
+				return Response.validationErrorResponse(
+					res,
+					"Email is required"
+				);
+			}
+
+			const { validateGmailFormat, verifyGmailExistence } = require("../helpers/emailExistenceService");
+			
+			// First validate format
+			const formatValidation = validateGmailFormat(email);
+			if (!formatValidation.isValid) {
+				return Response.ok(
+					res,
+					{
+						isValid: false,
+						exists: false,
+						message: formatValidation.message,
+						status: "invalid_format"
+					},
+					200,
+					formatValidation.message
+				);
+			}
+
+			// If format is valid, check existence
+			const existenceCheck = await verifyGmailExistence(email);
+			
+			return Response.ok(
+				res,
+				{
+					isValid: true,
+					exists: existenceCheck.exists,
+					message: existenceCheck.message,
+					status: existenceCheck.exists ? "valid" : "not_exists",
+					canSendVerification: existenceCheck.canSendVerification || false
+				},
+				200,
+				existenceCheck.message
+			);
+
+		} catch (error) {
+			console.error("[CHECK_EMAIL] Error:", error);
+			return Response.serverErrorResponse(
+				res,
+				"Error checking email. Please try again."
+			);
+		}
+	},
+
 	eventList: async (req, res) => {
 		const token = req.headers["authorization"];
 		const lang = req.lang || req.headers["lang"] || "en";
@@ -1888,6 +2257,21 @@ const UserController = {
 				);
 			}
 
+			// Check for duplicate booking - prevent same user from booking same event multiple times with pending status
+			const existingBooking = await BookEventService.FindOneService({
+				user_id: userId,
+				event_id: exist_event._id,
+				book_status: { $in: [0, 1] } // Check for pending bookings (0 or 1)
+			});
+
+			if (existingBooking) {
+				console.log(`[BOOKING] Duplicate booking prevented - User ${userId} already has a pending booking for event ${exist_event._id}`);
+				return Response.badRequestResponse(
+					res,
+					resp_messages(req.lang).duplicate_booking || "You already have a pending booking request for this event. Please wait for the host to respond."
+				);
+			}
+
 			const ticketPrice = exist_event.event_price;
 			const amountAttendees = ticketPrice * no_of_attendees;
 			const totalTaxAttendees = amountAttendees * taxRate;
@@ -1904,34 +2288,150 @@ const UserController = {
 			if (book_event) {
 				exist_event.no_of_attendees -= Number(no_of_attendees);
 				await exist_event.save();
-				const event_type =
-					exist_event.event_type == 1
-						? resp_messages(req.lang).event_type_join_us
-						: resp_messages(req.lang).event_type_welcome;
-				const notification_data = {
-					notification_type: 1,
-					title: `${event_type} ${
-						resp_messages(req.lang).event_booked_request
-					}`,
-					description: `${user.first_name} ${user.last_name} ${
-						resp_messages(req.lang).booked_event
-					} ${exist_event.event_name}`,
-					event_id: book_event.event_id,
-					book_id: book_event._id,
-					event_type: exist_event.event_type,
-					event_name: exist_event.event_name,
-					userId: userId,
-					first_name: user.first_name,
-					last_name: user.last_name,
-					profile_image: user.profile_image,
-					status: book_event.book_status,
-				};
-				// Send push notification to host
-				sendEventBookingNotification(
-					res,
-					exist_event.organizer_id,
-					notification_data
-				);
+				
+				// Get organizer/host data for notifications
+				const organizer = await organizerService.FindOneService({ _id: exist_event.organizer_id });
+				
+				// Calculate hold expiration (30 minutes from now)
+				const holdExpiresAt = new Date(Date.now() + 30 * 60 * 1000);
+				
+				// Send notification to guest (Request Sent)
+				try {
+					// Get organizer rating data properly
+					let organizerRating = { averageRating: 4.5, totalReviews: 0 };
+					try {
+						const UserReviewService = require("../services/userReviewService");
+						organizerRating = await UserReviewService.GetUserOverallRating(
+							exist_event.organizer_id,
+							"Organizer"
+						);
+						// Use received reviews for organizer rating
+						organizerRating = organizerRating.received || organizerRating.overall || { rating: 4.5, totalReviews: 0 };
+					} catch (ratingError) {
+						console.error('[NOTIFICATION] Error fetching organizer rating:', ratingError);
+					}
+					
+					await notificationHelper.sendGuestRequestSent({
+						experience_title: exist_event.event_name,
+						host_first_name: organizer?.first_name || 'Host',
+						host_id: exist_event.organizer_id,
+						tickets_count: no_of_attendees,
+						start_at: exist_event.event_date || exist_event.start_date,
+						event_date: exist_event.event_date || exist_event.start_date,
+						rating_avg: organizerRating.rating || organizerRating.averageRating || 4.5,
+						rating_count: organizerRating.totalReviews || 0,
+						book_id: book_event._id,
+						event_id: exist_event._id,
+						hold_expires_at: holdExpiresAt
+					}, user, 'A'); // Use variant A (friendly) by default
+				} catch (guestNotifError) {
+					console.error('[NOTIFICATION] Error sending guest request sent notification:', guestNotifError);
+				}
+				
+				// Send notification to host (New Request)
+				try {
+					await notificationHelper.sendHostNewRequest({
+						guest_first_name: user.first_name,
+						user_first_name: user.first_name,
+						experience_title: exist_event.event_name,
+						event_name: exist_event.event_name,
+						tickets_count: no_of_attendees,
+						no_of_attendees: no_of_attendees,
+						start_at: exist_event.event_date || exist_event.start_date,
+						event_date: exist_event.event_date || exist_event.start_date,
+						venue_area: exist_event.venue_area || exist_event.location || 'Diriyah',
+						book_id: book_event._id,
+						booking_id: book_event._id,
+						event_id: exist_event._id,
+						guest_id: userId,
+						user_id: userId
+					}, organizer);
+					
+					// Create in-app notification for host (always create for consistency)
+					try {
+						const lang = req.lang || req.headers["lang"] || "en";
+						const event_type =
+							exist_event.event_type == 1
+								? (lang === "ar" ? "انضم معنا" : "Join Us")
+								: (lang === "ar" ? "مرحباً" : "Welcome");
+						const hostTitle = lang === "ar" 
+							? `طلب حجز جديد - ${event_type}`
+							: `New Booking Request - ${event_type}`;
+						const hostDesc = lang === "ar"
+							? `طلب "${user.first_name} ${user.last_name}" حجز "${exist_event.event_name}" (${no_of_attendees} تذكرة)`
+							: `"${user.first_name} ${user.last_name}" requested to book "${exist_event.event_name}" (${no_of_attendees} ticket${no_of_attendees > 1 ? 's' : ''})`;
+						
+						await NotificationService.CreateService({
+							user_id: exist_event.organizer_id,
+							role: 2, // Host/Organizer role
+							title: hostTitle,
+							description: hostDesc,
+							isRead: false,
+							notification_type: 1, // New booking request
+							event_id: book_event.event_id,
+							book_id: book_event._id,
+							status: book_event.book_status,
+							profile_image: user.profile_image || "",
+							username: `${user.first_name} ${user.last_name}`,
+							senderId: userId,
+						});
+						console.log(`[NOTIFICATION] Created in-app notification for host ${exist_event.organizer_id} - New booking request: ${book_event._id}`);
+					} catch (inAppNotifError) {
+						console.error('[NOTIFICATION] Error creating in-app notification for host:', inAppNotifError);
+						// Don't fail the request if in-app notification fails
+					}
+				} catch (hostNotifError) {
+					console.error('[NOTIFICATION] Error sending host new request notification:', hostNotifError);
+					// Fallback to old notification method
+					const event_type =
+						exist_event.event_type == 1
+							? resp_messages(req.lang).event_type_join_us
+							: resp_messages(req.lang).event_type_welcome;
+					const notification_data = {
+						notification_type: 1,
+						title: `${event_type} ${
+							resp_messages(req.lang).event_booked_request
+						}`,
+						description: `${user.first_name} ${user.last_name} ${
+							resp_messages(req.lang).booked_event
+						} ${exist_event.event_name}`,
+						event_id: book_event.event_id,
+						book_id: book_event._id,
+						event_type: exist_event.event_type,
+						event_name: exist_event.event_name,
+						userId: userId,
+						first_name: user.first_name,
+						last_name: user.last_name,
+						profile_image: user.profile_image,
+						status: book_event.book_status,
+					};
+					sendEventBookingNotification(
+						res,
+						exist_event.organizer_id,
+						notification_data
+					);
+					
+					// Also create in-app notification as fallback
+					try {
+						await NotificationService.CreateService({
+							user_id: exist_event.organizer_id,
+							role: 2, // Host/Organizer role
+							title: notification_data.title,
+							description: notification_data.description,
+							isRead: false,
+							notification_type: 1, // New booking request
+							event_id: book_event.event_id,
+							book_id: book_event._id,
+							status: book_event.book_status,
+							profile_image: user.profile_image || "",
+							username: `${user.first_name} ${user.last_name}`,
+							senderId: userId,
+						});
+						console.log(`[NOTIFICATION] Created in-app notification for host (fallback): ${book_event._id}`);
+					} catch (fallbackNotifError) {
+						console.error('[NOTIFICATION] Error creating fallback in-app notification:', fallbackNotifError);
+					}
+				}
 				
 				// Notify admin about new booking (in-app only)
 				try {
@@ -1987,7 +2487,7 @@ const UserController = {
 		try {
 			const { userId } = req;
 			const {
-				book_status = 1,
+				book_status = "all", // allow frontend to fetch all bookings by default
 				event_date,
 				search,
 				page = 1,
@@ -2005,156 +2505,64 @@ const UserController = {
 				)
 			);
 
-			const matchStage = {
-				user_id: new mongoose.Types.ObjectId(userId),
-				$and: [{ payment_status: book_status == 2 ? 1 : 0 }],
-			};
+		const matchStage = {
+			user_id: new mongoose.Types.ObjectId(userId),
+		};
 
-			if (book_status == "3") {
-				matchStage.$and.push(
-					{ book_status: Number(book_status) },
-					{ payment_status: 0 },
-					...(event_date
-						? [
-								{
-									$expr: {
-										$eq: [
-											{
-												$dateFromParts: {
-													year: {
-														$year: "$createdAt",
-													},
-													month: {
-														$month: "$createdAt",
-													},
-													day: {
-														$dayOfMonth:
-															"$createdAt",
-													},
-												},
-											},
-											{
-												$dateFromParts: {
-													year: {
-														$year: new Date(
-															event_date
-														),
-													},
-													month: {
-														$month: new Date(
-															event_date
-														),
-													},
-													day: {
-														$dayOfMonth: new Date(
-															event_date
-														),
-													},
-												},
-											},
-										],
-									},
-								},
-						  ]
-						: [])
-				);
-			} else if (book_status == "2") {
-				matchStage.$and.push(
-					{ book_status: Number(book_status) },
-					{ payment_status: 1 },
-					...(event_date
-						? [
-								{
-									$expr: {
-										$eq: [
-											{
-												$dateFromParts: {
-													year: {
-														$year: "$createdAt",
-													},
-													month: {
-														$month: "$createdAt",
-													},
-													day: {
-														$dayOfMonth:
-															"$createdAt",
-													},
-												},
-											},
-											{
-												$dateFromParts: {
-													year: {
-														$year: new Date(
-															event_date
-														),
-													},
-													month: {
-														$month: new Date(
-															event_date
-														),
-													},
-													day: {
-														$dayOfMonth: new Date(
-															event_date
-														),
-													},
-												},
-											},
-										],
-									},
-								},
-						  ]
-						: [])
-				);
-			} else if (book_status == "1") {
-				matchStage.$and.push(
-					{ book_status: { $nin: [3] } },
-					{ payment_status: 0 },
-					...(event_date
-						? [
-								{
-									$expr: {
-										$eq: [
-											{
-												$dateFromParts: {
-													year: {
-														$year: "$createdAt",
-													},
-													month: {
-														$month: "$createdAt",
-													},
-													day: {
-														$dayOfMonth:
-															"$createdAt",
-													},
-												},
-											},
-											{
-												$dateFromParts: {
-													year: {
-														$year: new Date(
-															event_date
-														),
-													},
-													month: {
-														$month: new Date(
-															event_date
-														),
-													},
-													day: {
-														$dayOfMonth: new Date(
-															event_date
-														),
-													},
-												},
-											},
-										],
-									},
-								},
-						  ]
-						: [])
-				);
+		// Build filter conditions based on book_status
+		// book_status: 1 = pending, 2 = approved/confirmed, 3/4 = cancelled/rejected
+		if (book_status === "all" || book_status === "" || book_status === null || book_status === undefined) {
+			// No extra filtering; return all bookings for the user
+			// Don't add $and at all when fetching all bookings
+		} else if (book_status == "3" || book_status == "4") {
+			// Cancelled/Rejected bookings (unpaid)
+			matchStage.$and = [
+				{ book_status: Number(book_status) },
+				{ payment_status: 0 },
+			];
+		} else if (book_status == "2") {
+			// Approved/confirmed bookings — include both unpaid and paid
+			matchStage.$and = [{ book_status: 2 }];
+		} else {
+			// Default: Pending bookings (book_status=1 or 0, unpaid)
+			matchStage.$and = [
+				{ book_status: { $in: [0, 1] } },
+				{ payment_status: 0 },
+			];
+		}
+
+		// Add event_date filter if provided
+		if (event_date) {
+			// Initialize $and if it doesn't exist
+			if (!matchStage.$and) {
+				matchStage.$and = [];
 			}
+			matchStage.$and.push({
+				$expr: {
+					$eq: [
+						{
+							$dateFromParts: {
+								year: { $year: "$createdAt" },
+								month: { $month: "$createdAt" },
+								day: { $dayOfMonth: "$createdAt" },
+							},
+						},
+						{
+							$dateFromParts: {
+								year: { $year: new Date(event_date) },
+								month: { $month: new Date(event_date) },
+								day: { $dayOfMonth: new Date(event_date) },
+							},
+						},
+					],
+				},
+			});
+		}
+
+		// Remove $and if it's empty (MongoDB doesn't like empty $and arrays)
+		if (matchStage.$and && matchStage.$and.length === 0) {
+			delete matchStage.$and;
+		}
 
 			const eventDateCondition =
 				book_status == "1"
@@ -3010,9 +3418,41 @@ const UserController = {
 				console.log(
 					`Payment captured successfully for booking: ${book_id}`
 				);
+			} else if (body.data.status === "failed" || body.data.status === "declined") {
+				// Handle payment failure
+				console.log(`Payment failed/declined for booking: ${book_id}`);
+				
+				try {
+					const booking_details = await BookEventService.FindOneService({
+						_id: book_id,
+					});
+
+					if (booking_details) {
+						const [event, user] = await Promise.all([
+							EventService.FindOneService({ _id: booking_details.event_id }),
+							UserService.FindOneService({ _id: booking_details.user_id })
+						]);
+
+						if (user && event) {
+							// Send payment failed notification
+							await notificationHelper.sendGuestPaymentFailed({
+								guest_first_name: user.first_name || 'Guest',
+								experience_title: event.event_name || 'Experience',
+								event_name: event.event_name || 'Experience',
+								order_id: booking_details.order_id || booking_details._id.toString(),
+								book_id: booking_details._id,
+								booking_id: booking_details._id,
+								event_id: event._id
+							}, user);
+							console.log(`[NOTIFICATION] Sent payment failed notification to user ${user._id}`);
+						}
+					}
+				} catch (notifError) {
+					console.error('[NOTIFICATION] Error sending payment failed notification:', notifError);
+				}
 			} else {
 				console.log(
-					'Payment status is not "paid" or "authorized", ignoring webhook.'
+					`Payment status is "${body.data.status}", ignoring webhook.`
 				);
 			}
 
@@ -3365,6 +3805,35 @@ const UserController = {
 				}
 			}
 
+			// Send booking confirmed notification after successful payment
+			if (updatedBooking.payment_status === 1 && user && event) {
+				try {
+					// Get organizer for host name
+					const organizer = await organizerService.FindOneService({ _id: event.organizer_id });
+					
+					await notificationHelper.sendGuestBookingConfirmed({
+						experience_title: event.event_name,
+						event_name: event.event_name,
+						tickets_count: updatedBooking.no_of_attendees,
+						no_of_attendees: updatedBooking.no_of_attendees,
+						start_at: event.event_date || event.start_date,
+						event_date: event.event_date || event.start_date,
+						order_id: payment_id || updatedBooking.order_id || updatedBooking._id.toString(),
+						total_amount: amount || updatedBooking.total_amount,
+						price_total: amount || updatedBooking.total_amount,
+						currency: 'SAR',
+						book_id: booking_id,
+						booking_id: booking_id,
+						experience_id: event._id,
+						event_id: event._id,
+						host_first_name: organizer?.first_name || 'Host'
+					}, user);
+					console.log(`[NOTIFICATION] Sent booking confirmed notification to user ${bookingDetails.user_id}`);
+				} catch (notifError) {
+					console.error('[NOTIFICATION] Error sending booking confirmed notification:', notifError);
+				}
+			}
+
 			// Add user to group chat ONLY after payment is successful
 			// This ensures guests can only join group chat after they've paid
 			if (event && event.is_approved === 1 && payment_status === 1) {
@@ -3538,6 +4007,58 @@ const UserController = {
 				);
 			}
 
+			// Fetch the complete updated booking with event details for frontend
+			const completeBooking = await BookEventService.AggregateService([
+				{ $match: { _id: new mongoose.Types.ObjectId(booking_id) } },
+				{
+					$lookup: {
+						from: "events",
+						localField: "event_id",
+						foreignField: "_id",
+						as: "event",
+					},
+				},
+				{ $unwind: "$event" },
+				{
+					$lookup: {
+						from: "organizers",
+						localField: "organizer_id",
+						foreignField: "_id",
+						as: "organizer",
+					},
+				},
+				{ $unwind: "$organizer" },
+				{
+					$project: {
+						_id: 1,
+						book_status: 1,
+						payment_status: 1,
+						payment_id: 1,
+						total_amount: 1,
+						no_of_attendees: 1,
+						invoice_id: 1,
+						invoice_url: 1,
+						order_id: 1,
+						confirmed_at: 1,
+						createdAt: 1,
+						event: {
+							_id: "$event._id",
+							event_name: "$event.event_name",
+							event_image: "$event.event_image",
+							event_date: "$event.event_date",
+							event_start_time: "$event.event_start_time",
+							event_end_time: "$event.event_end_time",
+							event_address: "$event.event_address",
+						},
+						organizer: {
+							first_name: "$organizer.first_name",
+							last_name: "$organizer.last_name",
+							profile_image: "$organizer.profile_image",
+						},
+					},
+				},
+			]);
+
 			return Response.ok(
 				res,
 				{
@@ -3545,6 +4066,7 @@ const UserController = {
 					booking_id: booking_id,
 					payment_id: payment_id,
 					book_status: 2,
+					booking: completeBooking[0] || null, // Include full booking details
 				},
 				200,
 				resp_messages(req.lang).update_success
@@ -3881,13 +4403,43 @@ const UserController = {
 			}
 
 			// Verify OTP
-			const fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+			// IMPORTANT: Format phone number EXACTLY as it was when sending OTP
+			// This must match the format used in userRegistration
+			let fullPhoneNumber;
+			console.log(`[USER:VERIFY-SIGNUP-OTP] Phone formatting - phoneStr: "${phoneValidation.cleanPhone}", length: ${phoneValidation.cleanPhone.length}, country: ${country_code}`);
+			
+			if (country_code === "+92") {
+				// Pakistan: Format exactly as done in registration
+				if (phoneValidation.cleanPhone.length === 10 && phoneValidation.cleanPhone.startsWith('0')) {
+					// 10 digits starting with 0: Remove 0 and use 9 digits
+					const numberWithoutZero = phoneValidation.cleanPhone.substring(1);
+					fullPhoneNumber = `${country_code}${numberWithoutZero}`;
+				}
+				else if (phoneValidation.cleanPhone.length === 10 && !phoneValidation.cleanPhone.startsWith('0')) {
+					// 10 digits without leading 0: Use as-is -> +923054717775
+					fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+				}
+				else if (phoneValidation.cleanPhone.length === 9) {
+					// 9 digits: MSGATE needs 10 digits for Pakistan - reject
+					throw new Error(`Invalid Pakistan phone number format. MSGATE requires 10 digits after +92, but received only ${phoneValidation.cleanPhone.length} digits. Please enter the complete 10-digit number (e.g., 3054717775).`);
+				}
+				else {
+					fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+				}
+			} else {
+				// Saudi numbers: use as is
+				fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+			}
+			
+			console.log(`[USER:VERIFY-SIGNUP-OTP] Formatted phone for verification: ${fullPhoneNumber}`);
+			
 			const { verifySignupOtp } = require("../helpers/otpSend");
 			
 			try {
 				await verifySignupOtp(user_id, fullPhoneNumber, otpValidation.cleanOtp, 1);
 			} catch (otpError) {
 				console.error("[USER:VERIFY-SIGNUP-OTP] OTP verification failed:", otpError.message);
+				console.error("[USER:VERIFY-SIGNUP-OTP] Error details:", otpError);
 				return Response.validationErrorResponse(
 					res,
 					otpError.message || "Invalid or expired OTP"
@@ -4006,7 +4558,41 @@ const UserController = {
 			}
 
 			// Send OTP
-			const fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+			// IMPORTANT: Format phone number EXACTLY as done in registration
+			// This must match the format used in userRegistration
+			let fullPhoneNumber;
+			const phoneStr = phoneValidation.cleanPhone;
+			console.log(`[USER:RESEND-SIGNUP-OTP] Phone formatting - phoneStr: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code}`);
+			
+			if (country_code === "+92") {
+				// Pakistan: Format exactly as done in registration
+				if (phoneStr.length === 10 && phoneStr.startsWith('0')) {
+					// 10 digits starting with 0: Remove 0 and use 9 digits
+					const numberWithoutZero = phoneStr.substring(1);
+					fullPhoneNumber = `${country_code}${numberWithoutZero}`;
+					console.log(`[USER:RESEND-SIGNUP-OTP] 10-digit number with leading 0: "${phoneStr}" -> Removed 0 -> "${numberWithoutZero}" -> ${fullPhoneNumber}`);
+				}
+				else if (phoneStr.length === 10 && !phoneStr.startsWith('0')) {
+					// 10 digits without leading 0: Use as-is -> +923289081825
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+					console.log(`[USER:RESEND-SIGNUP-OTP] 10-digit number without leading 0: "${phoneStr}" -> Use as-is -> ${fullPhoneNumber}`);
+				}
+				else if (phoneStr.length === 9) {
+					// 9 digits: MSGATE needs 10 digits for Pakistan - reject
+					throw new Error(`Invalid Pakistan phone number format. MSGATE requires 10 digits after +92, but received only ${phoneStr.length} digits. Please enter the complete 10-digit number (e.g., 3289081825).`);
+				}
+				else {
+					// Unexpected length: use as is
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+					console.log(`[USER:RESEND-SIGNUP-OTP] Warning: Unexpected phone length: ${phoneStr.length} digits`);
+				}
+			} else {
+				// Saudi numbers: use as is
+				fullPhoneNumber = `${country_code}${phoneStr}`;
+			}
+			
+			console.log(`[USER:RESEND-SIGNUP-OTP] Formatted phone for OTP: ${fullPhoneNumber} (original: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code})`);
+			
 			const { sendSignupOtp } = require("../helpers/otpSend");
 			let otpSent = false;
 			let otpValue = null;

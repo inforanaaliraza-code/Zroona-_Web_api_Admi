@@ -239,8 +239,6 @@ export default function UnifiedSignUpForm({
 			first_name: "",
 			last_name: "",
 			email: "",
-			password: "",
-			confirmPassword: "",
 			country_code: "+966",
 			phone_number: "",
 			gender: "",
@@ -251,22 +249,26 @@ export default function UnifiedSignUpForm({
 			termsAccepted: false,
 		},
 		validationSchema: Yup.object({
-			// For organizer, require email, password, phone, and terms
+			// For organizer, require email, phone, and terms (passwordless)
 					...(accountType === ACCOUNT_TYPES.ORGANIZER
 						? {
 								email: Yup.string()
-									.email("Invalid email")
+									.required(t("signup.tab16"))
+									.test('gmail-only', "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+										if (!value) return true;
+										const emailLower = value.toLowerCase().trim();
+										return emailLower.endsWith('@gmail.com');
+									})
+									.test('gmail-format', "Invalid Gmail address format", function(value) {
+										if (!value) return true;
+										const emailLower = value.toLowerCase().trim();
+										const localPart = emailLower.split('@')[0];
+										if (!localPart) return false;
+										return /^[a-z0-9.+]+$/.test(localPart);
+									})
+									.email("Invalid email"),
+								phone_number: Yup.string()
 									.required(t("signup.tab16")),
-								password: Yup.string()
-									.required(t("auth.passwordRequired") || "Password is required")
-									.min(8, t("auth.passwordMinLength") || "Password must be at least 8 characters")
-									.matches(
-										/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-=\[\]{};':"\\|,.<>\/])/,
-										t("auth.passwordStrength") || "Password must contain uppercase, lowercase, number, and special character"
-									),
-								confirmPassword: Yup.string()
-									.required(t("auth.confirmPasswordRequired") || "Please confirm your password")
-									.oneOf([Yup.ref('password')], t("auth.passwordsMustMatch") || 'Passwords must match'),
 								termsAccepted: Yup.boolean()
 									.oneOf([true], "Terms must be accepted")
 									.required("Terms must be accepted"),
@@ -276,8 +278,20 @@ export default function UnifiedSignUpForm({
 						first_name: Yup.string().required(t("signup.tab16")),
 						last_name: Yup.string().required(t("signup.tab16")),
 						email: Yup.string()
-							.email("Invalid email")
-							.required(t("signup.tab16")),
+							.required(t("signup.tab16"))
+							.test('gmail-only', "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+								if (!value) return true;
+								const emailLower = value.toLowerCase().trim();
+								return emailLower.endsWith('@gmail.com');
+							})
+							.test('gmail-format', "Invalid Gmail address format", function(value) {
+								if (!value) return true;
+								const emailLower = value.toLowerCase().trim();
+								const localPart = emailLower.split('@')[0];
+								if (!localPart) return false;
+								return /^[a-z0-9.+]+$/.test(localPart);
+							})
+							.email("Invalid email"),
 						phone_number: Yup.string().required(t("signup.tab16")),
 						gender: Yup.string().required(t("signup.tab16")),
 						nationality: Yup.string().required(t("signup.tab16")),
@@ -300,27 +314,22 @@ export default function UnifiedSignUpForm({
 						? SignUpApi
 						: OrganizerSignUpApi;
 				
-				// For organizer, combine personal info from Step 1 with email/password from Step 2
+				// For organizer, combine personal info from Step 1 with email/phone from Step 2 (passwordless)
 				let payload;
 				if (accountType === ACCOUNT_TYPES.ORGANIZER) {
 					// Get personal info from localStorage (stored in Step 1)
 					const personalInfoStr = localStorage.getItem("organizer_personal_info");
 					const personalInfo = personalInfoStr ? JSON.parse(personalInfoStr) : {};
 					
-					// Combine personal info with email/password (don't include phone_number from form, use from personalInfo if exists)
+					// Combine personal info with email/phone (passwordless)
 					payload = {
 						...personalInfo,
 						email: values.email.toLowerCase().trim(),
-						password: values.password,
-						confirmPassword: values.confirmPassword,
-						registration_step: 2, // Step 2: Email/Password
+						phone_number: values.phone_number || personalInfo.phone_number,
+						country_code: values.country_code || personalInfo.country_code || "+966",
+						registration_step: 4, // Complete registration
 						language: i18n.language || "en",
 					};
-					
-					// Remove phone_number from payload if it's not in personalInfo (phone comes from Step 1)
-					if (!payload.phone_number) {
-						// Phone number should come from personal info step, not email/password step
-					}
 					
 					// Clear localStorage after using it
 					localStorage.removeItem("organizer_personal_info");
@@ -601,49 +610,7 @@ export default function UnifiedSignUpForm({
 									)}
 							</div>
 
-							{/* Password Fields - Only for Organizer */}
-							{accountType === ACCOUNT_TYPES.ORGANIZER && (
-							<div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-								<div>
-									<label htmlFor="password" className={labelClasses}>
-										{t("auth.password") || "Password"} *
-									</label>
-									<input
-										type="password"
-										id="password"
-										className={inputClasses}
-										placeholder={t("auth.enterPassword") || "Enter your password"}
-										{...formik.getFieldProps("password")}
-									/>
-									{formik.touched.password && formik.errors.password && (
-										<p className={errorClasses}>
-											{formik.errors.password}
-										</p>
-									)}
-								</div>
-
-								<div>
-									<label htmlFor="confirmPassword" className={labelClasses}>
-										{t("auth.confirmPassword") || "Confirm Password"} *
-									</label>
-									<input
-										type="password"
-										id="confirmPassword"
-										className={inputClasses}
-										placeholder={t("auth.confirmYourPassword") || "Confirm your password"}
-										{...formik.getFieldProps("confirmPassword")}
-									/>
-									{formik.touched.confirmPassword && formik.errors.confirmPassword && (
-										<p className={errorClasses}>
-											{formik.errors.confirmPassword}
-										</p>
-									)}
-								</div>
-							</div>
-							)}
-
-							{/* Phone Input - Only for User, not for Organizer */}
-							{accountType === ACCOUNT_TYPES.USER && (
+							{/* Phone Input - For both User and Organizer */}
 							<div>
 								<label className={labelClasses}>
 									{t("signup.tab4")}
@@ -654,7 +621,6 @@ export default function UnifiedSignUpForm({
 									countryCodeField="country_code"
 								/>
 							</div>
-							)}
 
 							{/* Gender Selection - Only for User */}
 							{accountType === ACCOUNT_TYPES.USER && (

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import React from "react";
 
-const SearchBar = ({ search, setSearch, setPage }) => {
+const SearchBar = ({ search, setSearch, setPage, placeholder }) => {
   return (
     <div className="flex gap-x-3">
       <div className="flex items-center border-2 border-brand-pastel-gray-purple-1/30 bg-white/90 backdrop-blur-sm rounded-xl overflow-hidden w-[250px] sm:w-[300px] shadow-md hover:shadow-lg hover:border-brand-pastel-gray-purple-1/50 transition-all duration-300 focus-within:border-brand-pastel-gray-purple-1 focus-within:shadow-lg">
@@ -15,7 +15,7 @@ const SearchBar = ({ search, setSearch, setPage }) => {
             setSearch(e.target.value);
             setPage(1); // Reset to first page on search
           }}
-          placeholder="Search by Organizer name/ID.."
+          placeholder={placeholder || "Search by Guest Name / Email ID"}
           className="w-full p-2.5 outline-none text-sm text-gray-800 placeholder:text-gray-400 placeholder:text-xs bg-transparent"
         />
       </div>

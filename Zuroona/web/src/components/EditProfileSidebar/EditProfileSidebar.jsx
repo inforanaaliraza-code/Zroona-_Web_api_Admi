@@ -10,6 +10,7 @@ const EditProfileSidebar = ({ onItemClick, activeSection }) => {
     const sidebarItems = [
         { key: "personal", title: t('steper.tab1'), icon: "mdi:account-outline", fillIcon: "mdi:account" },
         { key: "bank", title: t('steper.tab3'), icon: "mdi:bank-outline", fillIcon: "mdi:bank" },
+        { key: "settings", title: t('Settings') || 'Settings', icon: "mdi:cog-outline", fillIcon: "mdi:cog" },
     ];
 
     useEffect(() => {

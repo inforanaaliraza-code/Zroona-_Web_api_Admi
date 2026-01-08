@@ -35,7 +35,7 @@ export default function EmailLoginForm() {
     const phoneValidationSchema = Yup.object({
         phone_number: Yup.string()
             .required(t("auth.phoneRequired") || "Phone number is required")
-            .min(9, t("auth.phoneMinLength") || "Phone number must be at least 9 digits"),
+            .min(9, t("phone Min Length") || "Phone number must be at least 9 digits"),
         country_code: Yup.string()
             .required(t("auth.countryCodeRequired") || "Country code is required"),
     });
@@ -293,16 +293,19 @@ export default function EmailLoginForm() {
                                     <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                         <Icon icon="material-symbols:phone-android" className="w-4 h-4 text-[#a797cc]" />
                                         {t("auth.phoneNumber") || "Phone Number"} *
-                                        <span className="text-xs font-normal text-gray-500">(Saudi Arabia Only)</span>
+                                        <span className="text-xs font-normal text-gray-500">(Pakistan & Saudi Arabia)</span>
                                     </label>
-                                    <div className="relative group">
+                                    <div className="relative group" style={{ zIndex: 10 }}>
                                         <div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/10 to-brand-orange/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                        <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-1 shadow-sm group-hover:border-[#a797cc]/50 transition-all duration-300">
+                                        <div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-1 shadow-sm group-hover:border-[#a797cc]/50 transition-all duration-300" style={{ zIndex: 10 }}>
                                             <NumberInput
                                                 formik={phoneFormik}
                                                 mobileNumberField="phone_number"
                                                 countryCodeField="country_code"
                                                 disabled={loading}
+                                                enableSearch={true}
+                                                onlyCountries={['sa', 'pk']}
+                                                countryCodeEditable={false}
                                             />
                                         </div>
                                     </div>
@@ -314,6 +317,7 @@ export default function EmailLoginForm() {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.5 }}
                                     className="pt-2"
+                                    style={{ zIndex: 1 }}
                                 >
                                     <button
                                         type="submit"

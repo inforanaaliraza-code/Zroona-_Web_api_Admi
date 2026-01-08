@@ -97,6 +97,19 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
         .then((data) => {
           setLoading(false);
           if (data?.status === 1) {
+            // Show warning if email is not verified
+            if (data?.data?.warning || !data?.data?.user?.email_verified_at) {
+              toast.warning(
+                data?.data?.warningMessage || 
+                data?.data?.warning || 
+                "Please verify your email. Check your inbox for the verification link.",
+                {
+                  autoClose: 5000,
+                  position: "top-center",
+                }
+              );
+            }
+            
             dispatch(getProfile());
             if (data?.data?.user?.role === 1) {
               toast.success(data.message);

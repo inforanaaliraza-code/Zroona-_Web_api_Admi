@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 export default function SuspendHostModal({ isOpen, onClose, onConfirm, organizer }) {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const isSuspended = organizer?.is_suspended;
@@ -13,7 +15,7 @@ export default function SuspendHostModal({ isOpen, onClose, onConfirm, organizer
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-900">
-            {isSuspended ? "Unsuspend Host" : "Suspend Host"}
+            {isSuspended ? t("common.unsuspendHost") : t("common.suspendHost")}
           </h2>
           <button
             onClick={onClose}
@@ -31,20 +33,20 @@ export default function SuspendHostModal({ isOpen, onClose, onConfirm, organizer
         <div className="mb-6">
           <p className="text-gray-700 mb-4">
             {isSuspended 
-              ? `Are you sure you want to unsuspend ${organizer?.first_name} ${organizer?.last_name}?`
-              : `Are you sure you want to suspend ${organizer?.first_name} ${organizer?.last_name}?`
+              ? t("common.unsuspendConfirm", { name: `${organizer?.first_name} ${organizer?.last_name}` })
+              : t("common.suspendConfirm", { name: `${organizer?.first_name} ${organizer?.last_name}` })
             }
           </p>
           
           {!isSuspended && (
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-purple-800 mb-2">
-                <strong>Important:</strong> When a host is suspended, they will receive a notification with the following information:
+                <strong>{t("common.important")}:</strong> {t("common.suspendNotification", { type: t("common.host") })}
               </p>
               <ul className="text-sm text-purple-700 list-disc list-inside space-y-1">
-                <li>Review the Terms & Conditions and Privacy Policy</li>
-                <li>If you feel there is any wrongdoing, contact us at:</li>
-                <li className="font-semibold">info@zaroona.sa</li>
+                <li>{t("common.reviewTerms")}</li>
+                <li>{t("common.contactInfo")}</li>
+                <li className="font-semibold">{t("common.contactEmail")}</li>
               </ul>
             </div>
           )}
@@ -55,7 +57,7 @@ export default function SuspendHostModal({ isOpen, onClose, onConfirm, organizer
             onClick={onClose}
             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={onConfirm}
@@ -65,7 +67,7 @@ export default function SuspendHostModal({ isOpen, onClose, onConfirm, organizer
                 : "bg-purple-600 hover:bg-purple-700"
             }`}
           >
-            {isSuspended ? "Unsuspend" : "Suspend"}
+            {isSuspended ? t("common.unsuspendHost") : t("common.suspendHost")}
           </button>
         </div>
       </div>

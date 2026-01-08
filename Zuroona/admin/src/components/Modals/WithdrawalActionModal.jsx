@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { FaTimes, FaCheckCircle, FaTimesCircle, FaMoneyBillWave, FaUser, FaCalendar, FaBuilding, FaCreditCard } from "react-icons/fa";
 import Image from "next/image";
+import { useTranslation } from "react-i18next";
 
 export default function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }) {
+  const { t } = useTranslation();
   const [adminNotes, setAdminNotes] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
   const [transactionRef, setTransactionRef] = useState("");
@@ -60,9 +62,9 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
               )}
               <div>
                 <h2 className={`text-2xl font-bold ${isApprove ? 'text-green-700' : 'text-red-700'}`}>
-                  {isApprove ? 'Approve Withdrawal Request' : 'Reject Withdrawal Request'}
+                  {isApprove ? t("common.approveWithdrawalRequest") : t("common.rejectWithdrawalRequest")}
                 </h2>
-                <p className="text-gray-600 text-sm">Review and {isApprove ? 'approve' : 'reject'} this request</p>
+                <p className="text-gray-600 text-sm">{isApprove ? t("common.reviewAndApprove") : t("common.reviewAndReject")}</p>
               </div>
             </div>
             <button
@@ -80,7 +82,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-5 mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <FaUser className="text-[#a797cc]" />
-              Host Information
+              {t("common.hostInformation")}
             </h3>
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
@@ -109,15 +111,15 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
             <div className="bg-gradient-to-br from-[#a3cc69] to-[#9fb68b] rounded-xl p-5 text-white">
               <div className="flex items-center gap-3 mb-2">
                 <FaMoneyBillWave className="text-2xl" />
-                <h4 className="font-semibold">Withdrawal Amount</h4>
+                <h4 className="font-semibold">{t("common.withdrawalAmount")}</h4>
               </div>
-              <p className="text-3xl font-bold">{request.amount} {request.currency || 'SAR'}</p>
+              <p className="text-3xl font-bold">{request.amount} {request.currency || t("common.currency")}</p>
             </div>
 
             <div className="bg-gradient-to-br from-[#a797cc] to-[#b0a0df] rounded-xl p-5 text-white">
               <div className="flex items-center gap-3 mb-2">
                 <FaCalendar className="text-2xl" />
-                <h4 className="font-semibold">Request Date</h4>
+                <h4 className="font-semibold">{t("common.requestDate")}</h4>
               </div>
               <p className="text-xl font-bold">
                 {new Date(request.createdAt || request.created_at).toLocaleDateString('en-US', {
@@ -134,30 +136,30 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
             <div className="bg-blue-50 rounded-xl p-5 mb-6 border-2 border-blue-200">
               <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
                 <FaBuilding className="text-blue-600" />
-                Bank Details
+                {t("common.bankDetails")}
               </h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {(request.bank_details?.bank_name || request.organizer?.bank_details?.bank_name) && (
                   <div>
-                    <p className="text-gray-600 font-medium">Bank Name</p>
+                    <p className="text-gray-600 font-medium">{t("common.bankName")}</p>
                     <p className="text-gray-900 font-semibold">{request.bank_details?.bank_name || request.organizer?.bank_details?.bank_name}</p>
                   </div>
                 )}
                 {(request.bank_details?.account_holder_name || request.organizer?.bank_details?.account_holder_name) && (
                   <div>
-                    <p className="text-gray-600 font-medium">Account Holder</p>
+                    <p className="text-gray-600 font-medium">{t("common.accountName")}</p>
                     <p className="text-gray-900 font-semibold">{request.bank_details?.account_holder_name || request.organizer?.bank_details?.account_holder_name}</p>
                   </div>
                 )}
                 {(request.bank_details?.account_number || request.organizer?.bank_details?.account_number) && (
                   <div>
-                    <p className="text-gray-600 font-medium">Account Number</p>
+                    <p className="text-gray-600 font-medium">{t("common.accountNumber")}</p>
                     <p className="text-gray-900 font-semibold font-mono">{request.bank_details?.account_number || request.organizer?.bank_details?.account_number}</p>
                   </div>
                 )}
                 {(request.bank_details?.iban || request.organizer?.bank_details?.iban) && (
                   <div>
-                    <p className="text-gray-600 font-medium">IBAN</p>
+                    <p className="text-gray-600 font-medium">{t("common.iban")}</p>
                     <p className="text-gray-900 font-semibold font-mono">{request.bank_details?.iban || request.organizer?.bank_details?.iban}</p>
                   </div>
                 )}
@@ -165,7 +167,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
             </div>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
-              <p className="text-yellow-800 font-medium">⚠️ No bank details available for this host</p>
+              <p className="text-yellow-800 font-medium">{t("common.noBankDetails")}</p>
             </div>
           )}
 
@@ -175,13 +177,13 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   <FaCreditCard className="inline mr-2" />
-                  Transaction Reference (Optional)
+                  {t("common.transactionReference")}
                 </label>
                 <input
                   type="text"
                   value={transactionRef}
                   onChange={(e) => setTransactionRef(e.target.value)}
-                  placeholder="Enter transaction reference number"
+                  placeholder={t("common.enterTransactionReference")}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all"
                 />
               </div>
@@ -190,12 +192,12 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
             {!isApprove && (
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Rejection Reason <span className="text-red-500">*</span>
+                  {t("common.rejectionReason")} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Please provide a reason for rejection (required)"
+                  placeholder={t("common.rejectionReasonRequired")}
                   rows={3}
                   required
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all resize-none"
@@ -205,12 +207,12 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Admin Notes (Optional)
+                {t("common.adminNotes")}
               </label>
               <textarea
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder="Add internal notes (optional)"
+                placeholder={t("common.addInternalNotes")}
                 rows={3}
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-[#a797cc] focus:ring-4 focus:ring-[#a797cc]/20 transition-all resize-none"
               />
@@ -225,7 +227,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
             disabled={loading}
             className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-100 transition disabled:opacity-50"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleSubmit}
@@ -239,12 +241,12 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Processing...
+                {t("common.processing")}
               </>
             ) : (
               <>
                 {isApprove ? <FaCheckCircle /> : <FaTimesCircle />}
-                {isApprove ? 'Approve Request' : 'Reject Request'}
+                {isApprove ? t("common.approveRequestButton") : t("common.rejectRequestButton")}
               </>
             )}
           </button>

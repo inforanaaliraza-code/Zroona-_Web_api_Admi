@@ -35,6 +35,7 @@ const HostNavbar = () => {
 
   const navItems = [
     { label: t("hostNavbar.myEvents"), href: "/joinUsEvent", icon: "lucide:calendar" },
+    { label: t("hostNavbar.myBookings") || "My Bookings", href: "/myBookings", icon: "lucide:clipboard-list" },
     { label: t("hostNavbar.myWallet"), href: "/myEarning", icon: "lucide:wallet" },
     { label: t("hostNavbar.myRatings"), href: "/reviews", icon: "lucide:star" },
     { label: t("hostNavbar.messages"), href: "/messaging", icon: "lucide:message-circle" },
@@ -71,7 +72,7 @@ const HostNavbar = () => {
   return (
     <>
       <nav 
-        className="bg-[#b0a0df] border-b border-[#b0a0df]/30 shadow-sm z-[95]"
+        className="border-b border-[#8b7bb8]/30 shadow-sm z-[95] animate-gradient-xy" 
         style={{ 
           position: 'fixed',
           top: `${headerHeight}px`,
@@ -80,7 +81,8 @@ const HostNavbar = () => {
           width: '100%',
           willChange: 'transform', 
           transform: 'translateZ(0)',
-          backgroundColor: '#b0a0df',
+          background: 'linear-gradient(135deg, #8b7bb8 0%, #a797cc 30%, #a3cc69 70%, #a797cc 100%)',
+          backgroundSize: '200% 200%',
           zIndex: 95
         }}
       >

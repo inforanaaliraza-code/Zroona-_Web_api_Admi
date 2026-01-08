@@ -27,9 +27,9 @@ const eventSchema = new Schema(
 			type: [String],
 			validate: {
 				validator: function (v) {
-					return v.length <= 6;
+					return v.length <= 5;
 				},
-				message: "Event cannot have more than 6 images",
+				message: "Event cannot have more than 5 images",
 			},
 			required: true,
 		},
@@ -109,6 +109,12 @@ const eventSchema = new Schema(
 			type: Number,
 			enum: [1, 2],
 			default: 1,
+		},
+		area_name: {
+			type: String,
+		},
+		neighborhood: {
+			type: String,
 		},
 	},
 	{ timestamps: true }

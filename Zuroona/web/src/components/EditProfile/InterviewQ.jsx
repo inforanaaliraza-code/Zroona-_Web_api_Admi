@@ -13,7 +13,8 @@ import * as Yup from 'yup';
 
 export default function InterviewQ() {
     const { t, i18n } = useTranslation();
-    const YOUR_GOOGLE_MAPS_API_KEY = "AIzaSyC6cKp791aygkeF6blRdhoWR0EEl8WwLTk";
+    // Get API key from environment variable or use fallback
+    const YOUR_GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyBn1KfafJwi0QzJbiO0WcNmkzI3_z2L-VA";
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);

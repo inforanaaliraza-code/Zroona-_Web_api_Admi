@@ -31,24 +31,31 @@ const localStorageBackend = {
 	},
 };
 
-// Get language from localStorage or default to Arabic
+// Get language from localStorage or default to English
 // This function is safe to call during SSR
+// Always returns "en" on server to prevent hydration mismatch
+// Language will be updated on client-side after mount
 const getInitialLanguage = () => {
+	// On server, always return "en" to prevent hydration mismatch
+	if (typeof window === "undefined") {
+		return "en";
+	}
+	
 	try {
-		if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+		if (typeof localStorage !== "undefined") {
 			const stored = localStorage.getItem("i18nextLng");
 			if (stored && (stored === "ar" || stored === "en")) {
 				return stored;
 			}
-			// If invalid language, set default and save it
-			localStorage.setItem("i18nextLng", "ar");
-			return "ar";
+			// If invalid language, set default to English and save it
+			localStorage.setItem("i18nextLng", "en");
+			return "en";
 		}
 	} catch (error) {
 		// If localStorage access fails, return default
 		console.warn("[i18n] localStorage access failed, using default language:", error);
 	}
-	return "ar";
+	return "en"; // Default to English
 };
 
 // Initialize i18n with safe language detection and persistence
@@ -62,7 +69,7 @@ i18n.use(initReactI18next).init({
 		},
 	},
 	lng: getInitialLanguage(), // Get language from localStorage or default (safe for SSR)
-	fallbackLng: "ar", // Default to Arabic
+	fallbackLng: "en", // Default to English
 	debug: false,
 	interpolation: {
 		escapeValue: false,
@@ -70,6 +77,8 @@ i18n.use(initReactI18next).init({
 	react: {
 		useSuspense: false, // Disable suspense to prevent hydration errors
 	},
+	// Prevent hydration errors by ensuring server and client use same initial language
+	compatibilityJSON: 'v3',
 	// Return empty string if translation key is missing (prevents showing keys)
 	returnEmptyString: false,
 	returnNull: false,

@@ -2,10 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
+import { setLanguage } from "@/redux/slices/language";
 import { FaGlobe } from "react-icons/fa";
 
 const LanguageSwitcher = () => {
 	const { i18n, t } = useTranslation();
+	const dispatch = useDispatch();
+	const { currentLanguage, isRTL } = useSelector((state) => state.language);
 	const [isOpen, setIsOpen] = useState(false);
 	const dropdownRef = useRef(null);
 
@@ -14,22 +18,63 @@ const LanguageSwitcher = () => {
 		{ code: "ar", name: "Arabic", nativeName: "العربية", flag: "🇸🇦" },
 	];
 
-	const currentLanguage =
-		languages.find((lang) => lang.code === i18n.language) || languages[0];
+	const currentLang =
+		languages.find((lang) => lang.code === currentLanguage) || languages[0];
 
 	const changeLanguage = (langCode) => {
-		i18n.changeLanguage(langCode);
-		localStorage.setItem("i18nextLng", langCode);
+		// Dispatch Redux action to set language
+		dispatch(setLanguage(langCode));
 		
-		// Update document direction
-		document.documentElement.dir = langCode === "ar" ? "rtl" : "ltr";
-		document.documentElement.lang = langCode;
+		// Update i18n
+		i18n.changeLanguage(langCode);
+		
+		// Update document direction immediately
+		if (typeof document !== "undefined" && document.documentElement) {
+			document.documentElement.dir = langCode === "ar" ? "rtl" : "ltr";
+			document.documentElement.lang = langCode;
+			
+			// Update body class
+			if (document.body) {
+				document.body.classList.remove("rtl", "ltr");
+				document.body.classList.add(langCode === "ar" ? "rtl" : "ltr");
+			}
+		}
 		
 		setIsOpen(false);
 		
-		// Reload page to apply direction changes properly and prevent hydration issues
-		window.location.reload();
+		// NO PAGE RELOAD - Language switching is instant now!
 	};
+
+	// Sync i18n with Redux on mount and language changes
+	useEffect(() => {
+		if (i18n.language !== currentLanguage) {
+			i18n.changeLanguage(currentLanguage);
+		}
+		
+		// Update document direction based on Redux state
+		if (typeof document !== "undefined" && document.documentElement) {
+			document.documentElement.dir = isRTL ? "rtl" : "ltr";
+			document.documentElement.lang = currentLanguage;
+			
+			if (document.body) {
+				document.body.classList.remove("rtl", "ltr");
+				document.body.classList.add(isRTL ? "rtl" : "ltr");
+			}
+		}
+		
+		// Listen for language changes from i18n and sync with Redux
+		const handleLanguageChange = (lang) => {
+			if (lang !== currentLanguage) {
+				dispatch(setLanguage(lang));
+			}
+		};
+		
+		i18n.on("languageChanged", handleLanguageChange);
+		
+		return () => {
+			i18n.off("languageChanged", handleLanguageChange);
+		};
+	}, [dispatch, currentLanguage, isRTL]);
 
 	// Close dropdown when clicking outside
 	useEffect(() => {
@@ -51,8 +96,8 @@ const LanguageSwitcher = () => {
 				aria-label="Change language"
 			>
 				<FaGlobe className="w-4 h-4" />
-				<span className="hidden sm:inline">{currentLanguage.flag}</span>
-				<span className="hidden md:inline">{currentLanguage.nativeName}</span>
+				<span className="hidden sm:inline">{currentLang.flag}</span>
+				<span className="hidden md:inline">{currentLang.nativeName}</span>
 				<svg
 					className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
 					fill="none"
@@ -75,7 +120,7 @@ const LanguageSwitcher = () => {
 							key={lang.code}
 							onClick={() => changeLanguage(lang.code)}
 							className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${
-								currentLanguage.code === lang.code
+								currentLanguage === lang.code
 									? "bg-[#a797cc]/10 text-[#a797cc] font-medium"
 									: "text-gray-700"
 							}`}
@@ -85,7 +130,7 @@ const LanguageSwitcher = () => {
 								<span>{lang.nativeName}</span>
 								<span className="text-xs text-gray-500">{lang.name}</span>
 							</div>
-							{currentLanguage.code === lang.code && (
+							{currentLanguage === lang.code && (
 								<svg
 									className="w-4 h-4 ml-auto text-[#a797cc]"
 									fill="currentColor"

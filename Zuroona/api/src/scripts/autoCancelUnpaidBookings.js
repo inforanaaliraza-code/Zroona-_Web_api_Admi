@@ -85,21 +85,40 @@ const autoCancelUnpaidBookings = async () => {
                     }
                 }
 
-                // Send notification to user
+                // Send hold expired notification before cancelling
                 try {
                     const event = booking.event || {};
-                    await NotificationService.CreateService({
-                        user_id: booking.user_id,
-                        role: 1, // User role
-                        title: 'Booking Cancelled',
-                        description: `Your booking for "${event.event_name || 'the event'}" has been automatically cancelled because payment was not completed within 6 hours of confirmation.`,
-                        isRead: false,
-                        notification_type: 3, // Booking cancellation type
-                        event_id: booking.event_id,
-                        book_id: booking._id,
-                    });
+                    const user = booking.user || {};
+                    const notificationHelper = require('../helpers/notificationService');
+                    
+                    // Send hold expired notification using new template
+                    await notificationHelper.sendHoldExpired({
+                        guest_first_name: user.first_name || 'Guest',
+                        experience_title: event.event_name || 'Experience',
+                        event_name: event.event_name || 'Experience',
+                        experience_id: event._id,
+                        event_id: event._id
+                    }, user);
+                    
+                    console.log(`[AUTO-CANCEL-UNPAID] Sent hold expired notification for booking ${booking._id}`);
                 } catch (notifError) {
-                    console.error(`[AUTO-CANCEL-UNPAID] Error sending notification for booking ${booking._id}:`, notifError);
+                    console.error(`[AUTO-CANCEL-UNPAID] Error sending hold expired notification for booking ${booking._id}:`, notifError);
+                    // Fallback to old notification method
+                    try {
+                        const event = booking.event || {};
+                        await NotificationService.CreateService({
+                            user_id: booking.user_id,
+                            role: 1, // User role
+                            title: 'Booking Cancelled',
+                            description: `Your booking for "${event.event_name || 'the event'}" has been automatically cancelled because payment was not completed within 6 hours of confirmation.`,
+                            isRead: false,
+                            notification_type: 3, // Booking cancellation type
+                            event_id: booking.event_id,
+                            book_id: booking._id,
+                        });
+                    } catch (fallbackError) {
+                        console.error(`[AUTO-CANCEL-UNPAID] Error sending fallback notification for booking ${booking._id}:`, fallbackError);
+                    }
                 }
 
                 cancelledCount++;

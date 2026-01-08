@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
+    "@reduxjs/toolkit": "^2.11.2",
     "axios": "^1.7.7",
     "chart.js": "^4.5.1",
     "date-fns": "^4.1.0",
@@ -33,6 +34,7 @@
     "react-loader-spinner": "^6.1.6",
     "react-otp-input": "^3.1.1",
     "react-quill": "^2.0.0",
+    "react-redux": "^9.2.0",
     "react-toastify": "^10.0.5",
     "tailwindcss-animate": "^1.0.7",
     "uid": "^2.0.2",

@@ -27,7 +27,7 @@ export default function BankDetail() {
             <div className="w-full max-w-3xl">
               <BankDetails
                 title={t("signup.tab43")}
-                buttonName={t("signup.tab52")}
+                buttonName={t("signup.tab21") || "Next"}
                 onNext={handleFormSubmit}
               />
             </div>

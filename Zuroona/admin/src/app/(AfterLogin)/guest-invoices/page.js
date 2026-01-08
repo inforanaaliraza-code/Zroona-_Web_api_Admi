@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import dynamic from "next/dynamic";
+import { useTranslation } from "react-i18next";
 const InvoiceStatsDashboard = dynamic(() => import("@/components/Invoice/InvoiceStatsDashboard"), {
   ssr: false,
   loading: () => <div className="flex justify-center items-center py-10">Loading statistics...</div>
@@ -24,12 +25,8 @@ const DatePicker = dynamic(() => import("react-datepicker"), {
   loading: () => <div className="h-10 w-full bg-gray-100 rounded animate-pulse" />
 });
 
-// Lazy load CSS
-if (typeof window !== "undefined") {
-  import("react-datepicker/dist/react-datepicker.css");
-}
-
 export default function GuestInvoices() {
+  const { t } = useTranslation();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,11 +58,11 @@ export default function GuestInvoices() {
         setInvoices(invoiceData);
         setTotalCount(res?.total_count || invoiceData.length);
       } else {
-        toast.error(res?.message || "Failed to fetch guest invoices");
+        toast.error(res?.message || t("invoice.failedToFetchInvoices"));
       }
     } catch (error) {
       console.error("Error fetching guest invoices:", error);
-      toast.error("Failed to fetch guest invoices");
+      toast.error(t("invoice.failedToFetchInvoices"));
     } finally {
       setLoading(false);
     }
@@ -77,13 +74,13 @@ export default function GuestInvoices() {
 
   const getStatusBadge = (status) => {
     const statusMap = {
-      0: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
-      1: { label: "Pending", color: "bg-yellow-100 text-yellow-800" },
-      2: { label: "Confirmed", color: "bg-green-100 text-green-800" },
-      3: { label: "Cancelled", color: "bg-red-100 text-red-800" },
-      4: { label: "Rejected", color: "bg-red-100 text-red-800" },
-      5: { label: "Completed", color: "bg-blue-100 text-blue-800" },
-      6: { label: "Refunded", color: "bg-gray-100 text-gray-800" },
+      0: { label: t("invoice.status.pending"), color: "bg-yellow-100 text-yellow-800" },
+      1: { label: t("invoice.status.pending"), color: "bg-yellow-100 text-yellow-800" },
+      2: { label: t("invoice.status.confirmed"), color: "bg-green-100 text-green-800" },
+      3: { label: t("invoice.status.cancelled"), color: "bg-red-100 text-red-800" },
+      4: { label: t("invoice.status.rejected"), color: "bg-red-100 text-red-800" },
+      5: { label: t("invoice.status.completed"), color: "bg-blue-100 text-blue-800" },
+      6: { label: t("invoice.status.refunded"), color: "bg-gray-100 text-gray-800" },
     };
     const statusInfo = statusMap[status] || { label: "Unknown", color: "bg-gray-100 text-gray-800" };
     return (
@@ -97,13 +94,13 @@ export default function GuestInvoices() {
     if (status === 1) {
       return (
         <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-          Paid
+          {t("invoice.payment.paid")}
         </span>
       );
     }
     return (
       <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-        Unpaid
+        {t("invoice.payment.unpaid")}
       </span>
     );
   };
@@ -112,7 +109,7 @@ export default function GuestInvoices() {
     if (invoiceUrl) {
       window.open(invoiceUrl, "_blank");
     } else {
-      toast.error("Invoice URL not available");
+      toast.error(t("invoice.invoiceUrlNotAvailable"));
     }
   };
 
@@ -173,7 +170,7 @@ export default function GuestInvoices() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success("Invoices exported to CSV successfully!");
+    toast.success(t("invoice.invoicesExportedSuccess"));
   };
 
   return (
@@ -181,7 +178,7 @@ export default function GuestInvoices() {
       <div className="container mx-auto px-4 py-8 animate-fade-in">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-black">Guest Invoices & Receipts</h1>
+          <h1 className="text-3xl font-bold text-black">{t("invoice.title")}</h1>
         </div>
 
         {/* Statistics Dashboard */}
@@ -194,7 +191,7 @@ export default function GuestInvoices() {
             <div className="relative flex-grow max-w-md">
               <input
                 type="text"
-                placeholder="Search by invoice ID, guest name, email, or event..."
+                placeholder={t("invoice.searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent transition-all duration-200"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
@@ -209,9 +206,9 @@ export default function GuestInvoices() {
                 value={paymentStatusFilter}
                 onChange={(e) => { setPaymentStatusFilter(e.target.value); setPage(1); }}
               >
-                <option value="1">Paid Only</option>
-                <option value="0">Unpaid Only</option>
-                <option value="">All Payment Status</option>
+                <option value="1">{t("invoice.paidOnly")}</option>
+                <option value="0">{t("invoice.unpaidOnly")}</option>
+                <option value="">{t("invoice.allPaymentStatus")}</option>
               </select>
               <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Icon icon="mdi:chevron-down" className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -224,13 +221,13 @@ export default function GuestInvoices() {
                 value={bookStatusFilter}
                 onChange={(e) => { setBookStatusFilter(e.target.value); setPage(1); }}
               >
-                <option value="all">All Booking Status</option>
-                <option value="1">Pending</option>
-                <option value="2">Confirmed</option>
-                <option value="3">Cancelled</option>
-                <option value="4">Rejected</option>
-                <option value="5">Completed</option>
-                <option value="6">Refunded</option>
+                <option value="all">{t("invoice.allBookingStatus")}</option>
+                <option value="1">{t("invoice.status.pending")}</option>
+                <option value="2">{t("invoice.status.confirmed")}</option>
+                <option value="3">{t("invoice.status.cancelled")}</option>
+                <option value="4">{t("invoice.status.rejected")}</option>
+                <option value="5">{t("invoice.status.completed")}</option>
+                <option value="6">{t("invoice.status.refunded")}</option>
               </select>
               <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Icon icon="mdi:chevron-down" className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -245,7 +242,7 @@ export default function GuestInvoices() {
                 selectsStart
                 startDate={startDate}
                 endDate={endDate}
-                placeholderText="Start Date"
+                placeholderText={t("invoice.startDate")}
                 className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent transition-all duration-200"
               />
               <span>-</span>
@@ -256,7 +253,7 @@ export default function GuestInvoices() {
                 startDate={startDate}
                 endDate={endDate}
                 minDate={startDate}
-                placeholderText="End Date"
+                placeholderText={t("invoice.endDate")}
                 className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent transition-all duration-200"
               />
             </div>
@@ -268,13 +265,13 @@ export default function GuestInvoices() {
                 className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 shadow-md"
                 disabled={invoices.length === 0}
               >
-                <FaFileExcel /> Export CSV
+                <FaFileExcel /> {t("invoice.exportCSV")}
               </button>
               <button
                 onClick={() => window.print()}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
               >
-                <FaPrint /> Print
+                <FaPrint /> {t("invoice.print")}
               </button>
             </div>
           </div>
@@ -286,14 +283,14 @@ export default function GuestInvoices() {
             <table className="min-w-full bg-white rounded-lg">
               <thead className="bg-[#f3f7ff] border-b border-gray-200">
                 <tr className="text-sm text-gray-600 uppercase">
-                  <th className="px-4 py-3 text-left font-semibold">Invoice ID</th>
-                  <th className="px-4 py-3 text-left font-semibold">Guest</th>
-                  <th className="px-4 py-3 text-left font-semibold">Event</th>
-                  <th className="px-4 py-3 text-left font-semibold">Attendees</th>
-                  <th className="px-4 py-3 text-left font-semibold">Amount</th>
-                  <th className="px-4 py-3 text-left font-semibold">Status</th>
-                  <th className="px-4 py-3 text-left font-semibold">Date</th>
-                  <th className="px-4 py-3 text-center font-semibold">Details</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("invoice.invoiceId")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("invoice.guest")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("invoice.event")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("invoice.attendees")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("invoice.amount")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("invoice.status")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("invoice.date")}</th>
+                  <th className="px-4 py-3 text-center font-semibold">{t("invoice.details")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -358,7 +355,7 @@ export default function GuestInvoices() {
                           <button
                             onClick={() => handleViewDetails(invoice)}
                             className="text-[#a797cc] hover:text-[#8b85b1] transition-colors duration-200 p-2 rounded-full hover:bg-gray-100"
-                            title="View Details"
+                            title={t("invoice.viewDetails")}
                           >
                             <FaEye size={18} />
                           </button>
@@ -366,7 +363,7 @@ export default function GuestInvoices() {
                             <button
                               onClick={() => handleViewInvoice(invoice.invoice_url)}
                               className="text-green-600 hover:text-green-800 transition-colors duration-200 p-2 rounded-full hover:bg-green-50"
-                              title="Download Invoice"
+                              title={t("invoice.downloadInvoice")}
                             >
                               <FaDownload size={18} />
                             </button>
@@ -379,7 +376,7 @@ export default function GuestInvoices() {
                   <tr>
                     <td colSpan={8} className="py-10 text-center text-gray-500 text-lg">
                       <Icon icon="mdi:file-document-remove-outline" className="w-10 h-10 mx-auto mb-3 text-gray-400" />
-                      No invoices found
+                      {t("invoice.noInvoicesFound")}
                     </td>
                   </tr>
                 )}

@@ -71,7 +71,7 @@ const SignupHeader = ({ bgColor = "#fff" }) => {
                   onClick={openLoginModal}
                   className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-700 bg-white rounded-xl border border-brand-light-orange-1 hover:bg-gray-50 transition-all duration-300"
                 >
-                  <span>{t("header.tab5") || "Login"}</span>
+                  <span suppressHydrationWarning>{t("header.tab5") || "Login"}</span>
                 </button>
               </div>
             </div>

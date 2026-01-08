@@ -45,7 +45,21 @@ export default function OrganizerSignUpForm({ title, buttonText, showDeactiveBut
             termsAccepted: false,
         },
         validationSchema: Yup.object({
-            email: Yup.string().required("Required"),
+            email: Yup.string()
+                .required("Required")
+                .test('gmail-only', "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+                    if (!value) return true;
+                    const emailLower = value.toLowerCase().trim();
+                    return emailLower.endsWith('@gmail.com');
+                })
+                .test('gmail-format', "Invalid Gmail address format", function(value) {
+                    if (!value) return true;
+                    const emailLower = value.toLowerCase().trim();
+                    const localPart = emailLower.split('@')[0];
+                    if (!localPart) return false;
+                    return /^[a-z0-9.+]+$/.test(localPart);
+                })
+                .email("Invalid email"),
             profile_image: Yup.string().required("Required"),
             first_name: Yup.string().required("Required"),
             last_name: Yup.string().required("Required"),
@@ -57,26 +71,41 @@ export default function OrganizerSignUpForm({ title, buttonText, showDeactiveBut
             bio: Yup.string().required("Required"),
             termsAccepted: Yup.boolean().oneOf([true]),
         }),
-        onSubmit: (values) => {
+        onSubmit: async (values) => {
             setLoading(true);
-            const payload = {
-                ...values,
-                phone: values.phone_number, // Map phone_number to phone for API compatibility
-            };
+            try {
+                // Passwordless payload
+                const payload = {
+                    first_name: values.first_name,
+                    last_name: values.last_name,
+                    email: values.email.toLowerCase().trim(),
+                    phone_number: parseInt(values.phone_number),
+                    country_code: values.country_code || "+966",
+                    gender: parseInt(values.gender),
+                    nationality: values.nationality,
+                    date_of_birth: values.date_of_birth,
+                    bio: values.bio || "",
+                    profile_image: values.profile_image || "",
+                    registration_step: 4, // Complete registration
+                    language: i18n.language || "en",
+                };
 
-            const apiCall = OrganizerSignUpApi;
-
-            apiCall(payload).then((data) => {
-                setLoading(false);
-                if (data?.status === 1) {
-                    toast.success(data.message);
-                    Cookies.set(TOKEN_NAME, data?.data?.token);
-                    // Redirect to success page - email verification will be sent
+                const data = await OrganizerSignUpApi(payload);
+                
+                if (data?.status === 1 || data?.status === true) {
+                    toast.success(data.message || t("auth.registrationSuccessful") || "Registration successful! Please check your email and phone for verification.");
+                    // Don't set token yet - user needs to verify email and phone first
+                    // Redirect to success page with verification instructions
                     push("/signup/success");
                 } else {
-                    toast.error(data.message);
+                    toast.error(data.message || t("auth.signupError") || "Registration failed. Please try again.");
                 }
-            });
+            } catch (error) {
+                console.error("Organizer signup error:", error);
+                toast.error(error?.response?.data?.message || t("auth.signupError") || "An error occurred. Please try again.");
+            } finally {
+                setLoading(false);
+            }
         },
     });
 

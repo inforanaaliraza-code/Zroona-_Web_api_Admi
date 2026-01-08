@@ -1,12 +1,14 @@
 /**
- * OTP Service - Send OTP via Msegat SMS
+ * OTP Service - Send OTP via MSGATE SMS
  * 
- * This service generates OTP and sends it via Msegat SMS service
+ * This service generates OTP and sends it via MSGATE SMS service
+ * Supports Saudi Arabia (+966) and Pakistan (+92) phone numbers
  */
 
 const AdminService = require('../services/adminService.js');
 const organizerService = require('../services/organizerService.js');
 const UserService = require('../services/userService.js');
+// Using MSGATE for OTP sending
 const { sendOTP: sendOTPSMS } = require('./msegatService.js');
 
 // Store OTP request times to prevent spam
@@ -75,12 +77,12 @@ const sendOtp = async (_id, role, lang = 'en') => {
         console.error('Error updating OTP in database:', error);
     }
 
-    // Send OTP via Msegat SMS
+    // Send OTP via MSGATE SMS
     try {
         await sendOTPSMS(phoneNumber, otp, lang);
-        console.log(`✅ OTP sent successfully to ${phoneNumber} via Msegat`);
+        console.log(`✅ OTP sent successfully to ${phoneNumber} via MSGATE`);
     } catch (error) {
-        console.error('❌ Error sending OTP via Msegat:', error.message);
+        console.error('❌ Error sending OTP via MSGATE:', error.message);
         // Still return OTP for development/testing (remove in production)
         if (process.env.NODE_ENV === 'development') {
             console.warn('⚠️  Development mode: OTP not sent via SMS, but generated:', otp);
@@ -168,12 +170,12 @@ const sendOtpToPhone = async (phoneNumber, lang = 'en') => {
     // Update request time
     otpRequestTimes.set(numberKey, currentTime);
 
-    // Send OTP via Msegat SMS
+    // Send OTP via MSGATE SMS
     try {
         await sendOTPSMS(phoneNumber, otp, lang);
-        console.log(`✅ Login OTP sent successfully to ${phoneNumber} via Msegat`);
+        console.log(`✅ Login OTP sent successfully to ${phoneNumber} via MSGATE`);
     } catch (error) {
-        console.error('❌ Error sending login OTP via Msegat:', error.message);
+        console.error('❌ Error sending login OTP via MSGATE:', error.message);
         // In development or if Msegat is not configured, allow OTP generation to continue
         // The OTP is still stored and can be verified, just not sent via SMS
         if (process.env.NODE_ENV === 'development' || process.env.ALLOW_OTP_WITHOUT_SMS === 'true') {
@@ -198,86 +200,34 @@ const sendOtpToPhone = async (phoneNumber, lang = 'en') => {
  * @returns {Promise<Object>} - OTP verification result
  */
 const verifyLoginOtp = async (phoneNumber, otp) => {
-    // Dummy OTP for testing (123456 or 000000)
-    const DUMMY_OTPS = ['123456', '000000', '111111'];
     const otpStr = otp.toString().trim();
     
-    // Check if it's a dummy OTP (for testing/development)
-    if (DUMMY_OTPS.includes(otpStr)) {
-        console.log(`[OTP:VERIFY] Dummy OTP accepted for testing: ${otpStr}`);
-        
-        // Also verify against database OTP for test users (only if connected)
-        try {
-            const { ensureConnection } = require('../config/database');
-            const mongoose = require('mongoose');
-            
-            // Check if MongoDB is connected before querying
-            if (mongoose.connection.readyState !== 1) {
-                // Not connected, try to ensure connection
-                try {
-                    await ensureConnection();
-                } catch (connError) {
-                    console.warn('[OTP:VERIFY] MongoDB not connected, skipping database check:', connError.message);
-                    // Still allow dummy OTP even if database is not connected
-                    return { verified: true, phoneNumber, isDummy: true };
-                }
-            }
-            
-            const countryCode = phoneNumber.substring(0, 4); // +966
-            const phone = phoneNumber.substring(4);
-            
-            // Check User model
-            const User = require('../models/userModel');
-            const user = await User.findOne({
-                phone_number: parseInt(phone),
-                country_code: countryCode,
-                otp: otpStr
-            });
-            
-            if (user) {
-                console.log(`[OTP:VERIFY] OTP verified against database for user: ${user._id}`);
-                return { verified: true, phoneNumber, isDummy: true, userId: user._id, role: 1 };
-            }
-            
-            // Check Organizer model
-            const Organizer = require('../models/organizerModel');
-            const organizer = await Organizer.findOne({
-                phone_number: parseInt(phone),
-                country_code: countryCode,
-                otp: otpStr
-            });
-            
-            if (organizer) {
-                console.log(`[OTP:VERIFY] OTP verified against database for organizer: ${organizer._id}`);
-                return { verified: true, phoneNumber, isDummy: true, userId: organizer._id, role: 2 };
-            }
-            
-            // If dummy OTP but not in database, still allow (for testing)
-            console.log(`[OTP:VERIFY] Dummy OTP accepted (not in database, but allowed for testing)`);
-            return { verified: true, phoneNumber, isDummy: true };
-        } catch (dbError) {
-            console.error('[OTP:VERIFY] Error checking database OTP:', dbError.message || dbError);
-            // Still allow dummy OTP even if database check fails
-            return { verified: true, phoneNumber, isDummy: true };
-        }
+    // Test OTP for development/test users (123456)
+    const TEST_OTP = '123456';
+    const TEST_PHONES = ['+966501234567', '+966598765432']; // Test user phone numbers
+    
+    if (otpStr === TEST_OTP && TEST_PHONES.includes(phoneNumber)) {
+        console.log(`✅ Test OTP accepted for ${phoneNumber}`);
+        return { verified: true, phoneNumber, isTestOtp: true };
     }
-
+    
     const numberKey = `login_${phoneNumber}`;
-    const storedOtp = otpStore.get(`${numberKey}_${otp}`);
+    const storedOtp = otpStore.get(`${numberKey}_${otpStr}`);
 
-    if (!storedOtp) {
-        throw new Error('Invalid OTP. Please check and try again.');
+    // Check in-memory store first
+    if (storedOtp) {
+        if (Date.now() > storedOtp.expiresAt) {
+            otpStore.delete(`${numberKey}_${otpStr}`);
+            throw new Error('OTP has expired. Please request a new one.');
+        }
+
+        // OTP is valid, remove it
+        otpStore.delete(`${numberKey}_${otpStr}`);
+        return { verified: true, phoneNumber };
     }
 
-    if (Date.now() > storedOtp.expiresAt) {
-        otpStore.delete(`${numberKey}_${otp}`);
-        throw new Error('OTP has expired. Please request a new one.');
-    }
-
-    // OTP is valid, remove it
-    otpStore.delete(`${numberKey}_${otp}`);
-
-    return { verified: true, phoneNumber };
+    // If not found in memory, throw error
+    throw new Error('Invalid OTP. Please check and try again.');
 };
 
 /**
@@ -323,18 +273,24 @@ const sendSignupOtp = async (userId, phoneNumber, role, lang = 'en') => {
         console.error('[SIGNUP:OTP] Error updating OTP in database:', error);
     }
 
-    // Send OTP via Msegat SMS
+    // Send OTP via MSGATE SMS
     try {
         await sendOTPSMS(phoneNumber, otp, lang);
-        console.log(`✅ Signup OTP sent successfully to ${phoneNumber} via Msegat`);
+        console.log(`✅ Signup OTP sent successfully to ${phoneNumber} via MSGATE`);
     } catch (error) {
-        console.error('❌ Error sending signup OTP via Msegat:', error.message);
-        // In development, still allow OTP generation
-        if (process.env.NODE_ENV === 'development' || process.env.ALLOW_OTP_WITHOUT_SMS === 'true') {
-            console.warn('⚠️  Development mode: OTP generated but not sent via SMS:', otp);
-        } else {
-            console.error('⚠️  SMS sending failed, but OTP is still generated for verification');
-        }
+        console.error('❌ Error sending signup OTP via MSGATE:', error.message);
+        console.error('❌ Error details:', {
+            phoneNumber,
+            userId,
+            role,
+            lang,
+            error: error.message,
+            stack: error.stack
+        });
+        
+        // Always throw error - no dummy OTPs, real OTP required
+        console.error('⚠️  SMS sending failed. User must receive real OTP.');
+        throw new Error(`Failed to send OTP via SMS: ${error.message}. Please check your phone number and try again.`);
     }
 
     return otp;
@@ -351,23 +307,6 @@ const sendSignupOtp = async (userId, phoneNumber, role, lang = 'en') => {
 const verifySignupOtp = async (userId, phoneNumber, otp, role) => {
     const otpStr = otp.toString().trim();
     
-    // Check dummy OTPs for testing
-    const DUMMY_OTPS = ['123456', '000000', '111111'];
-    if (DUMMY_OTPS.includes(otpStr)) {
-        console.log(`[SIGNUP:OTP:VERIFY] Dummy OTP accepted for testing: ${otpStr}`);
-        // Check database as fallback
-        const service = role == 1 ? UserService : organizerService;
-        const user = await service.FindOneService({
-            _id: userId,
-            otp: otpStr
-        });
-        
-        if (user) {
-            return { verified: true, userId: user._id.toString(), role };
-        }
-        return { verified: true, userId, role };
-    }
-
     const numberKey = `signup_${role}_${phoneNumber}`;
     const storedOtp = otpStore.get(`${numberKey}_${otpStr}`);
 
@@ -388,21 +327,30 @@ const verifySignupOtp = async (userId, phoneNumber, otp, role) => {
         return { verified: true, userId: storedOtp.userId.toString(), role: storedOtp.role };
     }
 
-    // Fallback: Check database
-    const service = role == 1 ? UserService : organizerService;
-    const user = await service.FindOneService({
-        _id: userId,
-        otp: otpStr
-    });
-
-    if (!user) {
+    // Fallback: Check database (only if MongoDB is connected)
+    try {
+        const service = role == 1 ? UserService : organizerService;
+        
+        // First check if user exists by ID
+        const userById = await service.FindByIdService(userId);
+        if (!userById) {
+            throw new Error('User not found. Invalid OTP.');
+        }
+        
+        // Check if OTP matches
+        if (userById.otp && userById.otp.toString().trim() === otpStr) {
+            // Clear OTP from database after successful verification
+            await service.FindByIdAndUpdateService(userId, { otp: '' });
+            return { verified: true, userId: userById._id.toString(), role };
+        }
+        
         throw new Error('Invalid OTP. Please check and try again.');
+    } catch (dbError) {
+        // If database query fails, log but don't fail verification if OTP was found in memory
+        console.error('[OTP:VERIFY] Database check error:', dbError.message);
+        // If we reach here, OTP was not found in memory store and database check failed
+        throw new Error('Invalid or expired OTP. Please request a new one.');
     }
-
-    // Clear OTP from database after successful verification
-    await service.FindByIdAndUpdateService(userId, { otp: '' });
-
-    return { verified: true, userId: user._id.toString(), role };
 };
 
 module.exports = {

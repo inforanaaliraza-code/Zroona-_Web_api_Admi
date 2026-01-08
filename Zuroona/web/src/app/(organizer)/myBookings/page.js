@@ -12,6 +12,7 @@ import { ChangeStatusOrganizerApi } from "@/app/api/myBookings/apis";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -27,10 +28,14 @@ import {
 import { useRTL } from "@/utils/rtl";
 import { Icon } from "@iconify/react";
 import RejectReasonModal from "@/components/Modal/RejectReasonModal";
+import AttendeeReviewsModal from "@/components/Modal/AttendeeReviewsModal";
 
 export default function MyBookings() {
   const { t } = useTranslation();
   const { isRTL, flexDirection, textAlign, chevronIcon } = useRTL();
+  const searchParams = useSearchParams();
+  const eventIdFromUrl = searchParams?.get("event_id");
+  
   const breadcrumbItems = [
     { label: t("breadcrumb.tab1"), href: "/joinUsEvent" },
     { label: t("breadcrumb.tab4"), href: "/myBookings" },
@@ -45,6 +50,25 @@ export default function MyBookings() {
   const [processingBooking, setProcessingBooking] = useState(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedBookingForReject, setSelectedBookingForReject] = useState(null);
+  const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
+  const [selectedUserForReviews, setSelectedUserForReviews] = useState(null);
+  
+  // Auto-expand event if event_id is in URL
+  useEffect(() => {
+    if (eventIdFromUrl) {
+      setExpandedEvents((prev) => ({
+        ...prev,
+        [eventIdFromUrl]: true,
+      }));
+      // Scroll to the event section if possible
+      setTimeout(() => {
+        const eventElement = document.getElementById(`event-${eventIdFromUrl}`);
+        if (eventElement) {
+          eventElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 500);
+    }
+  }, [eventIdFromUrl]);
 
   const handlePage = (value) => {
     setPage(value);
@@ -80,13 +104,51 @@ export default function MyBookings() {
     );
   }, [page, search, selectedDate, activeTab, dispatch]);
 
-  // Group bookings by event
+  // Group bookings by event and remove duplicates
   const groupBookingsByEvent = () => {
     if (!BookingList?.data) return [];
     
+    // First, remove duplicate bookings based on booking _id
+    const seenBookingIds = new Set();
+    const uniqueBookings = BookingList.data.filter((booking) => {
+      const bookingId = booking._id?.toString();
+      if (!bookingId) return false;
+      
+      // Check for duplicates based on booking _id
+      if (seenBookingIds.has(bookingId)) {
+        console.warn(`[DUPLICATE] Found duplicate booking with ID: ${bookingId}`);
+        return false; // Skip duplicate
+      }
+      
+      seenBookingIds.add(bookingId);
+      return true;
+    });
+
+    // Also check for duplicates based on user_id + event_id + similar timestamps (within 5 seconds)
+    const seenBookingKeys = new Set();
+    const finalBookings = uniqueBookings.filter((booking) => {
+      const userId = booking.user_id?.toString() || booking.user?._id?.toString();
+      const eventId = booking.event_id?.toString();
+      const createdAt = booking.createdAt ? new Date(booking.createdAt).getTime() : 0;
+      
+      if (!userId || !eventId) return true; // Keep if missing critical data
+      
+      // Create a key based on user + event + time window (5 seconds)
+      const timeWindow = Math.floor(createdAt / 5000) * 5000; // Round to nearest 5 seconds
+      const bookingKey = `${userId}_${eventId}_${timeWindow}`;
+      
+      if (seenBookingKeys.has(bookingKey)) {
+        console.warn(`[DUPLICATE] Found duplicate booking: User ${userId}, Event ${eventId}, Time ${timeWindow}`);
+        return false; // Skip duplicate
+      }
+      
+      seenBookingKeys.add(bookingKey);
+      return true;
+    });
+    
     const grouped = {};
-    BookingList.data.forEach((booking) => {
-      const eventId = booking.event_id || booking.eventDetails?._id || booking._id;
+    finalBookings.forEach((booking) => {
+      const eventId = booking.event_id?.toString() || booking.eventDetails?._id?.toString() || booking._id?.toString();
       const eventName = booking.event_name || booking.eventDetails?.event_name || "Unknown Event";
       
       if (!grouped[eventId]) {
@@ -322,7 +384,10 @@ export default function MyBookings() {
                     return (
                       <div
                         key={eventGroup.eventId}
-                        className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300"
+                        id={`event-${eventGroup.eventId}`}
+                        className={`bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 ${
+                          eventIdFromUrl === eventGroup.eventId ? "ring-2 ring-[#a797cc] ring-offset-2" : ""
+                        }`}
                       >
                         {/* Premium Event Header - Expandable */}
                         <div
@@ -421,6 +486,9 @@ export default function MyBookings() {
                                       {t("status") || "Status"}
                                     </th>
                                     <th className={`px-6 py-4 ${textAlign} text-xs font-semibold text-gray-700 uppercase tracking-wider`}>
+                                      {t("reviews.rating") || "Rating"}
+                                    </th>
+                                    <th className={`px-6 py-4 ${textAlign} text-xs font-semibold text-gray-700 uppercase tracking-wider`}>
                                       {t("actions") || "Actions"}
                                     </th>
                                   </tr>
@@ -503,6 +571,24 @@ export default function MyBookings() {
                                           {getBookingStatusBadge(bookingStatus)}
                                         </td>
                                         <td className={`px-6 py-4 whitespace-nowrap text-sm ${textAlign}`}>
+                                          <button
+                                            onClick={() => {
+                                              const userId = booking.user_id || booking.user?._id || booking.userDetail?._id;
+                                              if (userId) {
+                                                setSelectedUserForReviews({
+                                                  id: userId,
+                                                  name: userName
+                                                });
+                                                setReviewsModalOpen(true);
+                                              }
+                                            }}
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-[#a797cc] text-white rounded-lg hover:bg-[#8ba179] text-xs font-medium transition-colors"
+                                          >
+                                            <Icon icon="lucide:star" className="w-4 h-4" />
+                                            {t("reviews.viewReviews") || "View Reviews"}
+                                          </button>
+                                        </td>
+                                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${textAlign}`}>
                                           <div className={`flex items-center gap-2 ${flexDirection}`}>
                                             {isPending && (
                                               <>
@@ -535,7 +621,7 @@ export default function MyBookings() {
                                             )}
                                             {!isPending && !(isApproved && isPaid) && (
                                               <span className="text-gray-400 text-xs">
-                                                {t("events.processed") || t("processed") || "Processed"}
+                                                {t("processed") || "Processed"}
                                               </span>
                                             )}
                                           </div>
@@ -589,6 +675,17 @@ export default function MyBookings() {
           isLoading={processingBooking === selectedBookingForReject.bookingId}
         />
       )}
+
+      {/* Attendee Reviews Modal */}
+      <AttendeeReviewsModal
+        isOpen={reviewsModalOpen}
+        onClose={() => {
+          setReviewsModalOpen(false);
+          setSelectedUserForReviews(null);
+        }}
+        userId={selectedUserForReviews?.id}
+        userName={selectedUserForReviews?.name}
+      />
     </>
   );
 }

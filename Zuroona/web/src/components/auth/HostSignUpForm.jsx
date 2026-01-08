@@ -20,6 +20,7 @@ import { TOKEN_NAME } from "@/until";
 import useAuthStore from "@/store/useAuthStore";
 import axios from "axios";
 import { BASE_API_URL } from "@/until";
+import { useEmailValidation } from "@/hooks/useEmailValidation";
 
 export default function HostSignUpForm() {
     const { t, i18n } = useTranslation();
@@ -34,6 +35,9 @@ export default function HostSignUpForm() {
     const [otpVerifying, setOtpVerifying] = useState(false);
     const [emailVerified, setEmailVerified] = useState(false);
     const [phoneVerified, setPhoneVerified] = useState(false);
+    
+    // Email validation hook
+    const { emailStatus, checkEmailDebounced, resetEmailStatus } = useEmailValidation();
 
     const validationSchema = Yup.object({
         first_name: Yup.string()
@@ -44,6 +48,18 @@ export default function HostSignUpForm() {
             .min(2, t("auth.lastNameMin") || "Last name must be at least 2 characters"),
         email: Yup.string()
             .required(t("auth.emailRequired") || "Email is required")
+            .test('gmail-only', "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+                if (!value) return true; // Let required handle empty
+                const emailLower = value.toLowerCase().trim();
+                return emailLower.endsWith('@gmail.com');
+            })
+            .test('gmail-format', "Invalid Gmail address format", function(value) {
+                if (!value) return true;
+                const emailLower = value.toLowerCase().trim();
+                const localPart = emailLower.split('@')[0];
+                if (!localPart) return false;
+                return /^[a-z0-9.+]+$/.test(localPart);
+            })
             .email(t("auth.emailInvalid") || "Invalid email address"),
         phone_number: Yup.string()
             .required(t("auth.phoneRequired") || "Phone number is required")
@@ -69,6 +85,12 @@ export default function HostSignUpForm() {
             date_of_birth: "",
             bio: "",
         },
+
+
+
+
+
+        
         validationSchema,
         onSubmit: async (values) => {
             setLoading(true);
@@ -396,7 +418,7 @@ export default function HostSignUpForm() {
                                 disabled={otpVerifying || otp.length !== 6}
                                 className="w-full py-3 px-6 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                             >
-                                {otpVerifying ? "Verifying..." : t("auth.verifyOTP") || "Verify OTP"}
+                                {otpVerifying ? "Verifying..." : t("Verify OTP") || "Verify OTP"}
                             </button>
                         )}
                         {(emailVerified && phoneVerified) && (
@@ -435,7 +457,7 @@ export default function HostSignUpForm() {
                         </div>
                     </div>
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                        {t("auth.becomeHost") || "Become a Host"}
+                        {t("auth.joinAsHostOrGuest") || "Join as Host or Guest"}
                     </h1>
                     <p className="text-gray-600">
                         {t("auth.hostSignupSubtitle") || "Create and manage your own events on Zuroona"}
@@ -517,21 +539,58 @@ export default function HostSignUpForm() {
                     {/* Email */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t("auth.email") || "Email"} *
+                            {t("auth.email") || "Email"} * <span className="text-xs text-gray-500">(Gmail only)</span>
                         </label>
                         <input
                             type="email"
                             name="email"
                             value={formik.values.email}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            onChange={(e) => {
+                                formik.handleChange(e);
+                                // Real-time email validation
+                                checkEmailDebounced(e.target.value, 'organizer');
+                            }}
+                            onBlur={(e) => {
+                                formik.handleBlur(e);
+                                // Final check on blur
+                                if (e.target.value) {
+                                    checkEmailDebounced(e.target.value, 'organizer');
+                                }
+                            }}
                             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
                                 formik.touched.email && formik.errors.email
                                     ? "border-red-500"
+                                    : emailStatus.status === 'valid'
+                                    ? "border-green-500"
+                                    : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
+                                    ? "border-red-500"
                                     : "border-gray-300"
                             }`}
-                            placeholder={t("auth.emailPlaceholder") || "your.email@example.com"}
+                            placeholder="your.email@gmail.com"
                         />
+                        {/* Real-time status message */}
+                        {formik.values.email && (
+                            <div className="mt-1">
+                                {emailStatus.isChecking && (
+                                    <p className="text-sm text-blue-600 flex items-center gap-1">
+                                        <span className="animate-spin">⏳</span> Checking email...
+                                    </p>
+                                )}
+                                {!emailStatus.isChecking && emailStatus.message && (
+                                    <p className={`text-sm ${
+                                        emailStatus.status === 'valid'
+                                            ? "text-green-600"
+                                            : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
+                                            ? "text-red-600"
+                                            : "text-gray-600"
+                                    }`}>
+                                        {emailStatus.status === 'valid' && '✓ '}
+                                        {emailStatus.message}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        {/* Formik validation error */}
                         {formik.touched.email && formik.errors.email && (
                             <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
                         )}
@@ -648,7 +707,7 @@ export default function HostSignUpForm() {
                             onClick={() => setIsLoginModalOpen(true)}
                             className="text-[#a797cc] hover:text-[#8ba179] font-semibold"
                         >
-                            {t("auth.login") || "Login"}
+                            <span suppressHydrationWarning>{t("auth.login") || "Login"}</span>
                         </button>
                     </p>
                     <p className="text-gray-600 mt-2">

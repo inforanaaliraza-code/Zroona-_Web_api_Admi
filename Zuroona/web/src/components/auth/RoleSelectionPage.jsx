@@ -26,14 +26,8 @@ export default function RoleSelectionPage() {
             icon: "material-symbols:person",
             color: "from-[#a797cc] to-[#a797cc]/80",
             hoverColor: "hover:from-[#a797cc]/80 hover:to-[#a797cc]/90",
-            features: [
-                t("auth.guestFeature1") || "Browse thousands of events",
-                t("auth.guestFeature2") || "Book tickets instantly",
-                t("auth.guestFeature3") || "Write reviews",
-                t("auth.guestFeature4") || "Connect with hosts"
-            ],
+            
             route: "/signup/guest",
-            time: t("auth.signupTime2min") || "2 minutes signup",
         },
         {
             id: "host",
@@ -42,14 +36,8 @@ export default function RoleSelectionPage() {
             icon: "material-symbols:star",
             color: "from-brand-orange to-brand-orange/80",
             hoverColor: "hover:from-brand-orange/80 hover:to-brand-orange/90",
-            features: [
-                t("auth.hostFeature1") || "Create unlimited events",
-                t("auth.hostFeature2") || "Manage bookings",
-                t("auth.hostFeature3") || "Earn money",
-                t("auth.hostFeature4") || "Build your community"
-            ],
+        
             route: "/signup/host",
-            time: t("auth.signupTime10min") || "10-15 minutes signup",
             badge: t("auth.requiresApproval") || "Requires Approval",
         },
     ];
@@ -144,27 +132,8 @@ export default function RoleSelectionPage() {
 
                                     {/* Features */}
                                     <ul className="space-y-3 mb-6">
-                                        {role.features.map((feature, idx) => (
-                                            <li key={idx} className="flex items-start">
-                                                <Icon 
-                                                    icon="material-symbols:check-circle" 
-                                                    className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" 
-                                                />
-                                                <span className="text-gray-700 text-sm">
-                                                    {feature}
-                                                </span>
-                                            </li>
-                                        ))}
+                                        
                                     </ul>
-
-                                    {/* Time */}
-                                    <div className="flex items-center justify-center md:justify-start text-sm text-gray-500">
-                                        <Icon 
-                                            icon="material-symbols:schedule" 
-                                            className="w-4 h-4 mr-2" 
-                                        />
-                                        {role.time}
-                                    </div>
                                 </div>
 
                                 {/* Arrow */}
@@ -194,7 +163,7 @@ export default function RoleSelectionPage() {
                             onClick={() => router.push("/login")}
                             className="text-brand-orange hover:text-brand-orange/90 font-semibold underline"
                         >
-                            {t("auth.login") || "Login"}
+                            <span suppressHydrationWarning>{t("auth.login") || "Login"}</span>
                         </button>
                     </p>
                 </motion.div>

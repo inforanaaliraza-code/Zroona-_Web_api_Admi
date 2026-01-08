@@ -476,13 +476,16 @@ const adminController = {
     adminProfile: async (req, res) => {
         try {
             const { userId } = req;
+            const lang = req.lang || req.headers.lang || 'en';
             const user = await AdminService.FindOneService({ _id: userId });
             if (!user) {
-                return Response.badRequestResponse(res, resp_messages(req.lang).user_not_found);
+                return Response.badRequestResponse(res, resp_messages(lang).user_not_found);
             }
-            return Response.ok(res, user, resp_messages(req.lang).profile_access);
+            return Response.ok(res, user, 200, resp_messages(lang).profile_access);
         } catch (error) {
-            return Response.serverErrorResponse(res, resp_messages(req.lang).internalServerError);
+            console.error('[ADMIN-PROFILE] Error:', error);
+            const lang = req.lang || req.headers.lang || 'en';
+            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError);
         }
     },
     // userList: async (req, res) => {
@@ -525,30 +528,89 @@ const adminController = {
     // },
     userList: async (req, res) => {
         try {
-            const { page = 1, limit = 10, search = '' } = req.query;
+            const { page = 1, limit = 10, search = '', isActive, status } = req.query;
             const pageInt = parseInt(page);
             const limitInt = parseInt(limit);
             const skip = (pageInt - 1) * limitInt;
 
-            const searchQuery = search ? {
+            // Build search query for name and email
+            const searchQuery = search && search.trim() ? {
                 $or: [
-                    { first_name: { $regex: search, $options: 'i' } },
-                    { last_name: { $regex: search, $options: 'i' } }
+                    { first_name: { $regex: search.trim(), $options: 'i' } },
+                    { last_name: { $regex: search.trim(), $options: 'i' } },
+                    { email: { $regex: search.trim(), $options: 'i' } }
                 ]
             } : {};
 
-            const totalCount = await UserService.CountDocumentService(searchQuery);
+            // Build status filter
+            // status can be: "Active", "Inactive", "Suspended", "Deleted"
+            // OR use isActive boolean (legacy support)
+            let statusFilter = {};
+            
+            if (status) {
+                // New status-based filtering
+                if (status === "Active") {
+                    statusFilter = { 
+                        isActive: 1, 
+                        is_suspended: false,
+                        is_delete: { $ne: 1 } // Not deleted
+                    };
+                } else if (status === "Inactive") {
+                    statusFilter = { 
+                        isActive: 2,
+                        is_suspended: false,
+                        is_delete: { $ne: 1 } // Not deleted
+                    };
+                } else if (status === "Suspended") {
+                    statusFilter = { 
+                        is_suspended: true,
+                        is_delete: { $ne: 1 } // Not deleted
+                    };
+                } else if (status === "Deleted") {
+                    statusFilter = { 
+                        is_delete: 1 // Show deleted users
+                    };
+                }
+            } else if (isActive !== undefined) {
+                // Legacy support: isActive boolean
+                const isActiveBool = isActive === 'true' || isActive === true;
+                statusFilter = {
+                    isActive: isActiveBool ? 1 : 2,
+                    is_suspended: false,
+                    is_delete: { $ne: 1 } // Not deleted
+                };
+            } else {
+                // Default: show all users including deleted (for admin visibility)
+                statusFilter = {}; // No filter - show all
+            }
+
+            // Combine search and status filters
+            const matchQuery = {
+                $and: [
+                    ...(Object.keys(searchQuery).length > 0 ? [searchQuery] : []),
+                    ...(Object.keys(statusFilter).length > 0 ? [statusFilter] : [])
+                ]
+            };
+
+            // If no filters, match all
+            const finalMatchQuery = Object.keys(matchQuery.$and).length > 0 ? matchQuery : {};
+
+            const totalCount = await UserService.CountDocumentService(finalMatchQuery);
 
             const user_data = await UserService.AggregateService([
-                { $match: searchQuery },
+                { $match: finalMatchQuery },
                 { $sort: { createdAt: -1 } },
                 { $skip: skip },
                 { $limit: limitInt }
             ]);
 
+            // Add formatted ID and ensure status fields are present
             user_data.forEach((user, i) => {
-                user.id = `JN_UM_${String(i + 1).padStart(3, '0')}`
-            })
+                user.id = `JN_UM_${String((pageInt - 1) * limitInt + i + 1).padStart(3, '0')}`;
+                // Ensure boolean fields are properly set
+                user.isActive = user.isActive === 1;
+                user.is_suspended = user.is_suspended === true;
+            });
 
             return Response.ok(res, user_data, 200, resp_messages(req.lang).fetched_data, totalCount);
         } catch (error) {
@@ -566,11 +628,14 @@ const adminController = {
 
             const match_query = {
                 $and: [
-
+                    // CRITICAL: Only show organizers who have completed all registration steps
+                    // registration_step === 4 means all 4 steps are completed and signup button was clicked
+                    { registration_step: 4 },
                     {
                         $or: [
                             { first_name: { $regex: search, $options: 'i' } },
-                            { last_name: { $regex: search, $options: 'i' } }
+                            { last_name: { $regex: search, $options: 'i' } },
+                            { email: { $regex: search, $options: 'i' } }
                         ]
                     }
                 ]
@@ -651,6 +716,16 @@ const adminController = {
             if (!organizer) {
                 return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
             }
+
+            // CRITICAL: Only allow access to organizers who have completed all registration steps
+            // registration_step === 4 means all 4 steps are completed and signup button was clicked
+            if (organizer.registration_step !== 4) {
+                return Response.notFoundResponse(
+                    res, 
+                    "Organizer registration is not complete. Only fully registered organizers can be viewed in admin panel."
+                );
+            }
+
             return Response.ok(res, organizer, 200, resp_messages(lang).fetched_data)
 
         } catch (error) {
@@ -896,37 +971,72 @@ const adminController = {
     },
     changeOrganizerStatus: async (req, res) => {
         const { lang } = req || 'en';
-        const { id, isActive, isSuspended } = req.body;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        const { id, userId, isActive, isSuspended, reactivate } = req.body;
+        const organizerId = userId || id; // Support both userId and id for backward compatibility
+        if (!mongoose.Types.ObjectId.isValid(organizerId)) {
             return Response.badRequestResponse(res, resp_messages(lang).id_required);
         }
 
-        const organizer = await organizerService.FindOneService({ _id: id });
+        const organizer = await organizerService.FindOneService({ _id: organizerId });
 
         if (!organizer) {
             return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
         }
 
+        // CRITICAL: Only allow status changes for organizers who have completed all registration steps
+        // registration_step === 4 means all 4 steps are completed and signup button was clicked
+        if (organizer.registration_step !== 4) {
+            return Response.badRequestResponse(
+                res,
+                "Cannot change status. Organizer registration is not complete. Only fully registered organizers can have their status changed."
+            );
+        }
+
+        // Handle reactivation (for deleted accounts)
+        if (reactivate === true) {
+            organizer.is_delete = 0; // Reactivate deleted account
+            organizer.is_suspended = false; // Remove suspension
+            organizer.isActive = 1; // Set to active
+            await organizer.save();
+            
+            return Response.ok(res, { 
+                isActive: organizer.isActive,
+                is_suspended: organizer.is_suspended,
+                is_delete: organizer.is_delete
+            }, 200, "Account reactivated successfully. Organizer can now register/login with the same phone number.");
+        }
+
         // Handle suspend/unsuspend
         if (isSuspended !== undefined) {
             organizer.is_suspended = isSuspended;
+            // If unsuspending, also set to active and ensure not deleted
+            if (!isSuspended) {
+                organizer.isActive = 1;
+                organizer.is_delete = 0; // Ensure not deleted when unsuspending
+            }
         }
         
         // Handle active/inactive
         if (isActive !== undefined) {
-            organizer.isActive = isActive ? 1 : 2; // Assuming 1 is active, 2 is inactive based on previous code
+            organizer.isActive = isActive ? 1 : 2;
+            // If setting to active, unsuspend and ensure not deleted
+            if (isActive) {
+                organizer.is_suspended = false;
+                organizer.is_delete = 0; // Ensure not deleted when activating
+            }
         }
 
         await organizer.save();
 
         return Response.ok(res, { 
             isActive: organizer.isActive,
-            is_suspended: organizer.is_suspended 
+            is_suspended: organizer.is_suspended,
+            is_delete: organizer.is_delete
         }, 200, resp_messages(lang).update_success);
     },
     changeUserStatus: async (req, res) => {
         const { lang } = req || 'en';
-        const { userId, isActive } = req.body;
+        const { userId, isActive, isSuspended, reactivate } = req.body;
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return Response.badRequestResponse(res, resp_messages(lang).id_required);
         }
@@ -937,11 +1047,79 @@ const adminController = {
             return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
         }
 
-        user.isActive = isActive ? 1 : 2; // 1 is active, 2 is inactive
+        // Handle reactivation (for deleted accounts)
+        if (reactivate === true) {
+            user.is_delete = 0; // Reactivate deleted account
+            user.is_suspended = false; // Remove suspension
+            user.isActive = 1; // Set to active
+            await user.save();
+            
+            return Response.ok(res, { 
+                isActive: user.isActive,
+                is_suspended: user.is_suspended,
+                is_delete: user.is_delete
+            }, 200, "Account reactivated successfully. User can now register/login with the same phone number.");
+        }
+
+        // Handle suspend/unsuspend
+        if (isSuspended !== undefined) {
+            user.is_suspended = isSuspended;
+            // If unsuspending, also set to active and ensure not deleted
+            if (!isSuspended) {
+                user.isActive = 1;
+                user.is_delete = 0; // Ensure not deleted when unsuspending
+            }
+        }
+        
+        // Handle active/inactive
+        if (isActive !== undefined) {
+            user.isActive = isActive ? 1 : 2;
+            // If setting to active, unsuspend and ensure not deleted
+            if (isActive) {
+                user.is_suspended = false;
+                user.is_delete = 0; // Ensure not deleted when activating
+            }
+        }
 
         await user.save();
 
-        return Response.ok(res, { isActive: user.isActive }, 200, resp_messages(lang).update_success);
+        return Response.ok(res, { 
+            isActive: user.isActive,
+            is_suspended: user.is_suspended,
+            is_delete: user.is_delete
+        }, 200, resp_messages(lang).update_success);
+    },
+    
+    deleteUser: async (req, res) => {
+        const { lang } = req || 'en';
+        try {
+            const { userId } = req.body;
+            
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                return Response.badRequestResponse(res, resp_messages(lang).id_required || "User ID is required");
+            }
+            
+            const user = await UserService.FindOneService({ _id: userId });
+            if (!user) {
+                return Response.notFoundResponse(res, resp_messages(lang).user_not_found || "User not found");
+            }
+            
+            // Soft delete: set is_delete = 1, isActive = 2, is_suspended = false
+            user.is_delete = 1;
+            user.isActive = 2; // Set to inactive
+            user.is_suspended = false; // Remove suspension when deleting
+            
+            await user.save();
+            
+            return Response.ok(res, { 
+                is_delete: user.is_delete,
+                isActive: user.isActive,
+                is_suspended: user.is_suspended
+            }, 200, "User deleted successfully. User remains visible in admin panel but cannot login/register.");
+        } catch (error) {
+            console.error("[ADMIN:DELETE_USER] Error:", error);
+            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError || "Internal server error");
+        }
     },
     
     updateUser: async (req, res) => {
@@ -1513,7 +1691,16 @@ const adminController = {
                         from: 'organizers',
                         localField: 'organizer_id',
                         foreignField: '_id',
-                        as: 'organizer'
+                        as: 'organizer',
+                        // CRITICAL: Only include organizers who have completed all registration steps
+                        // registration_step === 4 means all 4 steps are completed and signup button was clicked
+                        pipeline: [
+                            {
+                                $match: {
+                                    registration_step: 4
+                                }
+                            }
+                        ]
                     }
                 },
                 {
@@ -1690,34 +1877,34 @@ const adminController = {
                     console.error('[ADMIN:WITHDRAWAL_APPROVE] Notification error:', notifError);
                 }
 
-                // Send email notification
+                // Send email and push notification using new notification helper
                 try {
-                    const EmailService = require('../helpers/emailService');
-                    await EmailService.sendEmail({
-                        to: organizer.email,
-                        subject: lang === 'ar' ? 'تمت الموافقة على طلب السحب' : 'Withdrawal Request Approved - Zuroona',
-                        html: `
-                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                                <h2 style="color: #a3cc69;">Withdrawal Approved ✓</h2>
-                                <p>Dear ${organizer.first_name} ${organizer.last_name},</p>
-                                <p>Your withdrawal request has been approved!</p>
-                                <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                                    <h3 style="margin-top: 0;">Withdrawal Details:</h3>
-                                    <p><strong>Amount:</strong> ${transaction.amount} ${transaction.currency || 'SAR'}</p>
-                                    <p><strong>Request Date:</strong> ${new Date(transaction.createdAt).toLocaleDateString()}</p>
-                                    <p><strong>Approved Date:</strong> ${new Date().toLocaleDateString()}</p>
-                                    ${transaction_reference ? `<p><strong>Transaction Reference:</strong> ${transaction_reference}</p>` : ''}
-                                    ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ''}
-                                </div>
-                                <p>The amount will be transferred to your registered bank account within 3-5 business days.</p>
-                                <p>Thank you for using Zuroona!</p>
-                                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-                                <p style="color: #666; font-size: 12px;">This is an automated email from Zuroona. Please do not reply.</p>
-                            </div>
-                        `
-                    });
-                } catch (emailError) {
-                    console.error('[ADMIN:WITHDRAWAL_APPROVE] Email error:', emailError);
+                    const notificationHelper = require('../helpers/notificationService');
+                    await notificationHelper.sendWithdrawalApproved({
+                        amount: transaction.amount,
+                        currency: transaction.currency || 'SAR',
+                        bank_short: organizer.bank_name || 'Bank',
+                        bank_name: organizer.bank_name || 'Bank',
+                        payout_ref: transaction_reference || transaction._id.toString(),
+                        transaction_reference: transaction_reference || transaction._id.toString()
+                    }, organizer);
+                    console.log(`[NOTIFICATION] Sent withdrawal approved notification to organizer ${organizer._id}`);
+                } catch (notifError) {
+                    console.error('[ADMIN:WITHDRAWAL_APPROVE] Notification error:', notifError);
+                    // Fallback to old email method
+                    try {
+                        const EmailService = require('../helpers/emailService');
+                        const emailTemplate = EmailService.renderWithdrawalApprovedEmail({
+                            host_first_name: organizer.first_name,
+                            amount: transaction.amount,
+                            currency: transaction.currency || 'SAR',
+                            bank_short: organizer.bank_name || 'Bank',
+                            payout_ref: transaction_reference || transaction._id.toString()
+                        }, lang);
+                        await EmailService.send(organizer.email, emailTemplate.subject, emailTemplate.html);
+                    } catch (emailError) {
+                        console.error('[ADMIN:WITHDRAWAL_APPROVE] Email error:', emailError);
+                    }
                 }
 
                 return Response.ok(res, transaction, 200, resp_messages(lang).withdrawal_approved || 'Withdrawal approved successfully');
@@ -2537,7 +2724,7 @@ const adminController = {
                 admin_name: `${admin.firstName || ''} ${admin.lastName || ''}`.trim(),
                 username: admin.email?.split('@')[0] || `admin_${i + 1}`,
                 mobile_number: admin.mobileNumber?.toString() || '',
-                profile_image: admin.image || '/assets/images/home/Profile.png',
+                profile_image: admin.image || '/assets/images/dummyImage.png',
                 is_main: admin.mobileNumber === '0598379373' || admin.mobileNumber === 598379373
             }));
             
@@ -2574,27 +2761,28 @@ const adminController = {
         try {
             const { admin_name, username, mobile_number, email, password, profile_image } = req.body;
             
-            // Check if admin with same email or mobile exists
-            const existingAdmin = await AdminService.FindOneService({
-                $or: [
-                    { email: email },
-                    { mobileNumber: mobile_number }
-                ]
-            });
-            
-            if (existingAdmin) {
-                return Response.conflictResponse(res, {}, 409, "Admin with this email or mobile number already exists");
+            // Check if admin with same email exists (removed mobile number restriction)
+            if (email) {
+                const existingAdmin = await AdminService.FindOneService({ email: email });
+                if (existingAdmin) {
+                    return Response.conflictResponse(res, {}, 409, "Admin with this email already exists");
+                }
             }
             
             // Split admin_name into firstName and lastName
-            const nameParts = admin_name.split(' ');
+            const nameParts = admin_name ? admin_name.split(' ') : [];
             const firstName = nameParts[0] || '';
             const lastName = nameParts.slice(1).join(' ') || '';
+            
+            // Convert mobile_number to number if it's a string
+            const mobileNumberValue = mobile_number !== undefined && mobile_number !== null && mobile_number !== '' 
+                ? (typeof mobile_number === 'string' ? parseInt(mobile_number) || mobile_number : mobile_number)
+                : undefined;
             
             const adminData = {
                 firstName,
                 lastName,
-                mobileNumber: mobile_number,
+                mobileNumber: mobileNumberValue,
                 email: email || `${username}@zarouna.com`,
                 password: password,
                 image: profile_image,
@@ -2604,45 +2792,187 @@ const adminController = {
             
             const admin = await AdminService.CreateService(adminData);
             
-            return Response.ok(res, admin, 201, "Admin created successfully");
+            // Remove password from response
+            const adminResponse = admin.toObject ? admin.toObject() : admin;
+            delete adminResponse.password;
+            
+            return Response.ok(res, adminResponse, 201, "Admin created successfully");
         } catch (error) {
-            console.error(error);
-            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError);
+            console.error('[ADMIN:CREATE] Error:', error);
+            console.error('[ADMIN:CREATE] Error stack:', error.stack);
+            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError || `Error creating admin: ${error.message}`);
         }
     },
     
     adminUpdate: async (req, res) => {
         const { lang } = req || 'en';
         try {
-            const { id } = req.body;
-            const { admin_name, username, mobile_number, email, profile_image } = req.body;
+            // Handle both JSON and FormData requests
+            const id = req.body?.id;
+            const admin_name = req.body?.admin_name;
+            const username = req.body?.username;
+            const mobile_number = req.body?.mobile_number;
+            const email = req.body?.email;
+            const profile_image = req.body?.profile_image;
+            const password = req.body?.password;
+            
+            console.log('[ADMIN:UPDATE] Request body:', { id, admin_name, username, mobile_number, email, hasPassword: !!password, hasProfileImage: !!profile_image });
+            console.log('[ADMIN:UPDATE] Files:', req.files ? Object.keys(req.files) : 'No files');
+            console.log('[ADMIN:UPDATE] Content-Type:', req.headers['content-type']);
+            
+            if (!id) {
+                return Response.badRequestResponse(res, resp_messages(lang).id_required || "Admin ID is required");
+            }
             
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                return Response.badRequestResponse(res, resp_messages(lang).id_required);
+                return Response.badRequestResponse(res, resp_messages(lang).id_required || "Invalid admin ID format");
             }
             
             const admin = await AdminService.FindOneService({ _id: id });
             if (!admin) {
-                return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
+                return Response.notFoundResponse(res, resp_messages(lang).user_not_found || "Admin not found");
             }
+            
+            // Prepare update data
+            const updateData = {};
             
             // Split admin_name into firstName and lastName
-            if (admin_name) {
-                const nameParts = admin_name.split(' ');
-                admin.firstName = nameParts[0] || admin.firstName;
-                admin.lastName = nameParts.slice(1).join(' ') || admin.lastName;
+            if (admin_name !== undefined && admin_name !== null && admin_name !== '') {
+                const nameParts = admin_name.split(' ').filter(part => part.trim() !== '');
+                updateData.firstName = nameParts[0] || admin.firstName || '';
+                updateData.lastName = nameParts.slice(1).join(' ') || admin.lastName || '';
             }
             
-            if (mobile_number) admin.mobileNumber = mobile_number;
-            if (email) admin.email = email;
-            if (profile_image) admin.image = profile_image;
+            if (mobile_number !== undefined && mobile_number !== null && mobile_number !== '') {
+                // Convert to number if it's a string, otherwise use as-is
+                updateData.mobileNumber = typeof mobile_number === 'string' ? parseInt(mobile_number) || mobile_number : mobile_number;
+            }
             
-            await admin.save();
+            if (email !== undefined && email !== null && email !== '') {
+                updateData.email = email.toLowerCase().trim();
+            }
             
-            return Response.ok(res, admin, 200, "Admin updated successfully");
+            // Handle file upload (if file is sent via FormData)
+            if (req.files && req.files.profile_image) {
+                const file = req.files.profile_image;
+                console.log('[ADMIN:UPDATE] File received:', { 
+                    name: file.name, 
+                    size: file.size, 
+                    mimetype: file.mimetype,
+                    hasData: !!file.data,
+                    hasTempFilePath: !!file.tempFilePath
+                });
+                
+                try {
+                    // Read file data (handle both temp files and in-memory files)
+                    let fileData;
+                    const fs = require('fs');
+                    
+                    if (file.tempFilePath) {
+                        // File was saved to temp directory
+                        fileData = fs.readFileSync(file.tempFilePath);
+                        console.log('[ADMIN:UPDATE] Reading from temp file:', file.tempFilePath);
+                    } else if (file.data) {
+                        // File is in memory
+                        fileData = file.data;
+                        console.log('[ADMIN:UPDATE] Using in-memory file data');
+                    } else {
+                        console.error('[ADMIN:UPDATE] No file data found');
+                        throw new Error('File data not found');
+                    }
+                    
+                    // Upload to AWS S3
+                    const { uploadToS3 } = require("../utils/awsS3");
+                    const s3Result = await uploadToS3(
+                        fileData,
+                        'Zuroona/Admin',
+                        file.name || `admin-${Date.now()}.jpg`,
+                        file.mimetype || 'image/jpeg'
+                    );
+                    
+                    if (s3Result && s3Result.url) {
+                        updateData.image = s3Result.url;
+                        console.log('[ADMIN:UPDATE] Image uploaded to AWS S3:', s3Result.url);
+                    } else {
+                        console.error('[ADMIN:UPDATE] AWS S3 upload failed:', s3Result);
+                    }
+                    
+                    // Clean up temp file if it was used
+                    if (file.tempFilePath) {
+                        try {
+                            fs.unlinkSync(file.tempFilePath);
+                            console.log('[ADMIN:UPDATE] Temp file cleaned up');
+                        } catch (cleanupError) {
+                            console.warn('[ADMIN:UPDATE] Failed to delete temp file:', cleanupError.message);
+                        }
+                    }
+                } catch (uploadError) {
+                    console.error('[ADMIN:UPDATE] Error uploading image:', uploadError);
+                    console.error('[ADMIN:UPDATE] Upload error stack:', uploadError.stack);
+                    // Don't fail the entire update if image upload fails, but log it
+                }
+            } else if (profile_image !== undefined && profile_image !== null) {
+                // Handle string URL (if image URL is sent directly)
+                if (typeof profile_image === 'string' && profile_image.trim() !== '') {
+                    updateData.image = profile_image.trim();
+                } else if (typeof profile_image === 'object') {
+                    // Skip if it's an object (empty or not) - don't update image field
+                    console.warn('[ADMIN:UPDATE] profile_image is an object, skipping image update:', profile_image);
+                }
+            }
+            
+            // Handle password update (hash if provided)
+            if (password !== undefined && password !== null && password !== '') {
+                const HashPassword = require("../helpers/hashPassword");
+                updateData.password = await HashPassword.hashPassword(password);
+            }
+            
+            // Update admin - no restrictions, update whatever is provided
+            if (Object.keys(updateData).length > 0) {
+                console.log('[ADMIN:UPDATE] Updating fields:', Object.keys(updateData));
+                
+                const updatedAdmin = await AdminService.FindByIdAndUpdateService(id, updateData);
+                
+                if (!updatedAdmin) {
+                    return Response.serverErrorResponse(res, "Update failed");
+                }
+                
+                // Format response
+                const adminResponse = updatedAdmin.toObject ? updatedAdmin.toObject() : updatedAdmin;
+                delete adminResponse.password;
+                
+                const formattedResponse = {
+                    ...adminResponse,
+                    profile_image: adminResponse.image || '/assets/images/dummyImage.png',
+                    admin_name: `${adminResponse.firstName || ''} ${adminResponse.lastName || ''}`.trim() || 'Admin',
+                    username: adminResponse.email?.split('@')[0] || 'admin',
+                    mobile_number: adminResponse.mobileNumber?.toString() || '',
+                };
+                
+                return Response.ok(res, formattedResponse, 200, "Admin updated successfully");
+            } else {
+                // No changes, return current data
+                const adminResponse = admin.toObject ? admin.toObject() : admin;
+                delete adminResponse.password;
+                
+                const formattedResponse = {
+                    ...adminResponse,
+                    profile_image: adminResponse.image || '/assets/images/dummyImage.png',
+                    admin_name: `${adminResponse.firstName || ''} ${adminResponse.lastName || ''}`.trim() || 'Admin',
+                    username: adminResponse.email?.split('@')[0] || 'admin',
+                    mobile_number: adminResponse.mobileNumber?.toString() || '',
+                };
+                
+                return Response.ok(res, formattedResponse, 200, "No changes to update");
+            }
         } catch (error) {
-            console.error(error);
-            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError);
+            console.error('[ADMIN:UPDATE] Error:', error);
+            console.error('[ADMIN:UPDATE] Error message:', error.message);
+            console.error('[ADMIN:UPDATE] Error stack:', error.stack);
+            return Response.serverErrorResponse(
+                res, 
+                resp_messages(lang).internalServerError || `Error updating admin: ${error.message}`
+            );
         }
     },
     
@@ -2959,17 +3289,24 @@ const adminController = {
         try {
             const { page = 1, limit = 20 } = req.query;
             const skip = (parseInt(page) - 1) * parseInt(limit);
-            const userId = req.userId || req.user?.id;
+            const userId = req.userId || req.user?._id || req.user?.id;
             
             if (!userId) {
-                return Response.unauthorizedResponse(res, resp_messages(lang).unauthorized || "Unauthorized");
+                return Response.badRequestResponse(res, "User ID is required. Please login again.");
             }
+            
+            // Validate ObjectId format
+            if (!mongoose.Types.ObjectId.isValid(userId)) {
+                return Response.badRequestResponse(res, "Invalid user ID format");
+            }
+            
+            const userIdObject = new mongoose.Types.ObjectId(userId);
             
             // Get notifications for this specific admin user (role = 3)
             const notifications = await NotificationService.AggregateService([
                 {
                     $match: { 
-                        user_id: new mongoose.Types.ObjectId(userId),
+                        user_id: userIdObject,
                         role: 3 // Admin role
                     }
                 },
@@ -3006,14 +3343,15 @@ const adminController = {
             
             // Get total count for pagination
             const totalCount = await NotificationService.CountDocumentService({
-                user_id: new mongoose.Types.ObjectId(userId),
+                user_id: userIdObject,
                 role: 3
             });
             
             return Response.ok(res, notifications, 200, resp_messages(lang).fetched_data || "Notifications fetched successfully", totalCount);
         } catch (error) {
             console.error('[ADMIN-NOTIFICATIONS] Error:', error);
-            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError);
+            console.error('[ADMIN-NOTIFICATIONS] Error stack:', error.stack);
+            return Response.serverErrorResponse(res, resp_messages(lang).internalServerError || "Error fetching notifications");
         }
     },
 

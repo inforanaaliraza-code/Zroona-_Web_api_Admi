@@ -24,6 +24,7 @@ const WalletService = require("../services/walletService");
 const moment = require("moment");
 const TransactionService = require("../services/recentTransaction");
 const ConversationService = require("../services/conversationService.js");
+const notificationHelper = require("../helpers/notificationService");
 const {
 	getGraphData,
 	getCurrentMonthAttendees,
@@ -125,15 +126,29 @@ const organizerController = {
 			if (exist_organizer_email || exist_user_email) {
 				const existingAccount = exist_organizer_email || exist_user_email;
 				
-				// Check if account was deleted - prevent reuse of email/phone
+				// Check if account is deleted or suspended
 				if (existingAccount.is_delete === 1) {
 					return Response.conflictResponse(
 						res,
 						{
 							email: emailLower,
+							account_status: "deleted"
 						},
 						409,
-						"This email was previously used with a deleted account. Please use a different email address."
+						"This email was previously used with a deleted or suspended account. Please use a different email address or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
+					);
+				}
+				
+				// Check if account is suspended
+				if (existingAccount.is_suspended === true) {
+					return Response.conflictResponse(
+						res,
+						{
+							email: emailLower,
+							account_status: "suspended"
+						},
+						409,
+						"This email was previously used with a deleted or suspended account. Please use a different email address or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
 					);
 				}
 				
@@ -257,15 +272,29 @@ const organizerController = {
 			if (exist_organizer_phone || exist_user_phone) {
 				const existingPhoneAccount = exist_organizer_phone || exist_user_phone;
 				
-				// Prevent reuse of phone from deleted accounts
+				// Check if account is deleted or suspended
 				if (existingPhoneAccount.is_delete === 1) {
 					return Response.conflictResponse(
 						res,
 						{
 							phone_number: phone_number,
+							account_status: "deleted"
 						},
 						409,
-						"This phone number was previously used with a deleted account. Please use a different phone number."
+						"This phone number was previously used with a deleted or suspended account. Please use a different phone number or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
+					);
+				}
+				
+				// Check if account is suspended
+				if (existingPhoneAccount.is_suspended === true) {
+					return Response.conflictResponse(
+						res,
+						{
+							phone_number: phone_number,
+							account_status: "suspended"
+						},
+						409,
+						"This phone number was previously used with a deleted or suspended account. Please use a different phone number or contact the Zuroona admin team at infozuroona@gmail.com to reactivate your account."
 					);
 				}
 				
@@ -333,8 +362,22 @@ const organizerController = {
 			delete organizerData.password;
 			delete organizerData.confirmPassword;
 
-			const organizer = await organizerService.CreateService(organizerData);
-			console.log("[ORGANIZER:REGISTRATION] Organizer created:", organizer._id);
+			// Ensure MongoDB connection before database operations
+			const { ensureConnection } = require("../config/database");
+			await ensureConnection();
+
+			let organizer;
+			try {
+				organizer = await organizerService.CreateService(organizerData);
+				console.log("[ORGANIZER:REGISTRATION] Organizer created successfully in database:", organizer._id);
+			} catch (createError) {
+				console.error("[ORGANIZER:REGISTRATION] Failed to create organizer in database:", createError.message);
+				console.error("[ORGANIZER:REGISTRATION] Full error:", createError);
+				return Response.serverErrorResponse(
+					res,
+					"Failed to create organizer account. Please try again later."
+				);
+			}
 
 			// Send OTP to phone number for verification (via Msegat)
 			const fullPhoneNumber = `${country_code}${phoneStr}`;
@@ -967,15 +1010,18 @@ const organizerController = {
 					updateData
 				);
 
-			// Save bank details when registration_step is 3 (Bank Details step)
-			if (registration_step == 3) {
+			// Save bank details when registration_step is 3 (Bank Details step) OR when bank fields are present (for profile updates)
+			const hasBankDetails = req.body.account_holder_name || req.body.bank_name || req.body.iban || 
+									req.body.account_number || req.body.ifsc_code;
+			
+			if (registration_step == 3 || hasBankDetails) {
 				const bankData = {
 					organizer_id: targetOrganizerId,
-					account_holder_name: req.body.account_holder_name,
-					bank_name: req.body.bank_name,
-					iban: req.body.iban,
-					account_number: req.body.account_number,
-					ifsc_code: req.body.ifsc_code,
+					account_holder_name: req.body.account_holder_name || "",
+					bank_name: req.body.bank_name || "",
+					iban: req.body.iban || "",
+					account_number: req.body.account_number || "",
+					ifsc_code: req.body.ifsc_code || "",
 				};
 
 				const exist_user_bank = await BankService.FindOneService({
@@ -987,9 +1033,11 @@ const organizerController = {
 						bankData
 					);
 					console.log("[ORGANIZER:UPDATE] Bank details updated for organizer:", targetOrganizerId);
+					console.log("[ORGANIZER:UPDATE] Bank data:", JSON.stringify(bankData, null, 2));
 				} else {
 					await BankService.CreateService(bankData);
 					console.log("[ORGANIZER:UPDATE] Bank details created for organizer:", targetOrganizerId);
+					console.log("[ORGANIZER:UPDATE] Bank data:", JSON.stringify(bankData, null, 2));
 				}
 			}
 			
@@ -1008,7 +1056,41 @@ const organizerController = {
 				resp_messages(req.lang).profileUpdated
 			);
 		} catch (error) {
-			console.log(error);
+			console.log(error.message);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages(req.lang).internalServerError
+			);
+		}
+	},
+
+	deactivateAccount: async (req, res) => {
+		try {
+			const { userId } = req;
+			
+			const organizer = await organizerService.FindOneService({
+				_id: userId,
+			});
+
+			if (!organizer) {
+				return Response.notFoundResponse(
+					res,
+					resp_messages(req.lang).user_not_found
+				);
+			}
+
+			// Set organizer to inactive
+			organizer.isActive = 2;
+			await organizer.save();
+
+			return Response.ok(
+				res,
+				{ isActive: organizer.isActive },
+				200,
+				resp_messages(req.lang).update_success || "Account deactivated successfully"
+			);
+		} catch (error) {
+			console.log(error.message);
 			return Response.serverErrorResponse(
 				res,
 				resp_messages(req.lang).internalServerError
@@ -1099,28 +1181,45 @@ const organizerController = {
 		const token = req.headers["authorization"];
 
 		if (token) {
-			const decoded = verifyToken(token);
-			const user = await UserService.FindOneService({
-				_id: decoded.userId,
-			});
-			const organizer = await organizerService.FindOneService({
-				_id: decoded.userId,
-			});
-			const entity = user || organizer;
-			lang = entity.language;
+			try {
+				const decoded = verifyToken(token);
+				const user = await UserService.FindOneService({
+					_id: decoded.userId,
+				});
+				const organizer = await organizerService.FindOneService({
+					_id: decoded.userId,
+				});
+				const entity = user || organizer;
+				if (entity && entity.language) {
+					lang = entity.language;
+				}
+			} catch (tokenError) {
+				console.log("[EVENT-CATEGORY-LIST] Token verification failed, using default language:", tokenError.message);
+				// Continue with default language if token is invalid
+			}
 		}
 		try {
 			const { page = 1, limit = 100, search = "" } = req.query;
 
+			console.log("[EVENT-CATEGORY-LIST] Request received:", { page, limit, search, lang });
+
 			const skip = (parseInt(page) - 1) * parseInt(limit);
-			const count = await EventCategoryService.CountDocumentService({});
-
-			// Only add search filter if search term is provided
+			
+			// Build the match query - always exclude deleted categories
+			const baseQuery = { is_delete: { $ne: 1 } }; // Only get non-deleted categories
+			
+			// Add search filter if search term is provided
 			const searchQuery = search && search.trim() 
-				? { [`name.${lang}`]: { $regex: search.trim(), $options: "i" } }
-				: {}; // Empty object matches all documents
+				? { 
+					...baseQuery,
+					[`name.${lang}`]: { $regex: search.trim(), $options: "i" } 
+				}
+				: baseQuery;
 
-			console.log("Search Query:", searchQuery);
+			const count = await EventCategoryService.CountDocumentService(searchQuery);
+			console.log("[EVENT-CATEGORY-LIST] Total non-deleted categories in DB:", count);
+
+			console.log("[EVENT-CATEGORY-LIST] Search Query:", JSON.stringify(searchQuery));
 
 			const result = await EventCategoryService.AggregateService([
 				{ $match: searchQuery },
@@ -1139,18 +1238,22 @@ const organizerController = {
 				{ $limit: parseInt(limit) },
 			]);
 
+			console.log("[EVENT-CATEGORY-LIST] Categories found:", result?.length || 0);
+			console.log("[EVENT-CATEGORY-LIST] Sample category:", result?.[0] || "No categories");
+
 			return Response.ok(
 				res,
-				result,
+				result || [],
 				200,
-				resp_messages(req.lang).fetched_data,
+				resp_messages(req.lang || lang).fetched_data || "Categories fetched successfully",
 				count
 			);
 		} catch (error) {
-			console.error("Error:", error);
+			console.error("[EVENT-CATEGORY-LIST] Error:", error);
+			console.error("[EVENT-CATEGORY-LIST] Error stack:", error.stack);
 			return Response.serverErrorResponse(
 				res,
-				resp_messages(req.lang).internalServerError
+				error.message || resp_messages(req.lang || "en").internalServerError || "Internal server error"
 			);
 		}
 	},
@@ -1279,6 +1382,14 @@ const organizerController = {
 			};
 		}
 
+		// Ensure area_name and neighborhood are saved (area_name comes from frontend, neighborhood can also be set)
+		if (req.body.area_name) {
+			req.body.area_name = req.body.area_name.trim();
+		}
+		if (req.body.neighborhood) {
+			req.body.neighborhood = req.body.neighborhood.trim();
+		}
+
 		console.log("[ADD-EVENT] Creating event with payload:", JSON.stringify(req.body, null, 2));
 		const event = await EventService.CreateService(req.body);
 
@@ -1405,6 +1516,14 @@ const organizerController = {
 				type: "Point",
 				coordinates: [parseFloat(longitude), parseFloat(latitude)],
 			};
+		}
+
+		// Ensure area_name and neighborhood are saved (area_name comes from frontend, neighborhood can also be set)
+		if (req.body.area_name) {
+			req.body.area_name = req.body.area_name.trim();
+		}
+		if (req.body.neighborhood) {
+			req.body.neighborhood = req.body.neighborhood.trim();
 		}
 
 		const exist_event = await EventService.FindOneService({
@@ -1805,15 +1924,50 @@ const organizerController = {
 				{ $limit: parseInt(limit) },
 			]);
 
+			// Remove duplicates based on booking _id (in case of any data inconsistency)
+			const seenIds = new Set();
+			const uniqueEvents = event.filter((booking) => {
+				const bookingId = booking._id?.toString();
+				if (!bookingId) return false;
+				if (seenIds.has(bookingId)) {
+					console.warn(`[DUPLICATE] Found duplicate booking ID in organizer booking list: ${bookingId}`);
+					return false;
+				}
+				seenIds.add(bookingId);
+				return true;
+			});
+
+			// Also remove duplicates based on user_id + event_id + createdAt (within 5 seconds)
+			const seenKeys = new Set();
+			const finalEvents = uniqueEvents.filter((booking) => {
+				const userId = booking.user_id?.toString() || booking.user?._id?.toString();
+				const eventId = booking.event_id?.toString();
+				const createdAt = booking.createdAt ? new Date(booking.createdAt).getTime() : 0;
+				
+				if (!userId || !eventId) return true; // Keep if missing critical data
+				
+				// Create a key based on user + event + time window (5 seconds)
+				const timeWindow = Math.floor(createdAt / 5000) * 5000;
+				const bookingKey = `${userId}_${eventId}_${timeWindow}`;
+				
+				if (seenKeys.has(bookingKey)) {
+					console.warn(`[DUPLICATE] Found duplicate booking: User ${userId}, Event ${eventId}, Time ${timeWindow}`);
+					return false;
+				}
+				
+				seenKeys.add(bookingKey);
+				return true;
+			});
+
 			const totalDocuments =
 				total_count.length > 0 ? total_count[0].total_count : 0;
 
 			return Response.ok(
 				res,
-				event,
+				finalEvents,
 				200,
 				resp_messages(req.lang).fetched_data,
-				totalDocuments
+				finalEvents.length // Use deduplicated count
 			);
 		} catch (error) {
 			console.log(error.message);
@@ -1878,79 +2032,139 @@ const organizerController = {
 			// Store confirmation timestamp when booking is confirmed (status = 2)
 			if (book_status === 2) {
 				booked_event.confirmed_at = new Date();
+				// Set hold expiration (30 minutes from now)
+				booked_event.hold_expires_at = new Date(Date.now() + 30 * 60 * 1000);
 			}
 
 			await booked_event.save();
 
-			const book_notification_status =
-				book_status == 2
-					? resp_messages(req.lang).accepted_key
-					: resp_messages(req.lang).rejected_key;
-			
-			// Build notification description with proper messages
-			let notificationDescription = "";
-			
+			// Get guest user for notifications
+			const guest = await UserService.FindOneService({ _id: booked_event.user_id });
+
 			if (book_status === 2) {
-				// Accepted message
-				notificationDescription = req.lang === "ar"
-					? `تم قبول طلبك لحجز "${event.event_name}". يمكنك الآن المتابعة للدفع.`
-					: `Your booking request for "${event.event_name}" has been accepted by the host. You can now proceed with payment.`;
+				// Booking accepted - send "Accepted → Pay Now" notification
+				try {
+					// Calculate remaining seats
+					const bookedSeatsResult = await BookEventService.AggregateService([
+						{
+							$match: {
+								event_id: new mongoose.Types.ObjectId(event._id),
+								book_status: { $in: [1, 2] },
+								_id: { $ne: booked_event._id }
+							},
+						},
+						{
+							$group: {
+								_id: null,
+								totalBooked: { $sum: "$no_of_attendees" },
+							},
+						},
+					]);
+					const totalBookedSeats = bookedSeatsResult.length > 0 ? (bookedSeatsResult[0].totalBooked || 0) : 0;
+					const remainingSeats = Math.max(0, event.no_of_attendees - totalBookedSeats);
+
+					await notificationHelper.sendGuestAcceptedPayNow({
+						host_first_name: organizer.first_name,
+						host_id: organizer._id,
+						experience_title: event.event_name,
+						event_name: event.event_name,
+						tickets_count: booked_event.no_of_attendees,
+						no_of_attendees: booked_event.no_of_attendees,
+						start_at: event.event_date || event.start_date,
+						event_date: event.event_date || event.start_date,
+						hold_expires_at: booked_event.hold_expires_at,
+						total_amount: booked_event.total_amount,
+						price_total: booked_event.total_amount,
+						currency: 'SAR',
+						remaining_seats: remainingSeats,
+						book_id: booked_event._id,
+						booking_id: booked_event._id,
+						event_id: event._id
+					}, guest, 'A'); // Use variant A (scarcity) by default
+				} catch (notifError) {
+					console.error('[NOTIFICATION] Error sending accepted pay now notification:', notifError);
+					// Fallback to old notification method
+					const notificationTitle = req.lang === "ar" ? "تم قبول طلبك" : "Booking Accepted";
+					const notificationDescription = req.lang === "ar"
+						? `تم قبول طلبك لحجز "${event.event_name}". يمكنك الآن المتابعة للدفع.`
+						: `Your booking request for "${event.event_name}" has been accepted by the host. You can now proceed with payment.`;
+					
+					const notification_data = {
+						title: notificationTitle,
+						description: notificationDescription,
+						event_id: event._id,
+						event_type: event.event_type,
+						event_name: event.event_name,
+						userId: organizer._id,
+						book_id: booked_event._id,
+						notification_type: 2,
+						status: book_status,
+						first_name: organizer.first_name,
+						last_name: organizer.last_name,
+						profile_image: organizer.profile_image,
+					};
+					await sendEventBookingAcceptNotification(res, booked_event.user_id, notification_data);
+				}
 			} else if (book_status === 3 || book_status === 4) {
-				// Rejected message
-				notificationDescription = req.lang === "ar"
+				// Booking rejected - use old notification method for now
+				const notificationTitle = req.lang === "ar" ? "تم رفض طلبك" : "Booking Rejected";
+				let notificationDescription = req.lang === "ar"
 					? `تم رفض طلبك لحجز "${event.event_name}". لا يمكنك حجز هذا الحدث.`
 					: `Your booking request for "${event.event_name}" has been rejected by the host. You cannot book this event.`;
 				
-				// Add rejection reason to notification if rejected
 				if (rejection_reason) {
 					notificationDescription += req.lang === "ar"
 						? ` السبب: ${rejection_reason}`
 						: ` Reason: ${rejection_reason}`;
 				}
+				
+				const notification_data = {
+					title: notificationTitle,
+					description: notificationDescription,
+					event_id: event._id,
+					event_type: event.event_type,
+					event_name: event.event_name,
+					userId: organizer._id,
+					book_id: booked_event._id,
+					notification_type: 3,
+					status: book_status,
+					first_name: organizer.first_name,
+					last_name: organizer.last_name,
+					profile_image: organizer.profile_image,
+					rejection_reason: rejection_reason,
+				};
+				await sendEventBookingAcceptNotification(res, booked_event.user_id, notification_data);
 			}
-			
-			// Fallback to old format if description is empty
-			if (!notificationDescription) {
-				notificationDescription = `${resp_messages(req.lang).eventNotification || "Your booking for"} "${event.event_name}" ${resp_messages(req.lang)[book_notification_status] || (book_status == 2 ? "has been accepted" : "has been rejected")}`;
-			}
-			
-			// Set proper notification title
-			const notificationTitle = book_status === 2
-				? (req.lang === "ar" ? "تم قبول طلبك" : "Booking Accepted")
-				: (req.lang === "ar" ? "تم رفض طلبك" : "Booking Rejected");
-			
-			const notification_data = {
-				title: notificationTitle,
-				description: notificationDescription,
-				event_id: event._id,
-				event_type: event.event_type,
-				event_name: event.event_name,
-				userId: organizer._id,
-				book_id: booked_event._id,
-				notification_type: book_status == 2 ? 2 : 3,
-				status: book_status,
-				first_name: organizer.first_name,
-				last_name: organizer.last_name,
-				profile_image: organizer.profile_image,
-				rejection_reason: book_status === 3 ? rejection_reason : null,
-			};
 
-			// Send push notification
-			await sendEventBookingAcceptNotification(
-				res,
-				booked_event.user_id,
-				notification_data
-			);
-
-			// Create in-app notification for the guest
+			// Create in-app notification for the guest (always create for consistency)
 			try {
+				const notificationTitle = book_status === 2
+					? (req.lang === "ar" ? "تم قبول طلبك" : "Booking Accepted")
+					: (req.lang === "ar" ? "تم رفض طلبك" : "Booking Rejected");
+				
+				let notificationDescription = "";
+				if (book_status === 2) {
+					notificationDescription = req.lang === "ar"
+						? `تم قبول طلبك لحجز "${event.event_name}". يمكنك الآن المتابعة للدفع.`
+						: `Your booking request for "${event.event_name}" has been accepted by the host. You can now proceed with payment.`;
+				} else if (book_status === 3 || book_status === 4) {
+					notificationDescription = req.lang === "ar"
+						? `تم رفض طلبك لحجز "${event.event_name}". لا يمكنك حجز هذا الحدث.`
+						: `Your booking request for "${event.event_name}" has been rejected by the host. You cannot book this event.`;
+					if (rejection_reason) {
+						notificationDescription += req.lang === "ar"
+							? ` السبب: ${rejection_reason}`
+							: ` Reason: ${rejection_reason}`;
+					}
+				}
+
 				await NotificationService.CreateService({
 					user_id: booked_event.user_id,
 					role: 1, // User/Guest role
-					title: notification_data.title,
-					description: notification_data.description,
+					title: notificationTitle,
+					description: notificationDescription,
 					isRead: false,
-					notification_type: notification_data.notification_type,
+					notification_type: book_status == 2 ? 2 : 3,
 					event_id: event._id,
 					book_id: booked_event._id,
 					status: book_status,
@@ -2351,13 +2565,14 @@ const organizerController = {
 
 	earningList: async (req, res) => {
 		try {
-			const { userId, lang = "en" } = req;
-			const { filter = "m", page = 1, limit = 10 } = req.query;
-			const skip = (Number(page) - 1) * Number(limit);
+		const { userId, lang = "en" } = req;
+		const { filter = "m", page = 1, limit = 10 } = req.query;
+		const skip = (Number(page) - 1) * Number(limit);
 
-			const { total_amount } = await WalletService.FindOneService({
-				organizer_id: userId,
-			});
+		const wallet = await WalletService.FindOneService({
+			organizer_id: userId,
+		});
+		const total_amount = wallet?.total_amount || 0;
 
 			const transactions = await TransactionService.AggregateService([
 				{
@@ -2574,9 +2789,11 @@ const organizerController = {
 			]);
 			let total_attendee = 0;
 
-			total_attendees.forEach((attendee) => {
-				total_attendee += attendee.no_of_attendees;
-			});
+			if (total_attendees && Array.isArray(total_attendees)) {
+				total_attendees.forEach((attendee) => {
+					total_attendee += attendee?.no_of_attendees || 0;
+				});
+			}
 
 			const current_month_attendees =
 				await BookEventService.AggregateService([
@@ -2649,7 +2866,7 @@ const organizerController = {
 						100;
 
 					if (currentMonthTotal > previousMonthTotal) {
-						increaseFlag = 1;
+						is_increased = 1;
 					}
 				}
 			}
@@ -3142,7 +3359,41 @@ const organizerController = {
 			}
 
 			// Send OTP
-			const fullPhoneNumber = `${country_code}${phoneValidation.cleanPhone}`;
+			// IMPORTANT: Format phone number EXACTLY as done in registration
+			// This must match the format used in organizer registration
+			let fullPhoneNumber;
+			const phoneStr = phoneValidation.cleanPhone;
+			console.log(`[ORGANIZER:RESEND-SIGNUP-OTP] Phone formatting - phoneStr: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code}`);
+			
+			if (country_code === "+92") {
+				// Pakistan: Format exactly as done in registration
+				if (phoneStr.length === 10 && phoneStr.startsWith('0')) {
+					// 10 digits starting with 0: Remove 0 and use 9 digits
+					const numberWithoutZero = phoneStr.substring(1);
+					fullPhoneNumber = `${country_code}${numberWithoutZero}`;
+					console.log(`[ORGANIZER:RESEND-SIGNUP-OTP] 10-digit number with leading 0: "${phoneStr}" -> Removed 0 -> "${numberWithoutZero}" -> ${fullPhoneNumber}`);
+				}
+				else if (phoneStr.length === 10 && !phoneStr.startsWith('0')) {
+					// 10 digits without leading 0: Use as-is -> +923289081825
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+					console.log(`[ORGANIZER:RESEND-SIGNUP-OTP] 10-digit number without leading 0: "${phoneStr}" -> Use as-is -> ${fullPhoneNumber}`);
+				}
+				else if (phoneStr.length === 9) {
+					// 9 digits: MSGATE needs 10 digits for Pakistan - reject
+					throw new Error(`Invalid Pakistan phone number format. MSGATE requires 10 digits after +92, but received only ${phoneStr.length} digits. Please enter the complete 10-digit number (e.g., 3289081825).`);
+				}
+				else {
+					// Unexpected length: use as is
+					fullPhoneNumber = `${country_code}${phoneStr}`;
+					console.log(`[ORGANIZER:RESEND-SIGNUP-OTP] Warning: Unexpected phone length: ${phoneStr.length} digits`);
+				}
+			} else {
+				// Saudi numbers: use as is
+				fullPhoneNumber = `${country_code}${phoneStr}`;
+			}
+			
+			console.log(`[ORGANIZER:RESEND-SIGNUP-OTP] Formatted phone for OTP: ${fullPhoneNumber} (original: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code})`);
+			
 			const { sendSignupOtp } = require("../helpers/otpSend");
 			let otpSent = false;
 			let otpValue = null;

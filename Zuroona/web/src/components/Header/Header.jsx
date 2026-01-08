@@ -92,7 +92,15 @@ const Header = ({ bgColor, hideLogo = false }) => {
   return (
     <>
       <div className="h-[72px]" />
-      <header className={`fixed top-0 ${isRTL ? "left-0 right-0" : "right-0 left-0"} z-[100] border-b border-[#b0a0df]/30 bg-[#b0a0df] shadow-md`} style={{ willChange: 'transform', transform: 'translateZ(0)' }}>
+      <header 
+        className={`fixed top-0 ${isRTL ? "left-0 right-0" : "right-0 left-0"} z-[100] border-b border-[#8b7bb8]/30 shadow-md animate-gradient-xy`} 
+        style={{ 
+          willChange: 'transform', 
+          transform: 'translateZ(0)',
+          background: 'linear-gradient(135deg, #8b7bb8 0%, #a797cc 30%, #a3cc69 70%, #a797cc 100%)',
+          backgroundSize: '200% 200%'
+        }}
+      >
         <nav className="relative">
           <div className={`px-4 mx-auto max-w-7xl sm:px-6 lg:px-8`}>
             <div className={`flex items-center ${isRTL ? "flex-row-reverse" : "flex-row"} justify-between h-[72px]`}>
@@ -102,7 +110,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                   {/* Desktop Logo - Bigger sizes */}
                   <div className="hidden sm:block">
                     <Link
-                      href="/"
+                      href={isAuthenticated && user ? (user.role === 2 ? "/joinUsEvent" : "/events") : "/"}
                       className="flex items-center h-full transition-transform duration-600 hover:scale-105"
                     >
                       <Image
@@ -121,7 +129,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                   {/* Mobile Logo - Bigger sizes */}
                   <div className="block sm:hidden">
                     <Link
-                      href="/"
+                      href={isAuthenticated && user ? (user.role === 2 ? "/joinUsEvent" : "/events") : "/"}
                       className="flex items-center h-full transition-transform duration-300 hover:scale-105"
                     >
                       <Image
@@ -155,13 +163,13 @@ const Header = ({ bgColor, hideLogo = false }) => {
                         alt="Login"
                         className="opacity-80 group-hover:opacity-100"
                       />
-                      <span>{t("header.tab5")}</span>
+                      <span suppressHydrationWarning>{t("header.tab5") || "Login"}</span>
                     </button>
                     <Link
                       href="/signup"
                       className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-[#a797cc] rounded-xl hover:shadow-lg transition-all duration-300"
                     >
-                      <span>{t("header.tab4")}</span>
+                      <span suppressHydrationWarning>{t("header.tab4") || "Sign Up"}</span>
                     </Link>
                   </div>
                 ) : (
@@ -262,14 +270,14 @@ const Header = ({ bgColor, hideLogo = false }) => {
                         alt="Login"
                         className="opacity-80"
                       />
-                      <span>{t("header.tab5")}</span>
+                      <span suppressHydrationWarning>{t("header.tab5") || "Login"}</span>
                     </button>
                     <Link
                       href="/signup"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="flex justify-center items-center gap-2 px-5 py-3 text-sm font-medium text-white bg-[#a797cc] rounded-xl hover:shadow-lg transition-all duration-300 w-full"
                     >
-                      <span>{t("header.tab4")}</span>
+                      <span suppressHydrationWarning>{t("header.tab4") || "Sign Up"}</span>
                     </Link>
                   </div>
                 ) : (

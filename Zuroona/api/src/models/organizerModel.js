@@ -126,6 +126,12 @@ const OrganizerSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    max_event_capacity: {
+        type: Number,
+        default: 100,
+        min: 1,
+        max: 1000
+    },
 
 }, { timestamps: true });
 

@@ -59,16 +59,16 @@ const HeroSection = () => {
             
             <Header />
 
-            <main className="container relative flex items-center justify-center min-h-[calc(100vh-80px)] px-4 mx-auto overflow-visible">
+            <main className="container relative flex items-center justify-center min-h-[calc(100vh-80px)] px-4 mx-auto overflow-visible pt-20">
                 <div className="relative w-full max-w-6xl overflow-visible">
-                    {/* Dotted Arrow Line Image - Positioned to the left of heading */}
-                    <div className="absolute left-0 top-[5%] -translate-x-[60%] md:-translate-x-[55%] lg:-translate-x-[45%] hidden md:block z-1 overflow-visible">
+                    {/* Dotted Arrow Line Image - Positioned to the right of heading */}
+                    <div className="absolute right-0 top-[5%] translate-x-[60%] md:translate-x-[55%] lg:translate-x-[45%] hidden md:block z-1 overflow-visible">
                         <Image
                             src="/assets/images/dotedArrow line.jpeg"
                             alt="Decorative arrow"
                             width={190}
                             height={420}
-                            className="w-auto h-[380px] md:h-[480px] lg:h-[560px] object-contain opacity-30"
+                            className="w-auto h-[380px] md:h-[480px] lg:h-[560px] object-contain opacity-30 transform scale-x-[-1]"
                             priority
                         />
                     </div>
@@ -106,11 +106,12 @@ const HeroSection = () => {
                         </div> */}
 
                         {/* Stats */}
-                        <div className="grid grid-cols-3 gap-6 mx-auto max-w-3xl">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mx-auto max-w-3xl">
                             {[
-                                { value: '100+', label: t('home.organizers'), icon: 'material-symbols:groups' },
-                                { value: '100+', label: t('home.saudi'), icon: 'clarity:users-line' },
-                                { value: '50+', label: t('home.events'), icon: 'material-symbols:event' },
+                                { value: '100+', label: t('users') || 'Users', icon: 'clarity:users-line' },
+                                { value: '100+', label: t('home.events') || 'Events', icon: 'material-symbols:event' },
+                                { value: '100+', label: t('hosts') || 'Hosts', icon: 'material-symbols:groups' },
+                                { value: '10+', label: t('cities') || 'Cities', icon: 'material-symbols:location-city' },
                             ].map((stat, index) => (
                                 <div key={index} className="p-6 rounded-2xl backdrop-blur-sm transition-all bg-white/70 hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5 group">
                                     {renderStatIcon(stat)}

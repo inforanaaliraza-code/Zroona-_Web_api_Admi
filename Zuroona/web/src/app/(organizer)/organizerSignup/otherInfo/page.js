@@ -33,7 +33,7 @@ export default function OtherInfo() {
             <div className="w-full max-w-3xl">
               <UploadId
                 title={t('signup.tab28')}
-                buttonName={t('signup.tab21')}
+                buttonName={t('signup.tab52') || "Sign up"}
                 labelName={t('signup.tab29')}
                 onNext={handleNextStep}
               />

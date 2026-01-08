@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { ChangeEventStatusApi } from "@/api/events/apis";
 import RejectEventModal from "@/components/Modals/RejectEventModal";
+import { useTranslation } from "react-i18next";
 import { 
   Calendar, 
   Clock, 
@@ -67,6 +68,7 @@ const getEventImageUrl = (event) => {
 };
 
 export default function EventDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -85,7 +87,7 @@ export default function EventDetail() {
         .catch((err) => {
           console.error("[EVENT-DETAIL] Error:", err);
           setLoading(false);
-          toast.error("Failed to fetch Event details");
+          toast.error(t("eventDetail.failedToFetch"));
         });
     }
   }, [id, fetchEventsDetail]);
@@ -108,7 +110,7 @@ export default function EventDetail() {
     ChangeEventStatusApi(data)
       .then((res) => {
         if (res?.status === 1) {
-          toast.success(res?.message || "Event status updated successfully");
+          toast.success(res?.message || t("eventDetail.eventApprovedSuccess"));
           // Refresh details after status change
           setTimeout(() => {
             fetchEventsDetail({ id: detail._id })
@@ -122,12 +124,12 @@ export default function EventDetail() {
           }, 500);
           setShowRejectModal(false);
         } else {
-          toast.error(res?.message || "Failed to update event status");
+          toast.error(res?.message || t("eventDetail.failedToUpdateStatus"));
         }
       })
       .catch((err) => {
         console.error("[EVENT-STATUS] Error:", err);
-        toast.error(err?.response?.data?.message || "Failed to update event status");
+        toast.error(err?.response?.data?.message || t("eventDetail.failedToUpdateStatus"));
       })
       .finally(() => setLoading(false));
   };
@@ -180,31 +182,31 @@ export default function EventDetail() {
 
     if (isPending) {
       return {
-        text: "Pending",
+        text: t("eventDetail.pending"),
         className: "bg-yellow-100 text-yellow-800 border-yellow-300",
         icon: <AlertCircle className="w-4 h-4" />
       };
     } else if (isUpcoming) {
       return {
-        text: "Upcoming",
+        text: t("common.upcoming"),
         className: "bg-blue-100 text-blue-800 border-blue-300",
         icon: <Calendar className="w-4 h-4" />
       };
     } else if (isCompleted) {
       return {
-        text: "Completed",
+        text: t("common.completed"),
         className: "bg-green-100 text-green-800 border-green-300",
         icon: <CheckCircle2 className="w-4 h-4" />
       };
     } else if (isRejected) {
       return {
-        text: "Rejected",
+        text: t("eventDetail.rejected"),
         className: "bg-red-100 text-red-800 border-red-300",
         icon: <XCircle className="w-4 h-4" />
       };
     }
     return {
-      text: "Pending",
+      text: t("eventDetail.pending"),
       className: "bg-yellow-100 text-yellow-800 border-yellow-300",
       icon: <AlertCircle className="w-4 h-4" />
     };
@@ -226,17 +228,17 @@ export default function EventDetail() {
             className="flex items-center gap-2 text-gray-600 hover:text-[#a797cc] transition-colors mb-4"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Back to Events</span>
+            <span className="text-sm font-medium">{t("eventDetail.backToEvents")}</span>
           </button>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Event Details</h1>
-              <p className="text-sm text-gray-500 mt-1">View and manage event information</p>
+              <h1 className="text-2xl font-bold text-gray-900">{t("eventDetail.title")}</h1>
+              <p className="text-sm text-gray-500 mt-1">{t("eventDetail.eventInfo")}</p>
             </div>
             {detail?._id && (
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border shadow-sm">
-                  <span className="text-xs font-medium text-gray-600">Status:</span>
+                  <span className="text-xs font-medium text-gray-600">{t("common.status")}:</span>
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusBadge.className}`}>
                     {statusBadge.icon}
                     {statusBadge.text}
@@ -247,10 +249,10 @@ export default function EventDetail() {
                     onClick={() => ChangeEventStatus(2)}
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 bg-[#a797cc] hover:bg-[#a08ec8] text-white rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Approve Event"
+                    title={t("eventDetail.approveEvent")}
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Approve</span>
+                    <span>{t("common.approve")}</span>
                   </button>
                 )}
               </div>
@@ -262,7 +264,7 @@ export default function EventDetail() {
           <div className="flex justify-center items-center min-h-[500px] bg-white rounded-lg shadow-sm">
             <div className="text-center">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#a797cc] border-t-transparent mx-auto"></div>
-              <p className="mt-6 text-gray-600 font-medium">Loading event details...</p>
+              <p className="mt-6 text-gray-600 font-medium">{t("common.pleaseWait")}</p>
             </div>
           </div>
         ) : detail?._id ? (
@@ -459,10 +461,10 @@ export default function EventDetail() {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <FileText className="w-5 h-5 text-[#a797cc]" />
-                    <h3 className="text-xl font-bold text-gray-900">About This Event</h3>
+                    <h3 className="text-xl font-bold text-gray-900">{t("eventDetail.eventDescription")}</h3>
                   </div>
                   <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {detail?.event_description || "No description available."}
+                    {detail?.event_description || t("common.noData")}
                   </p>
                 </div>
               </div>
@@ -471,12 +473,12 @@ export default function EventDetail() {
               <div className="space-y-6">
                 {/* Event Details Card */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Event Information</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">{t("eventDetail.eventInfo")}</h3>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <Calendar className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-medium text-gray-500">Date</p>
+                        <p className="text-xs font-medium text-gray-500">{t("common.date")}</p>
                         <p className="text-sm font-semibold text-gray-900">
                           {detail?.event_date ? new Date(detail.event_date).toLocaleDateString("en-US", {
                             weekday: "long",
@@ -491,7 +493,7 @@ export default function EventDetail() {
                     <div className="flex items-start gap-3">
                       <Clock className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-medium text-gray-500">Time</p>
+                        <p className="text-xs font-medium text-gray-500">{t("common.time")}</p>
                         <p className="text-sm font-semibold text-gray-900">
                           {detail?.event_start_time && detail?.event_end_time
                             ? `${new Date(`1970-01-01T${detail.event_start_time}`).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${new Date(`1970-01-01T${detail.event_end_time}`).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
@@ -503,7 +505,7 @@ export default function EventDetail() {
                     <div className="flex items-start gap-3">
                       <MapPin className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-medium text-gray-500">Location</p>
+                        <p className="text-xs font-medium text-gray-500">{t("common.address")}</p>
                         <p className="text-sm font-semibold text-gray-900">
                           {detail?.event_address || "N/A"}
                         </p>
@@ -513,7 +515,7 @@ export default function EventDetail() {
                     <div className="flex items-start gap-3">
                       <DollarSign className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-medium text-gray-500">Price Per Person</p>
+                        <p className="text-xs font-medium text-gray-500">{t("eventDetail.eventPrice")}</p>
                         <p className="text-sm font-semibold text-gray-900">
                           {detail?.event_price ? `${detail.event_price} SAR` : "N/A"}
                         </p>
@@ -523,7 +525,7 @@ export default function EventDetail() {
                     <div className="flex items-start gap-3">
                       <Users className="w-5 h-5 text-[#a797cc] mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-medium text-gray-500">Capacity</p>
+                        <p className="text-xs font-medium text-gray-500">{t("eventDetail.maxAttendees")}</p>
                         <p className="text-sm font-semibold text-gray-900">
                           {detail?.no_of_attendees || "N/A"} {detail?.no_of_attendees === 1 ? "person" : "people"}
                         </p>
@@ -579,7 +581,7 @@ export default function EventDetail() {
                     ) : (
                       <>
                         <CheckCircle2 className="w-5 h-5" />
-                        <span>Accept Event</span>
+                        <span>{t("eventDetail.approveEvent")}</span>
                       </>
                     )}
                   </button>
@@ -589,7 +591,7 @@ export default function EventDetail() {
                     className="w-full sm:w-auto flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
                   >
                     <XCircle className="w-5 h-5" />
-                    <span>Reject Event</span>
+                    <span>{t("eventDetail.rejectEvent")}</span>
                   </button>
                 </div>
               </div>
@@ -642,8 +644,8 @@ export default function EventDetail() {
         show={showRejectModal}
         onClose={() => setShowRejectModal(false)}
         onConfirm={handleReject}
-        title="Reject Event"
-        message="Are you sure you want to reject this event? Please provide a reason below."
+        title={t("eventDetail.rejectEvent")}
+        message={t("messages.confirmRejectEvent", { eventName: detail?.event_name })}
       />
     </DefaultLayout>
   );

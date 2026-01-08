@@ -52,7 +52,15 @@ const GuestNavbar = ({ search, setSearch, setPage }) => {
   };
 
   return (
-    <nav className="bg-[#b0a0df] border-b border-[#b0a0df]/30 shadow-sm sticky top-[72px] z-[90]" style={{ willChange: 'transform', transform: 'translateZ(0)' }}>
+    <nav 
+      className="border-b border-[#8b7bb8]/30 shadow-sm sticky top-[72px] z-[90] animate-gradient-xy" 
+      style={{ 
+        willChange: 'transform', 
+        transform: 'translateZ(0)',
+        background: 'linear-gradient(135deg, #8b7bb8 0%, #a797cc 30%, #a3cc69 70%, #a797cc 100%)',
+        backgroundSize: '200% 200%'
+      }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Desktop Navigation */}

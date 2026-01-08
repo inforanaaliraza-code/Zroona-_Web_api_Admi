@@ -17,11 +17,11 @@ const eventValidation = Joi.object({
 	event_images: Joi.array()
 		.items(Joi.string())
 		.min(1)
-		.max(6)
+		.max(5)
 		.required()
 		.messages({
 			"array.min": "At least one image is required",
-			"array.max": "Maximum 6 images are allowed",
+			"array.max": "Maximum 5 images are allowed",
 		}),
 
 	event_description: Joi.string().optional(),

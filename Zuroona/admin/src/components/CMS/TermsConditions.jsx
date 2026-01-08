@@ -8,12 +8,14 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import * as Yup from "yup";
 
-const TextEditor = dynamic(() => import("@/components/TextEditor/TextEditor"), {
+const EnhancedTextEditor = dynamic(() => import("@/components/CMS/EnhancedTextEditor"), {
   ssr: false,
+  loading: () => <div className="h-32 bg-gray-100 rounded animate-pulse" />
 });
 
-const TextEditorAr = dynamic(() => import("@/components/TextEditorAr/TextEditorAr"), {
+const EnhancedTextEditorAr = dynamic(() => import("@/components/CMS/EnhancedTextEditorAr"), {
   ssr: false,
+  loading: () => <div className="h-32 bg-gray-100 rounded animate-pulse" />
 });
 
 
@@ -29,8 +31,8 @@ function TermsConditions(props) {
   }, []);
 
   const initialValues = {
-    content: props.status ? CMSDetail?.description : "",
-    content_ar: props.status ? CMSDetail?.description_ar : "",
+    content: props.status ? (CMSDetail?.description || "") : "",
+    content_ar: props.status ? (CMSDetail?.description_ar || "") : "",
   };
 
   const formik = useFormik({
@@ -65,9 +67,12 @@ function TermsConditions(props) {
 
   return (
     <form onSubmit={formik.handleSubmit} className="flex flex-col items-center">
-      <div className="flex justify-center mb-4 w-full">
-        <div className="mb-4 max-w-5xl w-5/6">
-          <TextEditor
+      <div className="flex justify-center mb-6 w-full">
+        <div className="mb-4 max-w-6xl w-full px-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            English Content
+          </label>
+          <EnhancedTextEditor
             ref={quillRef}
             name="content"
             value={formik.values.content}
@@ -75,13 +80,16 @@ function TermsConditions(props) {
             formik={formik}
           />
           {formik.errors.content && formik.touched.content && (
-            <div className="text-red-500">{formik.errors.content}</div>
+            <div className="text-red-500 mt-2">{formik.errors.content}</div>
           )}
         </div>
       </div>
-      <div className="flex justify-center mb-4 w-full">
-        <div className="mb-4 max-w-5xl w-5/6">
-          <TextEditorAr
+      <div className="flex justify-center mb-6 w-full">
+        <div className="mb-4 max-w-6xl w-full px-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Arabic Content (المحتوى العربي)
+          </label>
+          <EnhancedTextEditorAr
             ref={quillRef}
             name="content_ar"
             value={formik.values.content_ar}
@@ -89,7 +97,7 @@ function TermsConditions(props) {
             formik={formik}
           />
           {formik.errors.content_ar && formik.touched.content_ar && (
-            <div className="text-red-500">{formik.errors.content_ar}</div>
+            <div className="text-red-500 mt-2">{formik.errors.content_ar}</div>
           )}
         </div>
       </div>

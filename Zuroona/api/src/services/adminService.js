@@ -1,17 +1,33 @@
 const Admin = require('../models/adminModel.js');
 const HashPassword = require('../helpers/hashPassword.js');
+const { ensureConnection } = require('../config/database');
 
 const AdminService = {
     CreateService: async (value) => {
-        value.password = await HashPassword.hashPassword(value.password);
-        return new Promise((res, rej) => {
-            Admin.create(value).then((result) => {
-                res(result);
-            }).catch((error) => { 
-                console.error(error.message);
-                rej('could not create');
+        try {
+            // Ensure database connection before creating
+            await ensureConnection();
+            
+            value.password = await HashPassword.hashPassword(value.password);
+            
+            console.log('[ADMIN:SERVICE] Creating admin with data:', {
+                email: value.email,
+                role: value.role
             });
-        });
+            
+            const result = await Admin.create(value);
+            
+            console.log('[ADMIN:SERVICE] Admin created successfully:', {
+                id: result._id,
+                email: result.email
+            });
+            
+            return result;
+        } catch (error) {
+            console.error('[ADMIN:SERVICE] Error creating admin:', error.message);
+            console.error('[ADMIN:SERVICE] Full error:', error);
+            throw new Error(`Failed to create admin: ${error.message}`);
+        }
     },
     
     FindOneService: async (query) => {
@@ -38,14 +54,18 @@ const AdminService = {
     },
     
     FindByIdAndUpdateService: async (userId, value) => {
-        return new Promise((res, rej) => {
-            Admin.findByIdAndUpdate(userId, value, { new: true, upsert: true }).then((result) => {
-                res(result);
-            }).catch((error) => { 
-                console.error(error.message);
-                rej('could not find');
-            });
-        });
+        try {
+            await ensureConnection();
+            const result = await Admin.findByIdAndUpdate(userId, { $set: value }, { new: true, runValidators: true });
+            if (!result) {
+                throw new Error('Admin not found');
+            }
+            return result;
+        } catch (error) {
+            console.error('[ADMIN:SERVICE] FindByIdAndUpdate error:', error.message);
+            console.error('[ADMIN:SERVICE] Full error:', error);
+            throw error;
+        }
     },
     
     FindByIdAndDeleteService: async (userId) => {

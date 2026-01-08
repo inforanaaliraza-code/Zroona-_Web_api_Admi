@@ -11,6 +11,7 @@ const { organizerRegistrationValidation, paymentSchema } = require('../validatio
 
 
 // ===== ORGANIZER AUTHENTICATION =====
+router.post("/check-email", UserController.checkEmailFormat); // Check email format and existence
 router.post("/register", organizerController.organizerRegistration); // Email verification + 4 steps
 router.post("/login", organizerController.organizerLogin); // Email + password login
 router.get("/verify-email", organizerController.verifyOrganizerEmail); // Email verification
@@ -24,6 +25,7 @@ router.put('/registration/update', organizerController.updateRegistrationProfile
 router.put("/admin/approve/:organizerId", AuthenticateUser, organizerController.approveOrganizer); // Approve organizer
 router.put("/admin/reject/:organizerId", AuthenticateUser, organizerController.rejectOrganizer); // Reject organizer
 router.put('/profile/update', AuthenticateUser, AuthenticateOrganizer, organizerController.updateProfile); // Update after authentication
+router.put('/deactivate', AuthenticateUser, AuthenticateOrganizer, organizerController.deactivateAccount); // Deactivate organizer account
 router.get('/category/list', organizerController.categoryList);
 router.get('/event/category/list', organizerController.eventCategoryList);
 router.post('/event/add', AuthenticateUser, AuthenticateOrganizer, Validator(eventValidation),organizerController.addEvent);

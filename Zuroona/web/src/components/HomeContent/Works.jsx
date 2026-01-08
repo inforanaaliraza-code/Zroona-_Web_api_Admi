@@ -40,20 +40,24 @@ export default function Works() {
         </div>
     );
 
-    // Floating particles animation
+    // Floating particles animation - use deterministic values to prevent hydration mismatch
     const particleVariants = {
-        animate: (i) => ({
-            y: [0, -30, 0],
-            x: [0, Math.random() * 20 - 10, 0],
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
-            transition: {
-                duration: 3 + i * 0.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: i * 0.2,
-            },
-        }),
+        animate: (i) => {
+            // Use index-based deterministic offset instead of Math.random()
+            const offset = (i * 2.5) % 20 - 10; // Deterministic value based on index
+            return {
+                y: [0, -30, 0],
+                x: [0, offset, 0],
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3],
+                transition: {
+                    duration: 3 + i * 0.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.2,
+                },
+            };
+        },
     };
 
     const containerVariants = {

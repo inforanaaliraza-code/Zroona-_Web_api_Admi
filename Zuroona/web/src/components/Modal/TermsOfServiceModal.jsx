@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 import Modal from "../common/Modal";
 import { useDataStore } from "@/app/api/store/store";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useRTL } from "@/utils/rtl";
 
 export default function TermsOfServiceModal({ isOpen, onClose }) {
@@ -15,30 +15,14 @@ export default function TermsOfServiceModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
-      fetchCMSDetail({ type: 2 }); // Type 2 for Terms of Service
+      fetchCMSDetail({ type: 1 }); // Type 1 = Terms & Conditions (matches Admin Portal)
     }
   }, [isOpen, i18n.language, fetchCMSDetail]);
 
-  // Enhanced content processing - Remove all jeena references including Arabic
-  const processedContent = useMemo(() => {
-    if (!CMSDetail?.description) return "";
-    let content = CMSDetail.description;
-    // Remove Arabic "jeena" text (ﺎﻨﯿﺟ) and all variations
-    content = content.replace(/ﺎﻨﯿﺟ/gi, "Zuroona");
-    content = content.replace(/[""]\s*ﺎﻨﯿﺟ\s*[""]/gi, "Zuroona");
-    content = content.replace(/[""]\s*jeena\s*[""]/gi, "Zuroona");
-    content = content.replace(/[""]\s*Jeenas\s*[""]/gi, "Zuroona");
-    content = content.replace(/jeena/gi, "Zuroona");
-    content = content.replace(/jeenas/gi, "Zuroona");
-    content = content.replace(/Jeena/gi, "Zuroona");
-    content = content.replace(/Jeenas/gi, "Zuroona");
-    // Remove standalone quotes or "or" patterns
-    content = content.replace(/\s*[""]\s*or\s*[""]\s*/gi, " ");
-    content = content.replace(/\s*or\s*[""]\s*/gi, " ");
-    // Clean up extra spaces
-    content = content.replace(/\s+/g, " ").trim();
-    return content;
-  }, [CMSDetail?.description]);
+  // Get content based on language - ONLY from CMS (Admin Portal is source of truth)
+  const processedContent = i18n.language === 'ar' 
+    ? CMSDetail?.description_ar 
+    : CMSDetail?.description;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} width="2xl">
@@ -70,32 +54,38 @@ export default function TermsOfServiceModal({ isOpen, onClose }) {
           {/* Content Section - Ultra Professional */}
           <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-6 md:p-8 border border-gray-200/80">
             <div className="prose prose-lg max-w-none">
-              <div
-                className={`text-gray-700 leading-relaxed ${textAlign} 
-                  [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-8 [&_h1]:mb-6 [&_h1]:text-gray-900 [&_h1]:border-b-2 [&_h1]:border-[#a797cc] [&_h1]:pb-3 [&_h1]:flex [&_h1]:items-center [&_h1]:gap-3
-                  [&_h1_before]:content-[''] [&_h1_before]:w-1 [&_h1_before]:h-8 [&_h1_before]:bg-gradient-to-b [&_h1_before]:from-[#a797cc] [&_h1_before]:to-[#8b7bb8] [&_h1_before]:rounded-full
-                  [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-8 [&_h2]:mb-5 [&_h2]:text-gray-900 [&_h2]:flex [&_h2]:items-center [&_h2]:gap-3
-                  [&_h2_before]:content-[''] [&_h2_before]:w-1 [&_h2_before]:h-6 [&_h2_before]:bg-[#a797cc] [&_h2_before]:rounded-full
-                  [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-4 [&_h3]:text-gray-800
-                  [&_h4]:text-lg [&_h4]:font-semibold [&_h4]:mt-5 [&_h4]:mb-3 [&_h4]:text-gray-800
-                  [&_p]:mb-5 [&_p]:text-gray-700 [&_p]:leading-relaxed [&_p]:text-justify [&_p]:text-base
-                  [&_ul]:list-none [&_ul]:ml-0 [&_ul]:space-y-3 [&_ul]:mb-5
-                  [&_ol]:list-none [&_ol]:ml-0 [&_ol]:space-y-3 [&_ol]:mb-5
-                  [&_li]:mb-3 [&_li]:text-gray-700 [&_li]:leading-relaxed [&_li]:p-3 [&_li]:bg-white [&_li]:rounded-lg [&_li]:border-l-4 [&_li]:border-[#a797cc] [&_li]:hover:shadow-md [&_li]:transition-all
-                  [&_ul_li]:flex [&_ul_li]:items-start [&_ul_li]:gap-3
-                  [&_ol_li]:flex [&_ol_li]:items-start [&_ol_li]:gap-3
-                  [&_ul_li]:before:content-[''] [&_ul_li]:before:w-0 [&_ul_li]:before:h-0
-                  [&_ol_li]:before:content-[''] [&_ol_li]:before:w-0 [&_ol_li]:before:h-0
-                  [&_strong]:font-bold [&_strong]:text-gray-900
-                  [&_a]:text-[#a797cc] [&_a]:hover:text-[#8b7bb8] [&_a]:underline [&_a]:font-medium [&_a]:transition-colors
-                  [&_blockquote]:border-l-4 [&_blockquote]:border-[#a797cc] [&_blockquote]:pl-5 [&_blockquote]:pr-4 [&_blockquote]:py-3 [&_blockquote]:italic [&_blockquote]:text-gray-600 [&_blockquote]:bg-gray-50 [&_blockquote]:rounded-r [&_blockquote]:my-5
-                  [&_table]:w-full [&_table]:border-collapse [&_table]:mb-5 [&_table]:shadow-md [&_table]:rounded-lg [&_table]:overflow-hidden
-                  [&_th]:bg-gradient-to-r [&_th]:from-[#a797cc] [&_th]:to-[#8b7bb8] [&_th]:text-white [&_th]:p-4 [&_th]:text-left [&_th]:font-semibold
-                  [&_td]:border [&_td]:border-gray-300 [&_td]:p-4 [&_td]:text-gray-700 [&_td]:bg-white
-                  [&_tr:nth-child(even)_td]:bg-gray-50
-                `}
-                dangerouslySetInnerHTML={{ __html: processedContent }}
-              />
+              {processedContent ? (
+                <div
+                  className={`text-gray-700 leading-relaxed ${textAlign} 
+                    [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-8 [&_h1]:mb-6 [&_h1]:text-gray-900 [&_h1]:border-b-2 [&_h1]:border-[#a797cc] [&_h1]:pb-3 [&_h1]:flex [&_h1]:items-center [&_h1]:gap-3
+                    [&_h1_before]:content-[''] [&_h1_before]:w-1 [&_h1_before]:h-8 [&_h1_before]:bg-gradient-to-b [&_h1_before]:from-[#a797cc] [&_h1_before]:to-[#8b7bb8] [&_h1_before]:rounded-full
+                    [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-8 [&_h2]:mb-5 [&_h2]:text-gray-900 [&_h2]:flex [&_h2]:items-center [&_h2]:gap-3
+                    [&_h2_before]:content-[''] [&_h2_before]:w-1 [&_h2_before]:h-6 [&_h2_before]:bg-[#a797cc] [&_h2_before]:rounded-full
+                    [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-4 [&_h3]:text-gray-800
+                    [&_h4]:text-lg [&_h4]:font-semibold [&_h4]:mt-5 [&_h4]:mb-3 [&_h4]:text-gray-800
+                    [&_p]:mb-5 [&_p]:text-gray-700 [&_p]:leading-relaxed [&_p]:text-justify [&_p]:text-base
+                    [&_ul]:list-none [&_ul]:ml-0 [&_ul]:space-y-3 [&_ul]:mb-5
+                    [&_ol]:list-none [&_ol]:ml-0 [&_ol]:space-y-3 [&_ol]:mb-5
+                    [&_li]:mb-3 [&_li]:text-gray-700 [&_li]:leading-relaxed [&_li]:p-3 [&_li]:bg-white [&_li]:rounded-lg [&_li]:border-l-4 [&_li]:border-[#a797cc] [&_li]:hover:shadow-md [&_li]:transition-all
+                    [&_ul_li]:flex [&_ul_li]:items-start [&_ul_li]:gap-3
+                    [&_ol_li]:flex [&_ol_li]:items-start [&_ol_li]:gap-3
+                    [&_ul_li]:before:content-[''] [&_ul_li]:before:w-0 [&_ul_li]:before:h-0
+                    [&_ol_li]:before:content-[''] [&_ol_li]:before:w-0 [&_ol_li]:before:h-0
+                    [&_strong]:font-bold [&_strong]:text-gray-900
+                    [&_a]:text-[#a797cc] [&_a]:hover:text-[#8b7bb8] [&_a]:underline [&_a]:font-medium [&_a]:transition-colors
+                    [&_blockquote]:border-l-4 [&_blockquote]:border-[#a797cc] [&_blockquote]:pl-5 [&_blockquote]:pr-4 [&_blockquote]:py-3 [&_blockquote]:italic [&_blockquote]:text-gray-600 [&_blockquote]:bg-gray-50 [&_blockquote]:rounded-r [&_blockquote]:my-5
+                    [&_table]:w-full [&_table]:border-collapse [&_table]:mb-5 [&_table]:shadow-md [&_table]:rounded-lg [&_table]:overflow-hidden
+                    [&_th]:bg-gradient-to-r [&_th]:from-[#a797cc] [&_th]:to-[#8b7bb8] [&_th]:text-white [&_th]:p-4 [&_th]:text-left [&_th]:font-semibold
+                    [&_td]:border [&_td]:border-gray-300 [&_td]:p-4 [&_td]:text-gray-700 [&_td]:bg-white
+                    [&_tr:nth-child(even)_td]:bg-gray-50
+                  `}
+                  dangerouslySetInnerHTML={{ __html: processedContent }}
+                />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>{t("common.loading") || "Loading content..."}</p>
+                </div>
+              )}
             </div>
           </div>
 

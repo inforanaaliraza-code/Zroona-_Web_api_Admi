@@ -1,15 +1,34 @@
 const Organizer = require('../models/organizerModel.js');
+const { ensureConnection } = require('../config/database');
 
 const organizerService = {
     CreateService: async (value) => {
-        return new Promise((res, rej) => {
-            Organizer.create(value).then((result) => {
-                res(result);
-            }).catch((error) => {
-                console.error(error.message);
-                rej('could not create');
+        try {
+            // Ensure database connection before creating
+            await ensureConnection();
+            
+            console.log('[ORGANIZER:SERVICE] Creating organizer with data:', {
+                email: value.email,
+                phone_number: value.phone_number,
+                country_code: value.country_code,
+                role: value.role,
+                registration_step: value.registration_step
             });
-        });
+            
+            const result = await Organizer.create(value);
+            
+            console.log('[ORGANIZER:SERVICE] Organizer created successfully:', {
+                id: result._id,
+                email: result.email,
+                phone_number: result.phone_number
+            });
+            
+            return result;
+        } catch (error) {
+            console.error('[ORGANIZER:SERVICE] Error creating organizer:', error.message);
+            console.error('[ORGANIZER:SERVICE] Full error:', error);
+            throw new Error(`Failed to create organizer: ${error.message}`);
+        }
     },
 
     FindOneService: async (query) => {

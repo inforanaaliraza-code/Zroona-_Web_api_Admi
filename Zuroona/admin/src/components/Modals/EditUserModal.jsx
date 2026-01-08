@@ -5,16 +5,18 @@ import * as Yup from "yup";
 import { toast } from "react-toastify";
 import { FaTimes } from "react-icons/fa";
 import { UpdateUserApi } from "@/api/user/apis";
+import { useTranslation } from "react-i18next";
 
 function EditUserModal({ show, onClose, user, onSuccess }) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
   const validationSchema = Yup.object({
     phone_number: Yup.number()
-      .required("Phone number is required")
-      .integer("Phone number must be a valid number"),
-    country_code: Yup.string().required("Country code is required"),
-    email: Yup.string().email("Invalid email address"),
+      .required(t("common.phoneNumber") + " " + t("common.required"))
+      .integer(t("validation.invalidPhone")),
+    country_code: Yup.string().required(t("common.countryCode") + " " + t("common.required")),
+    email: Yup.string().email(t("common.invalidEmail")),
   });
 
   const handleSubmit = async (values) => {
@@ -29,15 +31,15 @@ function EditUserModal({ show, onClose, user, onSuccess }) {
 
       const res = await UpdateUserApi(payload);
       if (res?.status === 1 || res?.code === 200) {
-        toast.success("User updated successfully");
+        toast.success(t("common.userUpdated"));
         onSuccess?.();
         onClose();
       } else {
-        toast.error(res?.message || "Failed to update user");
+        toast.error(res?.message || t("common.failedToUpdate"));
       }
     } catch (error) {
       console.error("Error updating user:", error);
-      toast.error("Failed to update user");
+      toast.error(t("common.failedToUpdate"));
     } finally {
       setLoading(false);
     }
@@ -51,7 +53,7 @@ function EditUserModal({ show, onClose, user, onSuccess }) {
         {/* Header */}
         <div className="bg-gradient-to-r from-[#a797cc] to-[#b0a0df] p-6 rounded-t-xl">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">Edit User Details</h2>
+            <h2 className="text-2xl font-bold text-white">{t("common.editUserDetails")}</h2>
             <button
               onClick={onClose}
               className="text-white hover:text-gray-200 transition"
@@ -77,7 +79,7 @@ function EditUserModal({ show, onClose, user, onSuccess }) {
               {/* Phone Number */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number <span className="text-red-500">*</span>
+                  {t("common.phoneNumber")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -96,7 +98,7 @@ function EditUserModal({ show, onClose, user, onSuccess }) {
               {/* Country Code */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Country Code <span className="text-red-500">*</span>
+                  {t("common.countryCode")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -115,7 +117,7 @@ function EditUserModal({ show, onClose, user, onSuccess }) {
               {/* Email */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
+                  {t("common.emailAddress")}
                 </label>
                 <input
                   type="email"
@@ -139,14 +141,14 @@ function EditUserModal({ show, onClose, user, onSuccess }) {
                   disabled={loading}
                   className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition disabled:opacity-50"
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
                   className="px-6 py-2 bg-gradient-to-r from-[#a797cc] to-[#b0a0df] text-white rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
                 >
-                  {loading ? "Updating..." : "Update User"}
+                  {loading ? t("common.updatingUser") : t("common.updateUser")}
                 </button>
               </div>
             </form>

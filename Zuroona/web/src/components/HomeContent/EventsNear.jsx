@@ -15,7 +15,12 @@ export default function EventsNear() {
 	const { t } = useTranslation();
 	const [loading, setLoading] = useState(true);
 	const [events, setEvents] = useState([]);
+	const [isMounted, setIsMounted] = useState(false);
 
+	// Track if component has mounted to prevent hydration mismatch
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
 	// Carousel Settings
 	const settings = {
@@ -61,6 +66,11 @@ export default function EventsNear() {
 	};
 
 	useEffect(() => {
+		// Only fetch and shuffle on client side after mount
+		if (!isMounted) {
+			return;
+		}
+
 		setLoading(true);
 		GetEvents(params).then((data) => {
 			const fetchedEvents = data?.data?.events || [];
@@ -71,7 +81,7 @@ export default function EventsNear() {
 				return eventFor === 3;
 			});
 
-			// Randomize
+			// Randomize only on client side
 			filteredEvents = shuffleArray(filteredEvents);
 
 			// Limit display count if needed, e.g., take top 10 after shuffle
@@ -86,7 +96,7 @@ export default function EventsNear() {
 			setEvents([]);
 			setLoading(false);
 		});
-	}, []);
+	}, [isMounted]);
 
 	return (
 		<section className="relative py-20 overflow-hidden">

@@ -9,7 +9,7 @@ import 'react-phone-input-2/lib/style.css';
  * Unified NumberInput component with full RTL/LTR support
  * Supports proper direction handling for Arabic (RTL) and English (LTR)
  */
-const NumberInput = React.forwardRef(({ 
+  const NumberInput = React.forwardRef(({ 
   className = '', 
   error, 
   onChange, 
@@ -21,9 +21,9 @@ const NumberInput = React.forwardRef(({
   placeholder = "Mobile No.",
   country = 'sa',
   countryCodeEditable = false,
-  onlyCountries = ['sa'],
-  enableSearch = false,
-  disableDropdown = true,
+  onlyCountries = ['sa', 'pk'],
+  enableSearch = true,
+  disableDropdown = false,
   ...props 
 }, ref) => {
   const { i18n } = useTranslation();
@@ -37,7 +37,14 @@ const NumberInput = React.forwardRef(({
     if (input) {
       const handleKeyDown = (e) => {
         const cursorPosition = input.selectionStart;
-        const countryCode = '+966';
+        const currentValue = input.value || '';
+        // Detect current country code from input value
+        let countryCode = '+966'; // default
+        if (currentValue.startsWith('+966')) {
+          countryCode = '+966';
+        } else if (currentValue.startsWith('+92')) {
+          countryCode = '+92';
+        }
         
         // If backspace is pressed and cursor is at or before country code
         if (e.key === 'Backspace' && cursorPosition <= countryCode.length) {
@@ -64,20 +71,104 @@ const NumberInput = React.forwardRef(({
     }
   }, []);
 
+  // Enable Pakistan in dropdown - remove any disabled states
+  useEffect(() => {
+    if (phoneInputRef.current) {
+      // Wait for dropdown to be rendered
+      const enablePakistan = () => {
+        const pkCountry = phoneInputRef.current?.querySelector('.country-list .country[data-country-code="pk"]');
+        if (pkCountry) {
+          // Remove disabled attributes
+          pkCountry.removeAttribute('aria-disabled');
+          pkCountry.removeAttribute('disabled');
+          pkCountry.classList.remove('disabled');
+          pkCountry.style.pointerEvents = 'auto';
+          pkCountry.style.cursor = 'pointer';
+          pkCountry.style.opacity = '1';
+          
+          // Remove any blocked/disabled indicators
+          const blockedElements = pkCountry.querySelectorAll('.no-entry, [class*="blocked"], [class*="disabled"], svg, .icon');
+          blockedElements.forEach(el => {
+            el.style.display = 'none';
+            el.remove();
+          });
+        }
+      };
+
+      // Run immediately and also listen for dropdown open
+      enablePakistan();
+      
+      // Watch for dropdown opening
+      const observer = new MutationObserver(enablePakistan);
+      if (phoneInputRef.current) {
+        observer.observe(phoneInputRef.current, {
+          childList: true,
+          subtree: true
+        });
+      }
+
+      // Also listen for click events on dropdown
+      const dropdown = phoneInputRef.current?.querySelector('.flag-dropdown');
+      if (dropdown) {
+        dropdown.addEventListener('click', enablePakistan);
+      }
+
+      return () => {
+        observer.disconnect();
+        if (dropdown) {
+          dropdown.removeEventListener('click', enablePakistan);
+        }
+      };
+    }
+  }, []);
+
+  // Remove dashes from phone input in real-time (but don't modify digits)
+  useEffect(() => {
+    const input = phoneInputRef.current?.querySelector('.form-control');
+    if (input) {
+      const handleInput = (e) => {
+        // Remove dashes and spaces ONLY - don't add or remove digits
+        const value = e.target.value;
+        const cleanValue = value.replace(/[-\s]/g, '');
+        if (value !== cleanValue) {
+          const cursorPosition = e.target.selectionStart;
+          e.target.value = cleanValue;
+          // Adjust cursor position after removing dashes
+          const newPosition = Math.max(0, cursorPosition - (value.length - cleanValue.length));
+          e.target.setSelectionRange(newPosition, newPosition);
+          
+          // Trigger change event for react-phone-input-2
+          const event = new Event('input', { bubbles: true });
+          e.target.dispatchEvent(event);
+        }
+      };
+
+      input.addEventListener('input', handleInput);
+      return () => {
+        input.removeEventListener('input', handleInput);
+      };
+    }
+  }, []);
+
   // Handle value from formik or direct value prop
   const getValue = () => {
+    let phoneValue;
     if (value !== undefined) {
-      return value;
-    }
-    if (formik && formik.values) {
-      const phoneValue = formik.values[mobileNumberField] || '';
+      phoneValue = value;
+    } else if (formik && formik.values) {
+      const phone = formik.values[mobileNumberField] || '';
       const countryCodeValue = formik.values[countryCodeField] || '+966';
-      if (phoneValue) {
-        return `${countryCodeValue}${phoneValue}`;
+      if (phone) {
+        phoneValue = `${countryCodeValue}${phone}`;
+      } else {
+        phoneValue = countryCodeValue;
       }
-      return countryCodeValue;
+    } else {
+      phoneValue = '+966';
     }
-    return '+966';
+    
+    // Remove any dashes from the value before returning
+    return phoneValue ? phoneValue.replace(/[-\s]/g, '') : phoneValue;
   };
 
   // Handle onChange - support both formik and direct onChange
@@ -89,7 +180,18 @@ const NumberInput = React.forwardRef(({
       // Formik usage
       if (phone.length > 0 && countryData) {
         const raw = phone.slice(countryData?.dialCode?.length || 0);
-        const rawLimited = raw.slice(0, 10);
+        
+        // Clean the phone number - remove dashes and spaces ONLY
+        // DO NOT auto-add leading 0 - let user enter what they want
+        let processedRaw = raw.replace(/[-\s]/g, '');
+        
+        // Set max length based on country
+        // Saudi: 9 digits max, Pakistan: 9 or 10 digits (user can choose)
+        const maxLength = countryData?.dialCode === '966' ? 9 : 10;
+        const rawLimited = processedRaw.slice(0, maxLength);
+        
+        console.log(`[NUMBER_INPUT] Phone formatting - raw: "${raw}", processed: "${processedRaw}", limited: "${rawLimited}", country: ${countryData?.dialCode}`);
+        
         formik.setFieldValue(mobileNumberField, rawLimited);
         formik.setFieldValue(countryCodeField, `+${countryData.dialCode}`);
       } else {
@@ -130,6 +232,10 @@ const NumberInput = React.forwardRef(({
           font-size: 14px !important;
           color: #333333 !important;
           transition: all 0.2s ease !important;
+          letter-spacing: 0 !important;
+          -webkit-appearance: none !important;
+          -moz-appearance: textfield !important;
+          text-transform: none !important;
         }
         
         .number-input-wrapper .react-tel-input .form-control:focus {
@@ -210,7 +316,26 @@ const NumberInput = React.forwardRef(({
           border: 1px solid #f2dfba !important;
           box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
           max-height: 200px !important;
+          z-index: 9999 !important;
+          position: absolute !important;
           ${isRTL ? 'right: 0 !important; left: auto !important;' : 'left: 0 !important; right: auto !important;'}
+        }
+        
+        /* Ensure dropdown appears above all elements including buttons */
+        .number-input-wrapper {
+          position: relative !important;
+          z-index: 1 !important;
+        }
+        
+        .number-input-wrapper .react-tel-input {
+          position: relative !important;
+          z-index: 1 !important;
+        }
+        
+        /* When dropdown is open, ensure it's above everything */
+        .number-input-wrapper .react-tel-input .flag-dropdown.open .country-list {
+          z-index: 10000 !important;
+          position: absolute !important;
         }
         
         .number-input-wrapper .react-tel-input .country-list .country {
@@ -219,6 +344,58 @@ const NumberInput = React.forwardRef(({
         
         .number-input-wrapper .react-tel-input .country-list .country.highlight {
           background: rgba(167, 151, 204, 0.1) !important;
+        }
+        
+        /* Enable Pakistan - remove any disabled styles */
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] {
+          cursor: pointer !important;
+          pointer-events: auto !important;
+          opacity: 1 !important;
+        }
+        
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"]:hover {
+          background: rgba(167, 151, 204, 0.1) !important;
+        }
+        
+        /* Remove any disabled/blocked indicators for Pakistan - remove red circle/no-entry symbol */
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] .country-name::before,
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"]::before,
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] .no-entry,
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] [class*="no-entry"],
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] [class*="blocked"],
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] [class*="disabled"],
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] svg,
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] .icon,
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] [role="img"] {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+        }
+        
+        /* Remove any pseudo-elements that might show blocked symbol */
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"]::after {
+          display: none !important;
+          content: none !important;
+        }
+        
+        /* Ensure all countries in onlyCountries list are enabled */
+        .number-input-wrapper .react-tel-input .country-list .country {
+          cursor: pointer !important;
+          pointer-events: auto !important;
+        }
+        
+        /* Hide disabled countries completely */
+        .number-input-wrapper .react-tel-input .country-list .country.disabled,
+        .number-input-wrapper .react-tel-input .country-list .country[aria-disabled="true"] {
+          display: none !important;
+        }
+        
+        /* Force enable Pakistan - override any library restrictions */
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] {
+          -webkit-user-select: auto !important;
+          -moz-user-select: auto !important;
+          -ms-user-select: auto !important;
+          user-select: auto !important;
         }
         
         /* RTL-specific adjustments */
@@ -251,12 +428,17 @@ const NumberInput = React.forwardRef(({
           country={country}
           countryCodeEditable={countryCodeEditable}
           onlyCountries={onlyCountries}
+          preferredCountries={['sa', 'pk']}
           enableSearch={enableSearch}
           disableDropdown={disableDropdown}
+          autoFormat={false}
           onChange={handleChange}
           onBlur={handleBlur}
           value={getValue()}
           disabled={disabled}
+          disableCountryGuess={true}
+          excludeCountries={[]}
+          preserveOrder={['sa', 'pk']}
           inputProps={{
             name: mobileNumberField,
             placeholder: placeholder,

@@ -19,8 +19,10 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { FaFileExcel, FaPrint } from "react-icons/fa";
 import { exportOrganizersToPDF } from "@/utils/exportUtils";
+import { useTranslation } from "react-i18next";
 
 export default function ManageEventOrganizer() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState("1");
   const [approvedTab, setApprovedTab] = useState("Pending");
   const [search, setSearch] = useState("");
@@ -71,7 +73,7 @@ export default function ManageEventOrganizer() {
 
   const handleConfirmToggle = () => {
     if (!selectedOrganierEvent || !selectedOrganierEvent._id) {
-      toast.error("Invalid organizer ID");
+      toast.error(t("organizers.invalidOrganizerId"));
       return;
     }
 
@@ -88,17 +90,17 @@ export default function ManageEventOrganizer() {
         setLoading(false);
         // API returns { status: 1, message: "...", data: {...} }
         if (res?.status === 1) {
-          toast.success(res?.message || "Status updated successfully");
+          toast.success(res?.message || t("organizers.statusUpdated"));
           fetchGetAllOrganizer(params);
         } else {
-          toast.error(res?.message || "Failed to update status");
+          toast.error(res?.message || t("organizers.failedToUpdateStatus"));
         }
         setIsModalOpen(false);
         setSelectedOrganierEvent(null);
       })
       .catch((error) => {
         setLoading(false);
-        toast.error("Error updating organizer status");
+        toast.error(t("organizers.errorUpdatingStatus"));
         setIsModalOpen(false);
         setSelectedOrganierEvent(null);
       });
@@ -111,7 +113,7 @@ export default function ManageEventOrganizer() {
 
   const handleConfirmSuspend = () => {
     if (!selectedOrganizerForSuspend || !selectedOrganizerForSuspend._id) {
-      toast.error("Invalid organizer ID");
+      toast.error(t("organizers.invalidOrganizerId"));
       return;
     }
 
@@ -125,17 +127,17 @@ export default function ManageEventOrganizer() {
       .then((res) => {
         setLoading(false);
         if (res?.status === 1) {
-          toast.success(res?.message || (isSuspended ? "Host suspended successfully" : "Host unsuspended successfully"));
+          toast.success(res?.message || (isSuspended ? t("organizers.hostSuspended") : t("organizers.hostUnsuspended")));
           fetchGetAllOrganizer(params);
         } else {
-          toast.error(res?.message || "Failed to update suspend status");
+          toast.error(res?.message || t("organizers.failedToUpdateSuspendStatus"));
         }
         setSuspendModalOpen(false);
         setSelectedOrganizerForSuspend(null);
       })
       .catch((error) => {
         setLoading(false);
-        toast.error("Error updating suspend status");
+        toast.error(t("organizers.errorUpdatingSuspendStatus"));
         setSuspendModalOpen(false);
         setSelectedOrganizerForSuspend(null);
       });
@@ -160,7 +162,7 @@ export default function ManageEventOrganizer() {
       })
       .catch((error) => {
         setLoading(false);
-        toast.error("Failed to change status");
+        toast.error(t("organizers.failedToChangeStatus"));
       });
   };
 
@@ -173,18 +175,18 @@ export default function ManageEventOrganizer() {
 
   const exportToCSV = () => {
     const data = GetAllOrganizer?.data || [];
-    const headers = ["Organizer ID", "Name", "Mobile No.", "Gender", "Email ID", "Date of Birth", "City", "Status"];
+    const headers = [t("organizers.organizerId"), t("organizers.name"), t("organizers.mobileNo"), t("organizers.gender"), t("organizers.emailId"), t("organizers.dateOfBirth"), t("organizers.city"), t("organizers.status")];
     const csvContent = [
       headers.join(","),
       ...data.map(org => [
         org.id,
         `"${org.first_name} ${org.last_name}"`,
         `"${org.country_code} ${org.phone_number}"`,
-        org.gender === 1 ? "Male" : "Female",
+        org.gender === 1 ? t("organizers.male") : t("organizers.female"),
         org.email,
         org.date_of_birth ? new Date(org.date_of_birth).toLocaleDateString() : "N/A",
         `"${org.address || ""}"`,
-        org.is_approved === 1 ? "Pending" : org.is_approved === 2 ? "Approved" : "Rejected"
+        org.is_approved === 1 ? t("organizers.pending") : org.is_approved === 2 ? t("organizers.approved") : t("organizers.rejected")
       ].join(","))
     ].join("\n");
 
@@ -206,13 +208,18 @@ export default function ManageEventOrganizer() {
   }
 
   return (
-    <DefaultLayout search={search} setSearch={setSearch} setPage={setPage}>
+    <DefaultLayout 
+      search={search} 
+      setSearch={setSearch} 
+      setPage={setPage}
+      searchPlaceholder={t("organizers.searchPlaceholder") || "Search by Hosts"}
+    >
       <div>
         <div className="flex flex-wrap justify-between py-5">
           {/* Header */}
           <div className="flex lg:w-[40%] items-end mb-4 sm:mb-0">
             <h1 className="text-xl font-bold text-black">
-              Manage Hosts
+              {t("organizers.manageHosts")}
             </h1>
           </div>
 
@@ -223,48 +230,48 @@ export default function ManageEventOrganizer() {
               onClick={exportToCSV} 
               className="flex items-center gap-2 bg-gradient-to-r from-brand-green to-brand-gray-green-2 text-white px-4 py-2.5 rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 font-semibold text-sm"
             >
-              <FaFileExcel /> Export CSV
+              <FaFileExcel /> {t("organizers.exportCSV")}
             </button>
             <button 
               onClick={handlePrint} 
               className="flex items-center gap-2 bg-gradient-to-r from-brand-pastel-gray-purple-1 to-brand-gray-purple-2 text-white px-4 py-2.5 rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 font-semibold text-sm"
             >
-              <FaPrint /> Print/PDF
+              <FaPrint /> {t("organizers.printPDF")}
             </button>
           </div>
 
           <div className="flex justify-between w-full mt-5">
-            {/* Approvel Tabs */}
-            <div className="flex gap-1">
+            {/* Approval Tabs */}
+            <div className="flex gap-0">
               <button
                 onClick={() => handleTabChange("Pending")}
                 className={`px-4 py-3 text-sm w-28 font-semibold rounded-l-xl transition-all duration-300 ${
                   approvedTab === "Pending"
-                    ? "bg-gradient-to-r from-brand-pastel-gray-purple-1 to-brand-gray-purple-2 text-white shadow-lg shadow-brand-pastel-gray-purple-1/30 scale-105"
-                    : "bg-white text-brand-pastel-gray-purple-1 border-2 border-brand-pastel-gray-purple-1/30 hover:border-brand-pastel-gray-purple-1 hover:bg-brand-pastel-gray-purple-1/5"
+                    ? "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-lg shadow-yellow-500/30 scale-105 z-10"
+                    : "bg-white text-yellow-600 border-2 border-yellow-500/30 hover:border-yellow-500 hover:bg-yellow-50"
                 }`}
               >
-                Pending
+                {t("organizers.pending")}
               </button>
               <button
                 onClick={() => handleTabChange("Approved")}
-                className={`px-4 py-3 text-sm w-28 font-semibold transition-all duration-300 ${
+                className={`px-4 py-3 text-sm w-28 font-semibold transition-all duration-300 border-l-0 ${
                   approvedTab === "Approved"
-                    ? "bg-gradient-to-r from-brand-pastel-gray-purple-1 to-brand-gray-purple-2 text-white shadow-lg shadow-brand-pastel-gray-purple-1/30 scale-105"
-                    : "bg-white text-brand-pastel-gray-purple-1 border-t-2 border-b-2 border-brand-pastel-gray-purple-1/30 hover:border-brand-pastel-gray-purple-1 hover:bg-brand-pastel-gray-purple-1/5"
+                    ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 scale-105 z-10"
+                    : "bg-white text-green-600 border-2 border-green-500/30 border-l-0 hover:border-green-500 hover:bg-green-50"
                 }`}
               >
-                Approved
+                {t("organizers.approved")}
               </button>
               <button
                 onClick={() => handleTabChange("Rejected")}
-                className={`px-4 py-3 text-sm w-28 font-semibold rounded-r-xl transition-all duration-300 ${
+                className={`px-4 py-3 text-sm w-28 font-semibold rounded-r-xl transition-all duration-300 border-l-0 ${
                   approvedTab === "Rejected"
-                    ? "bg-gradient-to-r from-brand-pastel-gray-purple-1 to-brand-gray-purple-2 text-white shadow-lg shadow-brand-pastel-gray-purple-1/30 scale-105"
-                    : "bg-white border-2 text-brand-pastel-gray-purple-1 border-brand-pastel-gray-purple-1/30 hover:border-brand-pastel-gray-purple-1 hover:bg-brand-pastel-gray-purple-1/5"
+                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 scale-105 z-10"
+                    : "bg-white text-red-600 border-2 border-red-500/30 border-l-0 hover:border-red-500 hover:bg-red-50"
                 }`}
               >
-                Rejected
+                {t("organizers.rejected")}
               </button>
             </div>
 
@@ -282,7 +289,7 @@ export default function ManageEventOrganizer() {
                       : "bg-white text-green-600 border-2 border-green-600/30 hover:border-green-600 hover:bg-green-600/5"
                   }`}
                 >
-                  Active
+                  {t("organizers.active")}
                 </button>
                 <button
                   onClick={() => {
@@ -295,7 +302,7 @@ export default function ManageEventOrganizer() {
                       : "bg-white border-2 text-red-600 border-red-600/30 hover:border-red-600 hover:bg-red-600/5"
                   }`}
                 >
-                  Inactive
+                  {t("organizers.inactive")}
                 </button>
               </div>
             )}
@@ -309,34 +316,34 @@ export default function ManageEventOrganizer() {
               <thead className="bg-gradient-to-r from-brand-pastel-gray-purple-1/10 to-brand-gray-purple-2/10">
                 <tr className="text-sm">
                   <th className="px-4 py-4 text-left font-semibold text-gray-700">
-                    Organizer ID
+                    {t("organizers.organizerId")}
                   </th>
                   <th className="px-4 py-4 text-left font-semibold text-gray-700">
-                    Name
+                    {t("organizers.name")}
                   </th>
                   <th className="px-4 py-4 text-left font-semibold text-gray-700">
-                    Mobile No.
+                    {t("organizers.mobileNo")}
                   </th>
                   <th className="px-4 py-4 text-left font-semibold text-gray-700">
-                    Gender
+                    {t("organizers.gender")}
                   </th>
                   <th className="px-4 py-4 text-left font-semibold text-gray-700">
-                    Email ID
+                    {t("organizers.emailId")}
                   </th>
                   <th className="px-4 py-4 text-left font-semibold text-gray-700">
-                    Date of Birth
+                    {t("organizers.dateOfBirth")}
                   </th>
                     <th className="px-4 py-4 text-left font-semibold text-gray-700">
-                    City
+                    {t("organizers.city")}
                   </th>
                   <th className="px-4 py-4 text-left font-semibold text-gray-700">
-                    Registration Type
+                    {t("organizers.registrationType")}
                   </th>
                   <th className="px-4 py-4 text-left font-semibold text-gray-700">
-                    Status
+                    {t("organizers.status")}
                   </th>
                   <th className="px-4 py-4 text-center font-semibold text-gray-700">
-                    Action
+                    {t("organizers.action")}
                   </th>
                 </tr>
               </thead>
@@ -372,7 +379,7 @@ export default function ManageEventOrganizer() {
                               };
                               return getImageUrl(organizer?.profile_image);
                             })()}
-                            alt={organizer.first_name || "Organizer"}
+                            alt={organizer.first_name || t("organizers.title")}
                             fill
                             className="object-cover"
                             sizes="40px"
@@ -389,7 +396,7 @@ export default function ManageEventOrganizer() {
                         {organizer.country_code} {organizer.phone_number}
                       </td>
                       <td className="px-2 py-2">
-                        {organizer.gender === 1 ? "Male" : "Female"}
+                        {organizer.gender === 1 ? t("organizers.male") : t("organizers.female")}
                       </td>
                       <td className="px-2 py-2">{organizer.email}</td>
                       <td className="px-2 py-2">
@@ -406,14 +413,14 @@ export default function ManageEventOrganizer() {
                             ? 'bg-orange-100 text-orange-700 border border-orange-300' 
                             : 'bg-blue-100 text-blue-700 border border-blue-300'
                         }`}>
-                          {organizer.registration_type || 'New'}
+                          {organizer.registration_type === 'Re-apply' ? t("organizers.reApply") : t("organizers.new")}
                         </span>
                       </td>
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-2">
                           {approvedTab === "Pending" && (
                             <span className="text-sm font-semibold px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-300">
-                              Pending
+                              {t("organizers.pending")}
                             </span>
                           )}
                           {approvedTab === "Approved" && (
@@ -443,7 +450,7 @@ export default function ManageEventOrganizer() {
                               {(() => {
                                 // Check if suspended
                                 if (organizer.is_suspended) {
-                                  return "Suspended";
+                                  return t("organizers.suspended");
                                 }
                                 // Check if last ticket purchase is more than 1 month ago
                                 if (organizer.last_booking_date || organizer.last_ticket_date) {
@@ -453,18 +460,18 @@ export default function ManageEventOrganizer() {
                                   
                                   // If last booking is more than 1 month ago, show inactive
                                   if (lastBookingDate < oneMonthAgo) {
-                                    return "Inactive";
+                                    return t("organizers.inactive");
                                   }
-                                  return "Active";
+                                  return t("organizers.active");
                                 }
                                 // Default to organizer's isActive status
-                                return organizer.isActive === 1 ? "Active" : "Inactive";
+                                return organizer.isActive === 1 ? t("organizers.active") : t("organizers.inactive");
                               })()}
                             </span>
                           )}
                           {approvedTab === "Rejected" && (
                             <span className="text-sm font-semibold px-3 py-1 rounded-full bg-red-100 text-red-700 border border-red-300">
-                              Rejected
+                              {t("organizers.rejected")}
                             </span>
                           )}
                         </div>
@@ -477,7 +484,7 @@ export default function ManageEventOrganizer() {
                           >
                             <Image
                               src="/assets/images/home/eye-outline.png"
-                              alt="View"
+                              alt={t("organizers.view")}
                               height={20}
                               width={20}
                               className="transition-transform duration-300 hover:scale-110"
@@ -498,7 +505,7 @@ export default function ManageEventOrganizer() {
                                     ? 'bg-green-500 hover:bg-green-600 text-white' 
                                     : 'bg-purple-500 hover:bg-purple-600 text-white'
                                 }`}
-                                title={organizer.is_suspended ? "Unsuspend Host" : "Suspend Host"}
+                                title={organizer.is_suspended ? t("organizers.unsuspendHost") : t("organizers.suspendHost")}
                               >
                                 {organizer.is_suspended ? '✓' : '⏸'}
                               </button>
@@ -511,7 +518,7 @@ export default function ManageEventOrganizer() {
                 ) : (
                   <tr>
                     <td colSpan={11} className="py-3 text-center">
-                      No Data Available
+                      {t("common.noDataAvailable")}
                     </td>
                   </tr>
                 )}
@@ -536,12 +543,12 @@ export default function ManageEventOrganizer() {
           onClose={() => setModalShow(false)}
           onConfirm={handleConfirm}
           title={
-            actionType === "approve" ? "Approve Organizer" : "Reject Organizer"
+            actionType === "approve" ? t("organizers.approveOrganizer") : t("organizers.rejectOrganizer")
           }
           message={
             actionType === "approve"
-              ? "Are you sure you want to approve this organizer?"
-              : "Are you sure you want to reject this organizer?"
+              ? t("organizers.confirmApproveOrganizer")
+              : t("organizers.confirmRejectOrganizer")
           }
         />
         <StatusConfirmation

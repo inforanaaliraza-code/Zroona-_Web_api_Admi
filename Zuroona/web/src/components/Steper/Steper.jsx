@@ -15,6 +15,7 @@ const Steper = ({ currentStep }) => {
         }
     };
 
+
     const getTextStyle = (step) => {
         if (step < currentStep) {
             return 'text-[#43b11a]'; // Text color for completed steps
@@ -24,6 +25,7 @@ const Steper = ({ currentStep }) => {
             return 'text-[#cb9ea3]'; // Text color for upcoming steps
         }
     };
+
 
     const steps = [
         { step: 1, label: t('steper.tab1') }, // Basic Info

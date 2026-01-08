@@ -28,7 +28,7 @@ export default function JoinUsEvent() {
   const [search, setSearch] = useState("");
   const [event_type, setEvent_type] = useState("1");
   const [activePage, setActivePage] = useState(9);
-  const [statusFilter, setStatusFilter] = useState("all"); // all, accepted, rejected, pending
+  const [statusFilter, setStatusFilter] = useState("all"); // all, accepted, rejected, pending, completed
 
   useEffect(() => {
     dispatch(
@@ -65,6 +65,17 @@ export default function JoinUsEvent() {
       filtered = filtered.filter(event => event.is_approved === 2);
     } else if (statusFilter === "pending") {
       filtered = filtered.filter(event => event.is_approved === 0 || event.is_approved === null || event.is_approved === undefined);
+    } else if (statusFilter === "completed") {
+      // Completed events: approved events where event_date is in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      filtered = filtered.filter(event => {
+        if (event.is_approved !== 1) return false; // Must be approved
+        if (!event.event_date) return false;
+        const eventDate = new Date(event.event_date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate < today; // Event date is in the past
+      });
     }
     
     return filtered;
@@ -93,14 +104,14 @@ export default function JoinUsEvent() {
   return (
     <>
       <Breadcrumbs items={breadcrumbItems} />
-      <section className="bg-white min-h-screen py-8 sm:py-12">
-        <div className="mx-auto px-4 md:px-8 xl:px-28 max-w-7xl">
+      <section className="bg-white min-h-screen py-8 sm:py-12" style={{ overscrollBehavior: 'contain' }}>
+        <div className="mx-auto px-4 md:px-8 xl:px-28 max-w-[95%] sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%] xl:max-w-7xl">
           {/* Enhanced Header Section */}
           <div className="mb-8">
             <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6 mb-6 ${flexDirection}`}>
               <div className="flex-1">
                 <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 ${textAlign}`}>
-                  {t('myEventOnly')}
+                  Events
                 </h1>
                 <p className={`text-gray-600 text-sm sm:text-base mt-1 ${textAlign}`}>
                   {t('events.manageYourEvents') || 'Manage and organize your events'}
@@ -176,6 +187,19 @@ export default function JoinUsEvent() {
                 )}
                 <span className="relative z-10">{t('events.rejected')}</span>
               </button>
+              <button
+                onClick={() => setStatusFilter("completed")}
+                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  statusFilter === "completed"
+                    ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white shadow-lg shadow-indigo-500/30 scale-105"
+                    : "bg-white text-gray-700 border-2 border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 hover:shadow-md"
+                }`}
+              >
+                {statusFilter === "completed" && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#8b5cf6] to-[#6366f1] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                )}
+                <span className="relative z-10">{t('events.completed') || 'Completed'}</span>
+              </button>
             </div>
 
             {/* Enhanced Search Bar */}
@@ -218,7 +242,7 @@ export default function JoinUsEvent() {
             <>
               {displayEvents?.length > 0 ? (
                 <>
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-10">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 mb-10">
                     {displayEvents?.map((event, i) => (
                       <div 
                         key={event._id || i}
@@ -226,7 +250,7 @@ export default function JoinUsEvent() {
                       >
                         <Link
                           href={{
-                            pathname: "/joinUsEvent/detail",
+                            pathname: statusFilter === "completed" ? "/joinUsEvent/completed/detail" : "/joinUsEvent/detail",
                             query: { id: event._id },
                           }}
                           className="block h-full"

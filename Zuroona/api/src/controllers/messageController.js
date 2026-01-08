@@ -8,7 +8,7 @@ const BookEventService = require('../services/bookEventService.js');
 const resp_messages = require('../helpers/resp_messages.js');
 const mongoose = require('mongoose');
 const fs = require('fs');
-const { uploadToCloudinary } = require('../utils/cloudinary.js');
+const { uploadToS3 } = require('../utils/awsS3.js');
 
 const MessageController = {
     // Get all conversations for a user
@@ -27,6 +27,7 @@ const MessageController = {
             // Get one-on-one conversations
             const oneOnOneConversations = await ConversationService.FindService(oneOnOneQuery, parseInt(page), parseInt(limit));
 
+            n
             // For group chats - different logic for guests vs organizers
             let groupConversations = [];
             
@@ -782,15 +783,15 @@ const MessageController = {
                     );
                 }
 
-                // Upload to Cloudinary in messages folder
-                const cloudinaryResult = await uploadToCloudinary(
+                // Upload to AWS S3 in messages folder
+                const s3Result = await uploadToS3(
                     fileData,
                     'Zuroona/messages',
                     fileName,
                     uploadedFile.mimetype || 'application/octet-stream'
                 );
 
-                attachmentUrl = cloudinaryResult.secure_url;
+                attachmentUrl = s3Result.url;
 
                 // Clean up temp file if it was used
                 if (uploadedFile.tempFilePath) {
