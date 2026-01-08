@@ -24,6 +24,7 @@ import { formatDistanceToNow } from "date-fns";
 import Header from "@/components/Header/Header";
 import HostNavbar from "@/components/Header/HostNavbar";
 import Footer from "@/components/Footer/Footer";
+import { BASE_API_URL } from "@/until";
 
 export default function MessagingPage() {
   const { t, i18n } = useTranslation();
@@ -117,20 +118,26 @@ export default function MessagingPage() {
     try {
       setLoading(true);
       const apiCall = isOrganizer ? GetConversationsOrganizerApi : GetConversationsApi;
-      const response = await apiCall({ page: 1, limit: 50 });
+      // Increased limit to fetch all conversations including all group chats
+      const response = await apiCall({ page: 1, limit: 200 });
       
       // Handle different response formats
       if (response && (response.status === 1 || response.status === true)) {
         // Response format: { status: 1, data: { conversations: [...] } }
         const conversations = response.data?.conversations || response.conversations || [];
-        setConversations(Array.isArray(conversations) ? conversations : []);
+        const conversationsArray = Array.isArray(conversations) ? conversations : [];
+        console.log(`[FRONTEND] Fetched ${conversationsArray.length} conversations (${conversationsArray.filter(c => c.is_group).length} group chats)`);
+        setConversations(conversationsArray);
       } else if (Array.isArray(response)) {
         // Direct array response
+        console.log(`[FRONTEND] Fetched ${response.length} conversations (direct array)`);
         setConversations(response);
       } else if (response?.data && Array.isArray(response.data)) {
         // Response format: { data: [...] }
+        console.log(`[FRONTEND] Fetched ${response.data.length} conversations (data array)`);
         setConversations(response.data);
       } else {
+        console.warn('[FRONTEND] Unexpected response format:', response);
         setConversations([]);
       }
     } catch (error) {
@@ -406,6 +413,93 @@ export default function MessagingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversation?._id, isOrganizer, isAuthenticated, messagesLoading]);
 
+  // Poll for new conversations every 5 seconds (real-time refresh for new groups)
+  // This ensures users see new group chats immediately after payment completion
+  useEffect(() => {
+    if (!isAuthenticated || !token || loading) return;
+    
+    const interval = setInterval(async () => {
+      try {
+        const apiCall = isOrganizer ? GetConversationsOrganizerApi : GetConversationsApi;
+        // Increased limit to fetch all conversations including all group chats
+        const response = await apiCall({ page: 1, limit: 200 });
+        
+        if (response && (response.status === 1 || response.status === true)) {
+          const newConversations = response.data?.conversations || response.conversations || [];
+          
+          // Only update if conversations actually changed
+          if (Array.isArray(newConversations)) {
+            const currentConvIds = new Set(conversations.map(c => c._id?.toString()));
+            const newConvIds = new Set(newConversations.map(c => c._id?.toString()));
+            
+            // Check if there are any new conversations (e.g., new group chat after payment)
+            const hasNewConversations = newConversations.some(c => !currentConvIds.has(c._id?.toString()));
+            const hasDifferentLength = newConversations.length !== conversations.length;
+            
+            // Also check if participant count changed in existing group chats
+            const participantCountChanged = conversations.some(conv => {
+              if (!conv.is_group) return false;
+              const newConv = newConversations.find(c => c._id?.toString() === conv._id?.toString());
+              if (!newConv) return false;
+              return (newConv.participants?.length || 0) !== (conv.participants?.length || 0);
+            });
+            
+            // Check if user was added to a group chat they weren't in before
+            let userAddedToGroup = false;
+            if (!isOrganizer) {
+              const newGroupChats = newConversations.filter(c => 
+                c.is_group === true && 
+                !currentConvIds.has(c._id?.toString())
+              );
+              if (newGroupChats.length > 0) {
+                userAddedToGroup = true;
+                // Show toast notification for new group chat
+                newGroupChats.forEach(groupChat => {
+                  const eventName = groupChat.event_id?.event_name || "Event";
+                  toast.success(
+                    t("messaging.addedToGroupChat", `You've been added to the group chat for "${eventName}"!`),
+                    { autoClose: 5000 }
+                  );
+                });
+              }
+            }
+            
+            if (hasNewConversations || hasDifferentLength || participantCountChanged || userAddedToGroup) {
+              setConversations(newConversations);
+              
+              // If a new group chat was added and we have event_id in URL, auto-select it
+              if (eventIdFromUrl && hasNewConversations) {
+                const newGroupChat = newConversations.find(conv => 
+                  conv.is_group === true && 
+                  (conv.event_id?._id === eventIdFromUrl || conv.event_id === eventIdFromUrl) &&
+                  !selectedConversation
+                );
+                if (newGroupChat) {
+                  setSelectedConversation(newGroupChat);
+                  fetchMessages(newGroupChat._id);
+                }
+              }
+              
+              // Update selected conversation if it exists in new list (to get updated participant count)
+              if (selectedConversation) {
+                const updatedConv = newConversations.find(c => c._id?.toString() === selectedConversation._id?.toString());
+                if (updatedConv) {
+                  setSelectedConversation(updatedConv);
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Silently handle errors in polling to avoid spam
+        console.error("Error polling conversations:", error);
+      }
+    }, 5000); // Poll every 5 seconds for conversations (less frequent than messages)
+    
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, token, isOrganizer, loading, eventIdFromUrl, selectedConversation]);
+
   // Filter conversations based on search
   const filteredConversations = conversations.filter(conv => {
     if (!searchTerm) return true;
@@ -438,7 +532,7 @@ export default function MessagingPage() {
             {t("events.loginRequired")}
           </h2>
           <p className="text-gray-600 mb-6">
-            {t("events.loginToViewProfile")}
+            {t("Login To View Profile")}
           </p>
           <Link
             href="/"
@@ -663,15 +757,29 @@ export default function MessagingPage() {
                           <>
                             <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
                               <Image
-                                src={
-                                  isOrganizer
-                                    ? selectedConversation.user_id?.profile_image || "/assets/images/user-avatar.png"
-                                    : selectedConversation.organizer_id?.profile_image || "/assets/images/user-avatar.png"
-                                }
+                                src={(() => {
+                                  const getImageUrl = (imgPath) => {
+                                    if (!imgPath) return "/assets/images/user-avatar.png";
+                                    if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
+                                    if (imgPath.includes("res.cloudinary.com")) return imgPath;
+                                    const apiBase = BASE_API_URL.replace('/api/', '');
+                                    if (imgPath.startsWith("/uploads/")) return `${apiBase}${imgPath}`;
+                                    if (imgPath.startsWith("uploads/")) return `${apiBase}/${imgPath}`;
+                                    if (imgPath.startsWith("/")) return `${apiBase}${imgPath}`;
+                                    return "/assets/images/user-avatar.png";
+                                  };
+                                  const profileImg = isOrganizer
+                                    ? selectedConversation.user_id?.profile_image
+                                    : selectedConversation.organizer_id?.profile_image;
+                                  return getImageUrl(profileImg);
+                                })()}
                                 alt="User"
                                 width={40}
                                 height={40}
                                 className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.src = "/assets/images/user-avatar.png";
+                                }}
                               />
                             </div>
                             <div>
@@ -729,9 +837,30 @@ export default function MessagingPage() {
                           
                           // Get sender profile image - prioritize from message sender, fallback to conversation
                           const getSenderProfileImage = () => {
-                            // First try to get from populated sender object (from backend API)
-                            if (msg.sender && msg.sender.profile_image) {
-                              return msg.sender.profile_image;
+                            // First try to get from populated sender object (from backend API) - this is the most reliable source
+                            if (msg.sender) {
+                              // Check multiple possible paths for profile_image
+                              const senderProfile = 
+                                msg.sender.profile_image || 
+                                msg.sender?.profile_image ||
+                                (msg.sender && typeof msg.sender === 'object' && msg.sender.profile_image);
+                              
+                              // Only return if profile_image exists and is not empty/null
+                              if (senderProfile && senderProfile !== null && senderProfile !== '' && senderProfile !== 'null' && senderProfile !== 'undefined') {
+                                console.log("[MESSAGING] Using sender profile image from msg.sender:", senderProfile);
+                                return senderProfile;
+                              } else {
+                                console.log("[MESSAGING] msg.sender exists but profile_image is empty/null:", {
+                                  sender: msg.sender,
+                                  profile_image: senderProfile
+                                });
+                              }
+                            } else {
+                              console.log("[MESSAGING] msg.sender not found for message:", {
+                                msg_id: msg._id,
+                                sender_id: msg.sender_id,
+                                sender_role: msg.sender_role
+                              });
                             }
                             
                             // For group chats, try to get from participants list
@@ -743,34 +872,121 @@ export default function MessagingPage() {
                                   return participantId?.toString() === senderId?.toString() && p.role === msg.sender_role;
                                 }
                               );
-                              if (participant && participant.user_id) {
-                                const participantProfile = participant.user_id.profile_image || participant.user_id?.profile_image;
-                                if (participantProfile) return participantProfile;
+                              
+                              if (participant) {
+                                console.log("[MESSAGING] Found participant:", participant);
+                                
+                                // Handle different participant.user_id structures
+                                let participantProfile = null;
+                                
+                                if (participant.user_id) {
+                                  // If user_id is populated (object)
+                                  if (typeof participant.user_id === 'object' && participant.user_id !== null) {
+                                    participantProfile = participant.user_id.profile_image || participant.user_id?.profile_image;
+                                  } 
+                                  // If user_id is just an ID string, we can't get profile from it
+                                  // But this shouldn't happen if backend is populating correctly
+                                }
+                                
+                                // Only return if profile_image exists and is not empty/null
+                                if (participantProfile && participantProfile !== null && participantProfile !== '' && participantProfile !== 'null' && participantProfile !== 'undefined') {
+                                  console.log("[MESSAGING] Using participant profile image:", participantProfile);
+                                  return participantProfile;
+                                } else {
+                                  console.log("[MESSAGING] Participant found but profile_image is empty/null:", {
+                                    participant,
+                                    user_id: participant.user_id,
+                                    user_id_type: typeof participant.user_id,
+                                    profile_image: participantProfile
+                                  });
+                                }
+                              } else {
+                                console.log("[MESSAGING] Participant not found for sender:", {
+                                  sender_id: msg.sender_id,
+                                  sender_role: msg.sender_role,
+                                  participants: selectedConversation.participants.map(p => ({
+                                    id: p.user_id?._id || p.user_id,
+                                    role: p.role
+                                  }))
+                                });
                               }
                             }
                             
                             // Fallback to conversation user/organizer profile (for one-on-one chats)
                             if (!selectedConversation.is_group) {
                               if (msg.sender_role === 1) {
-                                return selectedConversation.user_id?.profile_image;
+                                const userProfile = selectedConversation.user_id?.profile_image;
+                                if (userProfile && userProfile !== null && userProfile !== '' && userProfile !== 'null' && userProfile !== 'undefined') {
+                                  console.log("[MESSAGING] Using conversation user profile image:", userProfile);
+                                  return userProfile;
+                                }
                               } else if (msg.sender_role === 2) {
-                                return selectedConversation.organizer_id?.profile_image;
+                                const organizerProfile = selectedConversation.organizer_id?.profile_image;
+                                if (organizerProfile && organizerProfile !== null && organizerProfile !== '' && organizerProfile !== 'null' && organizerProfile !== 'undefined') {
+                                  console.log("[MESSAGING] Using conversation organizer profile image:", organizerProfile);
+                                  return organizerProfile;
+                                }
                               }
                             }
                             
+                            console.log("[MESSAGING] No valid profile image found for sender - will use default avatar");
                             return null; // Will fallback to default avatar in getImageUrl
                           };
 
                           const getImageUrl = (imgPath) => {
-                            if (!imgPath) return "/assets/images/user-avatar.png";
-                            if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
-                            // Handle relative paths - add API base URL
-                            if (imgPath.startsWith("/uploads/") || imgPath.startsWith("uploads/")) {
-                              const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3434";
-                              const cleanPath = imgPath.startsWith("/") ? imgPath : `/${imgPath}`;
-                              return `${apiBase}${cleanPath}`;
+                            // Only use dummy image if absolutely no path is provided
+                            if (!imgPath || imgPath === null || imgPath === '' || imgPath === 'null' || imgPath === 'undefined') {
+                              console.log("[MESSAGING] No valid image path provided, using default avatar");
+                              return "/assets/images/user-avatar.png";
                             }
-                            return "/assets/images/user-avatar.png";
+                            
+                            // Clean the path (remove any whitespace)
+                            const cleanPath = String(imgPath).trim();
+                            
+                            if (!cleanPath || cleanPath === 'null' || cleanPath === 'undefined') {
+                              console.log("[MESSAGING] Cleaned path is empty, using default avatar");
+                              return "/assets/images/user-avatar.png";
+                            }
+                            
+                            // If already absolute URL (http/https) - includes Cloudinary URLs
+                            if (cleanPath.includes("http://") || cleanPath.includes("https://")) {
+                              console.log("[MESSAGING] Using absolute URL:", cleanPath);
+                              return cleanPath;
+                            }
+                            
+                            // If Cloudinary URL format (res.cloudinary.com)
+                            if (cleanPath.includes("res.cloudinary.com")) {
+                              console.log("[MESSAGING] Using Cloudinary URL:", cleanPath);
+                              return cleanPath;
+                            }
+                            
+                            // Get API base URL (remove /api/ from BASE_API_URL to get base server URL)
+                            const apiBase = BASE_API_URL.replace('/api/', '');
+                            
+                            // Handle relative paths - add API base URL
+                            if (cleanPath.startsWith("/uploads/")) {
+                              const fullUrl = `${apiBase}${cleanPath}`;
+                              console.log("[MESSAGING] Constructed URL from /uploads/ path:", fullUrl);
+                              return fullUrl;
+                            }
+                            
+                            if (cleanPath.startsWith("uploads/")) {
+                              const fullUrl = `${apiBase}/${cleanPath}`;
+                              console.log("[MESSAGING] Constructed URL from uploads/ path:", fullUrl);
+                              return fullUrl;
+                            }
+                            
+                            // If path starts with /, try to construct full URL
+                            if (cleanPath.startsWith("/")) {
+                              const fullUrl = `${apiBase}${cleanPath}`;
+                              console.log("[MESSAGING] Constructed URL from / path:", fullUrl);
+                              return fullUrl;
+                            }
+                            
+                            // If path doesn't start with /, try adding it
+                            const fullUrl = `${apiBase}/${cleanPath}`;
+                            console.log("[MESSAGING] Constructed URL from relative path:", fullUrl);
+                            return fullUrl;
                           };
                           
                           return (
@@ -782,14 +998,22 @@ export default function MessagingPage() {
                                 <>
                                   {showAvatar ? (
                                     <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border border-gray-300">
-                                      <Image
+                                      <img
                                         src={getImageUrl(getSenderProfileImage())}
-                                        alt={msg.sender?.first_name || "User"}
-                                        width={32}
-                                        height={32}
+                                        alt={msg.sender?.first_name || msg.sender?.last_name || "User"}
                                         className="w-full h-full object-cover"
+                                        loading="lazy"
                                         onError={(e) => {
-                                          e.target.src = "/assets/images/user-avatar.png";
+                                          const currentSrc = e.target.src;
+                                          console.log("[MESSAGING] Image load error for:", currentSrc);
+                                          // Only use fallback if it's not already the fallback image
+                                          if (!currentSrc.includes("user-avatar.png")) {
+                                            console.log("[MESSAGING] Setting fallback avatar");
+                                            e.target.src = "/assets/images/user-avatar.png";
+                                          }
+                                        }}
+                                        onLoad={(e) => {
+                                          console.log("[MESSAGING] Image loaded successfully:", e?.target?.src);
                                         }}
                                       />
                                     </div>

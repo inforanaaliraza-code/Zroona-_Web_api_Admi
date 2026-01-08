@@ -17,7 +17,7 @@ export default function CommunitySection() {
         </div>
       </div>
 
-      {/* Content Section */}
+      {/* Content Section */}                 
       <div className="grid grid-cols-1 lg:grid-cols-2 mt-5 md:mt-0 bg-[#FFF0F1]">
         {/* Left Image */}
         <div className='px-8 lg:px-0'>

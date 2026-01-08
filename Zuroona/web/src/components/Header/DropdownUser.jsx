@@ -83,14 +83,24 @@ const DropdownUser = ({ profile }) => {
             {/* Define your menu items */}
             {[
               {
+                label: t("header.tab1") || "Events",
+                path: "/events",
+                icon: "lucide:calendar",
+              },
+              {
+                label: t("header.messaging") || "Messaging",
+                path: "/messaging",
+                icon: "lucide:message-circle",
+              },
+              {
                 label: t("sidemenu.tab4") || "My Bookings",
                 path: "/myEvents",
                 icon: "lucide:calendar-check",
               },
               {
-                label: t("sidemenu.tab3") || "Edit Profile",
+                label: t("profile.personalInfo") || "Profile",
                 path: "/profile",
-                icon: "lucide:user-cog",
+                icon: "lucide:user",
               },
               { label: t("sidemenu.tab8") || "About Us", path: "/aboutUs", icon: "lucide:info" },
             ].map(({ label, path, icon }) => {

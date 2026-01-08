@@ -338,10 +338,21 @@ export const UpdatePaymentApi = async (payload) => {
 	}
 };
 
-export const GetUserBookingsApi = async () => {
+export const GetUserBookingsApi = async (params = {}) => {
 	// Fetch all bookings (pending, approved, rejected, paid/unpaid)
-	return getData("user/bookings", { book_status: "all" }).then((data) => {
+	// Allow passing custom params, but default to "all" for book_status
+	const queryParams = {
+		book_status: params.book_status || "all",
+		page: params.page || 1,
+		limit: params.limit || 100, // Increased limit to show all bookings
+		...params
+	};
+	
+	return getData("user/bookings", queryParams).then((data) => {
 		return data;
+	}).catch((error) => {
+		console.error("[GetUserBookingsApi] Error:", error);
+		throw error;
 	});
 };
 

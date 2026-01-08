@@ -621,7 +621,7 @@ export default function MyBookings() {
                                             )}
                                             {!isPending && !(isApproved && isPaid) && (
                                               <span className="text-gray-400 text-xs">
-                                                {t("processed") || "Processed"}
+                                                {t("Processed") || "Processed"}
                                               </span>
                                             )}
                                           </div>
