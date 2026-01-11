@@ -361,7 +361,7 @@ export const GetProfileApi = ProfileDetailApi;
 // ===== REFUND APIs =====
 export const RequestRefundApi = async (payload) => {
 	// Request refund for a booking
-	// payload: { book_id, refund_reason }
+	// payload: { booking_id, refund_reason }
 	return postRawData("user/refund/request", payload).then((data) => {
 		return data;
 	});

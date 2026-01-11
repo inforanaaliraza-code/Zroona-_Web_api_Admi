@@ -73,6 +73,8 @@ const SidebarItem = ({ item, pageName, setPageName, index = 0 }) => {
       return <ArrowDownCircle {...iconProps} />;
     } else if (label.includes("invoice")) {
       return <Receipt {...iconProps} />;
+    } else if (label.includes("refund")) {
+      return <Receipt {...iconProps} />;
     }
     
     // Fallback: try to use image icon if available

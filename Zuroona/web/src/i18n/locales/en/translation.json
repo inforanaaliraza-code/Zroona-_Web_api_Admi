@@ -940,6 +940,14 @@
     "noReviews": "No Reviews Yet",
     "noReviewsDesc": "Be the first to leave a review!"
   },
+  "reviews": {
+    "rating": "Rating",
+    "viewReviews": "View Reviews",
+    "attendeeReviews": "Reviews for",
+    "reviews": "reviews",
+    "noReviews": "No reviews from other hosts yet",
+    "event": "Event"
+  },
   "hostNavbar": {
     "myEvents": "My Events",
     "myBookings": "My Bookings",
@@ -1229,5 +1237,62 @@
     "personalInfo2": "Be authorized to provide that information, and",
     "personalInfo3": "Permit us to process the information as per our Privacy Policy.",
     "reviewTerms": "Make sure to review and adhere to our Terms, Policies, and guidelines."
+  },
+  "refunds": {
+    "title": "Refunds",
+    "subtitle": "View and track your refund requests",
+    "requestNew": "Request New Refund",
+    "requestDesc": "Submit a refund request for your booking",
+    "details": "Refund Details",
+    "detailsDesc": "View details of your refund request",
+    "backToList": "Back to Refunds",
+    "notFound": "Refund not found",
+    "noRefunds": "No refunds found",
+    "noRefundsDesc": "You haven't requested any refunds yet",
+    "noRefundsFilter": "No {{filter}} refunds found",
+    "viewDetails": "View Details",
+    "bookingId": "Booking ID",
+    "refundId": "Refund ID",
+    "requestedOn": "Requested on",
+    "processedOn": "Processed On",
+    "amount": "Amount",
+    "reason": "Reason",
+    "noReason": "No reason provided",
+    "error": "Error",
+    "refundInformation": "Refund Information",
+    "adminResponse": "Admin Response",
+    "paymentRefundId": "Payment Refund ID",
+    "selectBooking": "Select Booking",
+    "selectBookingPlaceholder": "Select a booking...",
+    "reasonPlaceholder": "Please explain why you need a refund...",
+    "characters": "characters",
+    "submit": "Submit Request",
+    "submitting": "Submitting...",
+    "requestSuccess": "Refund request submitted successfully",
+    "requestError": "Failed to submit refund request",
+    "noRefundableBookings": "No refundable bookings found. Only cancelled and paid bookings can be refunded.",
+    "filter": {
+      "all": "All",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "status": {
+      "pending": "Pending",
+      "pendingDesc": "Your refund request is under review",
+      "approved": "Approved",
+      "approvedDesc": "Your refund request has been approved",
+      "rejected": "Rejected",
+      "rejectedDesc": "Your refund request has been rejected",
+      "processed": "Processed",
+      "processedDesc": "Your refund has been processed",
+      "unknown": "Unknown"
+    },
+    "validation": {
+      "bookingRequired": "Please select a booking",
+      "reasonRequired": "Refund reason is required",
+      "reasonMin": "Reason must be at least 10 characters",
+      "reasonMax": "Reason must not exceed 500 characters"
+    }
   }
 }

@@ -1,5 +1,9 @@
+const axios = require('axios');
+require('dotenv').config();
+
 async function createOrder(amount) {
     try {
+        const API_KEY = process.env.MOYASAR_API_KEY;
         const response = await axios.post(
             "https://api.moyasar.com/v1/payments",
             {

@@ -288,7 +288,7 @@ export default function GuestInvoices() {
                   <th className="px-4 py-3 text-left font-semibold">{t("invoice.event")}</th>
                   <th className="px-4 py-3 text-left font-semibold">{t("invoice.attendees")}</th>
                   <th className="px-4 py-3 text-left font-semibold">{t("invoice.amount")}</th>
-                  <th className="px-4 py-3 text-left font-semibold">{t("invoice.status")}</th>
+                  <th className="px-4 py-3 text-left font-semibold">{t("invoice.statusHeader") || "Status"}</th>
                   <th className="px-4 py-3 text-left font-semibold">{t("invoice.date")}</th>
                   <th className="px-4 py-3 text-center font-semibold">{t("invoice.details")}</th>
                 </tr>

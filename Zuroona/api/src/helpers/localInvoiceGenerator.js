@@ -131,7 +131,7 @@ Generated on: ${new Date().toISOString()}
 <body>
     <div class="invoice-container">
         <div class="header">
-            <h1>🎉 ZUROONA</h1>
+            <h1>ZUROONA</h1>
             <p>Event Management Platform</p>
             <p style="margin-top: 10px; font-size: 18px; font-weight: bold;">INVOICE / RECEIPT</p>
         </div>

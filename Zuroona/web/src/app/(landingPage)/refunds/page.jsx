@@ -73,6 +73,12 @@ export default function RefundsPage() {
           icon: "lucide:x-circle",
           label: t("refunds.status.rejected") || "Rejected",
         };
+      case 3: // Processed
+        return {
+          color: "bg-blue-100 text-blue-800",
+          icon: "lucide:check-circle-2",
+          label: t("refunds.status.processed") || "Processed",
+        };
       default:
         return {
           color: "bg-gray-100 text-gray-800",

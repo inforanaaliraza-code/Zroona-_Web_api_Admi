@@ -54,7 +54,7 @@ export default function MyEventsPage() {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [isReserving, setIsReserving] = useState(false);
-  const [activeTab, setActiveTab] = useState("all"); // all, approved, pending, rejected
+  const [activeTab, setActiveTab] = useState("all"); // all, approved, pending, rejected, cancelled
 
   // Status mapping for colors and icons
   // Backend book_status: 1 = Pending (waiting for host), 2 = Approved/Confirmed, 3 = Cancelled, 4 = Rejected
@@ -132,6 +132,10 @@ export default function MyEventsPage() {
             payment_status: booking.payment_status,
             attendees: booking.no_of_attendees || booking.attendees || 0,
             total_amount: booking.book_details?.total_amount || booking.total_amount,
+            refund_request_id: booking.refund_request_id,
+            invoice_id: booking.invoice_id,
+            invoice_url: booking.invoice_url,
+            order_id: booking.order_id,
             // Top-level fields for easy access
             event_start_time: booking.event_start_time || booking.event?.event_start_time,
             event_end_time: booking.event_end_time || booking.event?.event_end_time,
@@ -257,6 +261,18 @@ export default function MyEventsPage() {
         const dateB = new Date(b.event?.event_date || 0);
         return dateB - dateA;
       });
+    } else if (activeTab === "cancelled") {
+      // Cancelled tab: Show bookings that user has cancelled (status = 3)
+      filtered = bookings.filter(booking => {
+        const status = booking.status;
+        return status === 3; // Only cancelled bookings
+      });
+      // Sort by date: most recent first
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.event?.event_date || 0);
+        const dateB = new Date(b.event?.event_date || 0);
+        return dateB - dateA;
+      });
     }
 
     setFilteredBookings(filtered);
@@ -295,6 +311,7 @@ export default function MyEventsPage() {
             payment_status: booking.payment_status,
             attendees: booking.no_of_attendees || booking.attendees || 0,
             total_amount: booking.book_details?.total_amount || booking.total_amount,
+            refund_request_id: booking.refund_request_id,
             invoice_id: booking.invoice_id,
             invoice_url: booking.invoice_url,
             order_id: booking.order_id,
@@ -458,13 +475,23 @@ export default function MyEventsPage() {
             </button>
             <button
               onClick={() => setActiveTab("rejected")}
-              className={`px-6 py-3 text-sm font-semibold transition-all duration-300 ${
+              className={`px-6 py-3 text-sm font-semibold transition-all duration-300 ${isRTL ? "border-r" : "border-l"} ${isRTL ? "border-l" : "border-r"} border-gray-200 ${
                 activeTab === "rejected"
+                  ? "bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {getTranslation(t, "events.rejected", "Rejected")}
+            </button>
+            <button
+              onClick={() => setActiveTab("cancelled")}
+              className={`px-6 py-3 text-sm font-semibold transition-all duration-300 ${
+                activeTab === "cancelled"
                   ? "bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg"
                   : "bg-white text-gray-700 hover:bg-gray-50"
               } ${isRTL ? "rounded-l-lg" : "rounded-r-lg"}`}
             >
-              {getTranslation(t, "events.rejected", "Rejected")}
+              {getTranslation(t, "events.cancelled", "Cancelled")}
             </button>
           </div>
         </div>
@@ -687,6 +714,28 @@ export default function MyEventsPage() {
                           <Icon icon="lucide:x-circle" className={`h-4 w-4 ${marginEnd(2)}`} />
                           {getTranslation(t, "events.cancelBooking", "Cancel Booking")}
                         </button>
+                      )}
+                      
+                      {/* Request Refund Button - Show for cancelled (status = 3) and paid (payment_status = 1) bookings without refund_request_id */}
+                      {booking.status === 3 && booking.payment_status === 1 && !booking.refund_request_id && (
+                        <Link
+                          href={`/refunds/request?booking_id=${booking._id}`}
+                          className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-all"
+                        >
+                          <Icon icon="lucide:receipt-refund" className={`h-4 w-4 ${marginEnd(2)}`} />
+                          {getTranslation(t, "events.requestRefund", "Request Refund")}
+                        </Link>
+                      )}
+                      
+                      {/* View Refund Button - Show if refund has been requested */}
+                      {booking.refund_request_id && (
+                        <Link
+                          href={`/refunds/${booking.refund_request_id}`}
+                          className="flex-1 inline-flex justify-center items-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 transition-all"
+                        >
+                          <Icon icon="lucide:receipt" className={`h-4 w-4 ${marginEnd(2)}`} />
+                          {getTranslation(t, "events.viewRefund", "View Refund")}
+                        </Link>
                       )}
                       
                       {/* Invoice Download - Show for paid bookings */}

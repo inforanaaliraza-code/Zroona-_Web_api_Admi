@@ -87,12 +87,12 @@ const eventSchema = new Schema(
 			default: 1,
 		},
 		event_category: {
-			type: Schema.Types.ObjectId,
+			type: String,
 			required: true,
 		},
 		// Support for multiple categories (array)
 		event_categories: {
-			type: [Schema.Types.ObjectId],
+			type: [String],
 			default: [],
 		},
 		// Support for multiple event types (array of strings: conference, workshop, etc.)

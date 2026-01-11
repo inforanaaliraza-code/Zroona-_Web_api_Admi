@@ -396,6 +396,12 @@ export const menuGroups = [
         translationKey: "sidebar.guestInvoices",
         route: "/guest-invoices",
       },
+      {
+        icon: "/assets/images/menu/wallet.png",
+        label: "Refund Requests",
+        translationKey: "sidebar.refundRequests",
+        route: "/refund-requests",
+      },
     ],
   },
 

@@ -6,7 +6,7 @@ import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
 import { toast } from "react-toastify";
 import { FaFileExcel, FaPrint, FaCheckCircle, FaTimesCircle, FaEye } from "react-icons/fa";
-import ApprovalModal from "@/components/Modals/ApprovalModal";
+import RefundActionModal from "@/components/Modals/RefundActionModal";
 import { GetRefundListApi, UpdateRefundStatusApi, GetRefundDetailApi } from "@/api/setting";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -18,6 +18,7 @@ export default function RefundRequests() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [selectedRefund, setSelectedRefund] = useState(null);
   const [actionType, setActionType] = useState("");
@@ -36,12 +37,18 @@ export default function RefundRequests() {
         page,
         limit: itemsPerPage,
         ...(search && { search }),
-        ...(statusFilter !== "all" && { status: statusFilter === "pending" ? 0 : statusFilter === "approved" ? 1 : 2 }),
+        ...(statusFilter !== "all" && { status: statusFilter === "pending" ? 0 : statusFilter === "approved" ? 1 : statusFilter === "rejected" ? 2 : statusFilter === "processed" ? 3 : undefined }),
       };
       const res = await GetRefundListApi(queryParams);
+      console.log("[REFUND:ADMIN] API Response:", res);
       if (res?.status === 1 || res?.code === 200) {
         const refundData = res?.data?.refunds || res?.data || [];
+        console.log("[REFUND:ADMIN] Refund Data:", refundData);
+        console.log("[REFUND:ADMIN] Total Count:", res?.total_count);
         setRefunds(refundData);
+        setTotalCount(res?.total_count || refundData.length);
+      } else {
+        console.error("[REFUND:ADMIN] API Error Response:", res);
       }
     } catch (error) {
       console.error("Error fetching refund requests:", error);
@@ -81,25 +88,30 @@ export default function RefundRequests() {
     }
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (formData) => {
     setLoading(true);
     try {
       const status = actionType === "approve" ? 1 : 2; // 1=approved, 2=rejected
-      const res = await UpdateRefundStatusApi({
+      const payload = {
         refund_id: selectedRefund._id,
         status: status,
-      });
+        ...(formData.admin_response && { admin_response: formData.admin_response }),
+        ...(formData.payment_refund_id && { payment_refund_id: formData.payment_refund_id }),
+      };
+      
+      const res = await UpdateRefundStatusApi(payload);
       
       if (res?.status === 1 || res?.code === 200) {
         toast.success(actionType === "approve" ? t("refund.refundApprovedSuccess") : t("refund.refundRejectedSuccess"));
         setShowModal(false);
+        setSelectedRefund(null);
         fetchRefunds();
       } else {
         toast.error(res?.message || t("refund.failedToUpdate"));
       }
     } catch (error) {
       console.error("Error updating refund request:", error);
-      toast.error(t("refund.failedToUpdate"));
+      toast.error(error.response?.data?.message || t("refund.failedToUpdate"));
     } finally {
       setLoading(false);
     }
@@ -113,6 +125,8 @@ export default function RefundRequests() {
         return <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">{t("refund.approved")}</span>;
       case 2:
         return <span className="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">{t("refund.rejected")}</span>;
+      case 3:
+        return <span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">{t("refund.processed") || "Processed"}</span>;
       default:
         return <span className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">{t("common.unknown")}</span>;
     }
@@ -128,7 +142,7 @@ export default function RefundRequests() {
         refund.user?.email || "N/A",
         refund.amount,
         `"${(refund.refund_reason || "").replace(/"/g, '""')}"`,
-        refund.status === 0 ? t("refund.pending") : refund.status === 1 ? t("refund.approved") : t("refund.rejected"),
+        refund.status === 0 ? t("refund.pending") : refund.status === 1 ? t("refund.approved") : refund.status === 2 ? t("refund.rejected") : refund.status === 3 ? (t("refund.processed") || "Processed") : t("common.unknown"),
         refund.createdAt ? format(new Date(refund.createdAt), "yyyy-MM-dd") : "N/A"
       ].join(","))
     ].join("\n");
@@ -283,6 +297,11 @@ export default function RefundRequests() {
                               </button>
                             </>
                           )}
+                          {refund.status === 1 && (
+                            <span className="text-xs text-gray-500" title={t("refund.approvedWaitingProcess") || "Approved - awaiting processing"}>
+                              {t("refund.approved")}
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -292,23 +311,25 @@ export default function RefundRequests() {
             </div>
             <div className="px-6 py-4 border-t border-gray-200">
               <Paginations
-                currentPage={page}
-                totalPages={Math.ceil(refunds.length / itemsPerPage)}
-                onPageChange={setPage}
+                handlePage={setPage}
+                page={page}
+                total={totalCount}
+                itemsPerPage={itemsPerPage}
               />
             </div>
           </div>
         )}
 
-        {/* Approval Modal */}
-        <ApprovalModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
+        {/* Refund Action Modal */}
+        <RefundActionModal
+          show={showModal}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedRefund(null);
+          }}
           onConfirm={handleConfirm}
-          title={actionType === "approve" ? t("refund.approveTitle") : t("refund.rejectTitle")}
-          message={actionType === "approve" ? t("refund.approveMessage") : t("refund.rejectMessage")}
-          confirmText={actionType === "approve" ? t("refund.approve") : t("refund.reject")}
-          confirmColor={actionType === "approve" ? "green" : "red"}
+          actionType={actionType}
+          refund={selectedRefund}
         />
 
         {/* Detail Modal */}
@@ -348,6 +369,18 @@ export default function RefundRequests() {
                     <p className="text-sm font-medium text-gray-500">{t("refund.status")}</p>
                     {getStatusBadge(refundDetail.status)}
                   </div>
+                  {refundDetail.admin_response && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">{t("refund.adminResponse") || "Admin Response"}</p>
+                      <p className="text-sm text-gray-900">{refundDetail.admin_response}</p>
+                    </div>
+                  )}
+                  {refundDetail.payment_refund_id && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">{t("refund.paymentRefundId") || "Payment Refund ID"}</p>
+                      <p className="text-sm text-gray-900 font-mono">{refundDetail.payment_refund_id}</p>
+                    </div>
+                  )}
                   {refundDetail.refund_error && (
                     <div>
                       <p className="text-sm font-medium text-red-500">{t("refund.error")}</p>
@@ -360,6 +393,14 @@ export default function RefundRequests() {
                       {refundDetail.createdAt ? format(new Date(refundDetail.createdAt), "MMM dd, yyyy 'at' hh:mm a") : "N/A"}
                     </p>
                   </div>
+                  {refundDetail.processed_at && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">{t("refund.processedDate") || "Processed Date"}</p>
+                      <p className="text-sm text-gray-900">
+                        {format(new Date(refundDetail.processed_at), "MMM dd, yyyy 'at' hh:mm a")}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

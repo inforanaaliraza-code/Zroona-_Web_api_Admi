@@ -973,6 +973,14 @@
     "noReviews": "لا توجد تقييمات بعد",
     "noReviewsDesc": "كن أول من يترك تقييمًا!"
   },
+  "reviews": {
+    "rating": "التقييم",
+    "viewReviews": "عرض التقييمات",
+    "attendeeReviews": "تقييمات",
+    "reviews": "تقييمات",
+    "noReviews": "لا توجد تقييمات من مضيفين آخرين بعد",
+    "event": "الفعالية"
+  },
   "hostNavbar": {
     "myBookings": "حجوزاتي",
     "myEvents": "فعالياتي",
@@ -1266,5 +1274,62 @@
     "personalInfo2": "أن تكون مخولًا لتقديم هذه المعلومات، و",
     "personalInfo3": "السماح لنا بمعالجة المعلومات وفقًا لسياسة الخصوصية الخاصة بنا.",
     "reviewTerms": "تأكد من مراجعة والالتزام بشروطنا وسياساتنا وإرشاداتنا."
+  },
+  "refunds": {
+    "title": "المبالغ المستردة",
+    "subtitle": "عرض وتتبع طلبات الاسترداد الخاصة بك",
+    "requestNew": "طلب استرداد جديد",
+    "requestDesc": "تقديم طلب استرداد لحجزك",
+    "details": "تفاصيل الاسترداد",
+    "detailsDesc": "عرض تفاصيل طلب الاسترداد الخاص بك",
+    "backToList": "العودة إلى المبالغ المستردة",
+    "notFound": "لم يتم العثور على الاسترداد",
+    "noRefunds": "لم يتم العثور على مبالغ مستردة",
+    "noRefundsDesc": "لم تطلب أي مبالغ مستردة بعد",
+    "noRefundsFilter": "لم يتم العثور على مبالغ مستردة {{filter}}",
+    "viewDetails": "عرض التفاصيل",
+    "bookingId": "رقم الحجز",
+    "refundId": "رقم الاسترداد",
+    "requestedOn": "تم الطلب في",
+    "processedOn": "تمت المعالجة في",
+    "amount": "المبلغ",
+    "reason": "السبب",
+    "noReason": "لم يتم تقديم سبب",
+    "error": "خطأ",
+    "refundInformation": "معلومات الاسترداد",
+    "adminResponse": "رد المسؤول",
+    "paymentRefundId": "رقم استرداد الدفع",
+    "selectBooking": "اختر الحجز",
+    "selectBookingPlaceholder": "اختر حجزاً...",
+    "reasonPlaceholder": "يرجى توضيح سبب الحاجة إلى الاسترداد...",
+    "characters": "أحرف",
+    "submit": "إرسال الطلب",
+    "submitting": "جاري الإرسال...",
+    "requestSuccess": "تم تقديم طلب الاسترداد بنجاح",
+    "requestError": "فشل في تقديم طلب الاسترداد",
+    "noRefundableBookings": "لم يتم العثور على حجوزات قابلة للاسترداد. يمكن استرداد الحجوزات الملغاة والمدفوعة فقط.",
+    "filter": {
+      "all": "الكل",
+      "pending": "قيد الانتظار",
+      "approved": "موافق عليه",
+      "rejected": "مرفوض"
+    },
+    "status": {
+      "pending": "قيد الانتظار",
+      "pendingDesc": "طلب الاسترداد الخاص بك قيد المراجعة",
+      "approved": "موافق عليه",
+      "approvedDesc": "تمت الموافقة على طلب الاسترداد الخاص بك",
+      "rejected": "مرفوض",
+      "rejectedDesc": "تم رفض طلب الاسترداد الخاص بك",
+      "processed": "تمت المعالجة",
+      "processedDesc": "تمت معالجة الاسترداد الخاص بك",
+      "unknown": "غير معروف"
+    },
+    "validation": {
+      "bookingRequired": "يرجى اختيار حجز",
+      "reasonRequired": "سبب الاسترداد مطلوب",
+      "reasonMin": "يجب أن يكون السبب 10 أحرف على الأقل",
+      "reasonMax": "يجب ألا يتجاوز السبب 500 حرف"
+    }
   }
 }

@@ -297,9 +297,12 @@ const LandingPageService = {
 				event_date: { $gt: new Date() }, // Only future events
 			};
 
-			// If category is provided, filter by it
-			if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
-				query.event_category = new mongoose.Types.ObjectId(categoryId);
+			// If category is provided, filter by it (now accepts string categories)
+			if (categoryId) {
+				// Support both string categories (new format) and ObjectId (old format for backward compatibility)
+				query.event_category = mongoose.Types.ObjectId.isValid(categoryId) 
+					? { $in: [categoryId, new mongoose.Types.ObjectId(categoryId)] }
+					: categoryId;
 			}
 
 			// Find similar events (by category if provided, otherwise random)

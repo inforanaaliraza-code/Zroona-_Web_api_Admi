@@ -542,7 +542,7 @@ export default function EventDetail() {
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <CheckCircle2 className="w-4 h-4 text-green-600" />
-                          <h4 className="text-sm font-semibold text-gray-900">Do's</h4>
+                          <h4 className="text-sm font-semibold text-gray-900">Do&apos;s</h4>
                         </div>
                         <p className="text-sm text-gray-700 pl-6">{detail.dos_instruction}</p>
                       </div>
@@ -551,7 +551,7 @@ export default function EventDetail() {
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <XCircle className="w-4 h-4 text-red-600" />
-                          <h4 className="text-sm font-semibold text-gray-900">Don'ts</h4>
+                          <h4 className="text-sm font-semibold text-gray-900">Don&apos;ts</h4>
                         </div>
                         <p className="text-sm text-gray-700 pl-6">{detail.do_not_instruction}</p>
                       </div>
@@ -627,7 +627,7 @@ export default function EventDetail() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
             <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Event Not Found</h3>
-            <p className="text-gray-600 mb-6">The event you're looking for doesn't exist or has been removed.</p>
+            <p className="text-gray-600 mb-6">The event you&apos;re looking for doesn&apos;t exist or has been removed.</p>
             <button
               onClick={() => router.push("/events")}
               className="inline-flex items-center gap-2 bg-[#a797cc] hover:bg-[#a08ec8] text-white px-6 py-2 rounded-lg font-medium transition-colors"

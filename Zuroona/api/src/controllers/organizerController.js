@@ -1306,28 +1306,29 @@ const organizerController = {
 				);
 			}
 
-			// Handle event_category - can be string (single) or array (multiple)
-			let categoryIds = [];
+			// Handle event_category - accept string categories from frontend (static categories)
+			// Frontend sends static category strings like "cultural-traditional", "outdoor-adventure", etc.
+			let categoryStrings = [];
 			if (Array.isArray(event_category)) {
 				// Validate all categories in array
 				for (const cat of event_category) {
-					if (!mongoose.Types.ObjectId.isValid(cat)) {
+					if (typeof cat !== 'string' || !cat || cat.trim() === '') {
 						return Response.validationErrorResponse(
 							res,
 							`Invalid event category: ${cat}. Please select valid categories.`
 						);
 					}
-					categoryIds.push(new mongoose.Types.ObjectId(cat));
+					categoryStrings.push(cat.trim());
 				}
 			} else if (typeof event_category === 'string') {
-				// Single category (backward compatibility)
-				if (!mongoose.Types.ObjectId.isValid(event_category)) {
+				// Single category
+				if (!event_category || event_category.trim() === '') {
 					return Response.validationErrorResponse(
 						res,
 						"Invalid event category. Please select a valid category."
 					);
 				}
-				categoryIds = [new mongoose.Types.ObjectId(event_category)];
+				categoryStrings = [event_category.trim()];
 			} else {
 				return Response.validationErrorResponse(
 					res,
@@ -1349,9 +1350,9 @@ const organizerController = {
 		
 		// Set event_category as primary (first) category for backward compatibility
 		// Set event_categories as array for multi-select support
-		if (categoryIds.length > 0) {
-			req.body.event_category = categoryIds[0]; // Primary category (required by model)
-			req.body.event_categories = categoryIds; // All selected categories (array)
+		if (categoryStrings.length > 0) {
+			req.body.event_category = categoryStrings[0]; // Primary category (required by model)
+			req.body.event_categories = categoryStrings; // All selected categories (array)
 		} else {
 			return Response.validationErrorResponse(
 				res,
@@ -1466,30 +1467,31 @@ const organizerController = {
 
 		req.body.organizer_id = userId;
 		
-		// Handle event_category - can be string (single) or array (multiple)
+		// Handle event_category - accept string categories from frontend (static categories)
+		// Frontend sends static category strings like "cultural-traditional", "outdoor-adventure", etc.
 		const { event_category } = req.body;
 		if (event_category !== undefined) {
-			let categoryIds = [];
+			let categoryStrings = [];
 			if (Array.isArray(event_category)) {
 				// Validate all categories in array
 				for (const cat of event_category) {
-					if (!mongoose.Types.ObjectId.isValid(cat)) {
+					if (typeof cat !== 'string' || !cat || cat.trim() === '') {
 						return Response.validationErrorResponse(
 							res,
 							`Invalid event category: ${cat}. Please select valid categories.`
 						);
 					}
-					categoryIds.push(new mongoose.Types.ObjectId(cat));
+					categoryStrings.push(cat.trim());
 				}
 			} else if (typeof event_category === 'string') {
-				// Single category (backward compatibility)
-				if (!mongoose.Types.ObjectId.isValid(event_category)) {
+				// Single category
+				if (!event_category || event_category.trim() === '') {
 					return Response.validationErrorResponse(
 						res,
 						"Invalid event category. Please select a valid category."
 					);
 				}
-				categoryIds = [new mongoose.Types.ObjectId(event_category)];
+				categoryStrings = [event_category.trim()];
 			} else {
 				return Response.validationErrorResponse(
 					res,
@@ -1499,9 +1501,9 @@ const organizerController = {
 			
 			// Set event_category as primary (first) category for backward compatibility
 			// Set event_categories as array for multi-select support
-			if (categoryIds.length > 0) {
-				req.body.event_category = categoryIds[0]; // Primary category (required by model)
-				req.body.event_categories = categoryIds; // All selected categories (array)
+			if (categoryStrings.length > 0) {
+				req.body.event_category = categoryStrings[0]; // Primary category (required by model)
+				req.body.event_categories = categoryStrings; // All selected categories (array)
 			}
 		}
 		
@@ -2891,7 +2893,6 @@ const organizerController = {
 				total_attendees: total_attendee,
 				is_increased: is_increased,
 				current_month_percentage: current_month_percentage,
-				total_attendees: total_attendee,
 			});
 		} catch (error) {
 			console.log(error.message);

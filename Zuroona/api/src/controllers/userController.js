@@ -1381,7 +1381,6 @@ const UserController = {
 				{
 					$project: {
 						group_category: "$group_category",
-						group_location: 1,
 						bio: 1,
 						first_name: 1,
 						last_name: 1,
@@ -1829,8 +1828,12 @@ const UserController = {
 				],
 			};
 			if (event_category) {
+				// Support both string categories (new format) and ObjectId (old format for backward compatibility)
+				const categoryQuery = mongoose.Types.ObjectId.isValid(event_category) 
+					? new mongoose.Types.ObjectId(event_category)
+					: event_category;
 				search_query.$and.push({
-					event_category: new mongoose.Types.ObjectId(event_category),
+					event_category: categoryQuery,
 				});
 			}
 			console.log(search_query);
@@ -2653,6 +2656,7 @@ const UserController = {
 						},
 						payment_status: 1,
 						book_status: 1,
+						refund_request_id: 1, // Include refund_request_id for refund flow
 						invoice_id: 1,
 						invoice_url: 1, // Include invoice URL so guests can access their receipts
 						order_id: 1,
@@ -2785,7 +2789,6 @@ const UserController = {
 				},
 				{
 					$project: {
-						_id: 0,
 						profile_image: "$user.profile_image",
 						_id: "$user._id",
 						first_name: "$user.first_name",
@@ -3436,6 +3439,11 @@ const UserController = {
 				);
 			} else if (body.data.status === "failed" || body.data.status === "declined") {
 				// Handle payment failure
+				const book_id = body.data.metadata?.order_id;
+				if (!book_id) {
+					console.error("Booking ID not found in webhook metadata");
+					return res.status(400).send("Booking ID not found");
+				}
 				console.log(`Payment failed/declined for booking: ${book_id}`);
 				
 				try {
@@ -4831,14 +4839,14 @@ const UserController = {
 	 * Get user's refund requests
 	 * GET /user/refund/list
 	 */
-	getRefundRequests: async (req, res) => {
+		getRefundRequests: async (req, res) => {
 		const lang = req.headers["lang"] || "en";
 		try {
 			const { userId } = req;
 			const { page = 1, limit = 10, status } = req.query;
 
 			const skip = (Number(page) - 1) * Number(limit);
-			const query = { user_id: userId };
+			const query = { user_id: new mongoose.Types.ObjectId(userId) };
 
 			// Filter by status if provided
 			if (status !== undefined) {

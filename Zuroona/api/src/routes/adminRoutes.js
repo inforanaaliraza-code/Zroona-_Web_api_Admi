@@ -117,4 +117,7 @@ router.get("/admin/notifications", adminController.getAdminNotifications);
 router.get("/bookings/invoices/stats", adminController.getInvoiceStats);
 router.get("/bookings/invoices", adminController.getAllBookingsWithInvoices);
 
+// Cleanup duplicate bookings
+router.post("/cleanup/duplicate-bookings", adminController.cleanupDuplicateBookings);
+
 module.exports = router;

@@ -3864,6 +3864,108 @@ const adminController = {
             );
         }
     },
+
+    /**
+     * Cleanup duplicate bookings - Remove duplicate booking events
+     * POST /admin/cleanup/duplicate-bookings
+     */
+    cleanupDuplicateBookings: async (req, res) => {
+        try {
+            const lang = req.lang || req.headers["lang"] || "en";
+            const BookEvent = require("../models/eventBookModel");
+
+            console.log("[ADMIN:CLEANUP] Starting duplicate booking cleanup...");
+
+            // Find all bookings grouped by user_id + event_id + time window (within 5 seconds)
+            const duplicateGroups = await BookEvent.aggregate([
+                {
+                    $group: {
+                        _id: {
+                            user_id: "$user_id",
+                            event_id: "$event_id",
+                            timeWindow: {
+                                $subtract: [
+                                    { $toLong: "$createdAt" },
+                                    { $mod: [{ $toLong: "$createdAt" }, 5000] } // 5 second window
+                                ]
+                            }
+                        },
+                        bookings: {
+                            $push: {
+                                _id: "$_id",
+                                createdAt: "$createdAt",
+                                book_status: "$book_status",
+                                payment_status: "$payment_status"
+                            }
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $match: {
+                        count: { $gt: 1 } // Only groups with more than 1 booking
+                    }
+                }
+            ]);
+
+            console.log(`[ADMIN:CLEANUP] Found ${duplicateGroups.length} groups with duplicates`);
+
+            let totalDeleted = 0;
+            const deletedIds = [];
+            const errors = [];
+
+            for (const group of duplicateGroups) {
+                try {
+                    // Sort by createdAt (oldest first) and keep the first one
+                    const sortedBookings = group.bookings.sort((a, b) => 
+                        new Date(a.createdAt) - new Date(b.createdAt)
+                    );
+
+                    const keepBooking = sortedBookings[0]; // Keep the oldest
+                    const duplicatesToDelete = sortedBookings.slice(1); // Delete the rest
+
+                    // Delete duplicate bookings
+                    for (const duplicate of duplicatesToDelete) {
+                        try {
+                            const result = await BookEvent.findByIdAndDelete(duplicate._id);
+                            if (result) {
+                                deletedIds.push(duplicate._id.toString());
+                                totalDeleted++;
+                                console.log(`[ADMIN:CLEANUP] Deleted duplicate booking: ${duplicate._id}`);
+                            }
+                        } catch (deleteError) {
+                            console.error(`[ADMIN:CLEANUP] Error deleting booking ${duplicate._id}:`, deleteError.message);
+                            errors.push(`Failed to delete booking ${duplicate._id}: ${deleteError.message}`);
+                        }
+                    }
+                } catch (groupError) {
+                    console.error(`[ADMIN:CLEANUP] Error processing group:`, groupError.message);
+                    errors.push(`Error processing group: ${groupError.message}`);
+                }
+            }
+
+            console.log(`[ADMIN:CLEANUP] Cleanup completed. Deleted ${totalDeleted} duplicate bookings`);
+
+            return Response.ok(
+                res,
+                {
+                    deletedCount: totalDeleted,
+                    deletedIds: deletedIds,
+                    duplicateGroupsFound: duplicateGroups.length,
+                    errors: errors.length > 0 ? errors : undefined
+                },
+                200,
+                `Cleanup completed. Deleted ${totalDeleted} duplicate booking(s).`,
+                0
+            );
+        } catch (error) {
+            console.error("[ADMIN:CLEANUP] Error:", error);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(req.lang).internalServerError || "Error during cleanup"
+            );
+        }
+    },
 };
 
 module.exports = adminController;

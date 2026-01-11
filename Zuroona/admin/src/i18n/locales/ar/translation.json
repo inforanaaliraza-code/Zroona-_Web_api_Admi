@@ -283,7 +283,8 @@
     "manageEvents": "إدارة الفعاليات",
     "manageCMS": "إدارة المحتوى",
     "hostWithdrawalRequests": "طلبات سحب المضيفين",
-    "guestInvoices": "فواتير الضيوف"
+    "guestInvoices": "فواتير الضيوف",
+    "refundRequests": "طلبات الاسترداد"
   },
   "events": {
     "title": "الفعاليات",
@@ -604,7 +605,7 @@
     "event": "الفعالية",
     "attendees": "الحضور",
     "amount": "المبلغ",
-    "status": "الحالة",
+    "statusHeader": "الحالة",
     "date": "التاريخ",
     "details": "التفاصيل",
     "viewDetails": "عرض التفاصيل",

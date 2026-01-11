@@ -250,7 +250,6 @@ module.exports = (lang = "en") => {
         accepted: accepted[lang],
         rejected: rejected[lang],
         eventNotification: eventNotification[lang],
-        bookingNotFound: bookingNotFound[lang],
         invalidEventId: invalidEventId[lang],
         eventAdded: eventAdded[lang],
         eventDeleted: eventDeleted[lang],

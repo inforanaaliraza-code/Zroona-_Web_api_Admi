@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import { Icon } from "@iconify/react";
 import { useFormik } from "formik";
@@ -17,6 +17,7 @@ export default function RequestRefundPage() {
   const { t, i18n } = useTranslation();
   const { isRTL, textAlign, flexDirection, marginStart, marginEnd } = useRTL();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { token, isAuthenticated } = useAuthStore();
   
   const [bookings, setBookings] = useState([]);
@@ -42,9 +43,13 @@ export default function RequestRefundPage() {
       setLoading(true);
       const response = await GetUserBookingsApi();
       if (response?.status === 1) {
-        // Filter only confirmed/completed bookings that can be refunded
+        // Filter only cancelled (status = 3) and paid (payment_status = 1) bookings that can be refunded
+        // Also exclude bookings that already have a refund request
         const refundableBookings = (response.data || []).filter(
-          (booking) => booking.book_status === 2 || booking.book_status === 5 // Confirmed or Completed
+          (booking) => 
+            booking.book_status === 3 && // Cancelled
+            booking.payment_status === 1 && // Paid
+            !booking.refund_request_id // No existing refund request
         );
         setBookings(refundableBookings);
       } else {
@@ -59,7 +64,7 @@ export default function RequestRefundPage() {
   };
 
   const validationSchema = Yup.object({
-    book_id: Yup.string().required(t("refunds.validation.bookingRequired") || "Please select a booking"),
+    booking_id: Yup.string().required(t("refunds.validation.bookingRequired") || "Please select a booking"),
     refund_reason: Yup.string()
       .required(t("refunds.validation.reasonRequired") || "Refund reason is required")
       .min(10, t("refunds.validation.reasonMin") || "Reason must be at least 10 characters")
@@ -68,10 +73,11 @@ export default function RequestRefundPage() {
 
   const formik = useFormik({
     initialValues: {
-      book_id: "",
+      booking_id: searchParams?.get("booking_id") || "",
       refund_reason: "",
     },
     validationSchema,
+    enableReinitialize: true,
     onSubmit: async (values) => {
       try {
         setSubmitting(true);
@@ -124,17 +130,17 @@ export default function RequestRefundPage() {
                 ) : bookings.length === 0 ? (
                   <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800">
-                      {t("refunds.noRefundableBookings") || "No refundable bookings found. Only confirmed or completed bookings can be refunded."}
+                      {t("refunds.noRefundableBookings") || "No refundable bookings found. Only cancelled and paid bookings can be refunded."}
                     </p>
                   </div>
                 ) : (
                   <select
-                    name="book_id"
-                    value={formik.values.book_id}
+                    name="booking_id"
+                    value={formik.values.booking_id}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] ${
-                      formik.touched.book_id && formik.errors.book_id
+                      formik.touched.booking_id && formik.errors.booking_id
                         ? "border-red-300"
                         : "border-gray-300"
                     }`}
@@ -142,14 +148,13 @@ export default function RequestRefundPage() {
                     <option value="">{t("refunds.selectBookingPlaceholder") || "Select a booking..."}</option>
                     {bookings.map((booking) => (
                       <option key={booking._id} value={booking._id}>
-                        {booking.event?.event_name || "Event"} - {booking.total_amount || 0} SAR - 
-                        {booking.book_status === 2 ? " Confirmed" : " Completed"}
+                        {booking.event?.event_name || booking.event_name || "Event"} - {booking.total_amount || booking.book_details?.total_amount || 0} SAR - Cancelled
                       </option>
                     ))}
                   </select>
                 )}
-                {formik.touched.book_id && formik.errors.book_id && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.book_id}</p>
+                {formik.touched.booking_id && formik.errors.booking_id && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.booking_id}</p>
                 )}
               </div>
 
