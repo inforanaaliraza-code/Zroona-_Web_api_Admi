@@ -117,6 +117,44 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
         },
     });
 
+    // Custom submit handler to validate and show toast on validation errors
+    const handleFormSubmit = async (e) => {
+        e.preventDefault();
+        
+        // Manually validate the form
+        const errors = await formik.validateForm();
+        
+        // Check for image requirement (not in Yup schema)
+        if (eventImages.length === 0) {
+            // Mark all fields as touched to show errors
+            const allFields = Object.keys(formik.values);
+            const touchedFields = {};
+            allFields.forEach(field => {
+                touchedFields[field] = true;
+            });
+            formik.setTouched(touchedFields);
+            toast.error(t('events.imageRequired') || "Please upload at least one event image");
+            return;
+        }
+        
+        // If there are validation errors, show toast and mark fields as touched
+        if (Object.keys(errors).length > 0) {
+            // Mark all fields with errors as touched
+            const touchedFields = {};
+            Object.keys(errors).forEach(field => {
+                touchedFields[field] = true;
+            });
+            formik.setTouched(touchedFields);
+            
+            // Show toast message
+            toast.error(t('events.missingRequiredFields') || "Some required information or selection is missing. Please check the form and try again.");
+            return;
+        }
+        
+        // If validation passes, proceed with normal Formik submission
+        formik.handleSubmit(e);
+    };
+
     const submitEvent = async (valuesOrPayload, resetForm) => {
         const values = valuesOrPayload?.values || valuesOrPayload;
         const actualResetForm = valuesOrPayload?.resetForm || resetForm;
@@ -271,7 +309,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                     {EventListId ? t('add.tab21') || 'Edit Event' : t('add.tab18') || 'Create Event'}
                 </h2>
                 
-                <form onSubmit={formik.handleSubmit} className="space-y-6">
+                <form onSubmit={handleFormSubmit} className="space-y-6">
 
                 {/* Calendar */}
                 <div>
@@ -702,9 +740,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                     <h3 className="text-2xl font-bold text-gray-900 mb-3">
                         {t('eventSubmitted') || 'Event Submitted for Review'}
                     </h3>
-                    <p className="text-gray-600 mb-2">
-                        {t('Event Submitted Desc') || 'Your event has been submitted for review. Once it is approved, you will be notified via email.'}
-                    </p>
+                
                     <p className="text-sm text-gray-500 mt-4">
                         {t('Check Email') || 'Please check your email for confirmation.'}
                     </p>

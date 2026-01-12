@@ -518,7 +518,7 @@ export default function MyBookings() {
                                                     if (!imgPath) return "/assets/images/home/user-dummy.png";
                                                     if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
                                                     if (imgPath.startsWith("/uploads/")) {
-                                                      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3434";
+                                                      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3434";
                                                       return `${apiBase}${imgPath}`;
                                                     }
                                                     return "/assets/images/home/user-dummy.png";

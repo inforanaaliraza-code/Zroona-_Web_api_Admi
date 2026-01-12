@@ -213,6 +213,15 @@ input[type="date"] {
   appearance: none; /* For modern browsers */
 }
 
+/* Toast Container - Ensure it appears above modals (modal z-index is 10000) */
+.Toastify__toast-container {
+  z-index: 10001 !important;
+}
+
+.Toastify__toast {
+  z-index: 10001 !important;
+}
+
 .custom-tooltip {
   position: relative;
   background: linear-gradient(180deg, theme('colors.brand-orange') 5%, theme('colors.brand-light-orange-1') 95%);

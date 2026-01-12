@@ -128,17 +128,18 @@ export default function SignUp() {
       if (user.profile_image) {
         let imageUrl = user.profile_image;
         
-        // Extract the API base URL (http://localhost:3434)
-        const apiBase = BASE_API_URL.replace('/api/', '');
+        // Extract the API base URL from env or BASE_API_URL
+        const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || BASE_API_URL.replace('/api/', '');
         
         console.log("[EDIT-PROFILE] Processing profile_image from DB:", imageUrl);
         console.log("[EDIT-PROFILE] API Base URL:", apiBase);
         
         // Handle different URL formats
         if (imageUrl.startsWith('http://localhost:3000') || imageUrl.startsWith('https://localhost:3000')) {
-          // Replace port 3000 with correct port 3434
-          imageUrl = imageUrl.replace('localhost:3000', 'localhost:3434');
-          console.log("[EDIT-PROFILE] Fixed localhost:3000 to localhost:3434:", imageUrl);
+          // Replace port 3000 with correct API base URL
+          const apiHost = apiBase.replace(/^https?:\/\//, '').split('/')[0];
+          imageUrl = imageUrl.replace(/localhost:3000/, apiHost);
+          console.log("[EDIT-PROFILE] Fixed localhost:3000 to", apiHost, ":", imageUrl);
         } else if (imageUrl.startsWith('/uploads/')) {
           // Relative path - prepend correct base URL
           imageUrl = `${apiBase}${imageUrl}`;

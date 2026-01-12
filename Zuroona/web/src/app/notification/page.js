@@ -130,16 +130,16 @@ const NotificationList = () => {
     let imageUrl = imagePath;
     
     // Handle different URL formats
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || BASE_API_URL.replace('/api/', '');
     if (imageUrl.startsWith('http://localhost:3000') || imageUrl.startsWith('https://localhost:3000')) {
-      // Replace port 3000 with correct port 3434
-      imageUrl = imageUrl.replace('localhost:3000', 'localhost:3434');
+      // Replace port 3000 with correct API base URL
+      const apiHost = apiBase.replace(/^https?:\/\//, '').split('/')[0];
+      imageUrl = imageUrl.replace(/localhost:3000/, apiHost);
     } else if (imageUrl.startsWith('/uploads/')) {
       // Relative path - prepend correct base URL
-      const apiBase = BASE_API_URL.replace('/api/', '');
       imageUrl = `${apiBase}${imageUrl}`;
     } else if (imageUrl.includes('/uploads/')) {
       // Contains uploads path but might have wrong port
-      const apiBase = BASE_API_URL.replace('/api/', '');
       const uploadsIndex = imageUrl.indexOf('/uploads/');
       imageUrl = `${apiBase}${imageUrl.substring(uploadsIndex)}`;
     } else if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://') && !imageUrl.startsWith('data:') && !imageUrl.startsWith('blob:')) {

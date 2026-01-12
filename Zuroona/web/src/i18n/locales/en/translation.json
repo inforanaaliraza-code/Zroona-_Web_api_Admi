@@ -306,6 +306,7 @@
     "eventDeleted": "Event deleted successfully",
     "imageRequired": "Please upload at least one event image",
     "endTimeAfterStart": "End time must be after start time",
+    "missingRequiredFields": "Some required information or selection is missing. Please check the form and try again.",
     "noEventsFoundBasic": "No events found",
     "createFirstEvent": "Create your first event to get started",
     "noEventsForFilter": "No events found for this filter",
@@ -854,7 +855,10 @@
     "totalRevenue": "Total Revenue",
     "bookingDate": "Booking Date",
     "view": "View",
-    "noBookingsFound": "No bookings found"
+    "noBookingsFound": "No bookings found",
+    "imageRequired": "Please upload at least one event image",
+    "endTimeAfterStart": "End time must be after start time",
+    "missingRequiredFields": "Some required information or selection is missing. Please check the form and try again."
   },
   "tab": {
     "tab4": "Events",

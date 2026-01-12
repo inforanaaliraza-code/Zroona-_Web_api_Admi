@@ -293,7 +293,7 @@ export default function ProfileImageUpload({
 								// Convert relative path to absolute URL if needed
 								if (!displayUrl.includes("http://") && !displayUrl.includes("https://") && !displayUrl.startsWith("blob:")) {
 									if (displayUrl.startsWith("/uploads/")) {
-										const apiBase = "http://localhost:3434";
+										const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3434";
 										return `${apiBase}${displayUrl}`;
 									}
 								}

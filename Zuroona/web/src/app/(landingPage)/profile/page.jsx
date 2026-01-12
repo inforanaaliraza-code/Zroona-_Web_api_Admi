@@ -136,7 +136,7 @@ export default function ProfilePage() {
                     // UserAvatar component will handle URL conversion, but we can also do it here
                     if (!imgPath.includes("http://") && !imgPath.includes("https://")) {
                       if (imgPath.startsWith("/uploads/")) {
-                        const apiBase = "http://localhost:3434";
+                        const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3434";
                         return `${apiBase}${imgPath}`;
                       }
                     }
