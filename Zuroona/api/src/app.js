@@ -43,14 +43,22 @@ app.set("trust proxy", 1);
 
 // CORS configuration - MUST be before all other middleware
 const allowedOrigins = [
+	// Development URLs
 	"http://localhost:3000",
 	"http://localhost:3001",
 	"http://localhost:3434",
 	"http://127.0.0.1:3000",
 	"http://127.0.0.1:3001",
 	"http://127.0.0.1:3434",
+	// Production URLs
+	"https://zuroona.sa",
+	"https://www.zuroona.sa",
+	"https://admin.zuroona.sa",
+	"https://api.zuroona.sa",
+	// Environment variable URLs (for flexibility)
 	process.env.FRONTEND_URL,
 	process.env.ADMIN_URL,
+	process.env.WEB_URL,
 ].filter(Boolean); // Remove undefined values
 
 const corsOptions = {

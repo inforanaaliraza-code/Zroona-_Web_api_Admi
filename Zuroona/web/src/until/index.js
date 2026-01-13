@@ -1,5 +1,10 @@
-// export const BASE_API_URL = "https://yc0ggs0sg4swwsog0sowg8sc.188.245.98.211.sslip.io/api/";
-export const BASE_API_URL = "http://localhost:3434/api/";
+// Auto-select API base URL: prefer env, else dev localhost, else production URL
+export const BASE_API_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:3434/api/"
+    : "https://api.zuroona.sa/api/");
 export const TOKEN_NAME = "Zuroona";
 
 export const config = {

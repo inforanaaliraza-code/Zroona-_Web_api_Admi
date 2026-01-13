@@ -11,10 +11,11 @@ export const config = {
 
 // Auto-select API base URL: prefer env, else dev localhost, else production URL
 export const BASE_API_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_BASE ||
   (process.env.NODE_ENV === "development"
     ? "http://localhost:3434/api/admin/"
-    : "https://domianName.com:3434/api/admin/");
+    : "https://api.zuroona.sa/api/admin/");
 
 export const TOKEN_NAME = "ZuroonaToken";
 
