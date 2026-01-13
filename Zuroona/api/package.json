@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "node ./node_modules/nodemon/bin/nodemon.js src/app.js",
-    "lint": "node ./node_modules/eslint/bin/eslint.js ."
+    "lint": "node ./node_modules/eslint/bin/eslint.js .",
+    "build": "npm run lint"
   },
   "keywords": [],
   "author": "",

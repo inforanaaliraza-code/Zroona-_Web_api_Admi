@@ -165,7 +165,7 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                                         <li>• Minimum withdrawal: {minWithdrawal} SAR</li>
                                         <li>• Processing time: 3-5 business days</li>
                                         <li>• Amount will be transferred to your registered bank account</li>
-                                        <li>• You'll receive a notification once processed</li>
+                                        <li>• You&apos;ll receive a notification once processed</li>
                                     </ul>
                                 </div>
                             </div>

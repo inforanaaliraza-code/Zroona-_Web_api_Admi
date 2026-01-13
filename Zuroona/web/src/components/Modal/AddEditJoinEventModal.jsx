@@ -1820,7 +1820,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                         {/* Do's Instructions */}
                         <div className="min-h-[180px]">
                             <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-2">
-                                <span className="whitespace-nowrap">Do's</span>
+                                <span className="whitespace-nowrap">Do&apos;s</span>
                                 <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
                                     ({formik.values.dos_instruction?.length || 0}/1000 characters)
                                 </span>
@@ -1849,7 +1849,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                         {/* Don'ts Instructions */}
                         <div className="min-h-[180px]">
                             <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-2">
-                                <span className="whitespace-nowrap">Don'ts</span>
+                                <span className="whitespace-nowrap">Don&apos;ts</span>
                                 <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
                                     ({formik.values.do_not_instruction?.length || 0}/1000 characters)
                                 </span>

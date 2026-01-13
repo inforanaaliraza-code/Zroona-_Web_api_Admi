@@ -4,8 +4,9 @@ require("dotenv").config();
 // OTP functionality removed - using email-based authentication only
 const Response = require("../helpers/response.js");
 const AdminService = require("../services/adminService.js");
-const { PutObjectCommand, } = require('@aws-sdk/client-s3');
+const { PutObjectCommand, S3Client, HeadObjectCommand } = require('@aws-sdk/client-s3');
 const mongoose = require('mongoose');
+const path = require('path');
 const GroupCategories = require("../models/groupCategoryModel.js");
 const UserService = require("../services/userService.js");
 const CmsService = require("../services/cmsService.js");
@@ -25,41 +26,39 @@ const { sendEventApprovalEmail, sendEventRejectionEmail, sendOrganizerApprovalEm
 const { pushNotification } = require("../helpers/pushNotification.js");
 
 
-// const s3 = new S3Client({
-//     region: process.env.AWS_REGION,
-//     credentials: {
-//         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-//         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-//     }
-// });
+const s3 = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+});
 
+const folderExists = async (folderName, bucketName) => {
+    try {
+        const headObjectCommand = new HeadObjectCommand({
+            Bucket: bucketName,
+            Key: folderName
+        });
+        await s3.send(headObjectCommand);
+        return true;
+    } catch (error) {
+        if (error.name === 'NotFound') {
+            return false;
+        }
+        throw error;
+    }
+};
 
-
-// const folderExists = async (folderName, bucketName) => {
-//     try {
-//         const headObjectCommand = new HeadObjectCommand({
-//             Bucket: bucketName,
-//             Key: folderName
-//         });
-//         await s3.send(headObjectCommand);
-//         return true;
-//     } catch (error) {
-//         if (error.name === 'NotFound') {
-//             return false;
-//         }
-//         throw error;
-//     }
-// };
-
-// const createFolder = async (folderName, bucketName) => {
-//     const uploadParams = {
-//         Bucket: bucketName,
-//         Key: `${folderName}/`,
-//         Body: ''
-//     };
-//     const uploadCommand = new PutObjectCommand(uploadParams);
-//     await s3.send(uploadCommand);
-// };
+const createFolder = async (folderName, bucketName) => {
+    const uploadParams = {
+        Bucket: bucketName,
+        Key: `${folderName}/`,
+        Body: ''
+    };
+    const uploadCommand = new PutObjectCommand(uploadParams);
+    await s3.send(uploadCommand);
+};
 
 
 const adminController = {
@@ -72,7 +71,7 @@ const adminController = {
 
             if (existingUser) {
                 return Response.conflictResponse(res, {}, 409, `The admin already exists`)
-            };
+            }
 
             const admin = await AdminService.CreateService(req.body);
 
@@ -1360,12 +1359,12 @@ const adminController = {
             const { id } = req.query;
 
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                return Response.badRequestResponse(res, resp_messages(lang).id_required)
+                return Response.badRequestResponse(res, resp_messages(req.lang).id_required)
             }
 
             const category = await GroupCategoriesService.FindOneService({ _id: id });
             if (!category) {
-                return Response.notFoundResponse(res, resp_messages(lang).user_not_found);
+                return Response.notFoundResponse(res, resp_messages(req.lang).user_not_found);
             }
             return Response.ok(res, category)
 
@@ -1379,7 +1378,7 @@ const adminController = {
             const { id } = req.query;
 
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                return Response.badRequestResponse(res, resp_messages(lang).id_required)
+                return Response.badRequestResponse(res, resp_messages(req.lang).id_required)
             }
 
             const category = await EventCategoryService.FindOneService({ _id: id });
@@ -1398,7 +1397,7 @@ const adminController = {
             const { id } = req.body;
 
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                return Response.badRequestResponse(res, resp_messages(lang).id_required)
+                return Response.badRequestResponse(res, resp_messages(req.lang).id_required)
             }
 
             const category = await EventCategoryService.FindOneService({ _id: id });
@@ -1418,7 +1417,7 @@ const adminController = {
             const { id } = req.body;
 
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                return Response.badRequestResponse(res, resp_messages(lang).id_required)
+                return Response.badRequestResponse(res, resp_messages(req.lang).id_required)
             }
 
             const category = await GroupCategoriesService.FindOneService({ _id: id });
@@ -1439,7 +1438,7 @@ const adminController = {
             const { id } = req.query;
 
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                return Response.badRequestResponse(res, resp_messages(lang).id_required)
+                return Response.badRequestResponse(res, resp_messages(req.lang).id_required)
             }
 
             const category = await EventCategoryService.FindByIdAndDeleteService(id);
@@ -1458,7 +1457,7 @@ const adminController = {
             const { id } = req.query;
 
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                return Response.badRequestResponse(res, resp_messages(lang).id_required)
+                return Response.badRequestResponse(res, resp_messages(req.lang).id_required)
             }
 
             const category = await GroupCategoriesService.FindByIdAndDeleteService(id);
