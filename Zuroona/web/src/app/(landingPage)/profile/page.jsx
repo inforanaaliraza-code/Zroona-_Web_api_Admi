@@ -13,6 +13,7 @@ import { ProfileDetailApi } from "@/app/api/setting";
 import Link from "next/link";
 import UserAvatar from "@/components/ui/UserAvatar";
 import { useRTL } from "@/utils/rtl";
+import { BASE_API_URL } from "@/until";
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation();
@@ -136,7 +137,7 @@ export default function ProfilePage() {
                     // UserAvatar component will handle URL conversion, but we can also do it here
                     if (!imgPath.includes("http://") && !imgPath.includes("https://")) {
                       if (imgPath.startsWith("/uploads/")) {
-                        const apiBase = "http://localhost:3434";
+                        const apiBase = BASE_API_URL.replace(/\/api\/?$/, "");
                         return `${apiBase}${imgPath}`;
                       }
                     }

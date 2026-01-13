@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import TermsOfServiceModal from "@/components/Modal/TermsOfServiceModal";
 import PrivacyPolicyModal from "@/components/Modal/PrivacyPolicyModal";
+import { BASE_API_URL } from "@/until";
 
 // Image compression utility
 const compressImage = (file, maxWidth = 1920, quality = 0.8) => {
@@ -359,7 +360,7 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 		}
 		// If relative path (starts with /uploads/), construct absolute URL
 		if (url.startsWith("/uploads/")) {
-			const apiBase = "http://localhost:3434";
+			const apiBase = BASE_API_URL.replace(/\/api\/?$/, "");
 			return `${apiBase}${url}`;
 		}
 		return url;

@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import ReactStars from "react-rating-stars-component";
 import { useDispatch, useSelector } from "react-redux";
 import { Icon } from "@iconify/react";
+import { BASE_API_URL } from "@/until";
 
 export default function Reviews() {
   const { t, i18n } = useTranslation();
@@ -152,7 +153,7 @@ export default function Reviews() {
                                       if (!imgPath) return "/assets/images/home/user-dummy.png";
                                       if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
                                       if (imgPath.startsWith("/uploads/")) {
-                                        const apiBase = "http://localhost:3434";
+                                        const apiBase = BASE_API_URL.replace(/\/api\/?$/, "");
                                         return `${apiBase}${imgPath}`;
                                       }
                                       return "/assets/images/home/user-dummy.png";

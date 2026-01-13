@@ -6,6 +6,7 @@ import Loader from "../Loader/Loader";
 import { useTranslation } from "react-i18next";
 import { UploadFileApi } from "@/app/api/setting";
 import { Icon } from "@iconify/react";
+import { BASE_API_URL } from "@/until";
 
 // Image compression utility
 const compressImage = (file, maxWidth = 800, quality = 0.85) => {
@@ -293,7 +294,7 @@ export default function ProfileImageUpload({
 								// Convert relative path to absolute URL if needed
 								if (!displayUrl.includes("http://") && !displayUrl.includes("https://") && !displayUrl.startsWith("blob:")) {
 									if (displayUrl.startsWith("/uploads/")) {
-										const apiBase = "http://localhost:3434";
+										const apiBase = BASE_API_URL.replace(/\/api\/?$/, "");
 										return `${apiBase}${displayUrl}`;
 									}
 								}

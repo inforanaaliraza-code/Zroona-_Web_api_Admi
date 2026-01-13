@@ -7,7 +7,7 @@ const nextConfig = {
       fullUrl: false,
     },
   },
-  // Reduce webpack stats 
+  // Reduce webpack stats 6z
   webpack: (config, { isServer }) => {
     config.stats = 'errors-only';
     

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/popover";
 import useAuthStore from "@/store/useAuthStore";
 import { useRTL } from "@/utils/rtl";
+import { BASE_API_URL } from "@/until";
 
 const MotionDiv = motion.div;
 
@@ -990,7 +991,7 @@ const EventsPage = () => {
 														if (!imgPath) return "/assets/images/home/event1.png";
 														if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
 														if (imgPath.startsWith("/uploads/")) {
-															const apiBase = "http://localhost:3434";
+															const apiBase = BASE_API_URL.replace(/\/api\/?$/, "");
 															return `${apiBase}${imgPath}`;
 														}
 														return "/assets/images/home/event1.png";

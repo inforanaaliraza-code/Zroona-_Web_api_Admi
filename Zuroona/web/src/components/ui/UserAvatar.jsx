@@ -11,8 +11,9 @@ const getImageUrl = (imagePath) => {
   
   // Handle different URL formats - same logic as edit profile page
   if (imageUrl.startsWith('http://localhost:3000') || imageUrl.startsWith('https://localhost:3000')) {
-    // Replace port 3000 with correct port 3434
-    imageUrl = imageUrl.replace('localhost:3000', 'localhost:3434');
+    // Replace port 3000 with correct API base URL
+    const apiBase = BASE_API_URL.replace(/\/api\/?$/, "");
+    imageUrl = imageUrl.replace('localhost:3000', apiBase.replace(/^https?:\/\//, '').split('/')[0]);
   } else if (imageUrl.startsWith('/uploads/')) {
     // Relative path - prepend correct base URL
     const apiBase = BASE_API_URL.replace('/api/', '');

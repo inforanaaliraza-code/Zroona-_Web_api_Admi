@@ -28,6 +28,7 @@ import {
 import { useRTL } from "@/utils/rtl";
 import { Icon } from "@iconify/react";
 import RejectReasonModal from "@/components/Modal/RejectReasonModal";
+import { BASE_API_URL } from "@/until";
 import AttendeeReviewsModal from "@/components/Modal/AttendeeReviewsModal";
 
 export default function MyBookings() {
@@ -518,7 +519,7 @@ export default function MyBookings() {
                                                     if (!imgPath) return "/assets/images/home/user-dummy.png";
                                                     if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
                                                     if (imgPath.startsWith("/uploads/")) {
-                                                      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3434";
+                                                      const apiBase = BASE_API_URL.replace(/\/api\/?$/, "");
                                                       return `${apiBase}${imgPath}`;
                                                     }
                                                     return "/assets/images/home/user-dummy.png";

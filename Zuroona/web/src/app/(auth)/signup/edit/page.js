@@ -136,9 +136,10 @@ export default function SignUp() {
         
         // Handle different URL formats
         if (imageUrl.startsWith('http://localhost:3000') || imageUrl.startsWith('https://localhost:3000')) {
-          // Replace port 3000 with correct port 3434
-          imageUrl = imageUrl.replace('localhost:3000', 'localhost:3434');
-          console.log("[EDIT-PROFILE] Fixed localhost:3000 to localhost:3434:", imageUrl);
+          // Replace port 3000 with correct API base URL
+          const apiBaseHost = apiBase.replace(/^https?:\/\//, '').split('/')[0];
+          imageUrl = imageUrl.replace('localhost:3000', apiBaseHost);
+          console.log("[EDIT-PROFILE] Fixed localhost:3000 to API base:", imageUrl);
         } else if (imageUrl.startsWith('/uploads/')) {
           // Relative path - prepend correct base URL
           imageUrl = `${apiBase}${imageUrl}`;
