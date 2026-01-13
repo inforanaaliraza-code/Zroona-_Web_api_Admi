@@ -1,7 +1,7 @@
 export const eventCategories = {
     joinUs: {
         en: [
-            { name: 'Cultural & Traditional Events', icon: 'material-symbols:celebration' },
+            { name: 'Cultural & Traditional Events', icon: 'material-symbols:mosque' },
             { name: 'Outdoor & Adventure', icon: 'material-symbols:hiking' },
             { name: 'Educational & Workshops', icon: 'material-symbols:school' },
             { name: 'Sports & Fitness', icon: 'material-symbols:fitness-center' },
@@ -10,10 +10,10 @@ export const eventCategories = {
             { name: 'Food & Culinary Experiences', icon: 'material-symbols:restaurant' },
             { name: 'Wellness & Relaxation', icon: 'material-symbols:spa' },
             { name: 'Heritage & History Tours', icon: 'material-symbols:museum' },
-            { name: 'Nightlife & Entertainment', icon: 'material-symbols:nightlife' },
+            { name: 'Nightlife & Entertainment', icon: 'material-symbols:celebration' },
         ],
         ar: [
-            { name: 'الفعاليات الثقافية والتقليدية', icon: 'material-symbols:celebration' },
+            { name: 'الفعاليات الثقافية والتقليدية', icon: 'material-symbols:mosque' },
             { name: 'المغامرات والأنشطة الخارجية', icon: 'material-symbols:hiking' },
             { name: 'الفعاليات التعليمية وورش العمل', icon: 'material-symbols:school' },
             { name: 'الرياضة واللياقة البدنية', icon: 'material-symbols:fitness-center' },
@@ -22,7 +22,7 @@ export const eventCategories = {
             { name: 'تجارب الطعام والطهي', icon: 'material-symbols:restaurant' },
             { name: 'العافية والاسترخاء', icon: 'material-symbols:spa' },
             { name: 'جولات التراث والتاريخ', icon: 'material-symbols:museum' },
-            { name: 'الحياة الليلية والترفيه', icon: 'material-symbols:nightlife' },
+            { name: 'الحياة الليلية والترفيه', icon: 'material-symbols:celebration' },
         ]
     },
     welcomeEvents: {

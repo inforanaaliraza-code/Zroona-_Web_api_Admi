@@ -156,12 +156,14 @@ export default function Works() {
                     {/* Professional Section Header */}
                     <motion.div variants={titleVariants} className="mb-12 text-center md:mb-16">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
                             transition={{ duration: 0.6 }}
-                            className="inline-block mb-4 px-4 py-1.5 text-xs font-semibold tracking-wider text-[#6b4c93] bg-white/60 backdrop-blur-md rounded-full uppercase shadow-lg border border-purple-200/50"
+                            className="inline-flex items-center gap-2 mb-3 text-[#a797cc] font-medium"
                         >
-                            {t("home.howToUseTitle")}
+                            <span className="w-8 h-[2px] bg-[#a797cc]"></span>
+                            <span>{t("home.howToUseTitle")}</span>
+                            <span className="w-8 h-[2px] bg-[#a797cc]"></span>
                         </motion.div>
                         
                         <motion.h2

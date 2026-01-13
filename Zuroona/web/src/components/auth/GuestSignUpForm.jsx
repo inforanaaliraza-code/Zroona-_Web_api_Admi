@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
@@ -20,7 +20,6 @@ import TermsOfServiceModal from "../Modal/TermsOfServiceModal";
 import PrivacyPolicyModal from "../Modal/PrivacyPolicyModal";
 import { TOKEN_NAME, BASE_API_URL } from "@/until";
 import useAuthStore from "@/store/useAuthStore";
-import CitySearchSelect from "@/components/ui/CitySearchSelect";
 import { useRTL } from "@/utils/rtl";
 import { useEmailValidation } from "@/hooks/useEmailValidation";
 
@@ -107,57 +106,118 @@ export default function GuestSignUpForm() {
     const [phoneVerified, setPhoneVerified] = useState(false);
     const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
     const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+    const [maxDate, setMaxDate] = useState("");
+    const [todayDate, setTodayDate] = useState(null);
+
+    // Set max date only on client side to prevent hydration mismatch
+    useEffect(() => {
+        setMaxDate(new Date().toISOString().split("T")[0]);
+        setTodayDate(new Date());
+    }, []);
 
     // Email validation hook
     const { emailStatus, checkEmailDebounced, resetEmailStatus } = useEmailValidation();
 
-    const validationSchema = Yup.object({
-        first_name: Yup.string()
-            .required(t("auth.firstNameRequired") || "First name is required")
-            .min(2, t("auth.firstNameMin") || "First name must be at least 2 characters"),
-        last_name: Yup.string()
-            .required(t("auth.lastNameRequired") || "Last name is required")
-            .min(2, t("auth.lastNameMin") || "Last name must be at least 2 characters"),
-        email: Yup.string()
-            .required(t("auth.emailRequired") || "Email is required")
-            .test('gmail-only', "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
-                if (!value) return true; // Let required handle empty
-                const emailLower = value.toLowerCase().trim();
-                return emailLower.endsWith('@gmail.com');
-            })
-            .test('gmail-format', "Invalid Gmail address format", function(value) {
-                if (!value) return true;
-                const emailLower = value.toLowerCase().trim();
-                const localPart = emailLower.split('@')[0];
-                if (!localPart) return false;
-                return /^[a-z0-9.+]+$/.test(localPart);
-            })
-            .email(t("auth.emailInvalid") || "Invalid email address"),
-        phone_number: Yup.string()
-            .required(t("auth.phoneRequired") || "Phone number is required")
-            .matches(/^[0-9]+$/, t("auth.phoneInvalid") || "Phone number must contain only digits"),
-        country_code: Yup.string()
-            .required(t("auth.countryCodeRequired") || "Country code is required"),
-        gender: Yup.mixed()
-            .required(t("auth.genderRequired") || "Gender is required")
-            .test('is-valid-gender', t("auth.genderInvalid") || "Please select a valid gender", function(value) {
-                // Handle both string and number (HTML select returns string)
-                if (value === "" || value === null || value === undefined) return false;
-                const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
-                return !isNaN(numValue) && [1, 2, 3].includes(numValue);
-            }),
-        date_of_birth: Yup.date()
-            .required(t("auth.dobRequired") || "Date of birth is required")
-            .max(new Date(), t("auth.dobFuture") || "Date of birth cannot be in the future"),
+    // Memoize validation schema to prevent hydration mismatch
+    const validationSchema = useMemo(() => {
+        if (!todayDate) {
+            // Return a schema without date validation until client-side date is set
+            return Yup.object({
+                first_name: Yup.string()
+                    .required(t("auth.firstNameRequired") || "First name is required")
+                    .min(2, t("auth.firstNameMin") || "First name must be at least 2 characters"),
+                last_name: Yup.string()
+                    .required(t("auth.lastNameRequired") || "Last name is required")
+                    .min(2, t("auth.lastNameMin") || "Last name must be at least 2 characters"),
+                email: Yup.string()
+                    .required(t("auth.emailRequired") || "Email is required")
+                    .test('gmail-only', t("auth.gmailOnly") || "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+                        if (!value) return true;
+                        const emailLower = value.toLowerCase().trim();
+                        return emailLower.endsWith('@gmail.com');
+                    })
+                    .test('gmail-format', t("auth.gmailFormat") || "Invalid Gmail address format", function(value) {
+                        if (!value) return true;
+                        const emailLower = value.toLowerCase().trim();
+                        const localPart = emailLower.split('@')[0];
+                        if (!localPart) return false;
+                        return /^[a-z0-9.+]+$/.test(localPart);
+                    })
+                    .email(t("auth.emailInvalid") || "Invalid email address"),
+                phone_number: Yup.string()
+                    .required(t("auth.phoneRequired") || "Phone number is required")
+                    .matches(/^[0-9]+$/, t("auth.phoneInvalid") || "Phone number must contain only digits"),
+                country_code: Yup.string()
+                    .required(t("auth.countryCodeRequired") || "Country code is required"),
+                gender: Yup.mixed()
+                    .required(t("auth.genderRequired") || "Gender is required")
+                    .test('is-valid-gender', t("auth.genderInvalid") || "Please select a valid gender", function(value) {
+                        if (value === "" || value === null || value === undefined) return false;
+                        const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+                        return !isNaN(numValue) && [1, 2, 3].includes(numValue);
+                    }),
+                date_of_birth: Yup.date()
+                    .required(t("auth.dobRequired") || "Date of birth is required"),
+                nationality: Yup.string()
+                    .required(t("auth.nationalityRequired") || "Nationality is required"),
+                city: Yup.string()
+                    .required(t("auth.countryOfResidenceRequired") || "Country of Residence is required"),
+                acceptPrivacy: Yup.boolean()
+                    .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
+                acceptTerms: Yup.boolean()
+                    .oneOf([true], t("termsRequired") || "You must accept the terms and conditions"),
+            });
+        }
+        
+        return Yup.object({
+            first_name: Yup.string()
+                .required(t("auth.firstNameRequired") || "First name is required")
+                .min(2, t("auth.firstNameMin") || "First name must be at least 2 characters"),
+            last_name: Yup.string()
+                .required(t("auth.lastNameRequired") || "Last name is required")
+                .min(2, t("auth.lastNameMin") || "Last name must be at least 2 characters"),
+            email: Yup.string()
+                .required(t("auth.emailRequired") || "Email is required")
+                .test('gmail-only', t("auth.gmailOnly") || "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+                    if (!value) return true;
+                    const emailLower = value.toLowerCase().trim();
+                    return emailLower.endsWith('@gmail.com');
+                })
+                .test('gmail-format', t("auth.gmailFormat") || "Invalid Gmail address format", function(value) {
+                    if (!value) return true;
+                    const emailLower = value.toLowerCase().trim();
+                    const localPart = emailLower.split('@')[0];
+                    if (!localPart) return false;
+                    return /^[a-z0-9.+]+$/.test(localPart);
+                })
+                .email(t("auth.emailInvalid") || "Invalid email address"),
+            phone_number: Yup.string()
+                .required(t("auth.phoneRequired") || "Phone number is required")
+                .matches(/^[0-9]+$/, t("auth.phoneInvalid") || "Phone number must contain only digits"),
+            country_code: Yup.string()
+                .required(t("auth.countryCodeRequired") || "Country code is required"),
+            gender: Yup.mixed()
+                .required(t("auth.genderRequired") || "Gender is required")
+                .test('is-valid-gender', t("auth.genderInvalid") || "Please select a valid gender", function(value) {
+                    if (value === "" || value === null || value === undefined) return false;
+                    const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+                    return !isNaN(numValue) && [1, 2, 3].includes(numValue);
+                }),
+            date_of_birth: Yup.date()
+                .required(t("auth.dobRequired") || "Date of birth is required")
+                .max(todayDate, t("auth.dobFuture") || "Date of birth cannot be in the future"),
         nationality: Yup.string()
             .required(t("auth.nationalityRequired") || "Nationality is required"),
         city: Yup.string()
-            .required(t("cityRequired") || "City is required"),
+            .required(t("auth.countryOfResidenceRequired") || "Country of Residence is required"),
         acceptPrivacy: Yup.boolean()
             .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
-        acceptTerms: Yup.boolean()
-            .oneOf([true], t("termsRequired") || "You must accept the terms and conditions"),
-    });
+            acceptPrivacy: Yup.boolean()
+                .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
+            acceptTerms: Yup.boolean()
+                .oneOf([true], t("termsRequired") || "You must accept the terms and conditions"),
+        });
+    }, [t, todayDate]);
 
     const formik = useFormik({
         initialValues: {
@@ -240,7 +300,7 @@ export default function GuestSignUpForm() {
 
     const handleResendOtp = async () => {
         if (!userId || !formik.values.phone_number || !formik.values.country_code) {
-            toast.error("Missing information to resend OTP");
+            toast.error(t("auth.missingInfoResend") || "Missing information to resend OTP");
             return;
         }
         try {
@@ -259,13 +319,13 @@ export default function GuestSignUpForm() {
             });
             const data = await response.json();
             if (data?.status === 1 || data?.success) {
-                toast.success(data.message || "OTP resent successfully!");
+                toast.success(data.message || t("auth.otpResentSuccess") || "OTP resent successfully!");
             } else {
-                toast.error(data.message || "Failed to resend OTP.");
+                toast.error(data.message || t("auth.otpResendFailed") || "Failed to resend OTP.");
             }
         } catch (error) {
             console.error("Resend OTP error:", error);
-            toast.error("Failed to resend OTP. Please try again.");
+            toast.error(t("auth.otpResendFailed") || "Failed to resend OTP. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -273,11 +333,11 @@ export default function GuestSignUpForm() {
 
     const handleVerifyOtp = async () => {
         if (!otp || otp.length !== 6) {
-            toast.error("Please enter a valid 6-digit OTP");
+            toast.error(t("auth.validOTPRequired") || "Please enter a valid 6-digit OTP");
             return;
         }
         if (!userId || !formik.values.phone_number || !formik.values.country_code) {
-            toast.error("Missing information to verify OTP");
+            toast.error(t("auth.missingInfoVerify") || "Missing information to verify OTP");
             return;
         }
         try {
@@ -300,19 +360,19 @@ export default function GuestSignUpForm() {
                 setPhoneVerified(true);
                 if (data?.data?.user?.is_verified) {
                     // Both verified - success!
-                    toast.success(data.message || "Account verified successfully! You can now login.");
+                    toast.success(data.message || t("auth.accountVerifiedLogin") || "Account verified successfully! You can now login.");
                     setTimeout(() => {
                         router.push("/login");
                     }, 2000);
                 } else {
-                    toast.success(data.message || "Phone verified! Please verify your email to complete registration.");
+                    toast.success(data.message || t("auth.phoneVerifiedEmail") || "Phone verified! Please verify your email to complete registration.");
                 }
             } else {
-                toast.error(data.message || "Invalid OTP. Please try again.");
+                toast.error(data.message || t("auth.invalidOTP") || "Invalid OTP. Please try again.");
             }
         } catch (error) {
             console.error("Verify OTP error:", error);
-            toast.error("Failed to verify OTP. Please try again.");
+            toast.error(t("auth.otpVerifyFailed") || "Failed to verify OTP. Please try again.");
         } finally {
             setOtpVerifying(false);
         }
@@ -404,7 +464,7 @@ export default function GuestSignUpForm() {
                     {/* Email */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t("auth.email") || "Email"} * <span className="text-xs text-gray-500">(Gmail only)</span>
+                            {t("auth.email") || "Email"} *
                         </label>
                         <input
                             type="email"
@@ -431,14 +491,14 @@ export default function GuestSignUpForm() {
                                     ? "border-red-500"
                                     : "border-gray-300"
                             }`}
-                            placeholder="your.email@gmail.com"
+                            placeholder={t("auth.gmailPlaceholder") || "your.email@gmail.com"}
                         />
                         {/* Real-time status message */}
                         {formik.values.email && (
                             <div className="mt-1">
                                 {emailStatus.isChecking && (
                                     <p className="text-sm text-blue-600 flex items-center gap-1">
-                                        <span className="animate-spin">⏳</span> Checking email...
+                                        <span className="animate-spin">⏳</span> {t("auth.checkingEmail") || "Checking email..."}
                                     </p>
                                 )}
                                 {!emailStatus.isChecking && emailStatus.message && (
@@ -516,7 +576,7 @@ export default function GuestSignUpForm() {
                                 value={formik.values.date_of_birth}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                max={new Date().toISOString().split("T")[0]}
+                                max={maxDate}
                                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
                                     formik.touched.date_of_birth && formik.errors.date_of_birth
                                         ? "border-red-500"
@@ -557,19 +617,32 @@ export default function GuestSignUpForm() {
                         )}
                     </div>
 
-                    {/* City */}
+                    {/* Country of Residence */}
                     <div>
-                        <CitySearchSelect
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {t("countryOfResidence") || "Country of Residence"} *
+                        </label>
+                        <select
+                            name="city"
                             value={formik.values.city}
-                            onChange={(value) => formik.setFieldValue("city", value)}
-                            onBlur={() => formik.setFieldTouched("city", true)}
-                            error={formik.errors.city}
-                            touched={formik.touched.city}
-                            placeholder={t("selectCity") || "Select city"}
-                            label={t("city") || "City"}
-                            required={true}
-                            isRTL={isRTL}
-                        />
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
+                                formik.touched.city && formik.errors.city
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                            }`}
+                        >
+                            <option value="">{t("auth.selectCountryOfResidence") || "Select Country of Residence"}</option>
+                            {countries.map((country) => (
+                                <option key={country.code} value={country.code}>
+                                    {country.name}
+                                </option>
+                            ))}
+                        </select>
+                        {formik.touched.city && formik.errors.city && (
+                            <p className="mt-1 text-sm text-red-600">{formik.errors.city}</p>
+                        )}
                     </div>
 
                     {/* Terms and Conditions & Privacy Policy */}
@@ -691,7 +764,7 @@ export default function GuestSignUpForm() {
 
                             {/* Title */}
                             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                {t("verifyYourAccount") || "Verify Your Account"}
+                                {t("auth.verifyYourAccount") || "Verify Your Account"}
                             </h2>
 
                             {/* Verification Status */}
@@ -706,8 +779,8 @@ export default function GuestSignUpForm() {
                                     />
                                     <span className="text-sm font-medium">
                                         {emailVerified 
-                                            ? "Email Verified ✓" 
-                                            : "Check your email and click the verification link"}
+                                            ? t("auth.emailVerified") || "Email Verified ✓"
+                                            : t("auth.checkEmailLink") || "Check your email and click the verification link"}
                                     </span>
                                 </div>
 
@@ -721,8 +794,8 @@ export default function GuestSignUpForm() {
                                     />
                                     <span className="text-sm font-medium">
                                         {phoneVerified 
-                                            ? "Phone Verified ✓" 
-                                            : "Enter OTP sent to your phone"}
+                                            ? t("auth.phoneVerified") || "Phone Verified ✓"
+                                            : t("auth.enterOTPPhone") || "Enter OTP sent to your phone"}
                                     </span>
                                 </div>
                             </div>
@@ -731,7 +804,7 @@ export default function GuestSignUpForm() {
                             {!phoneVerified && (
                                 <div className="mb-6">
                                     <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                                        {t("EnterOTP") || "Enter OTP"}
+                                        {t("auth.enterOTP") || "Enter OTP"}
                                     </label>
                                     <input
                                         type="text"
@@ -749,7 +822,7 @@ export default function GuestSignUpForm() {
                                         disabled={loading}
                                         className="mt-2 text-sm text-[#a797cc] hover:text-[#8ba179] font-medium"
                                     >
-                                        {t("Resend OTP") || "Resend OTP"}
+                                        {t("auth.resendOTP") || "Resend OTP"}
                                     </button>
                                 </div>
                             )}
@@ -762,7 +835,7 @@ export default function GuestSignUpForm() {
                                         disabled={otpVerifying || otp.length !== 6}
                                         className="w-full py-3 px-4 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                                     >
-                                        {otpVerifying ? "Verifying..." : t("Verify OTP") || "Verify OTP"}
+                                        {otpVerifying ? t("auth.verifyingOTP") || "Verifying..." : t("auth.verifyOTP") || "Verify OTP"}
                                     </button>
                                 )}
 
@@ -770,7 +843,7 @@ export default function GuestSignUpForm() {
                                     onClick={handleResendVerification}
                                     className="w-full py-3 px-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-colors"
                                 >
-                                    {t("Resend Verification Email") || "Resend Verification Email"}
+                                    {t("auth.resendVerificationEmail") || "Resend Verification Email"}
                                 </button>
 
                                 {/* Login Button - Always Visible */}
@@ -798,7 +871,7 @@ export default function GuestSignUpForm() {
                                     onClick={() => setShowVerificationStep(false)}
                                     className="w-full py-2 px-4 text-gray-500 hover:text-gray-700 text-sm font-medium"
                                 >
-                                    {t("close") || "Close"}
+                                    {t("close") || t("auth.close") || "Close"}
                                 </button>
                             </div>
                         </div>
