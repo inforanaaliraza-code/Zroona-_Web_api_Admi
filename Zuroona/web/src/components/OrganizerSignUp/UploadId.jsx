@@ -359,7 +359,7 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 		}
 		// If relative path (starts with /uploads/), construct absolute URL
 		if (url.startsWith("/uploads/")) {
-			const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3434";
+			const apiBase = "http://localhost:3434";
 			return `${apiBase}${url}`;
 		}
 		return url;
