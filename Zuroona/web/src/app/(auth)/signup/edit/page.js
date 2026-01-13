@@ -128,8 +128,8 @@ export default function SignUp() {
       if (user.profile_image) {
         let imageUrl = user.profile_image;
         
-        // Extract the API base URL (http://localhost:3434)
-        const apiBase = BASE_API_URL.replace('/api/', '');
+        // Extract the API base URL (remove /api/ suffix)
+        const apiBase = BASE_API_URL.replace(/\/api\/?$/, '');
         
         console.log("[EDIT-PROFILE] Processing profile_image from DB:", imageUrl);
         console.log("[EDIT-PROFILE] API Base URL:", apiBase);
