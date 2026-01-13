@@ -1,12 +1,11 @@
-export const mapApiKey = "gersgfeshhtbg";
+export const mapApiKey = process.env.NEXT_PUBLIC_MAPS_API_KEY || "";
 
+// Client should not embed secrets. Keep only non-sensitive storage config.
 export const config = {
-  bucketName: "appsinvo-staging-ys",
-  region: "us-west-1",
-  accessKeyId: "AKIAVMOPKAV4RPMGAK5M",
-  secretAccessKey: "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",
-  s3Url: "https://s3.us-west-1.amazonaws.com/appsinvo-staging-ys",
-  dirName: "Zuroona",
+  bucketName: process.env.NEXT_PUBLIC_S3_BUCKET || "",
+  region: process.env.NEXT_PUBLIC_S3_REGION || "",
+  s3Url: process.env.NEXT_PUBLIC_S3_URL || "",
+  dirName: process.env.NEXT_PUBLIC_S3_DIR || "Zuroona",
 };
 
 // Auto-select API base URL: prefer env, else dev localhost, else production URL
