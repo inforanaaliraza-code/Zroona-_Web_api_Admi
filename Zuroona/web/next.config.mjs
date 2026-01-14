@@ -10,7 +10,7 @@ const nextConfig = {
   // Reduce webpack stats 6z
   webpack: (config, { isServer }) => {
     config.stats = 'errors-only';
-    
+
     // Suppress source map warnings for third-party CSS
     if (!isServer) {
       config.ignoreWarnings = [
@@ -18,17 +18,17 @@ const nextConfig = {
         { file: /\.css\.map$/ },
       ];
     }
-    
+
     return config;
   },
-  
+
   // Suppress 404 warnings for source maps in development
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
   },
   images: {
-    unoptimized: true,
+
     remotePatterns: [
       {
         protocol: "https",

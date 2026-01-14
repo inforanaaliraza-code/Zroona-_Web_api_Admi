@@ -1,3 +1,5 @@
+"use client";
+
 import Image from 'next/image';
 import Header from '../Header/Header';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +17,7 @@ const HeroSection = () => {
             return <SaudiMapIcon className="w-10 h-10 text-brand-orange mb-4 mx-auto group-hover:scale-110 transition-transform" />;
         }
         return (
-            <Icon 
+            <Icon
                 icon={stat.icon}
                 className="w-10 h-10 text-brand-orange mb-4 mx-auto group-hover:scale-110 transition-transform"
             />
@@ -26,7 +28,7 @@ const HeroSection = () => {
         <div className="relative min-h-screen bg-white overflow-x-visible overflow-y-hidden">
             {/* Background Pattern */}
             <div className="fixed inset-0 bg-[url('/assets/images/home/bg-img.png')] bg-cover bg-center opacity-5 -z-10"></div>
-            
+
             {/* Dotted Arrows and Visual Cues Background */}
             <div className="absolute inset-0 -z-10 overflow-hidden">
                 {/* Dotted pattern overlay */}
@@ -34,29 +36,29 @@ const HeroSection = () => {
                     backgroundImage: `radial-gradient(circle, #a797cc 1px, transparent 1px)`,
                     backgroundSize: '30px 30px'
                 }}></div>
-                
+
                 {/* Decorative arrows */}
                 <div className="absolute top-20 left-10 w-16 h-16 opacity-20">
                     <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-[#a797cc]">
-                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/>
+                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4" />
                     </svg>
                 </div>
                 <div className="absolute bottom-32 right-16 w-20 h-20 opacity-15 transform rotate-45">
                     <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-[#a797cc]">
-                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4"/>
+                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 4" />
                     </svg>
                 </div>
                 <div className="absolute top-1/2 left-1/4 w-12 h-12 opacity-10 transform -rotate-12">
                     <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-[#a797cc]">
-                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 3"/>
+                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 3" />
                     </svg>
                 </div>
             </div>
-            
+
             {/* Decorative Elements */}
             <div className="absolute left-10 top-20 w-24 h-24 bg-brand-light-orange-1 rounded-full opacity-60 blur-3xl"></div>
             <div className="absolute right-10 bottom-20 w-32 h-32 bg-brand-light-orange-1 rounded-full opacity-40 blur-3xl"></div>
-            
+
             <Header />
 
             <main className="container relative flex items-center justify-center min-h-[calc(100vh-80px)] px-4 mx-auto overflow-visible pt-20">
@@ -76,8 +78,8 @@ const HeroSection = () => {
                     <div className="mx-auto max-w-4xl text-center">
                         {/* Welcome Tag */}
                         <span className="text-4xl md:text-5xl font-semibold text-[#a797cc] mb-6">
-                                {t('home.welcome')}
-                            </span>
+                            {t('home.welcome')}
+                        </span>
 
                         {/* Main Heading */}
                         <h1 className="mb-6 text-5xl md:text-7xl lg:text-8xl font-bold leading-tight text-gray-900">
