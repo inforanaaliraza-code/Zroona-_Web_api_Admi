@@ -3800,11 +3800,21 @@ const UserController = {
 						organizer
 					);
 
-					if (localInvoice && localInvoice.id) {
-						// Save local invoice to booking record
-						updatedBooking.invoice_id = localInvoice.id;
-						updatedBooking.invoice_url = `${process.env.BASE_URL || 'http://localhost:3434'}${localInvoice.invoice_url}`;
-						await updatedBooking.save();
+				if (localInvoice && localInvoice.id) {
+					// Save local invoice to booking record
+					// Fix URL construction to avoid double slashes
+					// Note: Invoices are served at root level (/invoices/), not under /api/
+					let baseUrl = (process.env.BASE_URL || 'http://localhost:3434').replace(/\/+$/, ''); // Remove trailing slashes
+					
+					// Remove /api or /api/ from base URL if present (invoices are served at root)
+					baseUrl = baseUrl.replace(/\/api\/?$/, '');
+					
+					const invoicePath = localInvoice.invoice_url.replace(/^\/+/, '/'); // Ensure single leading slash
+					const fullInvoiceUrl = `${baseUrl}${invoicePath}`;
+					
+					updatedBooking.invoice_id = localInvoice.id;
+					updatedBooking.invoice_url = fullInvoiceUrl;
+					await updatedBooking.save();
 
 						// Also store in transaction record
 						if (transaction && transaction._id) {
@@ -3812,7 +3822,7 @@ const UserController = {
 								transaction._id,
 								{
 									invoice_id: localInvoice.id,
-									invoice_url: `${process.env.BASE_URL || 'http://localhost:3434'}${localInvoice.invoice_url}`,
+									invoice_url: fullInvoiceUrl,
 								}
 							);
 						}
@@ -3821,7 +3831,7 @@ const UserController = {
 							"[RECEIPT] Local invoice generated successfully:",
 							localInvoice.id,
 							"URL:",
-							localInvoice.invoice_url
+							fullInvoiceUrl
 						);
 					}
 				} catch (localInvoiceError) {

@@ -173,10 +173,28 @@
   }
 }
 
+* {
+  box-sizing: border-box;
+}
+
+body, html {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
 body {
   font-family: var(--font-poppins);
   background-color: #ffffff;
   color: #171717; /* Default dark text on white background */
+}
+
+/* Prevent any child elements from causing overflow */
+body > * {
+  max-width: 100%;
 }
 
 [dir="rtl"] body {

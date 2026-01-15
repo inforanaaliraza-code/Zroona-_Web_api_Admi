@@ -18,10 +18,17 @@ const querystring = require('querystring');
 // Correct endpoint: https://www.msegat.com/gw/sendsms.php
 const MSEGAT_API_URL = process.env.MSEGAT_API_URL || 'https://www.msegat.com/gw/sendsms.php';
 // MsgGate supports both username+password OR apiKey alone
-const MSEGAT_USERNAME = process.env.MSEGAT_USERNAME || process.env.MSEGAT_API_KEY;
-const MSEGAT_PASSWORD = process.env.MSEGAT_PASSWORD || process.env.MSEGAT_API_KEY;
-const MSEGAT_API_KEY = process.env.MSEGAT_API_KEY || 'A1C264A8A08B891011F660D6D546AA41';
+const MSEGAT_USERNAME = process.env.MSEGAT_USERNAME;
+const MSEGAT_PASSWORD = process.env.MSEGAT_PASSWORD;
+const MSEGAT_API_KEY = process.env.MSEGAT_API_KEY;
 const SENDER_NAME = process.env.MSEGAT_SENDER_NAME || 'Zuroona';
+
+// Debug: Log what credentials are loaded
+console.log('🔍 [MSEGAT] Configuration loaded:');
+console.log(`   - MSEGAT_USERNAME: ${MSEGAT_USERNAME ? '✅ Set (' + MSEGAT_USERNAME.substring(0, 4) + '...)' : '❌ Not set'}`);
+console.log(`   - MSEGAT_PASSWORD: ${MSEGAT_PASSWORD ? '✅ Set (' + MSEGAT_PASSWORD.substring(0, 4) + '...)' : '❌ Not set'}`);
+console.log(`   - MSEGAT_API_KEY: ${MSEGAT_API_KEY ? '✅ Set (' + MSEGAT_API_KEY.substring(0, 4) + '...)' : '❌ Not set'}`);
+console.log(`   - SENDER_NAME: ${SENDER_NAME}`);
 
 /**
  * Send SMS via Msegat
@@ -31,9 +38,15 @@ const SENDER_NAME = process.env.MSEGAT_SENDER_NAME || 'Zuroona';
  */
 const sendSMS = async (phoneNumber, message) => {
     try {
-        // Validate API credentials
-        if (!MSEGAT_API_KEY && !MSEGAT_USERNAME) {
-            throw new Error('Msegat API credentials not configured. Please set MSEGAT_API_KEY or MSEGAT_USERNAME in environment variables.');
+        // Validate API credentials - Must have USERNAME and (API_KEY or PASSWORD)
+        if (!MSEGAT_USERNAME) {
+            console.error('❌ [MSEGAT] MSEGAT_USERNAME is not set!');
+            throw new Error('MSEGAT_USERNAME is required. Please set it in your .env file.');
+        }
+        
+        if (!MSEGAT_API_KEY && !MSEGAT_PASSWORD) {
+            console.error('❌ [MSEGAT] Neither MSEGAT_API_KEY nor MSEGAT_PASSWORD is set!');
+            throw new Error('MSEGAT_API_KEY or MSEGAT_PASSWORD is required. Please set one in your .env file.');
         }
 
         // Format phone number (remove + if present, ensure it starts with country code)
@@ -46,70 +59,106 @@ const sendSMS = async (phoneNumber, message) => {
 
         console.log(`📱 [MSEGAT] Sending SMS to: ${formattedNumber} (Original: ${phoneNumber})`);
         console.log(`📝 [MSEGAT] Message: ${message.substring(0, 50)}...`);
-        console.log(`🔑 [MSEGAT] Using API Key: ${MSEGAT_API_KEY ? MSEGAT_API_KEY.substring(0, 8) + '...' : 'Not set'}`);
+        console.log(`🔑 [MSEGAT] Username: ${MSEGAT_USERNAME ? MSEGAT_USERNAME.substring(0, 4) + '...' : 'Not set'}`);
+        console.log(`🔑 [MSEGAT] API Key: ${MSEGAT_API_KEY ? MSEGAT_API_KEY.substring(0, 8) + '...' : 'Using PASSWORD'}`);
         console.log(`📤 [MSEGAT] Sender Name: ${SENDER_NAME}`);
 
         // Msegat API request payload
-        // MSGATE API format based on working example:
-        // - userName: username
-        // - apiKey: API key/password
-        // - userSender: sender name (not 'sender')
-        // - msgEncoding: 'UTF8'
-        // - numbers: phone number without +
-        // - msg: message
-        let payload;
+        // MSGATE API format:
+        // - userName: Your MSEGAT username
+        // - apiKey: Your MSEGAT API key/password
+        // - userSender: Sender name
+        // - msgEncoding: 'UTF8' for Arabic/English
+        // - numbers: Phone number without +
+        // - msg: Message text
         
-        // If separate username and password/API key are provided
-        // Try using MSEGAT_API_KEY first (as it matches sample format)
-        if (process.env.MSEGAT_USERNAME && MSEGAT_API_KEY) {
-            payload = {
-                userName: process.env.MSEGAT_USERNAME,
-                apiKey: MSEGAT_API_KEY,
-                userSender: SENDER_NAME,
-                msgEncoding: 'UTF8',
-                numbers: formattedNumber,
-                msg: message
-            };
-        } else if (process.env.MSEGAT_USERNAME && process.env.MSEGAT_PASSWORD) {
-            // Fallback: Use password if API key not available
-            payload = {
-                userName: process.env.MSEGAT_USERNAME,
-                apiKey: process.env.MSEGAT_PASSWORD,
-                userSender: SENDER_NAME,
-                msgEncoding: 'UTF8',
-                numbers: formattedNumber,
-                msg: message
-            };
-        } else if (MSEGAT_API_KEY) {
-            // Fallback: Use API key if username/password not provided
-            payload = {
-                userName: MSEGAT_API_KEY,
-                apiKey: MSEGAT_API_KEY,
-                userSender: SENDER_NAME,
-                msgEncoding: 'UTF8',
-                numbers: formattedNumber,
-                msg: message
-            };
-        } else {
-            throw new Error('Msegat API credentials not configured. Please set MSEGAT_USERNAME and MSEGAT_PASSWORD or MSEGAT_API_KEY in environment variables.');
+        // Try different authentication combinations
+        let response;
+        let lastError;
+        
+        // Method 1: userName + apiKey (most common)
+        if (MSEGAT_API_KEY) {
+            try {
+                console.log(`🔐 [MSEGAT] Attempting authentication with USERNAME + API_KEY`);
+                const payload = {
+                    userName: MSEGAT_USERNAME,
+                    apiKey: MSEGAT_API_KEY,
+                    userSender: SENDER_NAME,
+                    msgEncoding: 'UTF8',
+                    numbers: formattedNumber,
+                    msg: message
+                };
+
+                console.log(`📦 [MSEGAT] Request Payload:`, {
+                    userName: payload.userName,
+                    apiKey: payload.apiKey ? payload.apiKey.substring(0, 10) + '****' + payload.apiKey.substring(payload.apiKey.length - 4) : 'Not set',
+                    userSender: payload.userSender,
+                    msgEncoding: payload.msgEncoding,
+                    numbers: payload.numbers,
+                    msg: payload.msg.substring(0, 50) + (payload.msg.length > 50 ? '...' : '')
+                });
+                
+                console.log(`🚀 [MSEGAT] Sending request to: ${MSEGAT_API_URL}`);
+
+                response = await axios.post(MSEGAT_API_URL, querystring.stringify(payload), {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    timeout: 15000,
+                });
+                
+                // Check if we got M0002 error
+                if (response.data && response.data.code === 'M0002' && MSEGAT_PASSWORD) {
+                    console.log(`⚠️  [MSEGAT] API_KEY failed with M0002, trying with PASSWORD...`);
+                    throw new Error('M0002'); // Trigger fallback
+                }
+            } catch (error) {
+                lastError = error;
+                console.log(`⚠️  [MSEGAT] Method 1 (API_KEY) failed:`, error.message);
+            }
         }
+        
+        // Method 2: userName + password (fallback)
+        if (!response && MSEGAT_PASSWORD) {
+            try {
+                console.log(`🔐 [MSEGAT] Attempting authentication with USERNAME + PASSWORD`);
+                const payload = {
+                    userName: MSEGAT_USERNAME,
+                    apiKey: MSEGAT_PASSWORD, // MSEGAT uses 'apiKey' field for both API key and password
+                    userSender: SENDER_NAME,
+                    msgEncoding: 'UTF8',
+                    numbers: formattedNumber,
+                    msg: message
+                };
 
-        console.log(`📦 [MSEGAT] Payload:`, {
-            userName: payload.userName ? payload.userName.substring(0, 8) + '...' : 'Not set',
-            apiKey: payload.apiKey ? payload.apiKey.substring(0, 8) + '...' : 'Not set',
-            userSender: payload.userSender,
-            msgEncoding: payload.msgEncoding,
-            numbers: payload.numbers,
-            msg: payload.msg.substring(0, 50) + '...'
-        });
+                console.log(`📦 [MSEGAT] Request Payload (with PASSWORD):`, {
+                    userName: payload.userName,
+                    apiKey: '[PASSWORD]',
+                    userSender: payload.userSender,
+                    msgEncoding: payload.msgEncoding,
+                    numbers: payload.numbers,
+                    msg: payload.msg.substring(0, 50) + (payload.msg.length > 50 ? '...' : '')
+                });
+                
+                console.log(`🚀 [MSEGAT] Sending request to: ${MSEGAT_API_URL}`);
 
-        // Send SMS via Msegat API
-        const response = await axios.post(MSEGAT_API_URL, querystring.stringify(payload), {
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            timeout: 15000, // 15 seconds timeout (increased for slow connections)
-        });
+                response = await axios.post(MSEGAT_API_URL, querystring.stringify(payload), {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    timeout: 15000,
+                });
+            } catch (error) {
+                lastError = error;
+                console.log(`⚠️  [MSEGAT] Method 2 (PASSWORD) failed:`, error.message);
+            }
+        }
+        
+        // If both methods failed, throw the last error
+        if (!response) {
+            console.error(`❌ [MSEGAT] All authentication methods failed!`);
+            throw lastError || new Error('Unable to authenticate with MSEGAT');
+        }
 
         console.log(`📥 [MSEGAT] API Response Status: ${response.status}`);
         console.log(`📥 [MSEGAT] API Response Headers:`, JSON.stringify(response.headers));

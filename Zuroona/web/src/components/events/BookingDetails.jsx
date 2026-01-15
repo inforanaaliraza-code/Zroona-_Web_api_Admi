@@ -325,7 +325,7 @@ export default function BookingDetails({
 										<>
 											<Button
 												onClick={onInitiatePayment}
-												className="w-full text-white text-lg font-bold h-16 rounded-xl bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#a797cc] transition-all duration-300 flex items-center justify-center shadow-xl hover:shadow-2xl hover:scale-[1.02] transform"
+												className="w-full text-white text-lg font-bold h-12 rounded-xl bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#a797cc] transition-all duration-300 flex items-center justify-center shadow-xl hover:shadow-2xl hover:scale-[1.02] transform"
 											>
 												<span className="inline-flex justify-center items-center gap-3">
 													<Icon
@@ -345,7 +345,7 @@ export default function BookingDetails({
 											<Button
 												onClick={onInitiatePayment}
 												disabled={true}
-												className="w-full text-white text-lg font-bold h-16 rounded-xl bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed transition-all duration-300 flex items-center justify-center shadow-lg opacity-75"
+												className="w-full text-white text-lg font-bold h-12 rounded-xl bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed transition-all duration-300 flex items-center justify-center shadow-lg opacity-75"
 											>
 												<span className="inline-flex justify-center items-center gap-3">
 													<Icon
