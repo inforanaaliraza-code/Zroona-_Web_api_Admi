@@ -11,6 +11,8 @@ import { useTranslation } from "react-i18next";
 import useAuth from "@/hooks/useAuth";
 import { useSelector } from "react-redux";
 import { Icon } from "@iconify/react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { useConfirm } from "@/hooks/useConfirm";
 
 const DropdownUser = ({ profile }) => {
   const { t } = useTranslation();
@@ -18,6 +20,7 @@ const DropdownUser = ({ profile }) => {
   const { push } = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { logout: authLogout } = useAuth();
+  const { confirmProps, openConfirm } = useConfirm();
   
   // Also get profile from Redux store as fallback/update source
   const reduxProfile = useSelector((state) => state.profileData?.profile);
@@ -45,11 +48,21 @@ const DropdownUser = ({ profile }) => {
     return null;
   }
 
-  const logout = (e) => {
+  const handleLogout = (e) => {
     e.preventDefault();
-    authLogout();
-    setDropdownOpen(false);
+    openConfirm({
+      title: t("confirm.logoutTitle") || "Logout?",
+      description: t("confirm.logoutDescription") || "Are you sure you want to logout?",
+      confirmText: t("confirm.logoutButton") || "Yes, Logout",
+      cancelText: t("confirm.cancel") || "Cancel",
+      variant: "warning",
+      onConfirm: () => {
+        authLogout();
+        setDropdownOpen(false);
+      },
+    });
   };
+  
   const closeDropdown = () => setDropdownOpen(false);
 
   return (
@@ -130,7 +143,7 @@ const DropdownUser = ({ profile }) => {
             {/* Logout */}
             <li className="flex gap-2 justify-center items-center py-1 pt-2 mt-4">
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="group text-[#a797cc] underline text-sm font-semibold hover:text-[#8ba179] flex items-center"
               >
                 {t("sidemenu.tab10")}
@@ -143,6 +156,9 @@ const DropdownUser = ({ profile }) => {
           </ul>
         </div>
       )}
+      
+      {/* Confirmation Dialog */}
+      <ConfirmDialog {...confirmProps} />
     </ClickOutside>
   );
 };

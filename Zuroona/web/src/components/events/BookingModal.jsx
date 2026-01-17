@@ -444,15 +444,37 @@ export default function BookingModal({
 			return;
 		}
 
-		// Note: Frontend validation is basic - backend will do the actual seat availability check
-		// This prevents obviously invalid inputs but the API will verify actual availability
+		// Check if event is sold out
+		if (event.available_seats !== undefined && event.available_seats === 0) {
+			toast.error(getTranslation(t, "events.eventSoldOut", "Sorry, this event is sold out. No seats available."), {
+				duration: 5000,
+			});
+			return;
+		}
+
+		// Validate attendees count
 		if (attendees < 1) {
 			toast.error(getTranslation(t, "events.invalidAttendees", "Number of attendees must be at least 1"));
 			return;
 		}
 		
-		// Check against total seats (backend will check available seats)
-		if (event.no_of_attendees && attendees > event.no_of_attendees) {
+		// Check against available seats with detailed error message
+		if (event.available_seats !== undefined) {
+			if (attendees > event.available_seats) {
+				toast.error(
+					getTranslation(
+						t, 
+						"events.exceedsAvailableSeats", 
+						`Cannot book ${attendees} seat(s). Only ${event.available_seats} seat(s) available.`
+					),
+					{
+						duration: 5000,
+					}
+				);
+				return;
+			}
+		} else if (event.no_of_attendees && attendees > event.no_of_attendees) {
+			// Fallback to checking total seats if available_seats not provided
 			toast.error(getTranslation(t, "events.exceedsTotalSeats", `Cannot book more than ${event.no_of_attendees} seats`));
 			return;
 		}
@@ -496,7 +518,9 @@ export default function BookingModal({
 			
 			// Check if it's a seat availability error
 			if (errorMessage.toLowerCase().includes("seats not available") || 
-			    errorMessage.toLowerCase().includes("seat")) {
+			    errorMessage.toLowerCase().includes("seat") ||
+			    errorMessage.toLowerCase().includes("sold out") ||
+			    errorMessage.toLowerCase().includes("capacity")) {
 				toast.error(errorMessage, {
 					duration: 5000, // Show longer for important errors
 				});
@@ -564,6 +588,39 @@ export default function BookingModal({
 					<div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 md:px-8 py-4 sm:py-6">
 						{step === "details" && (
 							<div className="space-y-6">
+								{/* Event Capacity Information */}
+								{event.available_seats !== undefined && (
+									<div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
+										<div className="flex items-center gap-3">
+											<div className="flex-shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+												<Icon icon="lucide:users" className="w-5 h-5 text-[#a797cc]" />
+											</div>
+											<div className="flex-1">
+												<p className="text-sm font-semibold text-gray-900">
+													{getTranslation(t, "events.seatsAvailable", "Seats Available")}
+												</p>
+												<p className="text-lg font-bold text-[#a797cc]">
+													{event.available_seats} {getTranslation(t, "events.of", "of")} {event.total_seats}
+												</p>
+											</div>
+											{event.available_seats === 0 && (
+												<div className="px-3 py-1 bg-red-100 rounded-full">
+													<span className="text-xs font-bold text-red-700">
+														{getTranslation(t, "events.soldOut", "SOLD OUT")}
+													</span>
+												</div>
+											)}
+											{event.available_seats > 0 && event.available_seats <= 5 && (
+												<div className="px-3 py-1 bg-orange-100 rounded-full">
+													<span className="text-xs font-bold text-orange-700">
+														{getTranslation(t, "events.fewLeft", "FEW LEFT")}
+													</span>
+												</div>
+											)}
+										</div>
+									</div>
+								)}
+								
 								<div className="space-y-2">
 									<Label.Root className="text-sm font-medium text-gray-900">
 										{getTranslation(t, "events.numberOfAttendees", "Number of Attendees")}
@@ -583,17 +640,19 @@ export default function BookingModal({
 										<input
 											type="number"
 											min={1}
-											max={event.no_of_attendees}
+											max={event.available_seats !== undefined ? event.available_seats : event.no_of_attendees}
 											value={attendees}
 											onChange={handleAttendeeChange}
-											className="w-full px-14 py-3 text-center text-lg font-medium text-gray-900 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+											disabled={event.available_seats === 0}
+											className="w-full px-14 py-3 text-center text-lg font-medium text-gray-900 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-gray-100 disabled:cursor-not-allowed"
 										/>
 										<button
 											type="button"
 											onClick={incrementAttendees}
 											disabled={
-												attendees >=
-												event.no_of_attendees
+												event.available_seats !== undefined 
+													? attendees >= event.available_seats || event.available_seats === 0
+													: attendees >= event.no_of_attendees
 											}
 											className="absolute right-0 h-full px-4 text-gray-500 hover:text-[#a797cc] disabled:opacity-50 disabled:hover:text-gray-500 transition-colors"
 										>
@@ -608,9 +667,14 @@ export default function BookingModal({
 											icon="lucide:info"
 											className="w-4 h-4"
 										/>
-										{getTranslation(t, "events.maxAttendeesAvailable", `Maximum ${event.no_of_attendees || 1} attendees available`, {
-											count: event.no_of_attendees || 1,
-										})}
+										{event.available_seats !== undefined 
+											? getTranslation(t, "events.maxAttendeesAvailable", `Maximum ${event.available_seats || 0} attendees available`, {
+												count: event.available_seats || 0,
+											})
+											: getTranslation(t, "events.maxAttendeesAvailable", `Maximum ${event.no_of_attendees || 1} attendees available`, {
+												count: event.no_of_attendees || 1,
+											})
+										}
 									</p>
 								</div>
 

@@ -131,12 +131,12 @@ export default function GuestSignUpForm() {
                     .min(2, t("auth.lastNameMin") || "Last name must be at least 2 characters"),
                 email: Yup.string()
                     .required(t("auth.emailRequired") || "Email is required")
-                    .test('gmail-only', t("auth.gmailOnly") || "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+                    .test('gmail-only', t("auth.gmailOnly") || "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function (value) {
                         if (!value) return true;
                         const emailLower = value.toLowerCase().trim();
                         return emailLower.endsWith('@gmail.com');
                     })
-                    .test('gmail-format', t("auth.gmailFormat") || "Invalid Gmail address format", function(value) {
+                    .test('gmail-format', t("auth.gmailFormat") || "Invalid Gmail address format", function (value) {
                         if (!value) return true;
                         const emailLower = value.toLowerCase().trim();
                         const localPart = emailLower.split('@')[0];
@@ -151,7 +151,7 @@ export default function GuestSignUpForm() {
                     .required(t("auth.countryCodeRequired") || "Country code is required"),
                 gender: Yup.mixed()
                     .required(t("auth.genderRequired") || "Gender is required")
-                    .test('is-valid-gender', t("auth.genderInvalid") || "Please select a valid gender", function(value) {
+                    .test('is-valid-gender', t("auth.genderInvalid") || "Please select a valid gender", function (value) {
                         if (value === "" || value === null || value === undefined) return false;
                         const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
                         return !isNaN(numValue) && [1, 2, 3].includes(numValue);
@@ -168,7 +168,7 @@ export default function GuestSignUpForm() {
                     .oneOf([true], t("termsRequired") || "You must accept the terms and conditions"),
             });
         }
-        
+
         return Yup.object({
             first_name: Yup.string()
                 .required(t("auth.firstNameRequired") || "First name is required")
@@ -178,12 +178,12 @@ export default function GuestSignUpForm() {
                 .min(2, t("auth.lastNameMin") || "Last name must be at least 2 characters"),
             email: Yup.string()
                 .required(t("auth.emailRequired") || "Email is required")
-                .test('gmail-only', t("auth.gmailOnly") || "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function(value) {
+                .test('gmail-only', t("auth.gmailOnly") || "Only Gmail addresses are allowed. Please use an email ending with @gmail.com", function (value) {
                     if (!value) return true;
                     const emailLower = value.toLowerCase().trim();
                     return emailLower.endsWith('@gmail.com');
                 })
-                .test('gmail-format', t("auth.gmailFormat") || "Invalid Gmail address format", function(value) {
+                .test('gmail-format', t("auth.gmailFormat") || "Invalid Gmail address format", function (value) {
                     if (!value) return true;
                     const emailLower = value.toLowerCase().trim();
                     const localPart = emailLower.split('@')[0];
@@ -198,20 +198,36 @@ export default function GuestSignUpForm() {
                 .required(t("auth.countryCodeRequired") || "Country code is required"),
             gender: Yup.mixed()
                 .required(t("auth.genderRequired") || "Gender is required")
-                .test('is-valid-gender', t("auth.genderInvalid") || "Please select a valid gender", function(value) {
+                .test('is-valid-gender', t("auth.genderInvalid") || "Please select a valid gender", function (value) {
                     if (value === "" || value === null || value === undefined) return false;
                     const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
                     return !isNaN(numValue) && [1, 2, 3].includes(numValue);
                 }),
             date_of_birth: Yup.date()
                 .required(t("auth.dobRequired") || "Date of birth is required")
-                .max(todayDate, t("auth.dobFuture") || "Date of birth cannot be in the future"),
-        nationality: Yup.string()
-            .required(t("auth.nationalityRequired") || "Nationality is required"),
-        city: Yup.string()
-            .required(t("auth.countryOfResidenceRequired") || "Country of Residence is required"),
-        acceptPrivacy: Yup.boolean()
-            .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
+                .max(todayDate, t("auth.dobFuture") || "Date of birth cannot be in the future")
+                .test('min-age', t("auth.dobMinAge") || "You must be at least 18 years old", function (value) {
+                    if (!value) return true;
+                    const today = new Date();
+                    const birthDate = new Date(value);
+                    const age = today.getFullYear() - birthDate.getFullYear();
+                    const monthDiff = today.getMonth() - birthDate.getMonth();
+                    const dayDiff = today.getDate() - birthDate.getDate();
+
+                    // Check if user has reached 18th birthday
+                    if (age > 18) return true;
+                    if (age === 18) {
+                        if (monthDiff > 0) return true;
+                        if (monthDiff === 0 && dayDiff >= 0) return true;
+                    }
+                    return false;
+                }),
+            nationality: Yup.string()
+                .required(t("auth.nationalityRequired") || "Nationality is required"),
+            city: Yup.string()
+                .required(t("auth.countryOfResidenceRequired") || "Country of Residence is required"),
+            acceptPrivacy: Yup.boolean()
+                .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
             acceptPrivacy: Yup.boolean()
                 .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
             acceptTerms: Yup.boolean()
@@ -248,14 +264,14 @@ export default function GuestSignUpForm() {
                 };
 
                 const response = await SignUpApi(payload);
-                
+
                 if (response?.status === 1 || response?.status === true) {
                     // Store user ID for OTP verification
                     setUserId(response?.data?.user?._id);
                     setShowVerificationStep(true);
                     toast.success(
-                        response.message || 
-                        t("auth.verificationEmailSent") || 
+                        response.message ||
+                        t("auth.verificationEmailSent") ||
                         "Account created! Please verify your email and enter the OTP sent to your phone."
                     );
                 } else {
@@ -264,8 +280,8 @@ export default function GuestSignUpForm() {
             } catch (error) {
                 console.error("Signup error:", error);
                 toast.error(
-                    error?.response?.data?.message || 
-                    t("auth.signupError") || 
+                    error?.response?.data?.message ||
+                    t("auth.signupError") ||
                     "An error occurred. Please try again."
                 );
             } finally {
@@ -426,11 +442,10 @@ export default function GuestSignUpForm() {
                                 value={formik.values.first_name}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.first_name && formik.errors.first_name
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${formik.touched.first_name && formik.errors.first_name
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                    }`}
                                 placeholder={t("auth.firstNamePlaceholder") || "Enter your first name"}
                             />
                             {formik.touched.first_name && formik.errors.first_name && (
@@ -448,11 +463,10 @@ export default function GuestSignUpForm() {
                                 value={formik.values.last_name}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.last_name && formik.errors.last_name
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${formik.touched.last_name && formik.errors.last_name
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                    }`}
                                 placeholder={t("auth.lastNamePlaceholder") || "Enter your last name"}
                             />
                             {formik.touched.last_name && formik.errors.last_name && (
@@ -464,7 +478,7 @@ export default function GuestSignUpForm() {
                     {/* Email */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t("auth.email") || "Email"} *
+                            {t("signup.tab5") || "Email"} *
                         </label>
                         <input
                             type="email"
@@ -482,15 +496,14 @@ export default function GuestSignUpForm() {
                                     checkEmailDebounced(e.target.value, 'user');
                                 }
                             }}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                formik.touched.email && formik.errors.email
-                                    ? "border-red-500"
-                                    : emailStatus.status === 'valid'
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${formik.touched.email && formik.errors.email
+                                ? "border-red-500"
+                                : emailStatus.status === 'valid'
                                     ? "border-green-500"
                                     : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                            }`}
+                                        ? "border-red-500"
+                                        : "border-gray-300"
+                                }`}
                             placeholder={t("auth.gmailPlaceholder") || "your.email@gmail.com"}
                         />
                         {/* Real-time status message */}
@@ -502,13 +515,12 @@ export default function GuestSignUpForm() {
                                     </p>
                                 )}
                                 {!emailStatus.isChecking && emailStatus.message && (
-                                    <p className={`text-sm ${
-                                        emailStatus.status === 'valid'
-                                            ? "text-green-600"
-                                            : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
+                                    <p className={`text-sm ${emailStatus.status === 'valid'
+                                        ? "text-green-600"
+                                        : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
                                             ? "text-red-600"
                                             : "text-gray-600"
-                                    }`}>
+                                        }`}>
                                         {emailStatus.status === 'valid' && '✓ '}
                                         {emailStatus.message}
                                     </p>
@@ -550,11 +562,10 @@ export default function GuestSignUpForm() {
                                     formik.setFieldValue("gender", numValue, false);
                                 }}
                                 onBlur={formik.handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.gender && formik.errors.gender
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${formik.touched.gender && formik.errors.gender
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                    }`}
                             >
                                 <option value="">{t("auth.selectGender") || "Select gender"}</option>
                                 <option value="1">{t("auth.male") || "Male"}</option>
@@ -577,11 +588,10 @@ export default function GuestSignUpForm() {
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
                                 max={maxDate}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.date_of_birth && formik.errors.date_of_birth
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${formik.touched.date_of_birth && formik.errors.date_of_birth
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                    }`}
                             />
                             {formik.touched.date_of_birth && formik.errors.date_of_birth && (
                                 <p className="mt-1 text-sm text-red-600">{formik.errors.date_of_birth}</p>
@@ -599,11 +609,10 @@ export default function GuestSignUpForm() {
                             value={formik.values.nationality}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                formik.touched.nationality && formik.errors.nationality
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                            }`}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formik.touched.nationality && formik.errors.nationality
+                                ? "border-red-500"
+                                : "border-gray-300"
+                                }`}
                         >
                             <option value="">{t("auth.selectNationality") || "Select nationality"}</option>
                             {countries.map((country) => (
@@ -627,11 +636,10 @@ export default function GuestSignUpForm() {
                             value={formik.values.city}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                formik.touched.city && formik.errors.city
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                            }`}
+                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${formik.touched.city && formik.errors.city
+                                ? "border-red-500"
+                                : "border-gray-300"
+                                }`}
                         >
                             <option value="">{t("auth.selectCountryOfResidence") || "Select Country of Residence"}</option>
                             {countries.map((country) => (
@@ -693,15 +701,15 @@ export default function GuestSignUpForm() {
                                         {t("privacyPolicy") || "Privacy Policy"}
                                     </button>
                                     <span className="text-red-500 ml-1">*</span>
-                            </label>
-                                {(formik.touched.acceptTerms && formik.errors.acceptTerms) || 
-                                 (formik.touched.acceptPrivacy && formik.errors.acceptPrivacy) ? (
+                                </label>
+                                {(formik.touched.acceptTerms && formik.errors.acceptTerms) ||
+                                    (formik.touched.acceptPrivacy && formik.errors.acceptPrivacy) ? (
                                     <p className="mt-1 text-sm text-red-600">
-                                        {formik.errors.acceptTerms || formik.errors.acceptPrivacy || 
-                                         "You must accept the Terms & Conditions and Privacy Policy"}
+                                        {formik.errors.acceptTerms || formik.errors.acceptPrivacy ||
+                                            "You must accept the Terms & Conditions and Privacy Policy"}
                                     </p>
                                 ) : null}
-                        </div>
+                            </div>
                         </div>
                     </div>
 
@@ -770,30 +778,28 @@ export default function GuestSignUpForm() {
                             {/* Verification Status */}
                             <div className="mb-6 space-y-3">
                                 {/* Email Verification Status */}
-                                <div className={`flex items-center justify-center gap-2 p-3 rounded-lg ${
-                                    emailVerified ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
-                                }`}>
-                                    <Icon 
-                                        icon={emailVerified ? "material-symbols:check-circle" : "material-symbols:schedule"} 
-                                        className="w-5 h-5" 
+                                <div className={`flex items-center justify-center gap-2 p-3 rounded-lg ${emailVerified ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                                    }`}>
+                                    <Icon
+                                        icon={emailVerified ? "material-symbols:check-circle" : "material-symbols:schedule"}
+                                        className="w-5 h-5"
                                     />
                                     <span className="text-sm font-medium">
-                                        {emailVerified 
+                                        {emailVerified
                                             ? t("auth.emailVerified") || "Email Verified ✓"
                                             : t("auth.checkEmailLink") || "Check your email and click the verification link"}
                                     </span>
                                 </div>
 
                                 {/* Phone Verification Status */}
-                                <div className={`flex items-center justify-center gap-2 p-3 rounded-lg ${
-                                    phoneVerified ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
-                                }`}>
-                                    <Icon 
-                                        icon={phoneVerified ? "material-symbols:check-circle" : "material-symbols:schedule"} 
-                                        className="w-5 h-5" 
+                                <div className={`flex items-center justify-center gap-2 p-3 rounded-lg ${phoneVerified ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
+                                    }`}>
+                                    <Icon
+                                        icon={phoneVerified ? "material-symbols:check-circle" : "material-symbols:schedule"}
+                                        className="w-5 h-5"
                                     />
                                     <span className="text-sm font-medium">
-                                        {phoneVerified 
+                                        {phoneVerified
                                             ? t("auth.phoneVerified") || "Phone Verified ✓"
                                             : t("auth.enterOTPPhone") || "Enter OTP sent to your phone"}
                                     </span>
@@ -880,9 +886,9 @@ export default function GuestSignUpForm() {
             )}
 
             {/* Login Modal */}
-            <LoginModal 
-                isOpen={isLoginModalOpen} 
-                onClose={() => setIsLoginModalOpen(false)} 
+            <LoginModal
+                isOpen={isLoginModalOpen}
+                onClose={() => setIsLoginModalOpen(false)}
             />
 
             {/* Terms & Conditions and Privacy Policy Modals */}

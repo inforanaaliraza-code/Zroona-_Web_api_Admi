@@ -30,7 +30,8 @@ const GuestNavbar = ({ search, setSearch, setPage }) => {
     { label: t("header.homepage", "Homepage"), href: "/", icon: "lucide:home", requiresAuth: false, hideWhenLoggedIn: true },
     { label: t("header.events", "Events"), href: "/events", icon: "lucide:calendar-days", requiresAuth: false },
     { label: t("header.messaging", "Messaging"), href: "/messaging", icon: "lucide:message-circle", requiresAuth: true },
-    { label: t("header.myBooking", "My Booking"), href: "/myEvents", icon: "lucide:calendar", requiresAuth: true },
+    { label: t("header.booking", "Booking"), href: "/myEvents", icon: "lucide:calendar", requiresAuth: true },
+    { label: t("header.reviews", "Reviews"), href: "/my-reviews", icon: "lucide:star", requiresAuth: true },
     { label: t("header.profile", "Profile"), href: "/profile", icon: "lucide:user", requiresAuth: true },
   ];
 

@@ -66,7 +66,7 @@ const BasicInfoForm = ({ onSuccess }) => {
         })
         .email(t("auth.emailInvalid") || t("auth.invalidEmail") || "Invalid email"),
       // Basic identification
-      profile_image: Yup.string().required(t("signup.tab16") || "Profile image is required"),
+      profile_image: Yup.string(), // Optional - user can upload later
       first_name: Yup.string().required(t("signup.tab16") || "First name is required"),
       last_name: Yup.string().required(t("signup.tab16") || "Last name is required"),
       phone_number: Yup.string().required(t("signup.tab16") || "Phone number is required"),
@@ -81,13 +81,6 @@ const BasicInfoForm = ({ onSuccess }) => {
     }),
     onSubmit: async (values, { setFieldTouched, setFieldError }) => {
       // Pre-submit validation with specific error messages
-      if (!values.profile_image || values.profile_image.trim() === "") {
-        setFieldTouched("profile_image", true);
-        setFieldError("profile_image", t("signup.profileImageRequired") || "Profile image is required");
-        toast.error(t("signup.profileImageRequired") || "Please upload your profile image to continue");
-        return;
-      }
-
       if (!values.first_name || values.first_name.trim() === "") {
         setFieldTouched("first_name", true);
         toast.error(t("signup.firstNameRequired") || "Please enter your first name");
@@ -133,10 +126,14 @@ const BasicInfoForm = ({ onSuccess }) => {
           last_name: values.last_name,
           phone_number: values.phone_number,
           country_code: values.country_code,
-          profile_image: values.profile_image,
           city: values.city,
           registration_step: 1, // Step 1: Basic Info only
         };
+
+        // Only include profile_image if it exists
+        if (values.profile_image && values.profile_image.trim() !== "") {
+          registrationPayload.profile_image = values.profile_image;
+        }
 
         console.log("[BASIC-INFO] Creating organizer account...");
         
@@ -154,7 +151,6 @@ const BasicInfoForm = ({ onSuccess }) => {
           // Store basic info (without password) for Step 2 reference
           const basicInfoData = {
             organizer_id: organizerId,
-            profile_image: values.profile_image,
             first_name: values.first_name,
             last_name: values.last_name,
             email: values.email.toLowerCase().trim(),
@@ -163,6 +159,11 @@ const BasicInfoForm = ({ onSuccess }) => {
             city: values.city,
             registration_step: 1,
           };
+
+          // Only include profile_image if it exists
+          if (values.profile_image && values.profile_image.trim() !== "") {
+            basicInfoData.profile_image = values.profile_image;
+          }
           
           localStorage.setItem("organizer_basic_info", JSON.stringify(basicInfoData));
           
@@ -463,11 +464,9 @@ const BasicInfoForm = ({ onSuccess }) => {
                 {formik.errors.profile_image}
               </p>
             )}
-            {!formik.values.profile_image && (
-              <p className="mt-2 text-xs text-gray-500 text-center">
-                {t("signup.profileImageHint") || "Please upload your profile image to continue"}
-              </p>
-            )}
+            <p className="mt-2 text-xs text-gray-500 text-center">
+              {t("signup.profileImageOptional") || "Profile image is optional - you can upload it later"}
+            </p>
           </div>
 
           {/* Basic Information Section */}

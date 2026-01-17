@@ -70,8 +70,8 @@ export default function EmailLoginForm() {
             } catch (error) {
                 setLoading(false);
                 console.error("[LOGIN] Error:", error);
-                const errorMessage = error?.response?.data?.message || 
-                    error?.message || 
+                const errorMessage = error?.response?.data?.message ||
+                    error?.message ||
                     "An error occurred. Please try again.";
                 toast.error(errorMessage);
             }
@@ -144,8 +144,8 @@ export default function EmailLoginForm() {
             } catch (error) {
                 setLoading(false);
                 console.error("[LOGIN] Error:", error);
-                const errorMessage = error?.response?.data?.message || 
-                    error?.message || 
+                const errorMessage = error?.response?.data?.message ||
+                    error?.message ||
                     "An error occurred. Please try again.";
                 toast.error(errorMessage);
             }
@@ -235,7 +235,7 @@ export default function EmailLoginForm() {
                 {/* Animated background elements */}
                 <div className="absolute top-0 right-0 w-72 h-72 bg-purple-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                 <div className="absolute bottom-0 left-0 w-56 h-56 bg-orange-200/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-                
+
                 <div className="relative z-10">
                     {/* Logo with glow effect */}
                     <motion.div
@@ -293,7 +293,6 @@ export default function EmailLoginForm() {
                                     <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                                         <Icon icon="material-symbols:phone-android" className="w-4 h-4 text-[#a797cc]" />
                                         {t("auth.phoneNumber") || "Phone Number"} *
-                                        <span className="text-xs font-normal text-gray-500">(Pakistan & Saudi Arabia)</span>
                                     </label>
                                     <div className="relative group" style={{ zIndex: 10 }}>
                                         <div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/10 to-brand-orange/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -327,18 +326,18 @@ export default function EmailLoginForm() {
                                         {/* Animated background */}
                                         <div className="absolute inset-0 bg-gradient-to-r from-brand-orange/20 to-[#a797cc]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                                        
+
                                         {/* Button content */}
                                         <span className="relative z-10 flex items-center gap-2">
-                                                    {loading ? (
-                                                        <>
-                                                            <Loader />
-                                                            <span>Sending OTP...</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Icon icon="material-symbols:sms" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                                            <span>Send OTP</span>
+                                            {loading ? (
+                                                <>
+                                                    <Loader />
+                                                    <span>Sending OTP...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Icon icon="material-symbols:sms" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                                    <span>Send OTP</span>
                                                     <Icon icon="material-symbols:arrow-forward" className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                                                 </>
                                             )}
@@ -450,15 +449,15 @@ export default function EmailLoginForm() {
                                         {/* Animated background */}
                                         <div className="absolute inset-0 bg-gradient-to-r from-brand-orange/20 to-[#a797cc]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                                        
+
                                         {/* Button content */}
                                         <span className="relative z-10 flex items-center gap-2">
-                                                {loading ? (
-                                                    <>
-                                                        <Loader />
-                                                        <span>Verifying...</span>
-                                                    </>
-                                                ) : (
+                                            {loading ? (
+                                                <>
+                                                    <Loader />
+                                                    <span>Verifying...</span>
+                                                </>
+                                            ) : (
                                                 <>
                                                     <Icon icon="material-symbols:verified" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                                     <span>{t("OTP.tab6") || "Verify & Login"}</span>

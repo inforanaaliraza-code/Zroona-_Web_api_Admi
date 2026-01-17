@@ -92,7 +92,8 @@ export default function Settings({ title, buttonText }) {
             <div className="flex-grow bg-white h-max p-7 rounded-xl">
                 <h2 className="text-2xl font-semibold mb-6">{title || t('Settings') || 'Settings'}</h2>
 
-                {/* Max Event Capacity */}
+                {/* Max Event Capacity - Hidden */}
+                {/* 
                 <div className="mb-6">
                     <label className="block text-gray-700 text-sm font-semibold mb-2">
                         {t('Max Event Capacity') || 'Max Event Capacity'} <span className="text-red-500">*</span>
@@ -123,8 +124,25 @@ export default function Settings({ title, buttonText }) {
                         </p>
                     ) : null}
                 </div>
+                */}
 
-                {/* Submit Button */}
+                {/* Info message */}
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                    <div className="flex items-start gap-3">
+                        <Icon icon="lucide:info" className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="text-sm text-blue-800 font-medium">
+                                {t('settings.capacityInfo') || 'Event Capacity Settings'}
+                            </p>
+                            <p className="text-xs text-blue-600 mt-1">
+                                {t('settings.capacityInfoDesc') || 'Event capacity is now managed individually for each event you create. You can set specific capacity limits when creating or editing events.'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Submit Button - Hidden since there's no field to save */}
+                {/* 
                 <div className="mt-10 px-10">
                     <button 
                         type="button"
@@ -135,6 +153,7 @@ export default function Settings({ title, buttonText }) {
                         {loading ? <Loader color="#fff" height="30" /> : buttonText || t('Save') || 'Save Settings'}
                     </button>
                 </div>
+                */}
 
                 {/* Deactivate Account Section */}
                 <div className="mt-12 pt-8 border-t border-gray-200">

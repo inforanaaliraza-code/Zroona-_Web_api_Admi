@@ -56,6 +56,16 @@ const OrganizerSchema = new mongoose.Schema({
             }
         }
     ],
+    country_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'country',
+        default: null
+    },
+    city_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'city',
+        default: null
+    },
 
     group_category: [{
         type: mongoose.Schema.Types.ObjectId

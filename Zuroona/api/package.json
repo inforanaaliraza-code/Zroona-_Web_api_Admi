@@ -6,7 +6,8 @@
     "start": "node src/app.js",
     "dev": "node ./node_modules/nodemon/bin/nodemon.js src/app.js",
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
-    "build": "npm run lint"
+    "build": "npm run lint",
+    "seed:locations": "node src/scripts/seedCountriesAndCities.js"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +22,7 @@
     "cloudinary": "^2.8.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
     "dotenv": "^16.6.1",
     "express": "^4.21.0",
     "express-csurf": "^1.10.1",
@@ -29,6 +31,7 @@
     "faker": "^5.5.3",
     "firebase-admin": "^12.5.0",
     "helmet": "^8.0.0",
+    "iban": "^0.0.14",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",

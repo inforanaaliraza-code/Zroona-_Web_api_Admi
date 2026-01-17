@@ -3216,6 +3216,72 @@ const UserController = {
 			);
 		}
 	},
+	// Get all event reviews given by the current user
+	myEventReviews: async (req, res) => {
+		try {
+			const { userId } = req;
+			const { page = 1, limit = 10 } = req.query;
+
+			const skip = (Number(page) - 1) * Number(limit);
+
+			// Get event reviews by current user
+			const event_reviews = await ReviewService.AggregateService([
+				{
+					$match: {
+						user_id: new mongoose.Types.ObjectId(userId),
+					},
+				},
+				{
+					$lookup: {
+						from: "events",
+						localField: "event_id",
+						foreignField: "_id",
+						as: "event",
+					},
+				},
+				{
+					$unwind: "$event",
+				},
+				{
+					$lookup: {
+						from: "organizers",
+						localField: "event.organizer_id",
+						foreignField: "_id",
+						as: "organizer",
+					},
+				},
+				{
+					$unwind: {
+						path: "$organizer",
+						preserveNullAndEmptyArrays: true,
+					},
+				},
+				{
+					$sort: { createdAt: -1 }
+				},
+				{ $skip: skip },
+				{ $limit: Number(limit) },
+			]);
+
+			const count = await ReviewService.CountDocumentService({
+				user_id: userId,
+			});
+
+			return Response.ok(
+				res,
+				event_reviews,
+				200,
+				resp_messages(req.lang).fetched_data,
+				count
+			);
+		} catch (error) {
+			console.error("Get my event reviews error:", error);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages(req.lang).internalServerError
+			);
+		}
+	},
 	notificationList: async (req, res) => {
 		try {
 			const { userId } = req;

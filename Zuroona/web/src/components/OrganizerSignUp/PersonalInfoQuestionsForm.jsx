@@ -89,7 +89,25 @@ const PersonalInfoQuestionsForm = ({ onSuccess }) => {
       // Personal Info validation (Step 2) - only new fields
       gender: Yup.string().required(t("signup.tab16") || "Gender is required"),
       nationality: Yup.string().required(t("signup.tab16") || "Nationality is required"),
-      date_of_birth: Yup.string().required(t("signup.tab16") || "Date of birth is required"),
+      date_of_birth: Yup.date()
+        .required(t("signup.tab16") || "Date of birth is required")
+        .max(new Date(), t("auth.dobFuture") || "Date of birth cannot be in the future")
+        .test('min-age', t("auth.dobMinAge") || "You must be at least 18 years old", function(value) {
+          if (!value) return true;
+          const today = new Date();
+          const birthDate = new Date(value);
+          const age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          const dayDiff = today.getDate() - birthDate.getDate();
+          
+          // Check if user has reached 18th birthday
+          if (age > 18) return true;
+          if (age === 18) {
+            if (monthDiff > 0) return true;
+            if (monthDiff === 0 && dayDiff >= 0) return true;
+          }
+          return false;
+        }),
       city: Yup.string().required(t("signup.tab16") || "City is required"),
       bio: Yup.string().required(t("signup.tab16") || "Biography is required"),
       // Interview Questions validation

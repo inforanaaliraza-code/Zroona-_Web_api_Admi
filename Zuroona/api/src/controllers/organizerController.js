@@ -1015,6 +1015,19 @@ const organizerController = {
 									req.body.account_number || req.body.ifsc_code;
 			
 			if (registration_step == 3 || hasBankDetails) {
+				// Validate IBAN if provided
+				if (req.body.iban && req.body.iban.trim() !== '') {
+					const IBAN = require('iban');
+					const cleanedIban = req.body.iban.replace(/\s/g, '').toUpperCase();
+					if (!IBAN.isValid(cleanedIban)) {
+						return Response.errorResponse(
+							res,
+							"Invalid IBAN format",
+							400
+						);
+					}
+				}
+
 				const bankData = {
 					organizer_id: targetOrganizerId,
 					account_holder_name: req.body.account_holder_name || "",
