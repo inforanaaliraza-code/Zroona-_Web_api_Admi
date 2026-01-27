@@ -1,0 +1,17 @@
+[
+  {
+    "booking_id": "507f1f77bcf86cd799439011",
+    "user_id": "507f1f77bcf86cd799439012",
+    "event_id": "507f1f77bcf86cd799439013",
+    "organizer_id": "507f1f77bcf86cd799439014",
+    "amount": 100,
+    "refund_reason": "Event was cancelled by organizer",
+    "status": 0,
+    "admin_response": null,
+    "processed_by": null,
+    "processed_at": null,
+    "payment_refund_id": null,
+    "refund_transaction_id": null,
+    "refund_error": null
+  }
+]
