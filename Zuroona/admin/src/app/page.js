@@ -1,0 +1,16 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function Home() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Fast redirect - no delay
+    router.replace("/adminsa111xyz");
+  }, []);
+
+  // Minimal loader - instant redirect
+  return null;
+}

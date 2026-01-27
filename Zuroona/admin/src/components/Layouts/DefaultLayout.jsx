@@ -1,0 +1,51 @@
+"use client";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
+
+export default function DefaultLayout({ children, title, breadcrumbs, search, setSearch, setPage, searchPlaceholder }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isRTL } = useSelector((state) => state.language);
+
+  return (
+    <>
+      {/* <!-- ===== Page Wrapper Start ===== --> */}
+      <div className="flex min-h-screen bg-[#b0a0df] transition-all duration-300">
+        {/* <!-- ===== Sidebar Start ===== --> */}
+        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        {/* <!-- ===== Sidebar End ===== --> */}
+
+        {/* <!-- ===== Content Area Start ===== --> */}
+        <div className={`overflow-auto relative flex flex-1 flex-col px-4 sm:px-6 transition-all duration-300 ${
+          isRTL ? 'lg:mr-[320px]' : 'lg:ml-[320px]'
+        }`}>
+          {/* <!-- ===== Header Start ===== --> */}
+          <Header 
+            sidebarOpen={sidebarOpen} 
+            setSidebarOpen={setSidebarOpen} 
+            title={title} 
+            breadcrumbs={breadcrumbs} 
+            search={search}
+            setSearch={setSearch}
+            setPage={setPage}
+            searchPlaceholder={searchPlaceholder}
+          />
+          {/* <!-- ===== Header End ===== --> */}
+
+          {/* <!-- ===== Main Content Start ===== --> */}
+          <main className="flex-1 py-6 animate-fade-in">
+            <div className="mx-auto max-w-screen-2xl">
+              <div className="transition-all duration-300">
+                {children}
+              </div>
+            </div>
+          </main>
+          {/* <!-- ===== Main Content End ===== --> */}
+        </div>
+        {/* <!-- ===== Content Area End ===== --> */}
+      </div>
+      {/* <!-- ===== Page Wrapper End ===== --> */}
+    </>
+  );
+}
