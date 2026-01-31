@@ -66,6 +66,24 @@ const getEventForLabel = (eventFor, t) => {
 	}
 };
 
+// Permanent Event Categories List
+const PERMANENT_CATEGORIES = [
+	{ _id: 'cultural-traditional', name: 'Cultural & Traditional Events' },
+	{ _id: 'outdoor-adventure', name: 'Outdoor & Adventure' },
+	{ _id: 'educational-workshops', name: 'Educational & Workshops' },
+	{ _id: 'sports-fitness', name: 'Sports & Fitness' },
+	{ _id: 'music-arts', name: 'Music & Arts' },
+	{ _id: 'family-kids', name: 'Family & Kids Activities' },
+	{ _id: 'food-culinary', name: 'Food & Culinary Experiences' },
+	{ _id: 'wellness-relaxation', name: 'Wellness & Relaxation' },
+	{ _id: 'heritage-history', name: 'Heritage & History Tours' },
+	{ _id: 'nightlife-entertainment', name: 'Nightlife & Entertainment' },
+	{ _id: 'eco-sustainable', name: 'Eco & Sustainable Tourism' },
+	{ _id: 'business-networking', name: 'Business & Networking' },
+	{ _id: 'volunteering', name: 'Volunteering' },
+	{ _id: 'photography-sightseeing', name: 'Photography & Sightseeing' },
+];
+
 const EventsPage = () => {
 	const { t, i18n, ready } = useTranslation();
 	const { isRTL, textAlign, flexDirection, marginStart, marginEnd } = useRTL();
@@ -76,18 +94,11 @@ const EventsPage = () => {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [showFilters, setShowFilters] = useState(false);
 	const [filters, setFilters] = useState({
-		eventFor: {
-			everyone: false, // 3 (not selected by default - all filters optional)
-			male: false, // 1
-			female: false, // 2
-		},
+		categories: []
 	});
 
 	// Sorting options
 	const [sortBy, setSortBy] = useState("none"); // none, date-asc, date-desc
-
-	// Store user's gender for filter logic
-	const [userGender, setUserGender] = useState(null);
 
 	// Prevent hydration errors by ensuring component is mounted AND translations loaded
 	const [isMounted, setIsMounted] = useState(false);
@@ -100,108 +111,20 @@ const EventsPage = () => {
 		setI18nReady(true);
 	}, []);
 
-	/**
-	 * Set user gender when authenticated and validate it
-	 * According to requirements, only gender values "1" (male) and "2" (female) are supported
-	 * Value "3" (both) has been removed as per requirements
-	 */
-	useEffect(() => {
-		if (isAuthenticated && user) {
-			// Helper function to safely parse gender values to numbers
-			const parseGenderValue = (value) => {
-				if (value === undefined || value === null) return 3; // Default to everyone
-
-				// Handle string values
-				if (typeof value === "string") {
-					const trimmed = value.trim();
-					// Handle empty strings
-					if (trimmed === "") return 3;
-
-					// Try to parse as integer
-					const parsed = parseInt(trimmed);
-					if (
-						!isNaN(parsed) &&
-						(parsed === 1 || parsed === 2 || parsed === 3)
-					) {
-						return parsed;
-					}
-
-					// Handle decimal strings that might be passed
-					if (trimmed === "1.0" || trimmed === "1,0") return 1;
-					if (trimmed === "2.0" || trimmed === "2,0") return 2;
-					if (trimmed === "3.0" || trimmed === "3,0") return 3;
-				}
-
-				// Handle number values
-				if (typeof value === "number") {
-					if (value === 1 || value === 2 || value === 3) {
-						return value;
-					}
-
-					// Handle potential floating point values
-					if (Math.abs(value - 1) < 0.1) return 1;
-					if (Math.abs(value - 2) < 0.1) return 2;
-					if (Math.abs(value - 3) < 0.1) return 3;
-				}
-
-				// Default to everyone for any other case
-				return 3;
-			};
-
-			// Try to extract gender from different possible locations
-			let genderValue = null;
-
-			// Check direct gender property
-			if ("gender" in user) {
-				genderValue = parseGenderValue(user.gender);
-			}
-			// Check nested locations if gender not found or invalid
-			else if (user._doc && "gender" in user._doc) {
-				genderValue = parseGenderValue(user._doc.gender);
-			} else if (user.profile && "gender" in user.profile) {
-				genderValue = parseGenderValue(user.profile.gender);
-			} else {
-				// Check for alternative gender property names
-				const possibleGenderFields = [
-					"gender_id",
-					"genderId",
-					"sex",
-					"user_gender",
-				];
-				for (const field of possibleGenderFields) {
-					if (field in user) {
-						genderValue = parseGenderValue(user[field]);
-						break;
-					}
-				}
-			}
-
-			// Set gender state based on found and normalized value
-			if (genderValue) {
-				setUserGender(genderValue);
-			} else {
-				setUserGender(null);
-			}
-		} else {
-			setUserGender(null);
-		}
-	}, [isAuthenticated, user]);
-
-
 	useEffect(() => {
 		// Only fetch data if component is mounted and i18n is ready (or timeout reached)
 		if (!isMounted) return;
-		
+
 		const fetchData = async () => {
 			try {
 				setLoading(true);
 				console.log("[EVENTS] Fetching events...");
 				const eventsResponse = await GetUpcomingEvents();
 				console.log("[EVENTS] API Response:", eventsResponse);
-				
+
 				// Handle different response formats - API returns { status, message, data, total_count }
 				let eventsData = [];
-				
+
 				// Check if response is directly an array
 				if (Array.isArray(eventsResponse)) {
 					eventsData = eventsResponse;
@@ -224,7 +147,7 @@ const EventsPage = () => {
 						eventsData = eventsResponse.data.events;
 					}
 				}
-				
+
 				// If still no data, try to extract from any nested structure
 				if (eventsData.length === 0 && eventsResponse) {
 					// Try to find any array in the response
@@ -235,10 +158,10 @@ const EventsPage = () => {
 						}
 					}
 				}
-				
+
 				console.log("[EVENTS] Extracted events data:", eventsData);
 				console.log("[EVENTS] Number of events:", eventsData.length);
-				
+
 				// Map API response to frontend format
 				const mappedEvents = eventsData.map(event => ({
 					_id: event._id,
@@ -263,7 +186,7 @@ const EventsPage = () => {
 					user_booking: event.user_booking,
 					booked_event: event.user_booking, // For compatibility
 				}));
-				
+
 				// Use API events as-is (no dummy events)
 				setAllEvents(mappedEvents);
 				setEvents(mappedEvents);
@@ -276,7 +199,7 @@ const EventsPage = () => {
 					response: error.response?.data,
 					status: error.response?.status
 				});
-				
+
 				// On error, set empty array (no dummy events)
 				console.log("[EVENTS] Error occurred, setting empty array");
 				setAllEvents([]);
@@ -290,7 +213,7 @@ const EventsPage = () => {
 		fetchData();
 	}, [isMounted, isAuthenticated]);
 
-	// Filter and sort events based on search term, filters, sort option, and user gender
+	// Filter and sort events based on search term, filters, sort option
 	useEffect(() => {
 		if (!allEvents.length) return;
 
@@ -307,69 +230,16 @@ const EventsPage = () => {
 			);
 		}
 
-		// Apply gender filter from UI controls (if explicitly selected)
-		const { everyone, male, female } = filters.eventFor;
-
-		// Apply gender filters - only if at least one is selected from UI
-		if (everyone || male || female) {
-			// First apply strict gender validation rules based on authentication
-			// Ensure we don't show gender-specific events that don't match the user's gender
-			let validGenderFilters = {
-				everyone: everyone, // Always a valid filter option
-				male: male && isAuthenticated && userGender === 1,
-				female: female && isAuthenticated && userGender === 2,
-			};
-
+		// Apply category filter
+		if (filters.categories && filters.categories.length > 0) {
 			filteredEvents = filteredEvents.filter((event) => {
-				// Event for value: 1 = male only, 2 = female only, 3 = everyone
+				// Check if event category matches any selected category
+				const eventCategory = event.category_name; // This is the ID string (e.g. 'music-arts')
 
-				// Default to "all genders" (3) if event_for is not specified
-				const eventFor = event.event_for || 3;
+				if (!eventCategory) return false;
 
-				// Convert to number for consistent comparison
-				const eventForNum =
-					typeof eventFor === "string"
-						? parseInt(eventFor)
-						: eventFor;
-
-				if (
-					validGenderFilters.everyone &&
-					(eventForNum === 3 || !event.event_for)
-				)
-					return true;
-				if (validGenderFilters.male && eventForNum === 1) return true;
-				if (validGenderFilters.female && eventForNum === 2) return true;
-				return false;
+				return filters.categories.includes(eventCategory);
 			});
-		}
-		// If no explicit filter is selected, filter based on authentication and gender
-		else {
-			// Apply default gender filtering based on authentication status AND valid gender
-			if (isAuthenticated && userGender) {
-				// Only filter by gender if user has a valid gender value set
-				const userGenderValue = parseInt(userGender);
-
-				// Show events matching user's gender or events for "all genders"
-				filteredEvents = filteredEvents.filter((event) => {
-					// Default to "all genders" (3) if event_for is not specified
-					const eventFor = event.event_for || 3;
-
-					// Convert event_for to number for consistent comparison
-					const eventForNum =
-						typeof eventFor === "string"
-							? parseInt(eventFor)
-							: eventFor;
-
-					// Show if event is specifically for user's gender OR is for everyone (3)
-					return eventForNum === userGenderValue || eventForNum === 3;
-				});
-			} else {
-				// For authenticated users without gender OR non-authenticated users
-				// Show ALL events (don't filter by gender)
-				// This allows users to see all events even if gender is not set
-				// The API will handle any necessary filtering
-				console.log("[EVENTS] No gender filter applied - showing all events");
-			}
 		}
 
 		// Apply sorting
@@ -388,23 +258,8 @@ const EventsPage = () => {
 		}
 
 		setEvents(filteredEvents);
-	}, [searchTerm, filters, sortBy, allEvents, isAuthenticated, userGender]);
+	}, [searchTerm, filters, sortBy, allEvents]);
 
-	// Reset gender filters when authentication state changes
-	useEffect(() => {
-		// Reset gender-specific filters when user logs out or gender changes
-		setFilters((prev) => ({
-			...prev,
-			eventFor: {
-				...prev.eventFor,
-				// Keep "everyone" filter as is
-				// Reset male/female based on auth state and gender
-				male: prev.eventFor.male && isAuthenticated && userGender === 1,
-				female:
-					prev.eventFor.female && isAuthenticated && userGender === 2,
-			},
-		}));
-	}, [isAuthenticated, userGender]);
 
 	const handleSortChange = (value) => {
 		setSortBy(value);
@@ -418,13 +273,9 @@ const EventsPage = () => {
 		// Clear search term
 		setSearchTerm("");
 
-		// Reset filters to default - make all gender filters optional (none selected)
+		// Reset filters to default
 		setFilters({
-			eventFor: {
-				everyone: false,
-				male: false,
-				female: false,
-			},
+			categories: []
 		});
 
 		// Reset sorting
@@ -432,6 +283,28 @@ const EventsPage = () => {
 
 		// Reset to all events immediately
 		setEvents(allEvents);
+	};
+
+	const toggleCategoryFilter = (categoryId) => {
+		setFilters(prev => {
+			const currentCategories = prev.categories || [];
+			// Check if already selected
+			const isSelected = currentCategories.includes(categoryId);
+
+			if (isSelected) {
+				// Remove id
+				return {
+					...prev,
+					categories: currentCategories.filter(id => id !== categoryId)
+				};
+			} else {
+				// Add id
+				return {
+					...prev,
+					categories: [...currentCategories, categoryId]
+				};
+			}
+		});
 	};
 
 	// Show loading state during SSR/hydration to prevent mismatch
@@ -454,7 +327,7 @@ const EventsPage = () => {
 			</div>
 		);
 	}
-	
+
 	// Show loading spinner if data is still loading
 	if (loading) {
 		return (
@@ -478,7 +351,7 @@ const EventsPage = () => {
 				<p className="mb-6 text-gray-600">
 					{getTranslation(t, "events.discoverEvents", "Discover and book amazing events happening in your city")}
 				</p>
-				
+
 				{/* Booking Flow Guide - Show for authenticated users */}
 				{isAuthenticated && (
 					<div className="mb-8 bg-gradient-to-r from-[#a797cc]/10 to-orange-50 rounded-xl p-6 border border-[#a797cc]/20">
@@ -552,31 +425,29 @@ const EventsPage = () => {
 								className="h-5 w-5 text-[#a797cc]"
 							/>
 						</div>
-					<Input
-						type="text"
-						placeholder={getTranslation(t, "events.searchEvents", "Search events...")}
-						className={`${isRTL ? "pr-10 pl-4" : "pl-10 pr-4"} py-2.5 w-full rounded-lg border-2 border-gray-200 bg-gray-50 shadow-sm focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-700 font-medium ${textAlign}`}
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-					/>
+						<Input
+							type="text"
+							placeholder={getTranslation(t, "events.searchEvents", "Search events...")}
+							className={`${isRTL ? "pr-10 pl-4" : "pl-10 pr-4"} py-2.5 w-full rounded-lg border-2 border-gray-200 bg-gray-50 shadow-sm focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-700 font-medium ${textAlign}`}
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+						/>
 					</div>
 					<Button
 						onClick={toggleFilter}
 						variant="outline"
-						className={`flex items-center gap-2 font-semibold border-2 py-2.5 ${
-							showFilters
-								? "bg-[#a797cc]/10 text-[#a797cc] border-[#a797cc]"
-								: "border-gray-300 bg-gray-50 text-gray-800 shadow-sm hover:bg-[#a797cc]/5 hover:border-[#a797cc]/50 hover:text-[#a797cc]"
-						}`}
+						className={`flex items-center gap-2 font-semibold border-2 py-2.5 ${showFilters
+							? "bg-[#a797cc]/10 text-[#a797cc] border-[#a797cc]"
+							: "border-gray-300 bg-gray-50 text-gray-800 shadow-sm hover:bg-[#a797cc]/5 hover:border-[#a797cc]/50 hover:text-[#a797cc]"
+							}`}
 					>
 						<Icon
 							icon="lucide:filter"
-							className={`h-5 w-5 ${
-								showFilters ? "text-[#a797cc]" : "text-gray-700"
-							}`}
-					/>
-					{getTranslation(t, "events.filter", "Filter")}
-				</Button>
+							className={`h-5 w-5 ${showFilters ? "text-[#a797cc]" : "text-gray-700"
+								}`}
+						/>
+						{getTranslation(t, "events.filter", "Filter")}
+					</Button>
 				</div>
 
 				{/* Filter Panel */}
@@ -607,222 +478,38 @@ const EventsPage = () => {
 								</Button>
 							</div>
 
-							<div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-								{/* Gender Filter */}
+							<div className="space-y-6">
+								{/* Category Filter */}
 								<div className="p-4 space-y-4 bg-white border border-gray-200 rounded-lg shadow-sm">
 									<h4 className={`flex items-center pb-2 font-semibold text-gray-800 border-b border-gray-200 ${flexDirection}`}>
 										<Icon
-											icon="lucide:users"
+											icon="lucide:tag"
 											className={`${marginEnd(2)} h-4 w-4 text-[#a797cc]`}
 										/>
-										{getTranslation(t, "events.audience", "Audience")}
+										{getTranslation(t, "events.categories", "Categories")}
 									</h4>
 
-									{/* Gender Filter Information Alert */}
-									{!isAuthenticated && (
-										<div className="p-2 mb-2 border border-yellow-200 rounded-md bg-yellow-50">
-											<div className={`flex items-start ${flexDirection}`}>
-												<Icon
-													icon="lucide:alert-triangle"
-													className={`h-4 w-4 text-yellow-600 mt-0.5 ${marginEnd(2)} flex-shrink-0`}
+									<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+										{PERMANENT_CATEGORIES.map((category) => (
+											<div
+												key={category._id}
+												className={`flex items-center space-x-2 p-2 rounded-md transition-colors hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-200 ${filters.categories.includes(category._id) ? 'bg-[#a797cc]/5 border-[#a797cc]/30' : ''
+													}`}
+												onClick={() => toggleCategoryFilter(category._id)}
+											>
+												<Checkbox
+													id={`filter-cat-${category._id}`}
+													checked={filters.categories.includes(category._id)}
+													onCheckedChange={() => toggleCategoryFilter(category._id)}
+													className="text-[#a797cc] border-2 border-gray-300 h-5 w-5 pointer-events-none"
 												/>
-												<p className={`text-xs text-yellow-700 ${textAlign}`}>
-													{getTranslation(t, "events.genderFilterLoginMessage", "Please login to filter events by gender.")}{" "}
-													<Link
-														href="/login"
-														className="text-[#a797cc] underline font-medium"
-													>
-														{getTranslation(t, "events.loginNow", "Login Now")}
-													</Link>
-												</p>
+												<div
+													className={`flex-1 font-medium text-gray-700 pointer-events-none ${flexDirection}`}
+												>
+													{category.name}
+												</div>
 											</div>
-										</div>
-									)}
-
-									{/* Alert for authenticated users with no gender set - Only show for guests, not hosts */}
-									{isAuthenticated && user && !userGender && user.role !== 2 && (
-										<div className="p-2 mb-2 border border-red-200 rounded-md bg-red-50">
-											<div className={`flex items-start ${flexDirection}`}>
-												<Icon
-													icon="lucide:alert-circle"
-													className={`h-4 w-4 text-red-600 mt-0.5 ${marginEnd(2)} flex-shrink-0`}
-												/>
-												<p className={`text-xs text-red-700 ${textAlign}`}>
-													{getTranslation(t, "events.noGenderProfile", "Please update your profile with your gender to filter events.")}{" "}
-													<Link
-														href="/profile"
-														className="text-[#a797cc] underline font-medium"
-													>
-														{getTranslation(t, "events.updateProfile", "Update Profile")}
-													</Link>
-												</p>
-											</div>
-										</div>
-									)}
-
-									<div className="p-1 space-y-3">
-										{/* Everyone filter - always shown and enabled */}
-										<div className={`flex items-center p-2 ${flexDirection} transition-colors rounded-md hover:bg-gray-50`}>
-											<Checkbox
-												id="filter-everyone"
-												checked={
-													filters.eventFor.everyone
-												}
-												onCheckedChange={(checked) => {
-													setFilters((prev) => ({
-														...prev,
-														eventFor: {
-															...prev.eventFor,
-															everyone: checked,
-														},
-													}));
-												}}
-												className="text-[#a797cc] border-2 border-gray-300 h-5 w-5"
-											/>
-											<Label
-												htmlFor="filter-everyone"
-												className={`flex items-center font-medium text-gray-700 cursor-pointer ${flexDirection}`}
-											>
-												<span className={`${marginEnd(1.5)} text-lg`}>
-													👥
-												</span>{" "}
-												{getTranslation(t, "events.allWelcome", "All Welcome")}
-											</Label>
-										</div>
-
-										{/* Male filter - conditionally enabled */}
-										<div
-											className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
-												// Disable for non-authenticated users or non-male users
-												isAuthenticated &&
-												userGender === 1
-													? "hover:bg-gray-50"
-													: "opacity-60 cursor-not-allowed"
-											}`}
-										>
-											<Checkbox
-												id="filter-men"
-												checked={filters.eventFor.male}
-												disabled={
-													!(
-														isAuthenticated &&
-														userGender === 1
-													)
-												}
-												onCheckedChange={(checked) => {
-													if (
-														isAuthenticated &&
-														userGender === 1
-													) {
-														setFilters((prev) => ({
-															...prev,
-															eventFor: {
-																...prev.eventFor,
-																male: checked,
-															},
-														}));
-													}
-												}}
-												className="text-[#a797cc] border-2 border-gray-300 h-5 w-5 disabled:opacity-50"
-											/>
-											<Label
-												htmlFor="filter-men"
-												className={`flex items-center font-medium ${
-													isAuthenticated &&
-													userGender === 1
-														? "cursor-pointer text-gray-700"
-														: "cursor-not-allowed text-gray-500"
-												}`}
-											>
-												<span className="mr-1.5 text-lg">
-													👨
-												</span>{" "}
-												{getTranslation(t, "events.menOnly", "Men Only")}
-												{!isAuthenticated && (
-													<span className="ml-2 text-xs font-normal text-red-500">
-														(
-														{getTranslation(t, "events.loginRequired", "Login Required")}
-														)
-													</span>
-												)}
-												{isAuthenticated &&
-													!userGender && (
-														<span className="ml-2 text-xs font-normal text-red-500">
-															(
-															{getTranslation(t, "events.genderRequired", "Gender Required")}
-															)
-														</span>
-													)}
-											</Label>
-										</div>
-
-										{/* Female filter - conditionally enabled */}
-										<div
-											className={`flex items-center space-x-2 p-2 rounded-md transition-colors ${
-												// Disable for non-authenticated users or non-female users
-												isAuthenticated &&
-												userGender === 2
-													? "hover:bg-gray-50"
-													: "opacity-60 cursor-not-allowed"
-											}`}
-										>
-											<Checkbox
-												id="filter-women"
-												checked={
-													filters.eventFor.female
-												}
-												disabled={
-													!(
-														isAuthenticated &&
-														userGender === 2
-													)
-												}
-												onCheckedChange={(checked) => {
-													if (
-														isAuthenticated &&
-														userGender === 2
-													) {
-														setFilters((prev) => ({
-															...prev,
-															eventFor: {
-																...prev.eventFor,
-																female: checked,
-															},
-														}));
-													}
-												}}
-												className="text-[#a797cc] border-2 border-gray-300 h-5 w-5 disabled:opacity-50"
-											/>
-											<Label
-												htmlFor="filter-women"
-												className={`flex items-center font-medium ${
-													isAuthenticated &&
-													userGender === 2
-														? "cursor-pointer text-gray-700"
-														: "cursor-not-allowed text-gray-500"
-												}`}
-											>
-												<span className="mr-1.5 text-lg">
-													👩
-												</span>{" "}
-												{getTranslation(t, "events.womenOnly", "Women Only")}
-												{!isAuthenticated && (
-													<span className="ml-2 text-xs font-normal text-red-500">
-														(
-														{getTranslation(t, "events.loginRequired", "Login Required")}
-														)
-													</span>
-												)}
-												{isAuthenticated &&
-													!userGender && (
-														<span className="ml-2 text-xs font-normal text-red-500">
-															(
-															{getTranslation(t, "events.genderRequired", "Gender Required")}
-															)
-														</span>
-													)}
-											</Label>
-										</div>
+										))}
 									</div>
 								</div>
 
@@ -832,9 +519,9 @@ const EventsPage = () => {
 										<Icon
 											icon="lucide:sort"
 											className="mr-2 h-4 w-4 text-[#a797cc]"
-									/>
-									{getTranslation(t, "events.sortBy", "Sort By")}
-								</h4>
+										/>
+										{getTranslation(t, "events.sortBy", "Sort By")}
+									</h4>
 									<div className="p-1 space-y-3">
 										{/* Date: Newest to Oldest */}
 										<div className="flex items-center p-2 space-x-2 transition-colors rounded-md hover:bg-gray-50">
@@ -909,25 +596,25 @@ const EventsPage = () => {
 						/>
 						<span className="text-[#a797cc] font-bold text-lg mr-1">
 							{events.length}
-					</span>{" "}
-					{getTranslation(t, "events.eventsFound", "events found")}
-				</div>
+						</span>{" "}
+						{getTranslation(t, "events.eventsFound", "events found")}
+					</div>
 					{(searchTerm ||
-						Object.values(filters.eventFor).some((v) => v) ||
+						(filters.categories && filters.categories.length > 0) ||
 						sortBy !== "none") && (
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={clearFilters}
-							className="text-sm text-gray-800 hover:text-[#a797cc] border border-gray-300 hover:border-[#a797cc] hover:bg-[#a797cc]/5 font-semibold"
-						>
-							<Icon
-								icon="lucide:x"
-								className="h-3.5 w-3.5 mr-1 text-gray-700"
-							/>
-							{getTranslation(t, "events.clearFilters", "Clear Filters")}
-						</Button>
-					)}
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={clearFilters}
+								className="text-sm text-gray-800 hover:text-[#a797cc] border border-gray-300 hover:border-[#a797cc] hover:bg-[#a797cc]/5 font-semibold"
+							>
+								<Icon
+									icon="lucide:x"
+									className="h-3.5 w-3.5 mr-1 text-gray-700"
+								/>
+								{getTranslation(t, "events.clearFilters", "Clear Filters")}
+							</Button>
+						)}
 				</div>
 
 				{loading ? (
@@ -940,18 +627,18 @@ const EventsPage = () => {
 							icon="lucide:calendar-x"
 							className="w-16 h-16 mb-4 text-gray-300"
 						/>
-					<h3 className="mb-2 text-xl font-semibold text-gray-700">
-						{getTranslation(t, "events.noEventsFound", "No events found matching your criteria")}
-					</h3>
-					<p className="max-w-md mb-6 text-gray-500">
-						{getTranslation(t, "events.tryAdjustingFilters", "Try adjusting your filters or search terms")}
-					</p>
-					<Button
-						onClick={clearFilters}
-						className="bg-[#a797cc] hover:bg-[#e06b0b] text-white font-semibold px-6 py-2.5 shadow-md"
-					>
-						{getTranslation(t, "events.showAllEvents", "Show All Events")}
-					</Button>
+						<h3 className="mb-2 text-xl font-semibold text-gray-700">
+							{getTranslation(t, "events.noEventsFound", "No events found matching your criteria")}
+						</h3>
+						<p className="max-w-md mb-6 text-gray-500">
+							{getTranslation(t, "events.tryAdjustingFilters", "Try adjusting your filters or search terms")}
+						</p>
+						<Button
+							onClick={clearFilters}
+							className="bg-[#a797cc] hover:bg-[#e06b0b] text-white font-semibold px-6 py-2.5 shadow-md"
+						>
+							{getTranslation(t, "events.showAllEvents", "Show All Events")}
+						</Button>
 					</div>
 				) : (
 					<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -959,7 +646,7 @@ const EventsPage = () => {
 							// Get event for label - safe version that always returns proper translation
 							let eventForIcon = "👥";
 							let eventForLabel = "All Welcome";
-							
+
 							if (event.event_for === 1) {
 								eventForIcon = "👨";
 								eventForLabel = getTranslation(t, "events.menOnly", "Men Only");
@@ -970,7 +657,7 @@ const EventsPage = () => {
 								eventForIcon = "👥";
 								eventForLabel = getTranslation(t, "events.allWelcome", "All Welcome");
 							}
-							
+
 							return (
 								<MotionDiv
 									key={event._id}
@@ -1012,44 +699,42 @@ const EventsPage = () => {
 												{/* Badges */}
 												<div className="absolute flex flex-wrap gap-2 top-4 left-4">
 													<Badge
-														className={`bg-white/95 font-medium px-3 py-1 rounded-full text-sm shadow-lg backdrop-blur-sm border border-white/20 ${
-															event.event_for ===
+														className={`bg-white/95 font-medium px-3 py-1 rounded-full text-sm shadow-lg backdrop-blur-sm border border-white/20 ${event.event_for ===
 															1
-																? "text-blue-600"
-																: event.event_for ===
-																  2
+															? "text-blue-600"
+															: event.event_for ===
+																2
 																? "text-pink-600"
 																: "text-purple-600"
-														}`}
+															}`}
 													>
 														{eventForIcon}{" "}
 														{eventForLabel}
 													</Badge>
-													
+
 													{/* Booking Status Badge - Show if user has booked this event */}
 													{isAuthenticated && event.book_status !== undefined && (
 														<Badge
-															className={`bg-white/95 font-medium px-3 py-1 rounded-full text-sm shadow-lg backdrop-blur-sm border border-white/20 ${
-																event.book_status === 2 && event.payment_status === 1
-																	? "bg-green-500/90 text-white"
-																	: event.book_status === 2 && event.payment_status === 0
+															className={`bg-white/95 font-medium px-3 py-1 rounded-full text-sm shadow-lg backdrop-blur-sm border border-white/20 ${event.book_status === 2 && event.payment_status === 1
+																? "bg-green-500/90 text-white"
+																: event.book_status === 2 && event.payment_status === 0
 																	? "bg-orange-500/90 text-white"
 																	: event.book_status === 1 || event.book_status === 0
-																	? "bg-yellow-500/90 text-white"
-																	: event.book_status === 3
-																	? "bg-red-500/90 text-white"
-																	: "bg-gray-500/90 text-white"
-															}`}
+																		? "bg-yellow-500/90 text-white"
+																		: event.book_status === 3
+																			? "bg-red-500/90 text-white"
+																			: "bg-gray-500/90 text-white"
+																}`}
 														>
 															{event.book_status === 2 && event.payment_status === 1
 																? "✓ Paid"
 																: event.book_status === 2 && event.payment_status === 0
-																? "💳 Pay Now"
-																: event.book_status === 1 || event.book_status === 0
-																? "⏳ Pending"
-																: event.book_status === 3
-																? "✗ Rejected"
-																: ""}
+																	? "💳 Pay Now"
+																	: event.book_status === 1 || event.book_status === 0
+																		? "⏳ Pending"
+																		: event.book_status === 3
+																			? "✗ Rejected"
+																			: ""}
 														</Badge>
 													)}
 												</div>
@@ -1120,7 +805,7 @@ const EventsPage = () => {
 														</div>
 													</div>
 												</div>
-												
+
 												{/* Book Now Button - Show different states based on booking status */}
 												<div className="mt-4" onClick={(e) => e.stopPropagation()}>
 													{isAuthenticated && event.book_status !== undefined ? (
@@ -1137,35 +822,34 @@ const EventsPage = () => {
 																	window.location.href = `/myEvents`;
 																}
 															}}
-															className={`w-full font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${flexDirection} ${
-																event.book_status === 2 && event.payment_status === 1
-																	? "bg-green-600 hover:bg-green-700 text-white"
-																	: event.book_status === 2 && event.payment_status === 0
+															className={`w-full font-semibold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${flexDirection} ${event.book_status === 2 && event.payment_status === 1
+																? "bg-green-600 hover:bg-green-700 text-white"
+																: event.book_status === 2 && event.payment_status === 0
 																	? "bg-orange-600 hover:bg-orange-700 text-white"
 																	: event.book_status === 1 || event.book_status === 0
-																	? "bg-yellow-600 hover:bg-yellow-700 text-white"
-																	: "bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#7a9069] text-white"
-															}`}
+																		? "bg-yellow-600 hover:bg-yellow-700 text-white"
+																		: "bg-gradient-to-r from-[#a797cc] to-[#8ba179] hover:from-[#8ba179] hover:to-[#7a9069] text-white"
+																}`}
 														>
 															<Icon
 																icon={
 																	event.book_status === 2 && event.payment_status === 1
 																		? "lucide:check-circle-2"
 																		: event.book_status === 2 && event.payment_status === 0
-																		? "lucide:credit-card"
-																		: event.book_status === 1 || event.book_status === 0
-																		? "lucide:clock"
-																		: "lucide:calendar-plus"
+																			? "lucide:credit-card"
+																			: event.book_status === 1 || event.book_status === 0
+																				? "lucide:clock"
+																				: "lucide:calendar-plus"
 																}
 																className="h-5 w-5"
 															/>
 															{event.book_status === 2 && event.payment_status === 1
 																? getTranslation(t, "events.viewBooking", "View Booking")
 																: event.book_status === 2 && event.payment_status === 0
-																? getTranslation(t, "events.payNow", "Pay Now")
-																: event.book_status === 1 || event.book_status === 0
-																? getTranslation(t, "events.pendingApproval", "Pending Approval")
-																: getTranslation(t, "card.tab10", getTranslation(t, "card.tab16", "Book Now"))}
+																	? getTranslation(t, "events.payNow", "Pay Now")
+																	: event.book_status === 1 || event.book_status === 0
+																		? getTranslation(t, "events.pendingApproval", "Pending Approval")
+																		: getTranslation(t, "card.tab10", getTranslation(t, "card.tab16", "Book Now"))}
 														</Button>
 													) : (
 														// User hasn't booked - show Book Now button
@@ -1200,24 +884,24 @@ const EventsPage = () => {
 							icon="lucide:search-x"
 							className="w-16 h-16 mx-auto mb-4 text-gray-400"
 						/>
-					<h3 className="mb-2 text-xl font-semibold text-gray-900">
-						{getTranslation(t, "events.noEventsFound", "No events found matching your criteria")}
-					</h3>
-					<p className="text-gray-600">
-						{getTranslation(t, "events.tryAdjustingFilters", "Try adjusting your filters or search terms")}
-					</p>
-					<Button
-						variant="outline"
-						className="mt-4 border-[#a797cc] text-[#a797cc] hover:bg-[#a797cc]/10"
-						onClick={() => {
-							// Refresh events
-							GetUpcomingEvents().then((response) => {
-								setEvents(response.data || []);
-							});
-						}}
-					>
-						{getTranslation(t, "events.showAllEvents", "Show All Events")}
-					</Button>
+						<h3 className="mb-2 text-xl font-semibold text-gray-900">
+							{getTranslation(t, "events.noEventsFound", "No events found matching your criteria")}
+						</h3>
+						<p className="text-gray-600">
+							{getTranslation(t, "events.tryAdjustingFilters", "Try adjusting your filters or search terms")}
+						</p>
+						<Button
+							variant="outline"
+							className="mt-4 border-[#a797cc] text-[#a797cc] hover:bg-[#a797cc]/10"
+							onClick={() => {
+								// Refresh events
+								GetUpcomingEvents().then((response) => {
+									setEvents(response.data || []);
+								});
+							}}
+						>
+							{getTranslation(t, "events.showAllEvents", "Show All Events")}
+						</Button>
 					</div>
 				)}
 			</div>
