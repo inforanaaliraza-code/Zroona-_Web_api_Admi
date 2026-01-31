@@ -363,8 +363,8 @@ export default function PaymentModal({
                             : 'bg-gray-100'
                             }`}>
                             <Icon
-                              icon="lucide:credit-card"
-                              className={`w-7 h-7 ${selectedMethod === 'card' ? 'text-white' : 'text-gray-600'
+                              icon="fa6-solid:credit-card"
+                              className={`w-7 h-7 ${selectedMethod === 'card' ? 'text-white' : 'text-gray-900'
                                 }`}
                             />
                           </div>
@@ -419,14 +419,17 @@ export default function PaymentModal({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-12 h-8 bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white text-xs font-bold">
-                    VISA
+                  <div className="h-8 bg-white border border-gray-100 rounded px-2 flex items-center justify-center shadow-sm">
+                    <Icon icon="logos:visa" className="w-8 h-auto" />
                   </div>
-                  <div className="w-12 h-8 bg-gradient-to-r from-red-500 to-orange-600 rounded-lg flex items-center justify-center text-white text-xs font-bold">
-                    MC
+                  <div className="h-8 bg-white border border-gray-100 rounded px-2 flex items-center justify-center shadow-sm">
+                    <Icon icon="logos:mastercard" className="w-8 h-auto" />
                   </div>
-                  <div className="w-12 h-8 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg flex items-center justify-center text-white text-xs font-bold">
-                    MADA
+                  <div className="h-8 bg-white border border-gray-100 rounded px-2 flex items-center justify-center shadow-sm">
+                    <span className="text-[10px] font-black tracking-tighter text-[#005098]">mada</span>
+                  </div>
+                  <div className="h-8 bg-white border border-gray-100 rounded px-2 flex items-center justify-center shadow-sm">
+                    <Icon icon="logos:amex" className="w-8 h-auto" />
                   </div>
                 </div>
               </div>
