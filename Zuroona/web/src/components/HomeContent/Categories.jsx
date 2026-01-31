@@ -18,13 +18,13 @@ export default function Categories() {
             <div className="absolute inset-0 opacity-5">
                 <div className="absolute top-20 right-20 w-32 h-32">
                     <svg viewBox="0 0 100 100" className="w-full h-full text-[#a797cc]">
-                        <path d="M10 50 L40 20 L70 50 L40 80 Z" fill="currentColor" opacity="0.3"/>
-                        <circle cx="50" cy="50" r="3" fill="currentColor"/>
+                        <path d="M10 50 L40 20 L70 50 L40 80 Z" fill="currentColor" opacity="0.3" />
+                        <circle cx="50" cy="50" r="3" fill="currentColor" />
                     </svg>
                 </div>
                 <div className="absolute bottom-32 left-16 w-24 h-24 opacity-30">
                     <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-[#a797cc]">
-                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 2"/>
+                        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 2" />
                     </svg>
                 </div>
             </div>
@@ -43,7 +43,7 @@ export default function Categories() {
                 {/* Categories Grid */}
                 <div className="flex flex-wrap justify-center gap-6">
                     {currentCategories.map((category, index) => (
-                        <div 
+                        <div
                             key={index}
                             className="group w-[calc(50%-12px)] sm:w-[calc(33.333%-16px)] md:w-[calc(33.333%-16px)] lg:w-[180px]"
                         >
@@ -55,7 +55,7 @@ export default function Categories() {
                                         <div className="w-20 h-20 bg-[#a797cc] rounded-2xl 
                                             flex items-center justify-center transform transition-all duration-500 
                                             group-hover:scale-110 group-hover:rotate-3">
-                                            <Icon 
+                                            <Icon
                                                 icon={category.icon}
                                                 className="w-10 h-10 text-white"
                                             />

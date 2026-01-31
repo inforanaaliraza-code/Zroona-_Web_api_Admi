@@ -452,7 +452,25 @@ export const putRawData = async (url = "", data = {}) => {
     return response.data;
   } catch (error) {
     // toast.error(error.response.data);
-    return error.response.data;
+    if (error.response) {
+      return error.response.data;
+    } else if (error.request) {
+      // Network error - server not reachable
+      return {
+        status: 0,
+        code: 500,
+        message: "Network error: Unable to reach server",
+        error: "Network error"
+      };
+    } else {
+      // Request setup error
+      return {
+        status: 0,
+        code: 500,
+        message: error.message || "An error occurred",
+        error: error.message
+      };
+    }
   }
 };
 

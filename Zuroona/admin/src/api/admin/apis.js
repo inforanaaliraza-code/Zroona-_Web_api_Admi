@@ -87,7 +87,7 @@ export const GetCurrentAdminApi = async () => {
 
 // Admin notifications
 export const GetAdminNotificationsApi = async (payload) => {
-  return getData("admin/notifications", payload).then((data) => {
+  return getData("notifications", payload).then((data) => {
     return data;
   });
 };

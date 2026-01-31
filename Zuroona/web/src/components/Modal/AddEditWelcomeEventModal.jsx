@@ -11,7 +11,7 @@ import { AddEventListApi, EditEventListApi, UploadFileApi } from '@/app/api/sett
 import * as Yup from "yup";
 import { toast } from 'react-toastify';
 import Loader from '../Loader/Loader';
-import SelectDate from '../common/SelectDate';
+import { DatePickerTime } from '@/components/ui/date-picker-time';
 import { getCategoryEventList } from '@/redux/slices/CategoryEventList';
 import { getEventList } from '@/redux/slices/EventList';
 import { useTranslation } from 'react-i18next';
@@ -313,15 +313,22 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
 
                 {/* Calendar */}
                 <div>
-                    <SelectDate
-                        selectedDate={formik.values.event_date}
-                        onDateChange={(date) => formik.setFieldValue("event_date", date)}
+                    <DatePickerTime
+                        date={formik.values.event_date}
+                        onDateChange={(date) => {
+                            formik.setFieldValue("event_date", date);
+                            formik.setFieldTouched("event_date", true);
+                        }}
+                        dateLabel="Event Date"
+                        dateId="event_date"
+                        showDate={true}
+                        showTime={false}
+                        fullWidth={true}
+                        minDate={new Date().toISOString().split('T')[0]}
+                        dateError={formik.touched.event_date && !!formik.errors.event_date}
+                        dateErrorMessage={formik.errors.event_date}
+                        className="w-full"
                     />
-                    {formik.touched.event_date && formik.errors.event_date ? (
-                        <p className="text-red-500 text-xs mt-1 font-semibold">
-                            {formik.errors.event_date}
-                        </p>
-                    ) : null}
                 </div>
 
                 {/* Time and Event Details */}

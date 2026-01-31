@@ -10,6 +10,7 @@ import Cookies from "js-cookie";
 import { TOKEN_NAME } from "@/until";
 import { SignUpApi, OrganizerSignUpApi } from "@/app/api/setting";
 import { NumberInput } from "@/components/ui/number-input";
+import { DatePickerTime } from "@/components/ui/date-picker-time";
 import ProfileImageUpload from "../ProfileImageUpload/ProfileImageUpload";
 import OtpVerificationModal from "../Modal/OtpVerificationModal";
 import Loader from "../Loader/Loader";
@@ -729,22 +730,22 @@ export default function UnifiedSignUpForm({
 							{/* Date of Birth - Only for User */}
 							{accountType === ACCOUNT_TYPES.USER && (
 							<div>
-								<label
-									htmlFor="date_of_birth"
-									className={labelClasses}
-								>
-									{t("signup.tab10")}
-								</label>
-								<div className="relative mt-1">
-									<input
-										type="date"
-										id="date_of_birth"
-										className={inputClasses}
-										{...formik.getFieldProps(
-											"date_of_birth"
-										)}
-									/>
-								</div>
+								<DatePickerTime
+									date={formik.values.date_of_birth}
+									onDateChange={(date) => {
+										formik.setFieldValue("date_of_birth", date);
+										formik.setFieldTouched("date_of_birth", true);
+									}}
+									dateLabel={t("signup.tab10")}
+									dateId="date_of_birth"
+									showDate={true}
+									showTime={false}
+									fullWidth={true}
+									maxDate={new Date().toISOString().split("T")[0]}
+									dateError={formik.touched.date_of_birth && !!formik.errors.date_of_birth}
+									dateErrorMessage={formik.errors.date_of_birth}
+									className="w-full"
+								/>
 								{formik.touched.date_of_birth &&
 									formik.errors.date_of_birth && (
 										<p className={errorClasses}>

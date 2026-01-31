@@ -21,9 +21,9 @@ import 'react-phone-input-2/lib/style.css';
   placeholder = "Mobile No.",
   country = 'sa',
   countryCodeEditable = false,
-  onlyCountries = ['sa', 'pk'],
+  onlyCountries = ['sa'],
   enableSearch = true,
-  disableDropdown = false,
+  disableDropdown = true,
   ...props 
 }, ref) => {
   const { i18n } = useTranslation();
@@ -39,11 +39,9 @@ import 'react-phone-input-2/lib/style.css';
         const cursorPosition = input.selectionStart;
         const currentValue = input.value || '';
         // Detect current country code from input value
-        let countryCode = '+966'; // default
+        let countryCode = '+966'; // default - only Saudi Arabia allowed
         if (currentValue.startsWith('+966')) {
           countryCode = '+966';
-        } else if (currentValue.startsWith('+92')) {
-          countryCode = '+92';
         }
         
         // If backspace is pressed and cursor is at or before country code
@@ -71,56 +69,7 @@ import 'react-phone-input-2/lib/style.css';
     }
   }, []);
 
-  // Enable Pakistan in dropdown - remove any disabled states
-  useEffect(() => {
-    if (phoneInputRef.current) {
-      // Wait for dropdown to be rendered
-      const enablePakistan = () => {
-        const pkCountry = phoneInputRef.current?.querySelector('.country-list .country[data-country-code="pk"]');
-        if (pkCountry) {
-          // Remove disabled attributes
-          pkCountry.removeAttribute('aria-disabled');
-          pkCountry.removeAttribute('disabled');
-          pkCountry.classList.remove('disabled');
-          pkCountry.style.pointerEvents = 'auto';
-          pkCountry.style.cursor = 'pointer';
-          pkCountry.style.opacity = '1';
-          
-          // Remove any blocked/disabled indicators
-          const blockedElements = pkCountry.querySelectorAll('.no-entry, [class*="blocked"], [class*="disabled"], svg, .icon');
-          blockedElements.forEach(el => {
-            el.style.display = 'none';
-            el.remove();
-          });
-        }
-      };
-
-      // Run immediately and also listen for dropdown open
-      enablePakistan();
-      
-      // Watch for dropdown opening
-      const observer = new MutationObserver(enablePakistan);
-      if (phoneInputRef.current) {
-        observer.observe(phoneInputRef.current, {
-          childList: true,
-          subtree: true
-        });
-      }
-
-      // Also listen for click events on dropdown
-      const dropdown = phoneInputRef.current?.querySelector('.flag-dropdown');
-      if (dropdown) {
-        dropdown.addEventListener('click', enablePakistan);
-      }
-
-      return () => {
-        observer.disconnect();
-        if (dropdown) {
-          dropdown.removeEventListener('click', enablePakistan);
-        }
-      };
-    }
-  }, []);
+  // Only Saudi Arabia is allowed - no need for Pakistan enabling code
 
   // Remove dashes from phone input in real-time (but don't modify digits)
   useEffect(() => {
@@ -186,8 +135,8 @@ import 'react-phone-input-2/lib/style.css';
         let processedRaw = raw.replace(/[-\s]/g, '');
         
         // Set max length based on country
-        // Saudi: 9 digits max, Pakistan: 9 or 10 digits (user can choose)
-        const maxLength = countryData?.dialCode === '966' ? 9 : 10;
+        // Saudi: 9 digits max
+        const maxLength = 9;
         const rawLimited = processedRaw.slice(0, maxLength);
         
         console.log(`[NUMBER_INPUT] Phone formatting - raw: "${raw}", processed: "${processedRaw}", limited: "${rawLimited}", country: ${countryData?.dialCode}`);
@@ -390,8 +339,8 @@ import 'react-phone-input-2/lib/style.css';
           display: none !important;
         }
         
-        /* Force enable Pakistan - override any library restrictions */
-        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="pk"] {
+        /* Only Saudi Arabia is allowed */
+        .number-input-wrapper .react-tel-input .country-list .country[data-country-code="sa"] {
           -webkit-user-select: auto !important;
           -moz-user-select: auto !important;
           -ms-user-select: auto !important;
@@ -438,7 +387,7 @@ import 'react-phone-input-2/lib/style.css';
           disabled={disabled}
           disableCountryGuess={true}
           excludeCountries={[]}
-          preserveOrder={['sa', 'pk']}
+          preserveOrder={['sa']}
           inputProps={{
             name: mobileNumberField,
             placeholder: placeholder,

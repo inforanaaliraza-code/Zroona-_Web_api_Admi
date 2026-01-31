@@ -2,12 +2,15 @@
 import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
 import { toast } from 'react-toastify';
+import { formatDate } from '@/utils/dateUtils';
 
 const InvoiceCard = ({ booking }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [expanded, setExpanded] = useState(false);
+    
+    // Get current locale for date formatting
+    const currentLocale = i18n.language || 'en';
 
     if (!booking || booking.payment_status !== 1 || !booking.invoice_url) {
         return null;
@@ -49,7 +52,7 @@ const InvoiceCard = ({ booking }) => {
                 <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-green-200/50">
                     <p className="text-xs text-gray-600 mb-1">{t('invoice.invoiceId') || 'Invoice ID'}</p>
                     <div className="flex items-center justify-between">
-                        <p className="font-bold text-gray-800 text-sm truncate">#{booking.invoice_id || booking.order_id || 'N/A'}</p>
+                        <p className="font-bold text-gray-800 text-sm truncate">#{booking.invoice_id || booking.order_id || t('common.notAvailable') || 'N/A'}</p>
                         <button 
                             onClick={handleCopy}
                             className="text-gray-500 hover:text-gray-700 transition-colors"
@@ -61,7 +64,7 @@ const InvoiceCard = ({ booking }) => {
                 </div>
                 <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-green-200/50">
                     <p className="text-xs text-gray-600 mb-1">{t('invoice.amount') || 'Amount Paid'}</p>
-                    <p className="font-bold text-green-700 text-lg">{booking.total_amount || 0} SAR</p>
+                    <p className="font-bold text-green-700 text-lg">{booking.total_amount || 0} {t('common.currency') || 'SAR'}</p>
                 </div>
             </div>
 
@@ -90,8 +93,8 @@ const InvoiceCard = ({ booking }) => {
                                 <span className="text-gray-600">{t('invoice.paymentDate') || 'Payment Date'}:</span>
                                 <span className="font-medium text-gray-800">
                                     {booking.payment_date 
-                                        ? format(new Date(booking.payment_date), 'MMM dd, yyyy HH:mm')
-                                        : format(new Date(), 'MMM dd, yyyy HH:mm')}
+                                        ? formatDate(booking.payment_date, 'MMM dd, yyyy HH:mm', currentLocale)
+                                        : formatDate(new Date().toISOString(), 'MMM dd, yyyy HH:mm', currentLocale)}
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -100,7 +103,7 @@ const InvoiceCard = ({ booking }) => {
                             </div>
                             <div className="flex justify-between pt-2 border-t border-green-200">
                                 <span className="text-gray-700 font-semibold">{t('invoice.totalAmount') || 'Total Amount'}:</span>
-                                <span className="font-bold text-green-700 text-lg">{booking.total_amount || 0} SAR</span>
+                                <span className="font-bold text-green-700 text-lg">{booking.total_amount || 0} {t('common.currency') || 'SAR'}</span>
                             </div>
                         </div>
                     </div>

@@ -27,6 +27,13 @@ export default function EventCard({
 }) {
 
     const { t, i18n } = useTranslation();
+    
+    // Helper function to check if image URL is external
+    const isExternalImage = (url) => {
+        if (!url) return false;
+        return url.startsWith("http://") || url.startsWith("https://");
+    };
+    
     // State to track approval status
     const [status, setStatus] = useState(
         event.book_status === 2
@@ -111,8 +118,8 @@ export default function EventCard({
 
     return (
         <>
-            <div className="relative bg-[#f8f8f8] rounded-xl hover:shadow-xl overflow-hidden hover:bg-white cursor-pointer">
-                <div className="relative h-[176px] overflow-hidden">
+            <div className="relative bg-white rounded-2xl shadow-md hover:shadow-2xl overflow-hidden transition-all duration-300 cursor-pointer border border-gray-100 group h-full flex flex-col">
+                <div className="relative h-[200px] overflow-hidden flex-shrink-0">
                     <Image
                         src={(() => {
                             const getImageUrl = (imgPath) => {
@@ -155,42 +162,49 @@ export default function EventCard({
                             return getImageUrl(event.event_images?.[0] || event.event_image);
                         })()}
                         alt={event.title || event.event_name}
-                        height={176}
+                        height={200}
                         width={405}
-                        className='w-full h-full object-cover'
+                        className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                        unoptimized={isExternalImage(event.event_images?.[0] || event.event_image)}
                         onError={(e) => {
                             e.target.src = "/assets/images/home/dummyImage.png";
                         }}
                     />
-                    <div className="absolute top-2 left-4 flex gap-x-2 bg-black text-white text-xs font-bold px-2 py-1 rounded">
+                    {/* Gradient overlay for better text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {/* Date & Time Badge - Enhanced */}
+                    <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg">
                         <Icon icon="lucide:calendar" className="w-4 h-4 text-white" />
-                        <div>
-                            {new Date(event.event_date).getDate()}{" "}
-                            {new Date(event.event_date).toLocaleString(
-                                "en-US",
-                                {
-                                    month: "short",
-                                }
-                            )}{" "}
-                            {new Date(event.event_date).getFullYear()}
-                        </div>
-                        <div className="text-white text-xs font-bold">
-                            {new Date(`1970-01-01T${event.event_start_time}`).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}{" "}
+                        <div className="flex items-center gap-1.5">
+                            <span>
+                                {new Date(event.event_date).getDate()}{" "}
+                                {new Date(event.event_date).toLocaleString(
+                                    "en-US",
+                                    {
+                                        month: "short",
+                                    }
+                                )}{" "}
+                                {new Date(event.event_date).getFullYear()}
+                            </span>
+                            <span className="text-white/70">•</span>
+                            <span>
+                                {new Date(`1970-01-01T${event.event_start_time}`).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                })}
+                            </span>
                         </div>
                     </div>
                 </div>
-                <div className="p-4 relative">
+                <div className="p-5 relative flex-1 flex flex-col">
                     {
                         showEventType && (
                             <div
-                                className={`absolute -top-3 left-4 flex text-white text-xs font-bold px-2 py-1 rounded 
+                                className={`absolute -top-3 left-5 flex items-center text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md z-10
                                     ${event?.event_type === 1
-                                        ? 'bg-[#a797cc]'
+                                        ? 'bg-gradient-to-r from-[#a797cc] to-[#8ba179]'
                                         : event?.event_type === 2
-                                            ? 'bg-[#ff3b00]'
+                                            ? 'bg-gradient-to-r from-[#ff3b00] to-[#ff6b3d]'
                                             : ''
                                     }`}
                             >
@@ -202,16 +216,14 @@ export default function EventCard({
                             </div>
                         )
                     }
-                    <div className='flex justify-between items-end'>
-                        <div className="max-w-[16rem]">
-                            <h2 className="text-base font-semibold mb-2 truncate max-w-full">
+                    <div className='flex justify-between items-start gap-4 flex-1'>
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-lg font-bold text-gray-900 mb-2.5 line-clamp-2 group-hover:text-[#a797cc] transition-colors">
                                 {event.event_name}
                             </h2>
-                            <div className="flex gap-x-2 text-gray-700 mb-1.5">
-                                <div>
-                                    <Icon icon="lucide:map-pin" className="w-4 h-4 text-brand-gray-purple-2" />
-                                </div>
-                                <span className="text-sm">{event.event_address}</span>
+                            <div className="flex items-start gap-2 text-gray-600 mb-2">
+                                <Icon icon="lucide:map-pin" className="w-4 h-4 text-[#a797cc] mt-0.5 flex-shrink-0" />
+                                <span className="text-sm leading-relaxed line-clamp-2">{event.event_address}</span>
                             </div>
                             {/* Category Display */}
                             {event.event_category && categories.length > 0 && (() => {
@@ -220,18 +232,22 @@ export default function EventCard({
                                     cat._id?.toString() === event.event_category?.toString()
                                 );
                                 return category ? (
-                                    <div className="flex items-center gap-x-1.5 mt-1">
+                                    <div className="flex items-center gap-1.5 mt-2">
                                         <Icon icon="lucide:tag" className="w-3.5 h-3.5 text-[#a797cc]" />
-                                        <span className="text-xs text-[#a797cc] font-medium">{category.name}</span>
+                                        <span className="text-xs text-[#a797cc] font-semibold bg-[#a797cc]/10 px-2 py-0.5 rounded-md">{category.name}</span>
                                     </div>
                                 ) : null;
                             })()}
                         </div>
-                    <div className="flex flex-col items-end">
-                        <p className="text-sm text-gray-800 leading-4">Price</p>
-                        <p className="text-[0.900rem] font-bold text-black leading-4 whitespace-nowrap">{event.event_price} SAR</p>
-                        <span className="text-xs text-gray-800">/ person</span>
-                    </div>
+                        {/* Price Box - Enhanced & Prominent */}
+                        <div className="flex flex-col items-end bg-gradient-to-br from-[#a797cc]/10 to-[#8ba179]/10 rounded-xl px-4 py-3 border-2 border-[#a797cc]/20 shadow-sm flex-shrink-0 self-start">
+                            <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wide">Price</p>
+                            <div className="flex items-baseline gap-1">
+                                <p className="text-xl font-bold text-[#a797cc] leading-tight">{event.event_price}</p>
+                                <span className="text-sm font-semibold text-gray-700">SAR</span>
+                            </div>
+                            <span className="text-xs text-gray-500 mt-0.5">per person</span>
+                        </div>
                     </div>
                 </div>
 
@@ -322,6 +338,7 @@ export default function EventCard({
                                             alt="Profile Picture" 
                                             height={40} 
                                             width={40}
+                                            unoptimized={isExternalImage(event.user_profile_image)}
                                             onError={(e) => {
                                                 e.target.src = "/assets/images/home/user-dummy.png";
                                             }}

@@ -7,15 +7,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { getEventList } from "@/redux/slices/EventList";
-import AddEditJoinEventModal from "@/components/Modal/AddEditJoinEventModal";
+import { useRouter } from "next/navigation";
 import Paginations from "@/components/Paginations/Pagination";
 import Loader from "@/components/Loader/Loader";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "@/utils/rtl";
 
 export default function JoinUsEvent() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { t } = useTranslation();
+  const router = useRouter();
   const { isRTL, flexDirection, textAlign } = useRTL();
   const breadcrumbItems = [
     { label: t('breadcrumb.tab1'), href: "/joinUsEvent" },
@@ -118,7 +118,7 @@ export default function JoinUsEvent() {
                 </p>
               </div>
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => router.push("/create-event?type=1")}
                 className={`group relative bg-gradient-to-r from-[#a797cc] to-[#8ba179] flex items-center justify-center text-white px-6 sm:px-8 gap-x-2 py-3.5 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 whitespace-nowrap ${flexDirection}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -242,11 +242,11 @@ export default function JoinUsEvent() {
             <>
               {displayEvents?.length > 0 ? (
                 <>
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 mb-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
                     {displayEvents?.map((event, i) => (
                       <div 
                         key={event._id || i}
-                        className="transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+                        className="transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl h-full"
                       >
                         <Link
                           href={{
@@ -299,7 +299,7 @@ export default function JoinUsEvent() {
                   </p>
                   {statusFilter === "all" && (
                     <button
-                      onClick={() => setIsModalOpen(true)}
+                      onClick={() => router.push("/create-event?type=1")}
                       className="group relative bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white px-8 py-4 rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 shadow-lg"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -321,13 +321,6 @@ export default function JoinUsEvent() {
           )}
         </div>
       </section>
-
-      <AddEditJoinEventModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        eventpage={page}
-        eventlimit={activePage}
-      />
     </>
   );
 }

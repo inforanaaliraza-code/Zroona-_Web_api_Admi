@@ -362,7 +362,9 @@ const adminController = {
                 console.log("[ADMIN:LOGIN] Admin not found for email:", emailLower);
                 return Response.unauthorizedResponse(
                     res,
-                    resp_messages(lang).invalid_credentials || "Invalid email or password"
+                    {},
+                    401,
+                    "Your email or password is incorrect"
                 );
             }
 
@@ -378,7 +380,9 @@ const adminController = {
                 console.log("[ADMIN:LOGIN] Invalid password");
                 return Response.unauthorizedResponse(
                     res,
-                    resp_messages(lang).invalid_credentials || "Invalid email or password"
+                    {},
+                    401,
+                    "Your email or password is incorrect"
                 );
             }
 
@@ -1211,15 +1215,79 @@ const adminController = {
                         as: 'organizer'
                     }
                 },
+                // Lookup for event_categories array (if multiple categories exist)
                 {
                     $lookup: {
                         from: 'event_categories',
                         localField: 'event_categories',
                         foreignField: '_id',
-                        as: 'event_category_details'
+                        as: 'event_categories_array'
+                    }
+                },
+                // Lookup for single event_category field - try multiple matching strategies
+                {
+                    $lookup: {
+                        from: 'event_categories',
+                        let: { 
+                            categoryValue: "$event_category",
+                            categoryStr: { $toString: { $ifNull: ["$event_category", ""] } }
+                        },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $or: [
+                                            // Match by _id (if event_category is ObjectId)
+                                            { $eq: ["$_id", "$$categoryValue"] },
+                                            // Match by name.en (exact)
+                                            { $eq: ["$name.en", "$$categoryValue"] },
+                                            // Match by name.en (case-insensitive)
+                                            { 
+                                                $and: [
+                                                    { $ne: ["$name.en", null] },
+                                                    { $ne: ["$name.en", ""] },
+                                                    { $eq: [{ $toLower: "$name.en" }, { $toLower: "$$categoryStr" }] }
+                                                ]
+                                            },
+                                            // Match by name.ar (exact)
+                                            { $eq: ["$name.ar", "$$categoryValue"] },
+                                            // Match by name.ar (case-insensitive)
+                                            { 
+                                                $and: [
+                                                    { $ne: ["$name.ar", null] },
+                                                    { $ne: ["$name.ar", ""] },
+                                                    { $eq: [{ $toLower: "$name.ar" }, { $toLower: "$$categoryStr" }] }
+                                                ]
+                                            },
+                                            // Match by direct name (if name is string)
+                                            { $eq: ["$name", "$$categoryValue"] }
+                                        ]
+                                    }
+                                }
+                            }
+                        ],
+                        as: 'event_category_single'
                     }
                 },
                 { $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true } },
+                // Combine all category lookups into event_category_details
+                {
+                    $addFields: {
+                        event_category_details: {
+                            $cond: {
+                                if: { $gt: [{ $size: { $ifNull: ["$event_categories_array", []] } }, 0] },
+                                then: "$event_categories_array",
+                                else: {
+                                    $cond: {
+                                        if: { $gt: [{ $size: { $ifNull: ["$event_category_single", []] } }, 0] },
+                                        then: "$event_category_single",
+                                        else: []
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 {
                     $project: {
                         organizer_id: 1,
@@ -2219,13 +2287,98 @@ const adminController = {
                 ];
             }
 
-            const refundRequests = await RefundRequestService.FindService(
-                query,
-                Number(page),
-                Number(limit)
-            );
+            let refundRequests;
+            try {
+                // Use aggregation for better populated data
+                refundRequests = await RefundRequestService.AggregateService([
+                    { $match: query },
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "user_id",
+                            foreignField: "_id",
+                            as: "user"
+                        }
+                    },
+                    { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+                    {
+                        $lookup: {
+                            from: "events",
+                            localField: "event_id",
+                            foreignField: "_id",
+                            as: "event"
+                        }
+                    },
+                    { $unwind: { path: "$event", preserveNullAndEmptyArrays: true } },
+                    {
+                        $lookup: {
+                            from: "organizers",
+                            localField: "organizer_id",
+                            foreignField: "_id",
+                            as: "organizer"
+                        }
+                    },
+                    { $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true } },
+                    {
+                        $project: {
+                            _id: 1,
+                            booking_id: 1,
+                            user_id: 1,
+                            event_id: 1,
+                            organizer_id: 1,
+                            amount: 1,
+                            currency: 1,
+                            refund_reason: 1,
+                            status: 1,
+                            admin_response: 1,
+                            payment_refund_id: 1,
+                            refund_error: 1,
+                            processed_at: 1,
+                            createdAt: 1,
+                            updatedAt: 1,
+                            user: {
+                                _id: "$user._id",
+                                first_name: "$user.first_name",
+                                last_name: "$user.last_name",
+                                email: "$user.email",
+                                phone_number: "$user.phone_number"
+                            },
+                            event: {
+                                _id: "$event._id",
+                                event_name: "$event.event_name",
+                                event_date: "$event.event_date",
+                                event_image: "$event.event_image"
+                            },
+                            organizer: {
+                                _id: "$organizer._id",
+                                first_name: "$organizer.first_name",
+                                last_name: "$organizer.last_name",
+                                email: "$organizer.email"
+                            }
+                        }
+                    },
+                    { $sort: { createdAt: -1 } },
+                    { $skip: skip },
+                    { $limit: Number(limit) }
+                ]);
+                
+                // Ensure it's an array
+                if (!Array.isArray(refundRequests)) {
+                    refundRequests = [];
+                }
+                console.log(`[ADMIN:REFUND:LIST] Found ${refundRequests.length} refund requests`);
+            } catch (serviceError) {
+                console.error("[ADMIN:REFUND:LIST] Service error:", serviceError);
+                refundRequests = [];
+            }
 
-            const count = await RefundRequestService.CountDocumentService(query);
+            let count = 0;
+            try {
+                count = await RefundRequestService.CountDocumentService(query);
+            } catch (countError) {
+                console.error("[ADMIN:REFUND:LIST] Count error:", countError);
+                count = Array.isArray(refundRequests) ? refundRequests.length : 0;
+            }
 
             return Response.ok(
                 res,
@@ -2259,17 +2412,122 @@ const adminController = {
                 );
             }
 
-            const RefundRequestService = require("../services/refundRequestService");
-            const refundRequest = await RefundRequestService.FindOneService({
-                _id: refund_id,
-            });
+            // Validate refund_id format
+            const mongoose = require("mongoose");
+            if (!mongoose.Types.ObjectId.isValid(refund_id)) {
+                return Response.validationErrorResponse(
+                    res,
+                    "Invalid refund ID format"
+                );
+            }
 
-            if (!refundRequest) {
+            const RefundRequestService = require("../services/refundRequestService");
+            
+            // Use aggregation pipeline to populate related data (like refundList)
+            const refundRequests = await RefundRequestService.AggregateService([
+                {
+                    $match: {
+                        _id: new mongoose.Types.ObjectId(refund_id)
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "book_event",
+                        localField: "booking_id",
+                        foreignField: "_id",
+                        as: "booking"
+                    }
+                },
+                { $unwind: { path: "$booking", preserveNullAndEmptyArrays: true } },
+                {
+                    $lookup: {
+                        from: "users",
+                        localField: "user_id",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+                { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+                {
+                    $lookup: {
+                        from: "events",
+                        localField: "event_id",
+                        foreignField: "_id",
+                        as: "event"
+                    }
+                },
+                { $unwind: { path: "$event", preserveNullAndEmptyArrays: true } },
+                {
+                    $lookup: {
+                        from: "organizers",
+                        localField: "organizer_id",
+                        foreignField: "_id",
+                        as: "organizer"
+                    }
+                },
+                { $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true } },
+                {
+                    $project: {
+                        _id: 1,
+                        booking_id: 1,
+                        user_id: 1,
+                        event_id: 1,
+                        organizer_id: 1,
+                        amount: 1,
+                        currency: 1,
+                        refund_reason: 1,
+                        status: 1,
+                        admin_response: 1,
+                        payment_refund_id: 1,
+                        refund_error: 1,
+                        processed_at: 1,
+                        processed_by: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        booking: {
+                            _id: "$booking._id",
+                            order_id: "$booking.order_id",
+                            invoice_id: "$booking.invoice_id",
+                            no_of_attendees: "$booking.no_of_attendees",
+                            total_amount: "$booking.total_amount",
+                            payment_status: "$booking.payment_status",
+                            book_status: "$booking.book_status",
+                            createdAt: "$booking.createdAt"
+                        },
+                        user: {
+                            _id: "$user._id",
+                            first_name: "$user.first_name",
+                            last_name: "$user.last_name",
+                            email: "$user.email",
+                            phone_number: "$user.phone_number",
+                            profile_image: "$user.profile_image"
+                        },
+                        event: {
+                            _id: "$event._id",
+                            event_name: "$event.event_name",
+                            event_date: "$event.event_date",
+                            event_image: "$event.event_image",
+                            event_price: "$event.event_price"
+                        },
+                        organizer: {
+                            _id: "$organizer._id",
+                            first_name: "$organizer.first_name",
+                            last_name: "$organizer.last_name",
+                            email: "$organizer.email",
+                            group_name: "$organizer.group_name"
+                        }
+                    }
+                }
+            ]);
+
+            if (!refundRequests || refundRequests.length === 0) {
                 return Response.notFoundResponse(
                     res,
                     "Refund request not found"
                 );
             }
+
+            const refundRequest = refundRequests[0];
 
             return Response.ok(
                 res,
@@ -2310,6 +2568,15 @@ const adminController = {
                 );
             }
 
+            // Validate refund_id is a valid ObjectId
+            if (!mongoose.Types.ObjectId.isValid(refund_id)) {
+                console.error("[ADMIN:REFUND:UPDATE] Invalid refund_id format:", refund_id);
+                return Response.validationErrorResponse(
+                    res,
+                    "Invalid refund ID format"
+                );
+            }
+
             // Validate status (0 pending, 1 approved, 2 rejected, 3 processed)
             if (![1, 2, 3].includes(parseInt(status))) {
                 return Response.validationErrorResponse(
@@ -2324,12 +2591,55 @@ const adminController = {
             const WalletService = require("../services/walletService");
             const NotificationService = require("../services/notificationService");
 
-            // Find refund request
-            const refundRequest = await RefundRequestService.FindOneService({
-                _id: refund_id,
-            });
+            // Convert refund_id to ObjectId
+            let refundObjectId;
+            try {
+                refundObjectId = new mongoose.Types.ObjectId(refund_id);
+            } catch (objectIdError) {
+                console.error("[ADMIN:REFUND:UPDATE] Failed to convert refund_id to ObjectId:", refund_id, objectIdError);
+                return Response.validationErrorResponse(
+                    res,
+                    "Invalid refund ID format"
+                );
+            }
+            
+            console.log("[ADMIN:REFUND:UPDATE] Searching for refund with ID:", refund_id, "ObjectId:", refundObjectId);
+
+            // Find refund request - don't populate for update operation (faster and avoids schema errors)
+            let refundRequest = await RefundRequestService.FindOneService({
+                _id: refundObjectId,
+            }, { populate: false });
+
+            // If not found with findOne, try findById as fallback
+            if (!refundRequest) {
+                console.log("[ADMIN:REFUND:UPDATE] Not found with findOne, trying findById...");
+                try {
+                    const RefundRequestModel = require("../models/refundRequestModel");
+                    refundRequest = await RefundRequestModel.findById(refundObjectId)
+                        .populate('booking_id')
+                        .populate('user_id', 'first_name last_name email phone_number')
+                        .populate('event_id', 'event_name event_date event_image')
+                        .populate('organizer_id', 'first_name last_name email')
+                        .populate('processed_by', 'first_name last_name email');
+                    console.log("[ADMIN:REFUND:UPDATE] findById result:", refundRequest ? "Found" : "Not found");
+                } catch (findError) {
+                    console.error("[ADMIN:REFUND:UPDATE] Error with findById:", findError);
+                }
+            }
 
             if (!refundRequest) {
+                console.error("[ADMIN:REFUND:UPDATE] Refund request not found for ID:", refund_id, "ObjectId:", refundObjectId);
+                // Try to find any refunds to see if the collection is accessible
+                try {
+                    const RefundRequestModel = require("../models/refundRequestModel");
+                    const count = await RefundRequestModel.countDocuments({});
+                    console.log("[ADMIN:REFUND:UPDATE] Total refunds in database:", count);
+                    // Try to find by string ID as well
+                    const byString = await RefundRequestModel.findOne({ _id: refund_id });
+                    console.log("[ADMIN:REFUND:UPDATE] Search by string ID result:", byString ? "Found" : "Not found");
+                } catch (countError) {
+                    console.error("[ADMIN:REFUND:UPDATE] Error counting refunds:", countError);
+                }
                 return Response.notFoundResponse(res, "Refund request not found");
             }
 

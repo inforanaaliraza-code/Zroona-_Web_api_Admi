@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
@@ -18,7 +18,7 @@ import { BASE_API_URL } from "@/until";
 import { motion } from "framer-motion";
 import TermsOfServiceModal from "@/components/Modal/TermsOfServiceModal";
 import PrivacyPolicyModal from "@/components/Modal/PrivacyPolicyModal";
-import CitySearchSelect from "@/components/ui/CitySearchSelect";
+import CountryCitySelect from "@/components/CountryCitySelect/CountryCitySelect";
 
 const BasicInfoForm = ({ onSuccess }) => {
   const { t, i18n } = useTranslation();
@@ -34,6 +34,9 @@ const BasicInfoForm = ({ onSuccess }) => {
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(60); // 1 minute timer for OTP
+  const [otpExpired, setOtpExpired] = useState(false);
+  const [otpSentTime, setOtpSentTime] = useState(null); // Track when OTP was sent
 
   const formik = useFormik({
     initialValues: {
@@ -44,6 +47,7 @@ const BasicInfoForm = ({ onSuccess }) => {
       last_name: "",
       country_code: "+966",
       phone_number: "",
+      country: "",
       city: "",
       acceptTerms: false,
       acceptPrivacy: false,
@@ -66,11 +70,12 @@ const BasicInfoForm = ({ onSuccess }) => {
         })
         .email(t("auth.emailInvalid") || t("auth.invalidEmail") || "Invalid email"),
       // Basic identification
-      profile_image: Yup.string().required(t("signup.tab16") || "Profile image is required"),
+      profile_image: Yup.string(), // Optional - user can upload later
       first_name: Yup.string().required(t("signup.tab16") || "First name is required"),
       last_name: Yup.string().required(t("signup.tab16") || "Last name is required"),
       phone_number: Yup.string().required(t("signup.tab16") || "Phone number is required"),
-      city: Yup.string().required(t("signup.tab16") || "City is required"),
+      country: Yup.string().required(t("signup.countryRequired") || "Country is required"),
+      city: Yup.string().required(t("signup.cityRequired") || "City is required"),
       // Terms acceptance
       acceptTerms: Yup.boolean()
         .oneOf([true], t("signup.tab23") || "You must accept the terms and conditions")
@@ -81,13 +86,6 @@ const BasicInfoForm = ({ onSuccess }) => {
     }),
     onSubmit: async (values, { setFieldTouched, setFieldError }) => {
       // Pre-submit validation with specific error messages
-      if (!values.profile_image || values.profile_image.trim() === "") {
-        setFieldTouched("profile_image", true);
-        setFieldError("profile_image", t("signup.profileImageRequired") || "Profile image is required");
-        toast.error(t("signup.profileImageRequired") || "Please upload your profile image to continue");
-        return;
-      }
-
       if (!values.first_name || values.first_name.trim() === "") {
         setFieldTouched("first_name", true);
         toast.error(t("signup.firstNameRequired") || "Please enter your first name");
@@ -133,10 +131,15 @@ const BasicInfoForm = ({ onSuccess }) => {
           last_name: values.last_name,
           phone_number: values.phone_number,
           country_code: values.country_code,
-          profile_image: values.profile_image,
+          country: values.country,
           city: values.city,
           registration_step: 1, // Step 1: Basic Info only
         };
+
+        // Only include profile_image if it exists
+        if (values.profile_image && values.profile_image.trim() !== "") {
+          registrationPayload.profile_image = values.profile_image;
+        }
 
         console.log("[BASIC-INFO] Creating organizer account...");
         
@@ -150,19 +153,27 @@ const BasicInfoForm = ({ onSuccess }) => {
           setOrganizerId(organizerId);
           setUserEmail(values.email.toLowerCase().trim());
           setShowVerificationStep(true);
+          setOtpSentTime(Date.now()); // Record when OTP was sent
+          setOtpTimer(60); // Reset timer
+          setOtpExpired(false);
           
           // Store basic info (without password) for Step 2 reference
           const basicInfoData = {
             organizer_id: organizerId,
-            profile_image: values.profile_image,
             first_name: values.first_name,
             last_name: values.last_name,
             email: values.email.toLowerCase().trim(),
             phone_number: values.phone_number,
             country_code: values.country_code,
+            country: values.country,
             city: values.city,
             registration_step: 1,
           };
+
+          // Only include profile_image if it exists
+          if (values.profile_image && values.profile_image.trim() !== "") {
+            basicInfoData.profile_image = values.profile_image;
+          }
           
           localStorage.setItem("organizer_basic_info", JSON.stringify(basicInfoData));
           
@@ -196,6 +207,30 @@ const BasicInfoForm = ({ onSuccess }) => {
   }`;
   const errorClasses = "mt-1 text-xs font-semibold text-red-500";
 
+  // OTP Timer Effect
+  useEffect(() => {
+    if (showVerificationStep && !phoneVerified && otpTimer > 0 && otpSentTime) {
+      const timer = setInterval(() => {
+        setOtpTimer((prev) => {
+          if (prev <= 1) {
+            setOtpExpired(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [showVerificationStep, phoneVerified, otpTimer, otpSentTime]);
+
+  // Reset timer when verification step is shown
+  useEffect(() => {
+    if (showVerificationStep) {
+      setOtpTimer(60);
+      setOtpExpired(false);
+    }
+  }, [showVerificationStep]);
+
   const handleResendOtp = async () => {
     if (!organizerId || !formik.values.phone_number || !formik.values.country_code) {
       toast.error("Missing information to resend OTP");
@@ -218,6 +253,10 @@ const BasicInfoForm = ({ onSuccess }) => {
         }
       );
       if (response.data?.status === 1 || response.data?.success) {
+        setOtpTimer(60);
+        setOtpExpired(false);
+        setOtpSentTime(Date.now());
+        setOtp("");
         toast.success(response.data.message || "OTP resent successfully!");
       } else {
         toast.error(response.data.message || "Failed to resend OTP.");
@@ -233,6 +272,18 @@ const BasicInfoForm = ({ onSuccess }) => {
   const handleVerifyOtp = async () => {
     if (!otp || otp.length !== 6) {
       toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+    // Check if OTP has expired (1 minute = 60000 ms)
+    if (otpSentTime && (Date.now() - otpSentTime) > 60000) {
+      toast.error(t("auth.otpExpired") || "OTP has expired. Please request a new one.");
+      setOtpExpired(true);
+      setOtp("");
+      return;
+    }
+    if (otpExpired) {
+      toast.error(t("auth.otpExpired") || "OTP has expired. Please request a new one.");
+      setOtp("");
       return;
     }
     if (!organizerId || !formik.values.phone_number || !formik.values.country_code) {
@@ -368,17 +419,37 @@ const BasicInfoForm = ({ onSuccess }) => {
                     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
                     setOtp(value);
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-center text-2xl tracking-widest"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-center text-2xl tracking-widest ${
+                    otpExpired ? "border-red-500 bg-red-50" : "border-gray-300"
+                  }`}
                   placeholder="000000"
                   maxLength={6}
+                  disabled={otpExpired}
                 />
-                <button
-                  onClick={handleResendOtp}
-                  disabled={loading}
-                  className="mt-2 text-sm text-[#a797cc] hover:text-[#8ba179] font-medium"
-                >
-                  {t("Resend OTP") || "Resend OTP"}
-                </button>
+                {otpExpired && (
+                  <p className="mt-2 text-sm text-red-600 font-medium">
+                    {t("auth.otpExpired") || "OTP has expired. Please request a new one."}
+                  </p>
+                )}
+                <div className="mt-2 flex items-center justify-between">
+                  <button
+                    onClick={handleResendOtp}
+                    disabled={loading || (otpTimer > 0 && !otpExpired)}
+                    className={`text-sm font-medium transition-colors ${
+                      loading || (otpTimer > 0 && !otpExpired)
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-[#a797cc] hover:text-[#8ba179]"
+                    }`}
+                  >
+                    {t("auth.resendOTP") || "Resend OTP"}
+                  </button>
+                  {otpTimer > 0 && !otpExpired && (
+                    <span className="text-sm text-gray-600">
+                      {t("auth.otpTimer") || "Resend in"} {Math.floor(otpTimer / 60)}:
+                      {(otpTimer % 60).toString().padStart(2, "0")}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
@@ -463,11 +534,9 @@ const BasicInfoForm = ({ onSuccess }) => {
                 {formik.errors.profile_image}
               </p>
             )}
-            {!formik.values.profile_image && (
-              <p className="mt-2 text-xs text-gray-500 text-center">
-                {t("signup.profileImageHint") || "Please upload your profile image to continue"}
-              </p>
-            )}
+            <p className="mt-2 text-xs text-gray-500 text-center">
+              {t("signup.profileImageOptional") || "Profile image is optional - you can upload it later"}
+            </p>
           </div>
 
           {/* Basic Information Section */}
@@ -565,18 +634,14 @@ const BasicInfoForm = ({ onSuccess }) => {
               </div>
             </div>
 
-            {/* City */}
+            {/* Country and City Selection */}
             <div className="mt-6">
-              <CitySearchSelect
-                value={formik.values.city}
-                onChange={(value) => formik.setFieldValue("city", value)}
-                onBlur={() => formik.setFieldTouched("city", true)}
-                error={formik.errors.city}
-                touched={formik.touched.city}
-                placeholder={t("signup.selectCity") || t("auth.selectCity") || "Select city"}
-                label={t("signup.city") || t("city") || "City"}
+              <CountryCitySelect
+                formik={formik}
+                countryFieldName="country"
+                cityFieldName="city"
+                showLabels={true}
                 required={true}
-                isRTL={i18n.language === "ar"}
               />
             </div>
           </div>

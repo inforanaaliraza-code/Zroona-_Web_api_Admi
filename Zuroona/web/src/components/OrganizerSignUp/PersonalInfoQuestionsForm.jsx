@@ -88,9 +88,25 @@ const PersonalInfoQuestionsForm = ({ onSuccess }) => {
     validationSchema: Yup.object({
       // Personal Info validation (Step 2) - only new fields
       gender: Yup.string().required(t("signup.tab16") || "Gender is required"),
-      nationality: Yup.string().required(t("signup.tab16") || "Nationality is required"),
-      date_of_birth: Yup.string().required(t("signup.tab16") || "Date of birth is required"),
-      city: Yup.string().required(t("signup.tab16") || "City is required"),
+      date_of_birth: Yup.date()
+        .required(t("signup.tab16") || "Date of birth is required")
+        .max(new Date(), t("auth.dobFuture") || "Date of birth cannot be in the future")
+        .test('min-age', t("auth.dobMinAge") || "You must be at least 18 years old", function(value) {
+          if (!value) return true;
+          const today = new Date();
+          const birthDate = new Date(value);
+          const age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          const dayDiff = today.getDate() - birthDate.getDate();
+          
+          // Check if user has reached 18th birthday
+          if (age > 18) return true;
+          if (age === 18) {
+            if (monthDiff > 0) return true;
+            if (monthDiff === 0 && dayDiff >= 0) return true;
+          }
+          return false;
+        }),
       bio: Yup.string().required(t("signup.tab16") || "Biography is required"),
       // Interview Questions validation
      
@@ -127,9 +143,7 @@ const PersonalInfoQuestionsForm = ({ onSuccess }) => {
           country_code: values.country_code || basicInfo.country_code,
           // New personal info fields
           gender: values.gender,
-          nationality: values.nationality,
           date_of_birth: values.date_of_birth,
-          city: values.city,
           bio: values.bio,
           interview: {
             "1": values["1"],
@@ -345,40 +359,6 @@ const PersonalInfoQuestionsForm = ({ onSuccess }) => {
                 )}
               </div>
 
-              {/* Nationality */}
-              <div>
-                <label htmlFor="nationality" className={labelClasses}>
-                  {t("auth.nationality")}
-                </label>
-                <div className="relative mt-1">
-                  <span className={iconContainerClasses}>
-                    <Icon
-                      icon="lucide:user"
-                      className="w-4 h-4 text-[#a797cc]"
-                    />
-                  </span>
-                  <select
-                    id="nationality"
-                    name="nationality"
-                    value={formik.values.nationality}
-                    onChange={formik.handleChange}
-                    className={`${inputClasses} ${
-                      i18n.language === "ar" ? "pr-10" : "pl-10"
-                    } appearance-none`}
-                  >
-                    <option value="">{t("auth.selectNationality")}</option>
-                    {countries.map((country) => (
-                      <option key={country.code} value={country.code}>
-                        {country.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {formik.touched.nationality && formik.errors.nationality && (
-                  <p className={errorClasses}>{formik.errors.nationality}</p>
-                )}
-              </div>
-
               {/* Date of Birth */}
               <div>
                 <label htmlFor="date_of_birth" className={labelClasses}>
@@ -397,60 +377,9 @@ const PersonalInfoQuestionsForm = ({ onSuccess }) => {
                 )}
               </div>
 
-              {/* City */}
-              <div className="sm:col-span-2">
-                <label htmlFor="city" className={labelClasses}>
-                  {t("signup.city") || "City"} *
-                </label>
-                <div className="relative mt-1">
-                  <span className={iconContainerClasses}>
-                    <Icon
-                      icon="lucide:map-pin"
-                      className="w-4 h-4 text-[#a797cc]"
-                    />
-                  </span>
-                  <select
-                    id="city"
-                    name="city"
-                    value={formik.values.city}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className={`${inputClasses} ${
-                      i18n.language === "ar" ? "pr-10" : "pl-10"
-                    } appearance-none`}
-                  >
-                    <option value="">{t("signup.selectCity") || "Select City"}</option>
-                    {[
-                      "Riyadh", "Jeddah", "Mecca", "Medina", "Dammam", "Khobar", "Taif", 
-                      "Abha", "Tabuk", "Buraidah", "Khamis Mushait", "Hail", "Najran", 
-                      "Jazan", "Yanbu", "Al Jubail", "Dhahran", "Al Khafji", "Arar", "Sakaka"
-                    ].map((city) => (
-                      <option key={city} value={city}>
-                        {t(`signup.cities.${city}`) || city}
-                      </option>
-                    ))}
-                  </select>
-                  <span className={`absolute inset-y-0 ${i18n.language === "ar" ? "left-0 flex items-center pl-3" : "right-0 flex items-center pr-3"} pointer-events-none`}>
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      ></path>
-                    </svg>
-                  </span>
-                </div>
-                {formik.touched.city && formik.errors.city && (
-                  <p className={errorClasses}>{formik.errors.city}</p>
-                )}
-              </div>
+              {/* Nationality (removed) */}
+
+              {/* City (removed in Step 2 as per requirements) */}
             </div>
 
             {/* Bio */}
@@ -642,9 +571,7 @@ const PersonalInfoQuestionsForm = ({ onSuccess }) => {
                       // Validate all personal info fields with detailed logging
                       const personalInfoFields = {
                         gender: formik.values.gender || "",
-                        nationality: formik.values.nationality || "",
                         date_of_birth: formik.values.date_of_birth || "",
-                        city: formik.values.city || "",
                         bio: formik.values.bio || "",
                       };
                       
@@ -653,18 +580,14 @@ const PersonalInfoQuestionsForm = ({ onSuccess }) => {
                       // Check each field properly (non-empty string)
                       // Handle both string and number types (gender might be "1" or "2")
                       const genderValid = personalInfoFields.gender && String(personalInfoFields.gender).trim().length > 0;
-                      const nationalityValid = personalInfoFields.nationality && String(personalInfoFields.nationality).trim().length > 0;
                       const dobValid = personalInfoFields.date_of_birth && String(personalInfoFields.date_of_birth).trim().length > 0;
-                      const cityValid = personalInfoFields.city && String(personalInfoFields.city).trim().length > 0;
                       const bioValid = personalInfoFields.bio && String(personalInfoFields.bio).trim().length > 0;
                       
-                      const personalInfoValid = genderValid && nationalityValid && dobValid && cityValid && bioValid;
+                      const personalInfoValid = genderValid && dobValid && bioValid;
                       
                       console.log("[PERSONAL-INFO] Field validation details:", {
                         gender: { value: personalInfoFields.gender, valid: genderValid },
-                        nationality: { value: personalInfoFields.nationality, valid: nationalityValid },
                         date_of_birth: { value: personalInfoFields.date_of_birth, valid: dobValid },
-                        city: { value: personalInfoFields.city, valid: cityValid },
                         bio: { value: personalInfoFields.bio, valid: bioValid },
                       });
                       
@@ -688,17 +611,13 @@ const PersonalInfoQuestionsForm = ({ onSuccess }) => {
                       if (!personalInfoValid) {
                         const missingFields = [];
                         if (!genderValid) missingFields.push("Gender");
-                        if (!nationalityValid) missingFields.push("Nationality");
                         if (!dobValid) missingFields.push("Date of Birth");
-                        if (!cityValid) missingFields.push("City");
                         if (!bioValid) missingFields.push("Bio");
                         
                         console.error("[PERSONAL-INFO] Missing fields:", missingFields);
                         console.error("[PERSONAL-INFO] Field validation status:", {
                           gender: { value: personalInfoFields.gender, valid: genderValid },
-                          nationality: { value: personalInfoFields.nationality, valid: nationalityValid },
                           date_of_birth: { value: personalInfoFields.date_of_birth, valid: dobValid },
-                          city: { value: personalInfoFields.city, valid: cityValid },
                           bio: { value: personalInfoFields.bio, valid: bioValid },
                         });
                         

@@ -80,14 +80,17 @@ export default function MyBookings() {
   );
 
   // Get book_status based on active tab
+  // book_status: 0/1 = Pending, 2 = Approved/Confirmed, 3 = Cancelled (by guest), 4 = Rejected (by host)
   const getBookStatus = () => {
     switch (activeTab) {
       case "pending":
         return "0"; // Pending bookings (status 0 or 1)
       case "approved":
         return "2"; // Approved bookings
+      case "cancelled":
+        return "3"; // Cancelled bookings (by guest)
       case "rejected":
-        return "3"; // Rejected bookings
+        return "4"; // Rejected bookings (by host)
       default:
         return ""; // All bookings
     }
@@ -276,6 +279,7 @@ export default function MyBookings() {
   };
 
   const getBookingStatusBadge = (bookStatus) => {
+    // book_status: 0/1 = Pending, 2 = Approved/Confirmed, 3 = Cancelled (by guest), 4 = Rejected (by host)
     if (bookStatus === 2) {
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
@@ -283,6 +287,12 @@ export default function MyBookings() {
         </span>
       );
     } else if (bookStatus === 3) {
+      return (
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
+          {t("events.cancelled") || "Cancelled"}
+        </span>
+      );
+    } else if (bookStatus === 4) {
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
           {t("rejected") || "Rejected"}
@@ -317,7 +327,8 @@ export default function MyBookings() {
                 { key: "all", label: t("events.all", "All"), icon: "lucide:list", count: groupedEvents.reduce((sum, e) => sum + e.bookings.length, 0) },
                 { key: "pending", label: t("events.pending", "Pending"), icon: "lucide:clock", count: groupedEvents.reduce((sum, e) => sum + e.bookings.filter(b => b.book_status === 0 || b.book_status === 1).length, 0) },
                 { key: "approved", label: t("events.approved", "Approved"), icon: "lucide:check-circle", count: groupedEvents.reduce((sum, e) => sum + e.bookings.filter(b => b.book_status === 2).length, 0) },
-                { key: "rejected", label: t("events.rejected", "Rejected"), icon: "lucide:x-circle", count: groupedEvents.reduce((sum, e) => sum + e.bookings.filter(b => b.book_status === 3).length, 0) },
+                { key: "cancelled", label: t("events.cancelled", "Cancelled"), icon: "lucide:x-octagon", count: groupedEvents.reduce((sum, e) => sum + e.bookings.filter(b => b.book_status === 3).length, 0) },
+                { key: "rejected", label: t("events.rejected", "Rejected"), icon: "lucide:x-circle", count: groupedEvents.reduce((sum, e) => sum + e.bookings.filter(b => b.book_status === 4).length, 0) },
               ].map((tab) => (
                 <button
                   key={tab.key}

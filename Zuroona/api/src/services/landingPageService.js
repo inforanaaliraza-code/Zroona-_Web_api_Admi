@@ -261,17 +261,42 @@ const LandingPageService = {
 				delete event.organizer_id;
 			}
 
-			if (userId) {
-				const bookEvent = await BookEventService.FindOneService({
+		// Calculate available seats
+		const bookedSeatsResult = await BookEventService.AggregateService([
+			{
+				$match: {
 					event_id: new mongoose.Types.ObjectId(eventId),
-					user_id: new mongoose.Types.ObjectId(userId),
-				});
-				if (bookEvent) {
-					event.booked_event = bookEvent;
-				}
-			}
+					book_status: { $in: [1, 2] }, // 1 = pending, 2 = confirmed (exclude cancelled/rejected)
+				},
+			},
+			{
+				$group: {
+					_id: null,
+					totalBooked: { $sum: "$no_of_attendees" },
+				},
+			},
+		]);
 
-			return event;
+		const totalBookedSeats = bookedSeatsResult.length > 0 ? (bookedSeatsResult[0].totalBooked || 0) : 0;
+		const totalSeats = event.no_of_attendees || 0;
+		const availableSeats = totalSeats - totalBookedSeats;
+
+		// Add capacity information to event object
+		event.total_seats = totalSeats;
+		event.booked_seats = totalBookedSeats;
+		event.available_seats = Math.max(0, availableSeats); // Never show negative
+
+		if (userId) {
+			const bookEvent = await BookEventService.FindOneService({
+				event_id: new mongoose.Types.ObjectId(eventId),
+				user_id: new mongoose.Types.ObjectId(userId),
+			});
+			if (bookEvent) {
+				event.booked_event = bookEvent;
+			}
+		}
+
+		return event;
 		} catch (error) {
 			console.error("Event details service error:", error.message);
 			throw new Error(

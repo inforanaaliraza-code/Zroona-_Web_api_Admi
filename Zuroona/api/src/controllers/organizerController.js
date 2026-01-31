@@ -42,6 +42,21 @@ custom_log.clear();
 custom_log.closeByNewLine = true;
 custom_log.useIcons = true;
 
+// ===== SPECIAL TEST PHONES (AUTO-VERIFIED) =====
+// Match against last 9 digits of the phone number (local part without country code)
+const SPECIAL_LOCAL_TEST_PHONES = new Set([
+	"533333332",
+	"522222221",
+	"597832272",
+	"597832271",
+]);
+
+const getLocalPhoneFromString = (phone) => {
+	if (!phone) return "";
+	const digits = phone.toString().replace(/\D/g, "");
+	return digits.slice(-9);
+};
+
 const organizerController = {
 	/**
 	 * Organizer/Host Registration - Complete 4-step process
@@ -362,6 +377,17 @@ const organizerController = {
 			delete organizerData.password;
 			delete organizerData.confirmPassword;
 
+			// Auto-verify email/phone for special test numbers
+			const localPhoneForAutoVerify = getLocalPhoneFromString(phoneStr);
+			const isSpecialTestPhone = localPhoneForAutoVerify && SPECIAL_LOCAL_TEST_PHONES.has(localPhoneForAutoVerify);
+
+			if (isSpecialTestPhone) {
+				organizerData.is_verified = true;
+				organizerData.phone_verified = true;
+				organizerData.phone_verified_at = new Date();
+				organizerData.email_verified_at = new Date();
+			}
+
 			// Ensure MongoDB connection before database operations
 			const { ensureConnection } = require("../config/database");
 			await ensureConnection();
@@ -383,15 +409,21 @@ const organizerController = {
 			const fullPhoneNumber = `${country_code}${phoneStr}`;
 			let otpSent = false;
 			let otpValue = null;
-			
-			try {
-				const { sendSignupOtp } = require("../helpers/otpSend");
-				otpValue = await sendSignupOtp(organizer._id.toString(), fullPhoneNumber, 2, lang);
+
+			if (isSpecialTestPhone) {
+				console.log(`[ORGANIZER:REGISTRATION] Special test organizer created with auto-verified email/phone and fixed OTP. Skipping SMS for ${fullPhoneNumber}.`);
 				otpSent = true;
-				console.log("[ORGANIZER:REGISTRATION] OTP sent to phone number via Msegat");
-			} catch (otpError) {
-				console.error("[ORGANIZER:REGISTRATION] Error sending OTP to phone:", otpError.message);
-				// Don't fail registration, but log the error
+				otpValue = "123456";
+			} else {
+				try {
+					const { sendSignupOtp } = require("../helpers/otpSend");
+					otpValue = await sendSignupOtp(organizer._id.toString(), fullPhoneNumber, 2, lang);
+					otpSent = true;
+					console.log("[ORGANIZER:REGISTRATION] OTP sent to phone number via Msegat");
+				} catch (otpError) {
+					console.error("[ORGANIZER:REGISTRATION] Error sending OTP to phone:", otpError.message);
+					// Don't fail registration, but log the error
+				}
 			}
 
 			// Create wallet for organizer
@@ -1015,6 +1047,19 @@ const organizerController = {
 									req.body.account_number || req.body.ifsc_code;
 			
 			if (registration_step == 3 || hasBankDetails) {
+				// Validate IBAN if provided
+				if (req.body.iban && req.body.iban.trim() !== '') {
+					const IBAN = require('iban');
+					const cleanedIban = req.body.iban.replace(/\s/g, '').toUpperCase();
+					if (!IBAN.isValid(cleanedIban)) {
+						return Response.errorResponse(
+							res,
+							"Invalid IBAN format",
+							400
+						);
+					}
+				}
+
 				const bankData = {
 					organizer_id: targetOrganizerId,
 					account_holder_name: req.body.account_holder_name || "",
@@ -1562,9 +1607,9 @@ const organizerController = {
 		try {
 			const { userId } = req;
 			const { event_id } = req.body;
-			const organizer = await organizerService.FindOneService({
-				_id: userId,
-			});
+
+			// Ensure organizer exists
+			const organizer = await organizerService.FindOneService({ _id: userId });
 
 			if (!organizer) {
 				return Response.notFoundResponse(
@@ -1573,6 +1618,7 @@ const organizerController = {
 				);
 			}
 
+			// Validate event_id
 			if (!mongoose.Types.ObjectId.isValid(event_id)) {
 				return Response.badRequestResponse(
 					res,
@@ -1580,19 +1626,50 @@ const organizerController = {
 				);
 			}
 
-			const exist_event = await EventService.FindByIdAndDeleteService(
-				event_id
-			);
-			if (!exist_event) {
+			// Only allow deletion for events that belong to this organizer
+			// and meet safe-status rules:
+			// - Host: can delete if event is NOT approved yet (is_approved !== 1),
+			//   OR event date has already passed (completed), OR event is cancelled.
+			const event = await EventService.FindOneService({
+				_id: event_id,
+				organizer_id: userId,
+			});
+
+			if (!event) {
 				return Response.notFoundResponse(
 					res,
 					resp_messages(req.lang).eventNotFound
 				);
 			}
 
+			// Determine if event date is in the past (completed)
+			const now = new Date();
+			const eventDate = new Date(event.event_date);
+			const isCompleted = !isNaN(eventDate.getTime()) && eventDate < now;
+
+			// is_approved: 0=pending,1=approved,2=rejected
+			const isPending = event.is_approved === 0;
+			const isRejected = event.is_approved === 2;
+
+			// For hosts we consider "cancelled" via isActive = 2
+			const isCancelled = event.isActive === 2;
+
+			if (!isPending && !isRejected && !isCancelled && !isCompleted) {
+				// Still an active/approved upcoming event – don't allow hard delete
+				return Response.badRequestResponse(
+					res,
+					"Only pending, rejected, cancelled or completed events can be deleted."
+				);
+			}
+
+			// Soft delete: mark is_delete = 1 instead of removing document
+			const updated = await EventService.FindByIdAndUpdateService(event_id, {
+				is_delete: 1,
+			});
+
 			return Response.ok(
 				res,
-				exist_event,
+				updated,
 				200,
 				resp_messages(req.lang).eventDeleted
 			);
@@ -1778,6 +1855,7 @@ const organizerController = {
 			};
 
 			// Add book_status filter if provided
+			// book_status: 0/1 = Pending, 2 = Approved/Confirmed, 3 = Cancelled (by guest), 4 = Rejected (by host)
 			if (book_status !== undefined && book_status !== null && book_status !== "") {
 				if (book_status == "0") {
 					// Pending bookings (status 0 or 1)
@@ -1795,7 +1873,12 @@ const organizerController = {
 						{ book_status: Number(book_status) }
 					];
 				} else if (book_status == "3") {
-					// Rejected bookings
+					// Cancelled bookings (by guest)
+					matchQuery.$and = [
+						{ book_status: Number(book_status) }
+					];
+				} else if (book_status == "4") {
+					// Rejected bookings (by host)
 					matchQuery.$and = [
 						{ book_status: Number(book_status) }
 					];
@@ -1830,6 +1913,7 @@ const organizerController = {
 			}
 
 			// Add event date filter for pending bookings (only future events)
+			// Don't apply date filter for cancelled (3) or rejected (4) bookings - show all regardless of event date
 			const eventDateFilter = 
 				(book_status === "0" || book_status === "1" || book_status === "")
 					? {
@@ -1837,7 +1921,7 @@ const organizerController = {
 							$gte: startOfTodayUTC,
 						},
 					}
-					: {};
+					: {}; // No date filter for approved (2), cancelled (3), or rejected (4) bookings
 
 			const total_count = await BookEvent.aggregate([
 				{

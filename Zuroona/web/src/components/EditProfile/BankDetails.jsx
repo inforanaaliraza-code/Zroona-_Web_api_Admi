@@ -12,6 +12,8 @@ import Loader from "../Loader/Loader";
 import { Icon } from "@iconify/react";
 import { useDispatch } from "react-redux";
 import { getProfile } from "@/redux/slices/profileInfo";
+import * as Yup from "yup";
+import * as IBAN from "iban";
 
 const BankDetails = ({ title, buttonName, onNext }) => {
     const { t, i18n } = useTranslation();
@@ -35,6 +37,15 @@ const BankDetails = ({ title, buttonName, onNext }) => {
             iban: detail?.user?.bank_details?.iban || ""
         },
         enableReinitialize: true,
+        validationSchema: Yup.object({
+            iban: Yup.string()
+                .test('is-valid-iban', t('signup.ibanInvalid') || 'Invalid IBAN format', function(value) {
+                    if (!value || value.trim() === '') return true; // Allow empty for optional
+                    // Remove spaces and convert to uppercase
+                    const cleanedIban = value.replace(/\s/g, '').toUpperCase();
+                    return IBAN.isValid(cleanedIban);
+                })
+        }),
         onSubmit: (values) => {
             setLoading(true);
             const payload = {
@@ -238,14 +249,22 @@ const BankDetails = ({ title, buttonName, onNext }) => {
                         <input
                             type="text"
                             name="iban"
-                            placeholder="Enter your account number"
+                            placeholder={t('signup.tab51')}
                             value={formik.values.iban}
-                            onChange={formik.handleChange}
+                            onChange={(e) => {
+                                // Allow only alphanumeric characters and spaces
+                                const value = e.target.value.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+                                formik.setFieldValue('iban', value);
+                            }}
+                            onBlur={formik.handleBlur}
                             className={`w-full ${
                         i18n.language === "ar" ? "pr-10" : "pl-10"
-                      } py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm`}
+                      } py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm uppercase`}
                         />
                     </div>
+                    {formik.touched.iban && formik.errors.iban && (
+                        <p className="text-red-500 text-xs mt-1 font-semibold">{formik.errors.iban}</p>
+                    )}
                 </div>
 
                 {/* Submit Button */}

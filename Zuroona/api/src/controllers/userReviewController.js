@@ -288,6 +288,66 @@ const UserReviewController = {
 			);
 		}
 	},
+
+	// Get all reviews given by the current user/guest
+	getMyReviews: async (req, res) => {
+		const lang = req.headers["lang"] || "en";
+		try {
+			const { requesterId, requesterRole } = getRequesterContext(req);
+
+			if (!requesterId) {
+				return Response.unauthorizedResponse(
+					res,
+					{},
+					401,
+					"Authentication required"
+				);
+			}
+
+			const page = parseInt(req.query.page) || 1;
+			const limit = parseInt(req.query.limit) || 10;
+			const skip = (page - 1) * limit;
+
+			// Get user reviews (reviews for organizers/hosts)
+			const userReviews = await UserReviewService.FindService(
+				page,
+				limit,
+				{
+					reviewer_id: requesterId,
+					is_delete: 0,
+				}
+			);
+
+			// Get total count for pagination
+			const totalCount = await UserReviewService.CountDocumentService({
+				reviewer_id: requesterId,
+				is_delete: 0,
+			});
+
+			return Response.ok(
+				res,
+				{
+					reviews: userReviews,
+					pagination: {
+						page,
+						limit,
+						totalCount,
+						totalPages: Math.ceil(totalCount / limit),
+					},
+				},
+				200,
+				resp_messages?.[lang]?.reviews_fetched ||
+					"Reviews fetched successfully"
+			);
+		} catch (error) {
+			console.error("Get my reviews error:", error);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages?.[lang]?.internalServerError ||
+					"Something went wrong"
+			);
+		}
+	},
 };
 
 module.exports = UserReviewController;

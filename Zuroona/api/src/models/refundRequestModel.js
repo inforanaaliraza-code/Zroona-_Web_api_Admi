@@ -20,7 +20,7 @@ const refundRequestSchema = new mongoose.Schema(
 		},
 		event_id: {
 			type: mongoose.Schema.Types.ObjectId,
-			ref: 'event',
+			ref: 'Event',
 			required: true,
 		},
 		organizer_id: {

@@ -8,13 +8,64 @@ export const config = {
   dirName: process.env.NEXT_PUBLIC_S3_DIR || "Zuroona",
 };
 
-// Auto-select API base URL: prefer env, else dev localhost, else production URL
-export const BASE_API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE ||
-  (process.env.NODE_ENV === "development"
-    ? "http://localhost:3434/api/admin/"
-    : "https://api.zuroona.sa/api/admin/");
+// Build a robust admin API base URL that stays in sync with the main API
+// This allows sharing the same NEXT_PUBLIC_API_BASE_URL between web and admin.
+const getAdminApiBaseUrl = () => {
+  // 1) Highest priority: explicit admin base
+  if (process.env.NEXT_PUBLIC_API_ADMIN_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_ADMIN_BASE_URL;
+  }
+
+  // 2) Re-use generic API base and normalize it to /api/admin/
+  const genericBase =
+    process.env.NEXT_PUBLIC_API_BASE_URL ||
+    process.env.NEXT_PUBLIC_API_BASE ||
+    "";
+
+  if (genericBase) {
+    // Ensure we always end up with .../api/admin/
+    let base = genericBase.trim();
+
+    // Remove trailing slashes for easier checks
+    if (base.endsWith("/")) base = base.slice(0, -1);
+
+    // If it already points to /api/admin, just ensure trailing slash
+    if (base.endsWith("/api/admin")) {
+      return base + "/";
+    }
+
+    // If it points to /api, append /admin
+    if (base.endsWith("/api")) {
+      return base + "/admin/";
+    }
+
+    // If it is just a bare domain, append /api/admin/
+    return base + "/api/admin/";
+  }
+
+  // 3) Fallbacks based on environment and hostname (similar to web)
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (
+      hostname === "zuroona.sa" ||
+      hostname === "www.zuroona.sa" ||
+      hostname.includes("zuroona.sa")
+    ) {
+      return "https://api.zuroona.sa/api/admin/";
+    }
+  }
+
+  // 4) NODE_ENV-based default
+  if (process.env.NODE_ENV === "production") {
+    return "https://api.zuroona.sa/api/admin/";
+  }
+
+  // 5) Development default
+  return "http://localhost:3434/api/admin/";
+};
+
+// Auto-select API base URL for admin
+export const BASE_API_URL = getAdminApiBaseUrl();
 
 export const TOKEN_NAME = "ZuroonaToken";
 

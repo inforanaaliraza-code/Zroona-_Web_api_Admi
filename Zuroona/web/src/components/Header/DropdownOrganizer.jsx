@@ -11,6 +11,8 @@ import useAuth from "@/hooks/useAuth";
 import { useSelector } from "react-redux";
 import { BASE_API_URL } from "@/until";
 import { Icon } from "@iconify/react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { useConfirm } from "@/hooks/useConfirm";
 
 const DropdownOrganizer = ({ profile }) => {
   const { t } = useTranslation();
@@ -18,6 +20,7 @@ const DropdownOrganizer = ({ profile }) => {
   const { push } = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { logout: authLogout } = useAuth();
+  const { confirmProps, openConfirm } = useConfirm();
   
   // Also get profile from Redux store as fallback/update source
   const reduxProfile = useSelector((state) => state.profileData?.profile);
@@ -52,10 +55,19 @@ const DropdownOrganizer = ({ profile }) => {
   const isPending = userData?.is_approved === 1;
   const isRejected = userData?.is_approved === 3;
 
-  const logout = (e) => {
+  const handleLogout = (e) => {
     e.preventDefault();
-    authLogout();
-    setDropdownOpen(false);
+    openConfirm({
+      title: t("confirm.logoutTitle") || "Logout?",
+      description: t("confirm.logoutDescription") || "Are you sure you want to logout?",
+      confirmText: t("confirm.logoutButton") || "Yes, Logout",
+      cancelText: t("confirm.cancel") || "Cancel",
+      variant: "warning",
+      onConfirm: () => {
+        authLogout();
+        setDropdownOpen(false);
+      },
+    });
   };
 
   // If not approved, show limited menu or message
@@ -188,7 +200,7 @@ const DropdownOrganizer = ({ profile }) => {
             {/* Logout */}
             <div className="p-2">
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200 hover:scale-[1.02]"
               >
                 <Icon
@@ -200,6 +212,8 @@ const DropdownOrganizer = ({ profile }) => {
             </div>
           </div>
         )}
+        {/* Confirmation Dialog */}
+        <ConfirmDialog {...confirmProps} />
       </ClickOutside>
     );
   }
@@ -377,7 +391,7 @@ const DropdownOrganizer = ({ profile }) => {
             
             {/* Logout */}
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200 hover:scale-[1.02]"
             >
               <Icon
@@ -389,6 +403,8 @@ const DropdownOrganizer = ({ profile }) => {
           </div>
         </div>
       )}
+      {/* Confirmation Dialog */}
+      <ConfirmDialog {...confirmProps} />
     </ClickOutside>
   );
 };

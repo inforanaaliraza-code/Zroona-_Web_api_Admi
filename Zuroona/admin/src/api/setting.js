@@ -167,20 +167,21 @@ import {
   };
 
   // ===== REFUND MANAGEMENT APIs =====
+  // Note: BASE_API_URL already includes /api/admin/, so don't add "admin/" prefix
   export const GetRefundListApi = async (payload) => {
-    return getData("admin/refund/list", payload).then((data) => {
+    return getData("refund/list", payload).then((data) => {
       return data;
     });
   };
 
   export const GetRefundDetailApi = async (payload) => {
-    return getData("admin/refund/detail", payload).then((data) => {
+    return getData("refund/detail", payload).then((data) => {
       return data;
     });
   };
 
   export const UpdateRefundStatusApi = async (payload) => {
-    return putRawData("admin/refund/update-status", payload).then((data) => {
+    return putRawData("refund/update-status", payload).then((data) => {
       return data;
     });
   };

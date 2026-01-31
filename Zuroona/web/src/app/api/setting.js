@@ -378,6 +378,7 @@ export const GetRefundListApi = async (payload) => {
 export const GetRefundDetailApi = async (payload) => {
 	// Get refund request detail
 	// payload: { refund_id }
+	// payload: { refund_id }
 	return getData("user/refund/detail", payload).then((data) => {
 		return data;
 	});

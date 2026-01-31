@@ -246,6 +246,12 @@ export default function EventDetailsPage() {
 		);
 	}
 
+	// Helper function to check if image URL is external
+	const isExternalImage = (url) => {
+		if (!url) return false;
+		return url.startsWith("http://") || url.startsWith("https://");
+	};
+
 	// Helper function to get proper image URL
 	const getImageUrl = (imagePath) => {
 		if (!imagePath) return "/assets/images/home/event1.png";
@@ -825,6 +831,7 @@ export default function EventDetailsPage() {
 											fill
 											className="object-cover transition-transform duration-500 group-hover:scale-105"
 											priority
+											unoptimized={isExternalImage(images[currentImageIndex])}
 											onError={(e) => {
 												e.target.src = "/assets/images/home/event1.png";
 											}}
@@ -904,6 +911,7 @@ export default function EventDetailsPage() {
 															alt={`Event image ${index + 1}`}
 															fill
 															className="object-cover"
+															unoptimized={isExternalImage(img)}
 															onError={(e) => {
 																e.target.src = "/assets/images/home/event1.png";
 															}}

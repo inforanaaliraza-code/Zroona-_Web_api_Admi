@@ -8,15 +8,15 @@ import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import Cookies from "universal-cookie";
 import { getEventList } from "@/redux/slices/EventList";
-import AddEditWelcomeEventModal from "@/components/Modal/AddEditWelcomeEventModal";
+import { useRouter } from "next/navigation";
 import Paginations from "@/components/Paginations/Pagination";
 import Loader from "@/components/Loader/Loader";
 import { useTranslation } from "react-i18next";
 
 export default function WelcomeEvent() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { t } = useTranslation();
+  const router = useRouter();
   const breadcrumbItems = [
     { label: t('breadcrumb.tab1'), href: "/joinUsEvent" },
     { label: t('breadcrumb.tab15'), href: "/welcomeUsEvent" },
@@ -72,7 +72,7 @@ export default function WelcomeEvent() {
                 <div className="flex justify-between items-center mb-5">
                   <h2 className="text-xl sm:text-3xl font-bold mb-0 sm:mb-3">{t('breadcrumb.tab15')}</h2>
                   <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => router.push("/create-event?type=2")}
                     className="bg-[#a797cc] flex items-center text-white px-5 gap-x-2 py-3 sm:py-4 rounded-xl text-xs font-semibold transition-colors duration-200 ease-in-out border border-transparent hover:border-[#a797cc] whitespace-nowrap"
                   >
                     <Image
@@ -123,13 +123,6 @@ export default function WelcomeEvent() {
           </div>
         </div>
       </section>
-
-      <AddEditWelcomeEventModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        eventpage={page}
-        eventlimit={activePage}
-      />
     </>
   );
 }

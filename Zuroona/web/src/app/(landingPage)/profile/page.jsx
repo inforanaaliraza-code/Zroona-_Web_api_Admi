@@ -125,7 +125,6 @@ export default function ProfilePage() {
       
       <div className="bg-gray-50 min-h-screen py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
           {/* Profile Header */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -216,9 +215,9 @@ export default function ProfilePage() {
                         </div>
                         
                         <div>
-                          <p className={`text-sm font-medium text-gray-500 ${textAlign}`}>{t("signup.tab10") || "Date of Birth"}</p>
+                          <p className={`text-sm font-medium text-gray-500 ${textAlign}`}>{t("signup.tab10") || t("profile.dateOfBirth") || "Date of Birth"}</p>
                           <p className={`mt-1 text-sm text-gray-900 ${textAlign}`}>
-                            {profile?.user?.dob ? formatDate(profile.user.dob) : "-"}
+                            {profile?.user?.date_of_birth ? formatDate(profile.user.date_of_birth) : "-"}
                           </p>
                         </div>
                       </div>

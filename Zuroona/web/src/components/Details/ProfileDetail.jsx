@@ -14,6 +14,12 @@ const ProfileDetail = ({ profile, showJoinButton, showEventStatus }) => {
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
 
+    // Helper function to check if image URL is external
+    const isExternalImage = (url) => {
+        if (!url) return false;
+        return url.startsWith("http://") || url.startsWith("https://");
+    };
+
     // Helper function to get proper image URL
     const getImageUrl = (imgPath) => {
         if (!imgPath) return "/assets/images/home/dummyImage.png";
@@ -146,6 +152,7 @@ const ProfileDetail = ({ profile, showJoinButton, showEventStatus }) => {
                             fill
                             className="object-cover transition-transform duration-300 group-hover:scale-105"
                             priority
+                            unoptimized={isExternalImage(images[currentImageIndex])}
                             onError={(e) => {
                                 e.target.src = "/assets/images/home/dummyImage.png";
                             }}
@@ -230,6 +237,7 @@ const ProfileDetail = ({ profile, showJoinButton, showEventStatus }) => {
                                             alt={`Event image ${index + 1}`}
                                             fill
                                             className="object-cover"
+                                            unoptimized={isExternalImage(img)}
                                             onError={(e) => {
                                                 e.target.src = "/assets/images/home/dummyImage.png";
                                             }}
@@ -261,27 +269,31 @@ const ProfileDetail = ({ profile, showJoinButton, showEventStatus }) => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {profile?.dos_instruction && (
-                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-100">
+                        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border border-green-100 overflow-hidden">
                             <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                 <div className="flex-shrink-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                                     <Icon icon="lucide:check" className="w-5 h-5 text-white" />
                                 </div>
-                                <div className={isRTL ? 'text-right' : 'text-left'}>
+                                <div className={`${isRTL ? 'text-right' : 'text-left'} overflow-hidden`}>
                                     <h3 className="font-bold text-green-800 mb-2 text-sm">{t('detail.tab40')}</h3>
-                                    <p className="text-gray-700 text-sm leading-relaxed">{profile.dos_instruction}</p>
+                                    <p className="text-gray-700 text-sm leading-relaxed break-words whitespace-pre-wrap line-clamp-5">
+                                        {profile.dos_instruction}
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     )}
                     {profile?.do_not_instruction && (
-                        <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-5 border border-red-100">
+                        <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-5 border border-red-100 overflow-hidden">
                             <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                 <div className="flex-shrink-0 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
                                     <Icon icon="lucide:x" className="w-5 h-5 text-white" />
                                 </div>
-                                <div className={isRTL ? 'text-right' : 'text-left'}>
+                                <div className={`${isRTL ? 'text-right' : 'text-left'} overflow-hidden`}>
                                     <h3 className="font-bold text-red-800 mb-2 text-sm">{t('detail.tab41')}</h3>
-                                    <p className="text-gray-700 text-sm leading-relaxed">{profile.do_not_instruction}</p>
+                                    <p className="text-gray-700 text-sm leading-relaxed break-words whitespace-pre-wrap line-clamp-5">
+                                        {profile.do_not_instruction}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -315,6 +327,7 @@ const ProfileDetail = ({ profile, showJoinButton, showEventStatus }) => {
                             width={1200}
                             height={800}
                             className="max-w-full max-h-[90vh] object-contain rounded-lg"
+                            unoptimized={isExternalImage(images[lightboxImageIndex])}
                             onError={(e) => {
                                 e.target.src = "/assets/images/home/dummyImage.png";
                             }}
@@ -369,6 +382,7 @@ const ProfileDetail = ({ profile, showJoinButton, showEventStatus }) => {
                                                 alt={`Thumbnail ${index + 1}`}
                                                 fill
                                                 className="object-cover"
+                                                unoptimized={isExternalImage(img)}
                                                 onError={(e) => {
                                                     e.target.src = "/assets/images/home/dummyImage.png";
                                                 }}

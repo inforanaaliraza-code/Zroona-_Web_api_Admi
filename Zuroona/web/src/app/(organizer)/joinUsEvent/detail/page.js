@@ -125,15 +125,6 @@ export default function JoinUsDetail() {
                     <span>{t("events.viewAnalytics", "View Analytics")}</span>
                   </Link>
                   
-                  {/* View Bookings Button - Alternative way to manage bookings */}
-                  <Link
-                    href={`/myBookings${EventListId ? `?event_id=${EventListId}` : ''}`}
-                    className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-                  >
-                    <Icon icon="lucide:clipboard-list" className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                    <span>{t("hostNavbar.myBookings", "View Bookings")}</span>
-                  </Link>
-                  
                   {/* Edit Event Button - Orange color (replaced Cancel Event) */}
                   {detailData?.is_approved === 1 && (
                     <button

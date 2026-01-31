@@ -27,8 +27,10 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
   // States
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Phone input, 2: OTP verification
-  const [seconds, setSeconds] = useState(30);
+  const [seconds, setSeconds] = useState(60); // 1 minute timer
   const [timerActive, setTimerActive] = useState(false);
+  const [otpExpired, setOtpExpired] = useState(false);
+  const [otpSentTime, setOtpSentTime] = useState(null); // Track when OTP was sent
 
   // Phone number form
   const phoneFormik = useFormik({
@@ -55,6 +57,8 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
         setLoading(false);
         if (data?.status === 1) {
           toast.success(data.message || "OTP sent successfully");
+          setOtpSentTime(Date.now()); // Record when OTP was sent
+          setOtpExpired(false);
           if (onLogin) {
             // If onLogin prop exists, call it instead of showing the OTP step in this modal
             onClose();
@@ -85,6 +89,22 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
     }),
     onSubmit: (values) => {
       setLoading(true);
+      
+      // Check if OTP has expired (1 minute = 60000 ms)
+      if (otpSentTime && (Date.now() - otpSentTime) > 60000) {
+        setLoading(false);
+        toast.error(t("auth.otpExpired") || "OTP has expired. Please request a new one.");
+        setOtpExpired(true);
+        otpFormik.setFieldValue("otp", "");
+        return;
+      }
+      if (otpExpired) {
+        setLoading(false);
+        toast.error(t("auth.otpExpired") || "OTP has expired. Please request a new one.");
+        otpFormik.setFieldValue("otp", "");
+        return;
+      }
+
       const payload = {
         otp: values.otp,
       };
@@ -167,8 +187,9 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
 
   // Timer for OTP resend
   const startTimer = () => {
-    setSeconds(30);
+    setSeconds(60); // 1 minute
     setTimerActive(true);
+    setOtpExpired(false);
 
     const interval = setInterval(() => {
       setSeconds((prevSeconds) => {
@@ -191,6 +212,9 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
       country_code: phoneFormik.values.country_code,
     }).then((data) => {
       if (data?.status === 1) {
+        setOtpSentTime(Date.now()); // Record when OTP was sent
+        setOtpExpired(false);
+        otpFormik.setFieldValue("otp", ""); // Clear previous OTP
         toast.success(data?.message);
         startTimer();
       } else {
@@ -430,10 +454,17 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
                       </p>
                     )}
 
-                    <div className="flex justify-center items-center my-4">
-                      <span className="text-brand-orange text-sm">
-                        00:{seconds > 9 ? seconds : `0${seconds}`}{" "}
-                      </span>
+                    <div className="flex justify-center items-center gap-3 my-4">
+                      {seconds > 0 && !otpExpired ? (
+                        <span className="text-gray-600 text-sm font-medium">
+                          {t("auth.otpTimer") || "Resend in"} {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}
+                        </span>
+                      ) : null}
+                      {otpExpired && (
+                        <span className="text-red-600 text-sm font-medium">
+                          {t("auth.otpExpired") || "OTP Expired"}
+                        </span>
+                      )}
                     </div>
 
                     <button
@@ -449,15 +480,21 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
                     </button>
                   </form>
 
-                  <div className="mt-4 text-sm text-center text-gray-800">
-                    {t("OTP.tab4")}{" "}
-                    {!timerActive && (
-                      <span
-                        className="text-brand-orange underline cursor-pointer"
-                        onClick={resendCode}
-                      >
-                        {t("OTP.tab5")}
+                  <div className="mt-4 text-sm text-center text-gray-800 flex items-center justify-center gap-2">
+                    {seconds > 0 && !otpExpired ? (
+                      <span className="text-gray-600">
+                        {t("auth.otpTimer") || "Resend in"} {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}
                       </span>
+                    ) : (
+                      <>
+                        <span>{t("OTP.tab4") || "Didn't receive the code?"}</span>
+                        <span
+                          className="text-brand-orange underline cursor-pointer hover:text-orange-700"
+                          onClick={resendCode}
+                        >
+                          {t("OTP.tab5") || "Resend"}
+                        </span>
+                      </>
                     )}
                   </div>
                 </motion.div>

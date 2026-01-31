@@ -299,9 +299,6 @@ export default function ManageEvents() {
                     {t("events.organizer")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
-                    {t("events.eventCategory")}
-                  </th>
-                  <th className="px-2 py-4 text-left font-base text-gray-600">
                     {t("events.numberOfAttendees")}
                   </th>
                   <th className="px-2 py-4 text-left font-base text-gray-600">
@@ -327,7 +324,7 @@ export default function ManageEvents() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="py-3">
+                    <td colSpan={11} className="py-3">
                       <Loader />
                     </td>
                   </tr>
@@ -373,9 +370,6 @@ export default function ManageEvents() {
                             {event?.organizer?.last_name}
                           </span>
                         </div>
-                      </td>
-                      <td className="px-2 py-3 whitespace-nowrap">
-                        {formatEventCategories(event.event_category_details)}
                       </td>
                       <td className="px-2 py-3">{event.no_of_attendees}</td>
                       <td className="px-2 py-3 whitespace-nowrap">
@@ -463,7 +457,7 @@ export default function ManageEvents() {
                   ))
                 ) : (
                   <tr className="text-center">
-                    <td colSpan={12} className="pt-2">
+                    <td colSpan={11} className="pt-2">
                       {t("events.noDataFound")}
                     </td>
                   </tr>

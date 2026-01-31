@@ -16,6 +16,7 @@ import LoginModal from "../Modal/LoginModal";
 import Cookies from "js-cookie";
 import { useTranslation } from "react-i18next";
 import { NumberInput } from "@/components/ui/number-input";
+import { DatePickerTime } from "@/components/ui/date-picker-time";
 
 export default function OrganizerSignUpForm({ title, buttonText, showDeactiveButton }) {
     const { t, i18n } = useTranslation();
@@ -298,24 +299,22 @@ export default function OrganizerSignUpForm({ title, buttonText, showDeactiveBut
                     <div className="mb-4">
                         <label className="block text-sm font-semibold text-gray-700" htmlFor="date_of_birth">{t('signup.tab10')}</label>
                         <div className="relative mt-1">
-                            <span className={`absolute flex items-center 
-                                ${i18n.language === "ar"
-                                ? "inset-y-0 right-0 pr-3 hidden"
-                                : "inset-y-0 left-0 pl-3"
-                            }`}>
-                                <Image src="/assets/images/signup/calendar-event.png" height={13} width={13} alt="" />
-                            </span>
-                            <input
-                                type="date"
-                                id="date_of_birth"
-                                className={`w-full ${i18n.language === "ar" ? "pl-5 pr-3" : "pl-10 pr-3"
-                                } py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm`}
-                                value={formik.values.date_of_birth}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                max={new Date().toISOString().split('T')[0]}
+                            <DatePickerTime
+                                date={formik.values.date_of_birth}
+                                onDateChange={(date) => {
+                                    formik.setFieldValue("date_of_birth", date);
+                                    formik.setFieldTouched("date_of_birth", true);
+                                }}
+                                dateLabel=""
+                                dateId="date_of_birth"
+                                showDate={true}
+                                showTime={false}
+                                fullWidth={true}
+                                maxDate={new Date().toISOString().split('T')[0]}
+                                dateError={formik.touched.date_of_birth && !!formik.errors.date_of_birth}
+                                dateErrorMessage={formik.errors.date_of_birth}
+                                className="w-full"
                             />
-
                         </div>
                         {formik.errors.date_of_birth && formik.touched.date_of_birth && (
                             <p className="mt-1 text-xs font-semibold text-red-500">{formik.errors.date_of_birth}</p>

@@ -13,11 +13,13 @@ import UserEventListReducer from "./slices/UserEventList";
 import UserEventDetailReducer from "./slices/UserEventListDetail";
 import UserBookingListReducer from "./slices/UserBookingList";
 import UserBookingdetailsReducer from "./slices/UserBookingDetail";
+import bookingsReducer from "./slices/bookingsSlice";
 import UserNotificatonListReducer from "./slices/UserNotificaton";
 import UserNotificatonCountReducer from "./slices/UserNotificatonCount";
 import EarningReducer from "./slices/Earning";
 import WithdrawalListReducer from "./slices/WithdrawalList";
 import languageReducer from "./slices/language";
+import signupFormReducer from "./slices/signupFormSlice";
 
 export const store = configureStore({
   reducer: {
@@ -35,8 +37,10 @@ export const store = configureStore({
     UserEventDetailData: UserEventDetailReducer,
     UserBookingListData: UserBookingListReducer,
     UserBookingDetailData: UserBookingdetailsReducer,
+    bookings: bookingsReducer,
     UserNotificatonListData: UserNotificatonListReducer,
     UserNotificatonCountData: UserNotificatonCountReducer,
     language: languageReducer,
+    signupForm: signupFormReducer,
   },
 });

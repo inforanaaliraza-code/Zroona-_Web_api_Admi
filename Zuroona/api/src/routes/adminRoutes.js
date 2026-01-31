@@ -111,7 +111,7 @@ router.get("/wallet/details", adminController.walletDetails);
 router.get("/admin/current", adminController.getCurrentAdmin);
 
 // Admin notifications
-router.get("/admin/notifications", adminController.getAdminNotifications);
+router.get("/notifications", adminController.getAdminNotifications);
 
 // Guest invoices/receipts management
 router.get("/bookings/invoices/stats", adminController.getInvoiceStats);

@@ -29,6 +29,21 @@ custom_log.closeByNewLine = true;
 custom_log.useIcons = true;
 let count = 0;
 
+// ===== SPECIAL TEST PHONES (AUTO-VERIFIED) =====
+// Match against last 9 digits of the phone number (local part without country code)
+const SPECIAL_LOCAL_TEST_PHONES = new Set([
+	"533333332",
+	"522222221",
+	"597832272",
+	"597832271",
+]);
+
+const getLocalPhoneFromString = (phone) => {
+	if (!phone) return "";
+	const digits = phone.toString().replace(/\D/g, "");
+	return digits.slice(-9);
+};
+
 const UserController = {
 	userRegistration: async (req, res) => {
 		const lang = req.headers["lang"] || "en";
@@ -326,6 +341,17 @@ const UserController = {
 			const { ensureConnection } = require("../config/database");
 			await ensureConnection();
 
+			// Auto-verify email/phone for special test numbers
+			const localPhoneForAutoVerify = getLocalPhoneFromString(phoneStr);
+			const isSpecialTestPhone = localPhoneForAutoVerify && SPECIAL_LOCAL_TEST_PHONES.has(localPhoneForAutoVerify);
+
+			if (isSpecialTestPhone) {
+				userData.is_verified = true;
+				userData.phone_verified = true;
+				userData.phone_verified_at = new Date();
+				userData.email_verified_at = new Date();
+			}
+
 			let user;
 			try {
 				user = await UserService.CreateService(userData);
@@ -387,15 +413,22 @@ const UserController = {
 			console.log(`[USER:REGISTRATION] Formatted phone for OTP: ${fullPhoneNumber} (original: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code})`);
 			let otpSent = false;
 			let otpValue = null;
-			
-			try {
-				const { sendSignupOtp } = require("../helpers/otpSend");
-				otpValue = await sendSignupOtp(user._id.toString(), fullPhoneNumber, 1, lang);
+
+			// For special test numbers, OTP already fixed and we don't need to send SMS again
+			if (isSpecialTestPhone) {
+				console.log(`[USER:REGISTRATION] Special test user created with auto-verified email/phone and fixed OTP. Skipping SMS for ${fullPhoneNumber}.`);
 				otpSent = true;
-				console.log("[USER:REGISTRATION] OTP sent to phone number via Msegat");
-			} catch (otpError) {
-				console.error("[USER:REGISTRATION] Error sending OTP to phone:", otpError.message);
-				// Don't fail registration, but log the error
+				otpValue = "123456";
+			} else {
+				try {
+					const { sendSignupOtp } = require("../helpers/otpSend");
+					otpValue = await sendSignupOtp(user._id.toString(), fullPhoneNumber, 1, lang);
+					otpSent = true;
+					console.log("[USER:REGISTRATION] OTP sent to phone number via Msegat");
+				} catch (otpError) {
+					console.error("[USER:REGISTRATION] Error sending OTP to phone:", otpError.message);
+					// Don't fail registration, but log the error
+				}
 			}
 
 			// Generate verification token
@@ -716,8 +749,10 @@ const UserController = {
 					console.log("[USER:LOGIN] Organizer pending approval");
 					return Response.unauthorizedResponse(
 						res,
+						{},
+						401,
 						resp_messages(lang).account_pending_approval ||
-						"Your account is pending admin approval. We will notify you via email once approved. You cannot login until your account is approved."
+						"Your host profile is under review. Once approved, you will receive an email confirmation and then you can login to your account."
 					);
 				}
 
@@ -1186,9 +1221,11 @@ const UserController = {
 				if (account.is_approved === 1) {
 					return Response.unauthorizedResponse(
 						res,
+						{},
+						401,
 						lang === "ar"
-							? "حسابك في انتظار موافقة المسؤول. يرجى المحاولة مرة أخرى بعد الموافقة."
-							: "Your account is pending admin approval."
+							? "حسابك قيد المراجعة من قبل الإدارة. بمجرد الموافقة، ستصلك رسالة تأكيد على بريدك الإلكتروني ويمكنك بعدها تسجيل الدخول إلى حسابك."
+							: "Your host profile is under review. Once approved, you will receive an email confirmation and then you can login to your account."
 					);
 				}
 
@@ -1204,9 +1241,11 @@ const UserController = {
 				if (account.is_approved !== 2) {
 					return Response.unauthorizedResponse(
 						res,
+						{},
+						401,
 						lang === "ar"
-							? "حسابك في انتظار موافقة المسؤول. يرجى المحاولة مرة أخرى بعد الموافقة."
-							: "Your account is pending admin approval."
+							? "حسابك قيد المراجعة من قبل الإدارة. بمجرد الموافقة، ستصلك رسالة تأكيد على بريدك الإلكتروني ويمكنك بعدها تسجيل الدخول إلى حسابك."
+							: "Your host profile is under review. Once approved, you will receive an email confirmation and then you can login to your account."
 					);
 				}
 			}
@@ -3058,12 +3097,63 @@ const UserController = {
 				});
 			}
 
+			// Auto-create refund request if payment was made (payment_status = 1)
+			if (book_event.payment_status === 1 && amountToDeduct > 0) {
+				try {
+					const RefundRequestService = require("../services/refundRequestService");
+					
+					// Check if refund request already exists for this booking
+					const existingRefund = await RefundRequestService.FindOneService({
+						booking_id: book_id,
+					});
+
+					if (!existingRefund) {
+						// Create automatic refund request
+						const refundRequestData = {
+							booking_id: book_id,
+							user_id: userId,
+							event_id: event._id,
+							organizer_id: book_event.organizer_id,
+							amount: amountToDeduct,
+							refund_reason: reason || `Automatic refund request for cancelled booking. ${lang === "ar" ? "تم إلغاء الحجز" : "Booking cancelled"}.`,
+							status: 0, // Pending
+							currency: "SAR",
+						};
+
+						const refundRequest = await RefundRequestService.CreateService(refundRequestData);
+						console.log(`[GUEST:CANCEL] Auto-created refund request: ${refundRequest._id} for booking: ${book_id}`);
+
+						// Notify admin about new refund request
+						for (const admin of admins) {
+							await NotificationService.CreateService({
+								user_id: admin._id,
+								role: 3, // Admin role
+								title: lang === "ar" ? "طلب استرداد جديد" : "New Refund Request",
+								description: lang === "ar"
+									? `طلب استرداد جديد من "${user.first_name} ${user.last_name}" لحدث "${event.event_name}". المبلغ: ${amountToDeduct} ريال.`
+									: `New refund request from "${user.first_name} ${user.last_name}" for event "${event.event_name}". Amount: ${amountToDeduct} SAR.`,
+								event_id: event._id,
+								book_id: book_id,
+								notification_type: 4, // Refund type
+								isRead: false,
+							});
+						}
+					} else {
+						console.log(`[GUEST:CANCEL] Refund request already exists for booking: ${book_id}`);
+					}
+				} catch (refundError) {
+					console.error("[GUEST:CANCEL] Error creating auto-refund request:", refundError);
+					// Don't fail the cancellation if refund request creation fails
+				}
+			}
+
 			return Response.ok(
 				res,
 				{
 					booking: book_event,
 					amountDeducted: amountToDeduct,
 					ticketsCancelled: ticketsCount,
+					refundRequestCreated: book_event.payment_status === 1 && amountToDeduct > 0,
 				},
 				200,
 				resp_messages(lang).bookingCancelled || "Booking cancelled successfully"
@@ -3210,6 +3300,72 @@ const UserController = {
 				count
 			);
 		} catch (error) {
+			return Response.serverErrorResponse(
+				res,
+				resp_messages(req.lang).internalServerError
+			);
+		}
+	},
+	// Get all event reviews given by the current user
+	myEventReviews: async (req, res) => {
+		try {
+			const { userId } = req;
+			const { page = 1, limit = 10 } = req.query;
+
+			const skip = (Number(page) - 1) * Number(limit);
+
+			// Get event reviews by current user
+			const event_reviews = await ReviewService.AggregateService([
+				{
+					$match: {
+						user_id: new mongoose.Types.ObjectId(userId),
+					},
+				},
+				{
+					$lookup: {
+						from: "events",
+						localField: "event_id",
+						foreignField: "_id",
+						as: "event",
+					},
+				},
+				{
+					$unwind: "$event",
+				},
+				{
+					$lookup: {
+						from: "organizers",
+						localField: "event.organizer_id",
+						foreignField: "_id",
+						as: "organizer",
+					},
+				},
+				{
+					$unwind: {
+						path: "$organizer",
+						preserveNullAndEmptyArrays: true,
+					},
+				},
+				{
+					$sort: { createdAt: -1 }
+				},
+				{ $skip: skip },
+				{ $limit: Number(limit) },
+			]);
+
+			const count = await ReviewService.CountDocumentService({
+				user_id: userId,
+			});
+
+			return Response.ok(
+				res,
+				event_reviews,
+				200,
+				resp_messages(req.lang).fetched_data,
+				count
+			);
+		} catch (error) {
+			console.error("Get my event reviews error:", error);
 			return Response.serverErrorResponse(
 				res,
 				resp_messages(req.lang).internalServerError
@@ -3800,21 +3956,11 @@ const UserController = {
 						organizer
 					);
 
-				if (localInvoice && localInvoice.id) {
-					// Save local invoice to booking record
-					// Fix URL construction to avoid double slashes
-					// Note: Invoices are served at root level (/invoices/), not under /api/
-					let baseUrl = (process.env.BASE_URL || 'http://localhost:3434').replace(/\/+$/, ''); // Remove trailing slashes
-					
-					// Remove /api or /api/ from base URL if present (invoices are served at root)
-					baseUrl = baseUrl.replace(/\/api\/?$/, '');
-					
-					const invoicePath = localInvoice.invoice_url.replace(/^\/+/, '/'); // Ensure single leading slash
-					const fullInvoiceUrl = `${baseUrl}${invoicePath}`;
-					
-					updatedBooking.invoice_id = localInvoice.id;
-					updatedBooking.invoice_url = fullInvoiceUrl;
-					await updatedBooking.save();
+					if (localInvoice && localInvoice.id) {
+						// Save local invoice to booking record
+						updatedBooking.invoice_id = localInvoice.id;
+						updatedBooking.invoice_url = `${process.env.BASE_URL || 'http://localhost:3434'}${localInvoice.invoice_url}`;
+						await updatedBooking.save();
 
 						// Also store in transaction record
 						if (transaction && transaction._id) {
@@ -3822,7 +3968,7 @@ const UserController = {
 								transaction._id,
 								{
 									invoice_id: localInvoice.id,
-									invoice_url: fullInvoiceUrl,
+									invoice_url: `${process.env.BASE_URL || 'http://localhost:3434'}${localInvoice.invoice_url}`,
 								}
 							);
 						}
@@ -3831,7 +3977,7 @@ const UserController = {
 							"[RECEIPT] Local invoice generated successfully:",
 							localInvoice.id,
 							"URL:",
-							fullInvoiceUrl
+							localInvoice.invoice_url
 						);
 					}
 				} catch (localInvoiceError) {
@@ -4783,6 +4929,15 @@ const UserController = {
 			}
 
 			// Create refund request
+			console.log("[REFUND:REQUEST] Creating refund request with data:", {
+				booking_id: booking._id,
+				user_id: userId,
+				event_id: booking.event_id,
+				organizer_id: booking.organizer_id,
+				amount: booking.total_amount,
+				refund_reason: refund_reason.trim(),
+			});
+
 			const refundRequest = await RefundRequestService.CreateService({
 				booking_id: booking._id,
 				user_id: userId,
@@ -4793,10 +4948,26 @@ const UserController = {
 				status: 0, // Pending
 			});
 
+			if (!refundRequest || !refundRequest._id) {
+				console.error("[REFUND:REQUEST] Failed to create refund request");
+				return Response.serverErrorResponse(
+					res,
+					"Failed to create refund request. Please try again."
+				);
+			}
+
+			console.log("[REFUND:REQUEST] Refund request created successfully:", refundRequest._id);
+
 			// Update booking with refund request ID
-			await BookEventService.FindByIdAndUpdateService(booking._id, {
-				refund_request_id: refundRequest._id,
-			});
+			try {
+				await BookEventService.FindByIdAndUpdateService(booking._id, {
+					refund_request_id: refundRequest._id,
+				});
+				console.log("[REFUND:REQUEST] Booking updated with refund_request_id");
+			} catch (updateError) {
+				console.error("[REFUND:REQUEST] Error updating booking:", updateError);
+				// Don't fail the request if booking update fails
+			}
 
 			// Create notification for admin
 			const AdminService = require("../services/adminService");
@@ -4849,28 +5020,89 @@ const UserController = {
 	 * Get user's refund requests
 	 * GET /user/refund/list
 	 */
-		getRefundRequests: async (req, res) => {
+	getRefundRequests: async (req, res) => {
 		const lang = req.headers["lang"] || "en";
 		try {
 			const { userId } = req;
 			const { page = 1, limit = 10, status } = req.query;
 
-			const skip = (Number(page) - 1) * Number(limit);
+			console.log("[REFUND:LIST] Fetching refunds for user:", userId, { page, limit, status });
+
+			// Build query
 			const query = { user_id: new mongoose.Types.ObjectId(userId) };
 
 			// Filter by status if provided
-			if (status !== undefined) {
+			if (status !== undefined && status !== null && status !== "") {
 				query.status = parseInt(status);
 			}
 
 			const RefundRequestService = require("../services/refundRequestService");
-			const refundRequests = await RefundRequestService.FindService(
-				query,
-				Number(page),
-				Number(limit)
-			);
+			
+			// Fetch refund requests with proper error handling and populated data
+			let refundRequests;
+			try {
+				// Use aggregation for better populated data
+				refundRequests = await RefundRequestService.AggregateService([
+					{ $match: query },
+					{
+						$lookup: {
+							from: "events",
+							localField: "event_id",
+							foreignField: "_id",
+							as: "event"
+						}
+					},
+					{ $unwind: { path: "$event", preserveNullAndEmptyArrays: true } },
+					{
+						$project: {
+							_id: 1,
+							booking_id: 1,
+							user_id: 1,
+							event_id: 1,
+							organizer_id: 1,
+							amount: 1,
+							currency: 1,
+							refund_reason: 1,
+							status: 1,
+							admin_response: 1,
+							payment_refund_id: 1,
+							refund_error: 1,
+							processed_at: 1,
+							createdAt: 1,
+							updatedAt: 1,
+							event: {
+								_id: "$event._id",
+								event_name: "$event.event_name",
+								event_date: "$event.event_date",
+								event_image: "$event.event_image"
+							}
+						}
+					},
+					{ $sort: { createdAt: -1 } },
+					{ $skip: (Number(page) - 1) * Number(limit) },
+					{ $limit: Number(limit) }
+				]);
+				
+				console.log("[REFUND:LIST] Found refunds:", refundRequests?.length || 0);
+			} catch (serviceError) {
+				console.error("[REFUND:LIST] Service error:", serviceError);
+				// If no refunds found, return empty array instead of error
+				refundRequests = [];
+			}
 
-			const count = await RefundRequestService.CountDocumentService(query);
+			// Get count
+			let count = 0;
+			try {
+				count = await RefundRequestService.CountDocumentService(query);
+			} catch (countError) {
+				console.error("[REFUND:LIST] Count error:", countError);
+				count = Array.isArray(refundRequests) ? refundRequests.length : 0;
+			}
+
+			// Ensure refundRequests is an array
+			if (!Array.isArray(refundRequests)) {
+				refundRequests = [];
+			}
 
 			return Response.ok(
 				res,
@@ -4881,9 +5113,10 @@ const UserController = {
 			);
 		} catch (error) {
 			console.error("[REFUND:LIST] Error:", error);
+			console.error("[REFUND:LIST] Error stack:", error.stack);
 			return Response.serverErrorResponse(
 				res,
-				resp_messages(lang).internalServerError
+				error.message || resp_messages(lang).internalServerError || "Internal server error"
 			);
 		}
 	},
@@ -4898,22 +5131,138 @@ const UserController = {
 			const { userId } = req;
 			const { refund_id } = req.query;
 
+			console.log("[REFUND:DETAIL] Request:", { refund_id, userId });
+
 			if (!refund_id) {
 				return Response.validationErrorResponse(res, "Refund ID is required");
 			}
 
-			const RefundRequestService = require("../services/refundRequestService");
-			const refundRequest = await RefundRequestService.FindOneService({
-				_id: refund_id,
-				user_id: userId,
-			});
+			// Validate ObjectId format
+			if (!mongoose.Types.ObjectId.isValid(refund_id)) {
+				return Response.validationErrorResponse(res, "Invalid refund ID format");
+			}
 
-			if (!refundRequest) {
+			const RefundRequestService = require("../services/refundRequestService");
+			
+			// Use aggregation pipeline to populate related data and ensure user_id matches
+			let refundRequests;
+			try {
+				refundRequests = await RefundRequestService.AggregateService([
+					{
+						$match: {
+							_id: new mongoose.Types.ObjectId(refund_id),
+							user_id: new mongoose.Types.ObjectId(userId),
+						}
+					},
+					{
+						$lookup: {
+							from: "book_event",
+							localField: "booking_id",
+							foreignField: "_id",
+							as: "booking"
+						}
+					},
+					{ $unwind: { path: "$booking", preserveNullAndEmptyArrays: true } },
+					{
+						$lookup: {
+							from: "users",
+							localField: "user_id",
+							foreignField: "_id",
+							as: "user"
+						}
+					},
+					{ $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+					{
+						$lookup: {
+							from: "events",
+							localField: "event_id",
+							foreignField: "_id",
+							as: "event"
+						}
+					},
+					{ $unwind: { path: "$event", preserveNullAndEmptyArrays: true } },
+					{
+						$lookup: {
+							from: "organizers",
+							localField: "organizer_id",
+							foreignField: "_id",
+							as: "organizer"
+						}
+					},
+					{ $unwind: { path: "$organizer", preserveNullAndEmptyArrays: true } },
+					{
+						$project: {
+							_id: 1,
+							booking_id: 1,
+							user_id: 1,
+							event_id: 1,
+							organizer_id: 1,
+							amount: 1,
+							currency: 1,
+							refund_reason: 1,
+							status: 1,
+							admin_response: 1,
+							payment_refund_id: 1,
+							refund_error: 1,
+							processed_at: 1,
+							processed_by: 1,
+							createdAt: 1,
+							updatedAt: 1,
+							booking: {
+								_id: "$booking._id",
+								order_id: "$booking.order_id",
+								invoice_id: "$booking.invoice_id",
+								no_of_attendees: "$booking.no_of_attendees",
+								total_amount: "$booking.total_amount",
+								payment_status: "$booking.payment_status",
+								book_status: "$booking.book_status",
+								createdAt: "$booking.createdAt"
+							},
+							user: {
+								_id: "$user._id",
+								first_name: "$user.first_name",
+								last_name: "$user.last_name",
+								email: "$user.email",
+								phone_number: "$user.phone_number",
+								profile_image: "$user.profile_image"
+							},
+							event: {
+								_id: "$event._id",
+								event_name: "$event.event_name",
+								event_date: "$event.event_date",
+								event_image: "$event.event_image",
+								event_price: "$event.event_price"
+							},
+							organizer: {
+								_id: "$organizer._id",
+								first_name: "$organizer.first_name",
+								last_name: "$organizer.last_name",
+								email: "$organizer.email",
+								group_name: "$organizer.group_name"
+							}
+						}
+					}
+				]);
+			} catch (serviceError) {
+				console.error("[REFUND:DETAIL] Service error:", serviceError);
+				console.error("[REFUND:DETAIL] Service error stack:", serviceError.stack);
+				// Return not found instead of server error
 				return Response.notFoundResponse(
 					res,
 					"Refund request not found or you don't have permission"
 				);
 			}
+
+			if (!refundRequests || refundRequests.length === 0) {
+				console.log("[REFUND:DETAIL] Refund not found or user mismatch");
+				return Response.notFoundResponse(
+					res,
+					"Refund request not found or you don't have permission"
+				);
+			}
+
+			const refundRequest = refundRequests[0];
+			console.log("[REFUND:DETAIL] Found refund request:", refundRequest._id);
 
 			return Response.ok(
 				res,
@@ -4923,9 +5272,10 @@ const UserController = {
 			);
 		} catch (error) {
 			console.error("[REFUND:DETAIL] Error:", error);
+			console.error("[REFUND:DETAIL] Error stack:", error.stack);
 			return Response.serverErrorResponse(
 				res,
-				resp_messages(lang).internalServerError
+				error.message || resp_messages(lang).internalServerError || "Internal server error"
 			);
 		}
 	},

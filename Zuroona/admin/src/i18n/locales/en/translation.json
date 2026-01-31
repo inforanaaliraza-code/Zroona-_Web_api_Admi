@@ -284,7 +284,8 @@
     "manageEvents": "Manage Events",
     "manageCMS": "Manage CMS",
     "hostWithdrawalRequests": "Host Withdrawal Requests",
-    "guestInvoices": "Guest Invoices"
+    "guestInvoices": "Guest Invoices",
+    "refundRequests": "Refund Requests"
   },
   "events": {
     "title": "Events",
@@ -672,11 +673,13 @@
   "refund": {
     "title": "Refund Requests",
     "description": "Manage and process refund requests from users",
-    "searchPlaceholder": "Search by booking ID, user email...",
+    "searchPlaceholder": "Search by Guest Name / Email ID",
+    "searchByBookingId": "Search by booking ID, user email...",
     "allStatus": "All Status",
     "pending": "Pending",
     "approved": "Approved",
     "rejected": "Rejected",
+    "processed": "Processed",
     "exportCSV": "Export CSV",
     "print": "Print",
     "refundId": "Refund ID",
@@ -701,6 +704,14 @@
     "rejectTitle": "Reject Refund Request",
     "approveMessage": "Are you sure you want to approve this refund request? This action will process the refund via Moyasar payment gateway.",
     "rejectMessage": "Are you sure you want to reject this refund request? This action will process the refund via Moyasar payment gateway.",
+    "adminResponse": "Admin Response",
+    "adminResponsePlaceholder": "Optional: Add a response message",
+    "rejectionReasonPlaceholder": "Please provide a reason for rejection",
+    "paymentRefundId": "Payment Refund ID (from Moyasar)",
+    "paymentRefundIdPlaceholder": "Optional: Moyasar refund transaction ID",
+    "paymentRefundIdNote": "Leave empty if refund will be processed manually",
+    "approvedWaitingProcess": "Approved - awaiting processing",
+    "processedDate": "Processed Date",
     "detailsTitle": "Refund Details",
     "error": "Error"
   },

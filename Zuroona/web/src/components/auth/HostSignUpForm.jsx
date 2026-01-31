@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useFormik } from "formik";
@@ -21,6 +21,15 @@ import useAuthStore from "@/store/useAuthStore";
 import axios from "axios";
 import { BASE_API_URL } from "@/until";
 import { useEmailValidation } from "@/hooks/useEmailValidation";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip-shadcn";
+import { Checkbox } from "@/components/ui/checkbox";
+import TermsOfServiceModal from "../Modal/TermsOfServiceModal";
+import PrivacyPolicyModal from "../Modal/PrivacyPolicyModal";
+import CountryCitySelect from "../CountryCitySelect/CountryCitySelect";
 
 export default function HostSignUpForm() {
     const { t, i18n } = useTranslation();
@@ -35,9 +44,58 @@ export default function HostSignUpForm() {
     const [otpVerifying, setOtpVerifying] = useState(false);
     const [emailVerified, setEmailVerified] = useState(false);
     const [phoneVerified, setPhoneVerified] = useState(false);
+    const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+    const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+    const [otpTimer, setOtpTimer] = useState(60); // 1 minute timer for OTP
+    const [emailTimer, setEmailTimer] = useState(60); // 1 minute timer for email verification
+    const [otpExpired, setOtpExpired] = useState(false);
+    const [emailExpired, setEmailExpired] = useState(false);
+    const [otpSentTime, setOtpSentTime] = useState(null); // Track when OTP was sent
     
     // Email validation hook
     const { emailStatus, checkEmailDebounced, resetEmailStatus } = useEmailValidation();
+
+    // OTP Timer Effect
+    useEffect(() => {
+        if (showVerificationStep && !phoneVerified && otpTimer > 0 && otpSentTime) {
+            const timer = setInterval(() => {
+                setOtpTimer((prev) => {
+                    if (prev <= 1) {
+                        setOtpExpired(true);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [showVerificationStep, phoneVerified, otpTimer, otpSentTime]);
+
+    // Email Verification Timer Effect
+    useEffect(() => {
+        if (showVerificationStep && !emailVerified && emailTimer > 0) {
+            const timer = setInterval(() => {
+                setEmailTimer((prev) => {
+                    if (prev <= 1) {
+                        setEmailExpired(true);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(timer);
+        }
+    }, [showVerificationStep, emailVerified, emailTimer]);
+
+    // Reset timers when verification step is shown
+    useEffect(() => {
+        if (showVerificationStep) {
+            setOtpTimer(60);
+            setEmailTimer(60);
+            setOtpExpired(false);
+            setEmailExpired(false);
+        }
+    }, [showVerificationStep]);
 
     const validationSchema = Yup.object({
         first_name: Yup.string()
@@ -69,9 +127,39 @@ export default function HostSignUpForm() {
         gender: Yup.number()
             .required(t("auth.genderRequired") || "Gender is required")
             .oneOf([1, 2, 3], t("auth.genderInvalid") || "Please select a valid gender"),
-        date_of_birth: Yup.date()
+        date_of_birth: Yup.string()
             .required(t("auth.dobRequired") || "Date of birth is required")
-            .max(new Date(), t("auth.dobFuture") || "Date of birth cannot be in the future"),
+            .test('valid-format', t("auth.dobInvalidFormat") || "Date must be in DD/MM/YYYY format", function (value) {
+                if (!value) return true;
+                // Check if it's already in YYYY-MM-DD format (from onBlur conversion)
+                if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return true;
+                // Check DD/MM/YYYY format
+                if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return false;
+                const [day, month, year] = value.split('/');
+                const dateObj = new Date(`${year}-${month}-${day}`);
+                return !isNaN(dateObj.getTime());
+            })
+            .test('not-future', t("auth.dobFuture") || "Date of birth cannot be in the future", function (value) {
+                if (!value) return true;
+                let dateObj;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                    dateObj = new Date(value);
+                } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                    const [day, month, year] = value.split('/');
+                    dateObj = new Date(`${year}-${month}-${day}`);
+                } else {
+                    return false;
+                }
+                return dateObj <= new Date();
+            }),
+        country: Yup.string()
+            .required(t("signup.countryRequired") || "Country is required"),
+        city: Yup.string()
+            .required(t("signup.cityRequired") || "City is required"),
+        acceptPrivacy: Yup.boolean()
+            .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
+        acceptTerms: Yup.boolean()
+            .oneOf([true], t("termsRequired") || "You must accept the terms and conditions"),
     });
 
     const formik = useFormik({
@@ -83,7 +171,11 @@ export default function HostSignUpForm() {
             country_code: "+966",
             gender: "",
             date_of_birth: "",
+            country: "",
+            city: "",
             bio: "",
+            acceptPrivacy: false,
+            acceptTerms: false,
         },
 
 
@@ -95,6 +187,13 @@ export default function HostSignUpForm() {
         onSubmit: async (values) => {
             setLoading(true);
             try {
+                // Convert DD/MM/YYYY to YYYY-MM-DD format for API
+                let dateOfBirth = values.date_of_birth;
+                if (dateOfBirth && /^\d{2}\/\d{2}\/\d{4}$/.test(dateOfBirth)) {
+                    const [day, month, year] = dateOfBirth.split('/');
+                    dateOfBirth = `${year}-${month}-${day}`;
+                }
+
                 const payload = {
                     email: values.email.toLowerCase().trim(),
                     first_name: values.first_name,
@@ -102,7 +201,9 @@ export default function HostSignUpForm() {
                     phone_number: values.phone_number ? parseInt(values.phone_number) : null,
                     country_code: values.country_code,
                     gender: parseInt(values.gender),
-                    date_of_birth: values.date_of_birth,
+                    date_of_birth: dateOfBirth,
+                    country: values.country,
+                    city: values.city,
                     bio: values.bio || "",
                     profile_image: profileImage || "",
                     registration_step: 4, // Complete registration
@@ -119,6 +220,9 @@ export default function HostSignUpForm() {
                     setUserEmail(values.email.toLowerCase().trim());
                     setOrganizerId(response?.data?.organizer?._id);
                     setShowVerificationStep(true);
+                    setOtpSentTime(Date.now()); // Record when OTP was sent
+                    setOtpTimer(60); // Reset timer
+                    setOtpExpired(false);
                     toast.success(
                         response.message || 
                         t("auth.hostSignupSuccess") || 
@@ -225,6 +329,11 @@ export default function HostSignUpForm() {
                 }
             );
             if (response.data?.status === 1 || response.data?.success) {
+                // Reset OTP timer
+                setOtpTimer(60);
+                setOtpExpired(false);
+                setOtpSentTime(Date.now());
+                setOtp(""); // Clear previous OTP
                 toast.success(response.data.message || "OTP resent successfully!");
             } else {
                 toast.error(response.data.message || "Failed to resend OTP.");
@@ -240,6 +349,18 @@ export default function HostSignUpForm() {
     const handleVerifyOtp = async () => {
         if (!otp || otp.length !== 6) {
             toast.error("Please enter a valid 6-digit OTP");
+            return;
+        }
+        // Check if OTP has expired (1 minute = 60000 ms)
+        if (otpSentTime && (Date.now() - otpSentTime) > 60000) {
+            toast.error(t("auth.otpExpired") || "OTP has expired. Please request a new one.");
+            setOtpExpired(true);
+            setOtp("");
+            return;
+        }
+        if (otpExpired) {
+            toast.error(t("auth.otpExpired") || "OTP has expired. Please request a new one.");
+            setOtp("");
             return;
         }
         if (!organizerId || !formik.values.phone_number || !formik.values.country_code) {
@@ -358,13 +479,29 @@ export default function HostSignUpForm() {
                                 placeholder="000000"
                                 maxLength={6}
                             />
-                            <button
-                                onClick={handleResendOtp}
-                                disabled={loading}
-                                className="mt-2 text-sm text-[#a797cc] hover:text-[#8ba179] font-medium"
-                            >
-                                {t("auth.resendOTP") || "Resend OTP"}
-                            </button>
+                            <div className="mt-2 flex items-center justify-between">
+                                <button
+                                    onClick={handleResendOtp}
+                                    disabled={loading || (otpTimer > 0 && !otpExpired)}
+                                    className={`text-sm font-medium transition-colors ${
+                                        loading || (otpTimer > 0 && !otpExpired)
+                                            ? "text-gray-400 cursor-not-allowed"
+                                            : "text-[#a797cc] hover:text-[#8ba179]"
+                                    }`}
+                                >
+                                    {t("auth.resendOTP") || "Resend OTP"}
+                                </button>
+                                {otpTimer > 0 && !otpExpired && (
+                                    <span className="text-sm text-gray-600">
+                                        {t("auth.otpTimer") || "Resend in"} {Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}
+                                    </span>
+                                )}
+                                {otpExpired && (
+                                    <span className="text-sm text-red-600 font-medium">
+                                        {t("auth.otpExpired") || "OTP Expired"}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     )}
 
@@ -448,27 +585,27 @@ export default function HostSignUpForm() {
             transition={{ duration: 0.5 }}
             className="max-w-2xl mx-auto"
         >
-            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+            <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 max-w-4xl mx-auto">
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="flex justify-center mb-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-[#a797cc] to-[#d66a0a] rounded-full flex items-center justify-center">
-                            <Icon icon="material-symbols:star" className="w-8 h-8 text-white" />
+                <div className="text-center mb-6">
+                    <div className="flex justify-center mb-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#a797cc] to-[#d66a0a] rounded-full flex items-center justify-center">
+                            <Icon icon="material-symbols:star" className="w-6 h-6 text-white" />
                         </div>
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-1">
                         {t("auth.joinAsHostOrGuest") || "Join as Host or Guest"}
                     </h1>
-                    <p className="text-gray-600">
+                    <p className="text-sm text-gray-600">
                         {t("auth.hostSignupSubtitle") || "Create and manage your own events on Zuroona"}
                     </p>
                 </div>
 
                 {/* Info Box */}
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
                     <div className="flex items-start">
-                        <Icon icon="material-symbols:info" className="w-5 h-5 text-orange-600 mr-2 mt-0.5 flex-shrink-0" />
-                        <div className="text-sm text-orange-900">
+                        <Icon icon="material-symbols:info" className="w-4 h-4 text-orange-600 mr-2 mt-0.5 flex-shrink-0" />
+                        <div className="text-xs text-orange-900">
                             <p className="font-semibold mb-1">
                                 {t("auth.requiresApproval") || "Requires Approval"}
                             </p>
@@ -480,224 +617,372 @@ export default function HostSignUpForm() {
                     </div>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={formik.handleSubmit} className="space-y-6">
-                    {/* Profile Image */}
-                    <div className="flex justify-center">
-                        <ProfileImageUpload
-                            onImageChange={(image) => setProfileImage(image)}
-                        />
-                    </div>
-
-                    {/* Name Fields */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {t("auth.firstName") || "First Name"} *
-                            </label>
-                            <input
-                                type="text"
-                                name="first_name"
-                                value={formik.values.first_name}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.first_name && formik.errors.first_name
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
-                                placeholder={t("auth.firstNamePlaceholder") || "Enter your first name"}
+                <TooltipProvider>
+                    {/* Form */}
+                    <form onSubmit={formik.handleSubmit} className="space-y-4">
+                        {/* Profile Image */}
+                        <div className="flex justify-center mb-4">
+                            <ProfileImageUpload
+                                onImageChange={(image) => setProfileImage(image)}
                             />
-                            {formik.touched.first_name && formik.errors.first_name && (
-                                <p className="mt-1 text-sm text-red-600">{formik.errors.first_name}</p>
-                            )}
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {t("auth.lastName") || "Last Name"} *
-                            </label>
-                            <input
-                                type="text"
-                                name="last_name"
-                                value={formik.values.last_name}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.last_name && formik.errors.last_name
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
-                                placeholder={t("auth.lastNamePlaceholder") || "Enter your last name"}
-                            />
-                            {formik.touched.last_name && formik.errors.last_name && (
-                                <p className="mt-1 text-sm text-red-600">{formik.errors.last_name}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t("auth.email") || "Email"} * <span className="text-xs text-gray-500">(Gmail only)</span>
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formik.values.email}
-                            onChange={(e) => {
-                                formik.handleChange(e);
-                                // Real-time email validation
-                                checkEmailDebounced(e.target.value, 'organizer');
-                            }}
-                            onBlur={(e) => {
-                                formik.handleBlur(e);
-                                // Final check on blur
-                                if (e.target.value) {
-                                    checkEmailDebounced(e.target.value, 'organizer');
-                                }
-                            }}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                formik.touched.email && formik.errors.email
-                                    ? "border-red-500"
-                                    : emailStatus.status === 'valid'
-                                    ? "border-green-500"
-                                    : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                            }`}
-                            placeholder="your.email@gmail.com"
-                        />
-                        {/* Real-time status message */}
-                        {formik.values.email && (
-                            <div className="mt-1">
-                                {emailStatus.isChecking && (
-                                    <p className="text-sm text-blue-600 flex items-center gap-1">
-                                        <span className="animate-spin">⏳</span> Checking email...
-                                    </p>
-                                )}
-                                {!emailStatus.isChecking && emailStatus.message && (
-                                    <p className={`text-sm ${
-                                        emailStatus.status === 'valid'
-                                            ? "text-green-600"
-                                            : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
-                                            ? "text-red-600"
-                                            : "text-gray-600"
-                                    }`}>
-                                        {emailStatus.status === 'valid' && '✓ '}
-                                        {emailStatus.message}
-                                    </p>
+                        {/* Row 1: First Name & Last Name */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Label htmlFor="first_name" className="text-sm font-medium">
+                                        {t("auth.firstName") || "First Name"} *
+                                    </Label>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Icon icon="mdi:information-outline" className="w-4 h-4 text-gray-400 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="text-xs">Enter your legal first name</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <Input
+                                    id="first_name"
+                                    name="first_name"
+                                    value={formik.values.first_name}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    className={formik.touched.first_name && formik.errors.first_name ? "border-red-500" : ""}
+                                    placeholder={t("auth.firstNamePlaceholder") || "Enter your first name"}
+                                />
+                                {formik.touched.first_name && formik.errors.first_name && (
+                                    <p className="text-xs text-red-600">{formik.errors.first_name}</p>
                                 )}
                             </div>
-                        )}
-                        {/* Formik validation error */}
-                        {formik.touched.email && formik.errors.email && (
-                            <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
-                        )}
-                    </div>
-                    
 
-                    {/* Phone Number */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t("auth.phoneNumber") || "Phone Number"} *
-                        </label>
-                        <NumberInput
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Label htmlFor="last_name" className="text-sm font-medium">
+                                        {t("auth.lastName") || "Last Name"} *
+                                    </Label>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Icon icon="mdi:information-outline" className="w-4 h-4 text-gray-400 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="text-xs">Enter your legal last name</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <Input
+                                    id="last_name"
+                                    name="last_name"
+                                    value={formik.values.last_name}
+                                    onChange={formik.handleChange}
+                                    onBlur={formik.handleBlur}
+                                    className={formik.touched.last_name && formik.errors.last_name ? "border-red-500" : ""}
+                                    placeholder={t("auth.lastNamePlaceholder") || "Enter your last name"}
+                                />
+                                {formik.touched.last_name && formik.errors.last_name && (
+                                    <p className="text-xs text-red-600">{formik.errors.last_name}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Row 2: Email & Phone Number */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Label htmlFor="email" className="text-sm font-medium">
+                                        {t("auth.email") || "Email"} *
+                                    </Label>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Icon icon="mdi:information-outline" className="w-4 h-4 text-gray-400 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="text-xs">Only Gmail addresses are allowed</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    value={formik.values.email}
+                                    onChange={(e) => {
+                                        formik.handleChange(e);
+                                        checkEmailDebounced(e.target.value, 'organizer');
+                                    }}
+                                    onBlur={(e) => {
+                                        formik.handleBlur(e);
+                                        if (e.target.value) {
+                                            checkEmailDebounced(e.target.value, 'organizer');
+                                        }
+                                    }}
+                                    className={`${formik.touched.email && formik.errors.email
+                                        ? "border-red-500"
+                                        : emailStatus.status === 'valid'
+                                        ? "border-green-500"
+                                        : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists'
+                                        ? "border-red-500"
+                                        : ""
+                                    }`}
+                                    placeholder="your.email@gmail.com"
+                                />
+                                {formik.touched.email && formik.errors.email ? (
+                                    <p className="text-xs text-red-600">{formik.errors.email}</p>
+                                ) : (
+                                    formik.values.email && !emailStatus.isChecking && emailStatus.message && (
+                                        <p className={`text-xs ${emailStatus.status === 'valid' ? "text-green-600" : emailStatus.status === 'invalid' || emailStatus.status === 'not_exists' ? "text-red-600" : "text-gray-600"}`}>
+                                            {emailStatus.status === 'valid' && '✓ '}
+                                            {emailStatus.message}
+                                        </p>
+                                    )
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm font-medium">
+                                        {t("auth.phoneNumber") || "Phone Number"} *
+                                    </Label>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Icon icon="mdi:information-outline" className="w-4 h-4 text-gray-400 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="text-xs">Enter your phone number with country code</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <NumberInput
+                                    formik={formik}
+                                    mobileNumberField="phone_number"
+                                    countryCodeField="country_code"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Row 3: Gender & Date of Birth */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm font-medium">
+                                        {t("auth.gender") || "Gender"} *
+                                    </Label>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Icon icon="mdi:information-outline" className="w-4 h-4 text-gray-400 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="text-xs">Select your gender identity</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <Select
+                                    value={formik.values.gender === undefined || formik.values.gender === null ? "" : String(formik.values.gender)}
+                                    onValueChange={(value) => {
+                                        const numValue = value ? parseInt(value, 10) : "";
+                                        formik.setFieldValue("gender", numValue, false);
+                                    }}
+                                >
+                                    <SelectTrigger className={formik.touched.gender && formik.errors.gender ? "border-red-500" : ""}>
+                                        <SelectValue placeholder={t("auth.selectGender") || "Select gender"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="1">{t("auth.male") || "Male"}</SelectItem>
+                                        <SelectItem value="2">{t("auth.female") || "Female"}</SelectItem>
+                                        <SelectItem value="3">{t("auth.other") || "Other"}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {formik.touched.gender && formik.errors.gender && (
+                                    <p className="text-xs text-red-600">{formik.errors.gender}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Label className="text-sm font-medium">
+                                        {t("auth.dateOfBirth") || "Date of Birth"} *
+                                    </Label>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Icon icon="mdi:information-outline" className="w-4 h-4 text-gray-400 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="text-xs">You must be at least 18 years old. Format: DD/MM/YYYY</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                                <div className="relative">
+                                    <Input
+                                        type="text"
+                                        id="date_of_birth"
+                                        name="date_of_birth"
+                                        value={formik.values.date_of_birth || ""}
+                                        onChange={(e) => {
+                                            let value = e.target.value;
+                                            // Allow only digits and slashes
+                                            value = value.replace(/[^\d/]/g, '');
+                                            // Auto-format as DD/MM/YYYY
+                                            if (value.length <= 10) {
+                                                // Remove existing slashes and add new ones
+                                                const digits = value.replace(/\//g, '');
+                                                if (digits.length <= 2) {
+                                                    value = digits;
+                                                } else if (digits.length <= 4) {
+                                                    value = digits.slice(0, 2) + '/' + digits.slice(2);
+                                                } else {
+                                                    value = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4, 8);
+                                                }
+                                            }
+                                            formik.setFieldValue("date_of_birth", value);
+                                            formik.setFieldTouched("date_of_birth", true);
+                                        }}
+                                        onBlur={(e) => {
+                                            formik.setFieldTouched("date_of_birth", true);
+                                            // Convert DD/MM/YYYY to Date object for validation
+                                            const value = e.target.value;
+                                            if (value && value.length === 10) {
+                                                const [day, month, year] = value.split('/');
+                                                if (day && month && year) {
+                                                    const dateObj = new Date(`${year}-${month}-${day}`);
+                                                    if (!isNaN(dateObj.getTime())) {
+                                                        formik.setFieldValue("date_of_birth", dateObj.toISOString().split('T')[0]);
+                                                    }
+                                                }
+                                            }
+                                        }}
+                                        placeholder="DD/MM/YYYY"
+                                        maxLength={10}
+                                        className={`w-full min-h-[44px] px-4 py-3 border-2 rounded-lg transition-all duration-200 ${
+                                            formik.touched.date_of_birth && formik.errors.date_of_birth
+                                                ? "border-red-500 focus:ring-red-500"
+                                                : "border-gray-300 focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-2"
+                                        }`}
+                                    />
+                                    <p className="mt-1.5 text-xs text-gray-500">
+                                        {t("auth.dateFormatHint") || "Format: DD/MM/YYYY (e.g., 25/12/1990)"}
+                                    </p>
+                                </div>
+                                {formik.touched.date_of_birth && formik.errors.date_of_birth && (
+                                    <p className="text-xs text-red-600 font-medium">{formik.errors.date_of_birth}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Country and City Selection */}
+                        <CountryCitySelect
                             formik={formik}
-                            mobileNumberField="phone_number"
-                            countryCodeField="country_code"
+                            countryFieldName="country"
+                            cityFieldName="city"
+                            showLabels={true}
+                            required={true}
                         />
-                    </div>
 
-                    {/* Gender & DOB */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {t("auth.gender") || "Gender"} *
-                            </label>
-                            <select
-                                name="gender"
-                                value={formik.values.gender}
+                        {/* Bio - Full Width */}
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Label className="text-sm font-medium">
+                                    {t("auth.bio") || "Bio"} <span className="text-xs text-gray-500 font-normal">(Optional)</span>
+                                </Label>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Icon icon="mdi:information-outline" className="w-4 h-4 text-gray-400 cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="text-xs">Tell us about yourself and your experience</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </div>
+                            <textarea
+                                name="bio"
+                                value={formik.values.bio}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.gender && formik.errors.gender
+                                rows={3}
+                                className={`w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-[#a797cc] focus:border-transparent resize-none ${
+                                    formik.touched.bio && formik.errors.bio
                                         ? "border-red-500"
                                         : "border-gray-300"
                                 }`}
-                            >
-                                <option value="">{t("auth.selectGender") || "Select gender"}</option>
-                                <option value="1">{t("auth.male") || "Male"}</option>
-                                <option value="2">{t("auth.female") || "Female"}</option>
-                                <option value="3">{t("auth.other") || "Other"}</option>
-                            </select>
-                            {formik.touched.gender && formik.errors.gender && (
-                                <p className="mt-1 text-sm text-red-600">{formik.errors.gender}</p>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {t("auth.dateOfBirth") || "Date of Birth"} *
-                            </label>
-                            <input
-                                type="date"
-                                name="date_of_birth"
-                                value={formik.values.date_of_birth}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                max={new Date().toISOString().split("T")[0]}
-                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                    formik.touched.date_of_birth && formik.errors.date_of_birth
-                                        ? "border-red-500"
-                                        : "border-gray-300"
-                                }`}
+                                placeholder={t("auth.bioPlaceholder") || "Tell us about yourself..."}
                             />
-                            {formik.touched.date_of_birth && formik.errors.date_of_birth && (
-                                <p className="mt-1 text-sm text-red-600">{formik.errors.date_of_birth}</p>
+                            {formik.touched.bio && formik.errors.bio && (
+                                <p className="text-xs text-red-600">{formik.errors.bio}</p>
                             )}
                         </div>
-                    </div>
 
-                    {/* Bio */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t("auth.bio") || "Bio"} (Optional)
-                        </label>
-                        <textarea
-                            name="bio"
-                            value={formik.values.bio}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
-                            rows={4}
-                            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent ${
-                                formik.touched.bio && formik.errors.bio
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                            }`}
-                            placeholder={t("auth.bioPlaceholder") || "Tell us about yourself..."}
-                        />
-                    </div>
+                        {/* Terms and Conditions & Privacy Policy */}
+                        <div className="flex items-start gap-3 pt-2">
+                            <Checkbox
+                                id="acceptTermsAndPrivacy"
+                                checked={formik.values.acceptTerms && formik.values.acceptPrivacy}
+                                onCheckedChange={(checked) => {
+                                    formik.setFieldValue("acceptTerms", checked);
+                                    formik.setFieldValue("acceptPrivacy", checked);
+                                    formik.setFieldTouched("acceptTerms", true);
+                                    formik.setFieldTouched("acceptPrivacy", true);
+                                }}
+                                className={formik.touched.acceptTerms && formik.errors.acceptTerms ? "border-red-500" : ""}
+                            />
+                            <div className="text-sm">
+                                <Label
+                                    htmlFor="acceptTermsAndPrivacy"
+                                    className="font-normal cursor-pointer text-gray-700"
+                                >
+                                    {t("signup.tab22") || "By signing up, you agree to our"}{" "}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setIsTermsModalOpen(true);
+                                        }}
+                                        className="text-[#a797cc] hover:underline font-semibold"
+                                    >
+                                        {t("termsAndConditions") || "Terms & Conditions"}
+                                    </button>
+                                    {" "}{t("signup.tab24") || "and"}{" "}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setIsPrivacyModalOpen(true);
+                                        }}
+                                        className="text-[#a797cc] hover:underline font-semibold"
+                                    >
+                                        {t("privacyPolicy") || "Privacy Policy"}
+                                    </button>
+                                    <span className="text-red-500 ml-1">*</span>
+                                </Label>
+                                {(formik.touched.acceptTerms && formik.errors.acceptTerms) ||
+                                    (formik.touched.acceptPrivacy && formik.errors.acceptPrivacy) ? (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        {formik.errors.acceptTerms || formik.errors.acceptPrivacy ||
+                                            "You must accept the Terms & Conditions and Privacy Policy"}
+                                    </p>
+                                ) : null}
+                            </div>
+                        </div>
 
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={loading || !formik.isValid}
-                        className="w-full py-4 px-6 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                    >
-                        {loading ? (
-                            <>
-                                <Loader />
-                                <span>{t("auth.creating") || "Creating..."}</span>
-                            </>
-                        ) : (
-                            <>
-                                <Icon icon="material-symbols:arrow-forward" className="w-5 h-5" />
-                                <span>{t("auth.createAccount") || "Create Account"}</span>
-                            </>
-                        )}
-                    </button>
-                </form>
+                        {/* Submit Button */}
+                        <Button
+                            type="submit"
+                            disabled={loading || !formik.values.acceptTerms || !formik.values.acceptPrivacy}
+                            className="w-full bg-[#a797cc] hover:bg-[#8ba179] text-white"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader />
+                                    <span className="ml-2">{t("auth.creating") || "Creating..."}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Icon icon="material-symbols:arrow-forward" className="w-4 h-4 mr-2" />
+                                    <span>{t("auth.createAccount") || "Create Account"}</span>
+                                </>
+                            )}
+                        </Button>
+                    </form>
+                </TooltipProvider>
 
                 {/* Footer */}
                 <div className="mt-8 text-center">
@@ -727,6 +1012,10 @@ export default function HostSignUpForm() {
                 isOpen={isLoginModalOpen} 
                 onClose={() => setIsLoginModalOpen(false)} 
             />
+
+            {/* Terms & Conditions and Privacy Policy Modals */}
+            <TermsOfServiceModal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)} />
+            <PrivacyPolicyModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
         </motion.div>
     );
 }

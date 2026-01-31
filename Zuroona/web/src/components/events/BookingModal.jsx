@@ -8,6 +8,7 @@ import * as Label from "@radix-ui/react-label";
 import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { AddBookNowApi } from "@/app/api/setting";
+import { getPaymentMethods, isAppleDevice, shouldShowApplePay } from "@/utils/deviceDetection";
 
 // Helper function to safely get translations with fallbacks
 const getTranslation = (t, key, fallback) => {
@@ -34,10 +35,7 @@ export default function BookingModal({
 	const [attendees, setAttendees] = useState(1);
 	const [isLoading, setIsLoading] = useState(false);
 	const [step, setStep] = useState("details");
-	const [activePaymentTab, setActivePaymentTab] = useState("moyasar");
 	const moyasarFormRef = useRef(null);
-	const googlePayFormRef = useRef(null);
-	const [googlePayReady, setGooglePayReady] = useState(false);
 
 	const ticketPrice = event?.event_price || 0;
 	// Use booked_event total_amount if available (includes tax), otherwise calculate
@@ -193,32 +191,53 @@ export default function BookingModal({
 				language: currentLang
 			});
 
-			moyasar.init({
+			// Detect device and get appropriate payment methods
+			const paymentMethods = getPaymentMethods();
+			const isApple = isAppleDevice();
+			
+			console.log("[PAYMENT-FORM] Device detection:", {
+				isApple,
+				paymentMethods,
+				userAgent: window.navigator.userAgent,
+				platform: window.navigator.platform
+			});
+
+			// Build Moyasar config based on device
+			const moyasarConfig = {
 				element: moyasarFormRef.current,
 				amount: amountInHalala,
 				currency: "SAR",
 				callback_url: callbackUrl,
 				description: `${getTranslation(t, "events.bookEvent", "Booking for")} ${event?.event_name || getTranslation(t, "events.eventDetails", "Event")}`,
 				publishable_api_key: apiKey,
-				methods: ["creditcard"],
-				language: currentLang, // Set language for Moyasar form
+				methods: paymentMethods, // Dynamic based on device
+				language: currentLang,
 				// Optimize 3DS authentication
 				three_d_secure: {
 					enabled: true,
-					// Reduce timeout for faster processing
-					timeout: 30000, // 30 seconds instead of default
+					timeout: 30000, // 30 seconds
 				},
-				apple_pay: {
+			};
+
+			// Only add Apple Pay config if device is Apple
+			if (isApple) {
+				moyasarConfig.apple_pay = {
 					country: "SA",
 					label: getTranslation(t, "events.appName", "Zuroona"),
-					validate_merchant_url:
-						"https://api.moyasar.com/v1/applepay/initiate",
+					validate_merchant_url: "https://api.moyasar.com/v1/applepay/initiate",
 					merchant_capabilities: [
 						"supports3DS",
 						"supportsCredit",
 						"supportsDebit",
 					],
-				},
+				};
+				console.log("[PAYMENT-FORM] Apple Pay enabled for Apple device");
+			} else {
+				console.log("[PAYMENT-FORM] Apple Pay disabled - non-Apple device detected");
+			}
+
+			moyasar.init({
+				...moyasarConfig,
 				on_failed: (error) => {
 					console.error("[PAYMENT-FORM] Payment failed:", error);
 					toast.error(getTranslation(t, "events.paymentFailed", "Payment failed. Please try again."));
@@ -246,21 +265,16 @@ export default function BookingModal({
 		}
 	}, [totalAmount, event?.event_name, t, event?.booked_event?._id, i18n.language, handlePaymentCompleted]);
 
-	// Initialize Moyasar when step changes to payment (for both tabs)
+	// Initialize Moyasar when step changes to payment (optimized)
 	useEffect(() => {
 		if (!isOpen || step !== "payment") {
 			return;
 		}
-		
-		// Determine which form to initialize based on active tab
-		const isGooglePay = activePaymentTab === "googlepay";
-		const formRef = isGooglePay ? googlePayFormRef : moyasarFormRef;
-		const formId = isGooglePay ? "googlepay-payment-form" : "moyasar-payment-form";
 
-		console.log(`[PAYMENT-MODAL] Payment step activated, initializing ${isGooglePay ? 'Google Pay' : 'Moyasar'}...`);
+		console.log('[PAYMENT-MODAL] Payment step activated, initializing Moyasar...');
 		console.log('[PAYMENT-MODAL] Moyasar available:', !!window.Moyasar);
 		console.log('[PAYMENT-MODAL] MoyasarReady:', !!window.MoyasarReady);
-		console.log('[PAYMENT-MODAL] Form ref:', !!formRef.current);
+		console.log('[PAYMENT-MODAL] Form ref:', !!moyasarFormRef.current);
 		console.log('[PAYMENT-MODAL] Total amount:', totalAmount);
 		console.log('[PAYMENT-MODAL] API Key:', process.env.NEXT_PUBLIC_MOYASAR_KEY ? 'Present' : 'Missing');
 
@@ -312,7 +326,7 @@ export default function BookingModal({
 
 		// Check if Moyasar is ready, if not wait for it
 		const initForm = async () => {
-			if (!formRef.current || !formRef.current.parentNode) {
+			if (!moyasarFormRef.current || !moyasarFormRef.current.parentNode) {
 				console.warn('[PAYMENT-MODAL] Form ref not ready');
 				return;
 			}
@@ -327,80 +341,10 @@ export default function BookingModal({
 				// Wait a bit for DOM to be ready
 				await new Promise(resolve => setTimeout(resolve, 100));
 
-				// Validate API key
-				const apiKey = process.env.NEXT_PUBLIC_MOYASAR_KEY;
-				if (!apiKey) {
-					console.error("[PAYMENT-FORM] Moyasar API key not configured");
-					toast.error(getTranslation(t, "events.paymentInitError", "Payment gateway configuration error. Please contact support."));
-					return;
-				}
-
 				// Now initialize the form
-				if (window.Moyasar && formRef.current && formRef.current.parentNode) {
-					console.log(`[PAYMENT-MODAL] Initializing ${isGooglePay ? 'Google Pay' : 'Credit Card'} form...`);
-					
-					// Clear previous form content
-					try {
-						while (formRef.current.firstChild) {
-							const child = formRef.current.firstChild;
-							if (child.parentNode === formRef.current && formRef.current.contains(child)) {
-								formRef.current.removeChild(child);
-							} else {
-								break;
-							}
-						}
-					} catch (error) {
-						console.warn("Error clearing form:", error);
-						formRef.current.textContent = "";
-					}
-
-					// Get current language
-					const currentLang = i18n.language || "ar";
-
-					// Validate amount
-					if (!totalAmount || totalAmount <= 0) {
-						console.error("[PAYMENT-FORM] Invalid amount:", totalAmount);
-						toast.error(getTranslation(t, "events.invalidAmount", "Invalid payment amount. Please contact support."));
-						return;
-					}
-
-					const amountInHalala = Math.round(totalAmount * 100);
-					const callbackUrl = `${window.location.origin}/events/${event?._id}?booking_id=${event?.booked_event?._id}&status=paid`;
-
-					// Configure payment methods based on active tab
-					const paymentMethods = isGooglePay ? ["googlepay"] : ["creditcard"];
-
-					console.log(`[PAYMENT-FORM] Initializing with methods:`, paymentMethods);
-
-					window.Moyasar.init({
-						element: formRef.current,
-						amount: amountInHalala,
-						currency: "SAR",
-						callback_url: callbackUrl,
-						description: `${getTranslation(t, "events.bookEvent", "Booking for")} ${event?.event_name || getTranslation(t, "events.eventDetails", "Event")}`,
-						publishable_api_key: apiKey,
-						methods: paymentMethods,
-						language: currentLang,
-						on_failed: (error) => {
-							console.error("[PAYMENT-FORM] Payment failed:", error);
-							toast.error(getTranslation(t, "events.paymentFailed", "Payment failed. Please try again."));
-							setIsLoading(false);
-						},
-						on_completed: async function (payment) {
-							console.log("[PAYMENT-FORM] Payment completed:", payment);
-							setIsLoading(true);
-							try {
-								await handlePaymentCompleted(payment);
-							} catch (error) {
-								console.error("[PAYMENT-FORM] Error handling payment completion:", error);
-								toast.error(getTranslation(t, "events.paymentProcessingError", "Error processing payment. Please contact support."));
-							} finally {
-								setIsLoading(false);
-							}
-						},
-					});
-
-					console.log("[PAYMENT-FORM] Form initialized successfully");
+				if (window.Moyasar && moyasarFormRef.current && moyasarFormRef.current.parentNode) {
+					console.log('[PAYMENT-MODAL] Initializing Moyasar form...');
+					initializeMoyasarForm();
 				} else {
 					console.error('[PAYMENT-MODAL] Cannot initialize: Moyasar or form ref not ready');
 					toast.error(getTranslation(t, "events.paymentInitError", "Error initializing payment form. Please refresh and try again."));
@@ -418,11 +362,10 @@ export default function BookingModal({
 
 		return () => {
 			clearTimeout(timeoutId);
-			// Cleanup: Clear payment form if element still exists
-			const cleanupFormRef = isGooglePay ? googlePayFormRef : moyasarFormRef;
-			if (cleanupFormRef.current) {
+			// Cleanup: Clear Moyasar form if element still exists
+			if (moyasarFormRef.current) {
 				try {
-					const formElement = cleanupFormRef.current;
+					const formElement = moyasarFormRef.current;
 					
 					// Check if element is still connected to DOM
 					if (formElement.isConnected && formElement.parentNode) {
@@ -438,7 +381,7 @@ export default function BookingModal({
 									break;
 								}
 							}
-							console.log(`[PAYMENT-MODAL] Cleaned up ${isGooglePay ? 'Google Pay' : 'Moyasar'} form`);
+							console.log('[PAYMENT-MODAL] Cleaned up Moyasar form');
 						} catch (removeError) {
 							// If removeChild fails, use textContent as safer alternative
 							console.warn("removeChild failed, using textContent:", removeError);
@@ -453,11 +396,11 @@ export default function BookingModal({
 						console.log('[PAYMENT-MODAL] Form element no longer in DOM, skipping cleanup');
 					}
 				} catch (error) {
-					console.warn("Error cleaning up payment form:", error);
+					console.warn("Error cleaning up Moyasar form:", error);
 					// Final fallback: try textContent
 					try {
-						if (cleanupFormRef.current && cleanupFormRef.current.isConnected) {
-							cleanupFormRef.current.textContent = "";
+						if (moyasarFormRef.current && moyasarFormRef.current.isConnected) {
+							moyasarFormRef.current.textContent = "";
 						}
 					} catch (fallbackError) {
 						console.warn("All cleanup methods failed:", fallbackError);
@@ -465,7 +408,7 @@ export default function BookingModal({
 				}
 			}
 		};
-	}, [step, isOpen, activePaymentTab, t, totalAmount, event?.event_name, event?.booked_event?._id, event?._id, i18n.language, handlePaymentCompleted]);
+	}, [step, isOpen, initializeMoyasarForm, t, totalAmount]);
 
 	// Check for payment result when modal is opened
 	useEffect(() => {
@@ -523,15 +466,37 @@ export default function BookingModal({
 			return;
 		}
 
-		// Note: Frontend validation is basic - backend will do the actual seat availability check
-		// This prevents obviously invalid inputs but the API will verify actual availability
+		// Check if event is sold out
+		if (event.available_seats !== undefined && event.available_seats === 0) {
+			toast.error(getTranslation(t, "events.eventSoldOut", "Sorry, this event is sold out. No seats available."), {
+				duration: 5000,
+			});
+			return;
+		}
+
+		// Validate attendees count
 		if (attendees < 1) {
 			toast.error(getTranslation(t, "events.invalidAttendees", "Number of attendees must be at least 1"));
 			return;
 		}
 		
-		// Check against total seats (backend will check available seats)
-		if (event.no_of_attendees && attendees > event.no_of_attendees) {
+		// Check against available seats with detailed error message
+		if (event.available_seats !== undefined) {
+			if (attendees > event.available_seats) {
+				toast.error(
+					getTranslation(
+						t, 
+						"events.exceedsAvailableSeats", 
+						`Cannot book ${attendees} seat(s). Only ${event.available_seats} seat(s) available.`
+					),
+					{
+						duration: 5000,
+					}
+				);
+				return;
+			}
+		} else if (event.no_of_attendees && attendees > event.no_of_attendees) {
+			// Fallback to checking total seats if available_seats not provided
 			toast.error(getTranslation(t, "events.exceedsTotalSeats", `Cannot book more than ${event.no_of_attendees} seats`));
 			return;
 		}
@@ -573,9 +538,20 @@ export default function BookingModal({
 			// Show user-friendly error message
 			const errorMessage = error?.message || getTranslation(t, "events.reservationFailed", "Failed to make reservation");
 			
+			// Check if it's a duplicate/pending booking error (show as warning, not error)
+			if (errorMessage.toLowerCase().includes("already") || 
+			    errorMessage.toLowerCase().includes("pending") ||
+			    errorMessage.toLowerCase().includes("duplicate") ||
+			    errorMessage.toLowerCase().includes("wait for the host")) {
+				toast.warning(errorMessage, {
+					duration: 6000, // Show longer for important warnings
+				});
+			} 
 			// Check if it's a seat availability error
-			if (errorMessage.toLowerCase().includes("seats not available") || 
-			    errorMessage.toLowerCase().includes("seat")) {
+			else if (errorMessage.toLowerCase().includes("seats not available") || 
+			    errorMessage.toLowerCase().includes("seat") ||
+			    errorMessage.toLowerCase().includes("sold out") ||
+			    errorMessage.toLowerCase().includes("capacity")) {
 				toast.error(errorMessage, {
 					duration: 5000, // Show longer for important errors
 				});
@@ -602,38 +578,25 @@ export default function BookingModal({
 	return (
 		<Dialog.Root open={isOpen} onOpenChange={onClose}>
 			<Dialog.Portal>
-				<Dialog.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-md z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-				<Dialog.Content className="fixed left-[50%] top-[50%] z-50 max-h-[95vh] w-[95vw] sm:w-[90vw] md:w-[85vw] lg:w-[80vw] max-w-[1100px] translate-x-[-50%] translate-y-[-50%] rounded-3xl bg-white shadow-2xl transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] border-2 border-gray-200 flex flex-col overflow-hidden">
-					{/* Header - Fixed - Enhanced */}
-					<div className="flex-shrink-0 px-4 sm:px-6 md:px-8 lg:px-10 pt-5 sm:pt-6 md:pt-7 pb-5 border-b-2 border-gray-100 bg-gradient-to-br from-gray-50/50 via-white to-gray-50/50">
+				<Dialog.Overlay className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+				<Dialog.Content className="fixed left-[50%] top-[50%] z-50 max-h-[95vh] w-[95vw] sm:w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] rounded-2xl bg-white shadow-2xl transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] border border-gray-100 flex flex-col overflow-hidden">
+					{/* Header - Fixed */}
+					<div className="flex-shrink-0 px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 border-b border-gray-100">
 						<div className="flex items-start justify-between gap-4">
 							<div className="flex-1 min-w-0">
-								<Dialog.Title className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 flex items-center gap-3 mb-2">
+								<Dialog.Title className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
 									{step === "payment" && (
-										<div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-2xl shadow-lg">
-											<Icon icon="lucide:credit-card" className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-										</div>
+										<Icon icon="lucide:credit-card" className="w-6 h-6 text-[#a797cc]" />
 									)}
 									{step === "confirmation" && (
-										<div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-lg">
-											<Icon icon="lucide:check-circle" className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-										</div>
+										<Icon icon="lucide:check-circle" className="w-6 h-6 text-green-500" />
 									)}
 									{step === "reservation" && (
-										<div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl shadow-lg">
-											<Icon icon="lucide:clock" className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-										</div>
+										<Icon icon="lucide:clock" className="w-6 h-6 text-yellow-500" />
 									)}
-									{step === "details" && (
-										<div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg">
-											<Icon icon="lucide:ticket" className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-										</div>
-									)}
-									<span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
-										{getTranslation(t, "events.bookEvent", "Book Event")}
-									</span>
+									{getTranslation(t, "events.bookEvent", "Book Event")}
 								</Dialog.Title>
-								<Dialog.Description className="mt-2 text-sm sm:text-base md:text-lg text-gray-600 font-semibold ml-0 sm:ml-14">
+								<Dialog.Description className="mt-2 text-sm md:text-base text-gray-600 font-medium">
 									{step === "details" &&
 										getTranslation(t, "events.enterBookingDetails", "Enter booking details")}
 									{step === "reservation" &&
@@ -643,10 +606,10 @@ export default function BookingModal({
 										getTranslation(t, "events.bookingConfirmed", "Booking Confirmed")}
 								</Dialog.Description>
 							</div>
-							<Dialog.Close className="flex-shrink-0 p-2.5 rounded-xl transition-all duration-300 hover:bg-red-50 hover:rotate-90 border border-transparent hover:border-red-200 group">
+							<Dialog.Close className="flex-shrink-0 p-2 rounded-full transition-colors hover:bg-gray-100">
 								<Icon
 									icon="lucide:x"
-									className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-red-500 transition-colors"
+									className="w-5 h-5 text-gray-500"
 								/>
 							</Dialog.Close>
 						</div>
@@ -656,6 +619,39 @@ export default function BookingModal({
 					<div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 md:px-8 py-4 sm:py-6">
 						{step === "details" && (
 							<div className="space-y-6">
+								{/* Event Capacity Information */}
+								{event.available_seats !== undefined && (
+									<div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
+										<div className="flex items-center gap-3">
+											<div className="flex-shrink-0 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm">
+												<Icon icon="lucide:users" className="w-5 h-5 text-[#a797cc]" />
+											</div>
+											<div className="flex-1">
+												<p className="text-sm font-semibold text-gray-900">
+													{getTranslation(t, "events.seatsAvailable", "Seats Available")}
+												</p>
+												<p className="text-lg font-bold text-[#a797cc]">
+													{event.available_seats} {getTranslation(t, "events.of", "of")} {event.total_seats}
+												</p>
+											</div>
+											{event.available_seats === 0 && (
+												<div className="px-3 py-1 bg-red-100 rounded-full">
+													<span className="text-xs font-bold text-red-700">
+														{getTranslation(t, "events.soldOut", "SOLD OUT")}
+													</span>
+												</div>
+											)}
+											{event.available_seats > 0 && event.available_seats <= 5 && (
+												<div className="px-3 py-1 bg-orange-100 rounded-full">
+													<span className="text-xs font-bold text-orange-700">
+														{getTranslation(t, "events.fewLeft", "FEW LEFT")}
+													</span>
+												</div>
+											)}
+										</div>
+									</div>
+								)}
+								
 								<div className="space-y-2">
 									<Label.Root className="text-sm font-medium text-gray-900">
 										{getTranslation(t, "events.numberOfAttendees", "Number of Attendees")}
@@ -675,17 +671,19 @@ export default function BookingModal({
 										<input
 											type="number"
 											min={1}
-											max={event.no_of_attendees}
+											max={event.available_seats !== undefined ? event.available_seats : event.no_of_attendees}
 											value={attendees}
 											onChange={handleAttendeeChange}
-											className="w-full px-14 py-3 text-center text-lg font-medium text-gray-900 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+											disabled={event.available_seats === 0}
+											className="w-full px-14 py-3 text-center text-lg font-medium text-gray-900 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:bg-gray-100 disabled:cursor-not-allowed"
 										/>
 										<button
 											type="button"
 											onClick={incrementAttendees}
 											disabled={
-												attendees >=
-												event.no_of_attendees
+												event.available_seats !== undefined 
+													? attendees >= event.available_seats || event.available_seats === 0
+													: attendees >= event.no_of_attendees
 											}
 											className="absolute right-0 h-full px-4 text-gray-500 hover:text-[#a797cc] disabled:opacity-50 disabled:hover:text-gray-500 transition-colors"
 										>
@@ -700,9 +698,14 @@ export default function BookingModal({
 											icon="lucide:info"
 											className="w-4 h-4"
 										/>
-										{getTranslation(t, "events.maxAttendeesAvailable", `Maximum ${event.no_of_attendees || 1} attendees available`, {
-											count: event.no_of_attendees || 1,
-										})}
+										{event.available_seats !== undefined 
+											? getTranslation(t, "events.maxAttendeesAvailable", `Maximum ${event.available_seats || 0} attendees available`, {
+												count: event.available_seats || 0,
+											})
+											: getTranslation(t, "events.maxAttendeesAvailable", `Maximum ${event.no_of_attendees || 1} attendees available`, {
+												count: event.no_of_attendees || 1,
+											})
+										}
 									</p>
 								</div>
 
@@ -825,214 +828,78 @@ export default function BookingModal({
 									</div>
 								</div>
 
-								{/* Payment Method Tabs - Enhanced */}
-								<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-50 via-white to-gray-50 p-1.5 border border-gray-200/60 shadow-lg">
-									<div className="flex gap-2">
-										{/* Moyasar Tab */}
-										<button
-											onClick={() => setActivePaymentTab("moyasar")}
-											className={`flex-1 relative overflow-hidden rounded-xl px-4 sm:px-6 py-3 sm:py-4 font-bold text-sm sm:text-base transition-all duration-300 ${
-												activePaymentTab === "moyasar"
-													? "bg-gradient-to-r from-[#a797cc] via-purple-500 to-[#8ba179] text-white shadow-xl scale-[1.02]"
-													: "bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-											}`}
-										>
-											<div className="relative z-10 flex items-center justify-center gap-2">
-												<img src="/assets/images/moyasar.png" alt="Moyasar" width={40} height={40} className="object-contain" />
-												<span>{getTranslation(t, "events.Moyasar", "Moyasar")}</span>
-												{activePaymentTab === "moyasar" && (
-													<Icon icon="lucide:check-circle" className="w-5 h-5" />
-												)}
-											</div>
-											{activePaymentTab === "moyasar" && (
-												<div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
-											)}
-										</button>
-
-										{/* Google Pay Tab */}
-										<button
-											onClick={() => setActivePaymentTab("googlepay")}
-											className={`flex-1 relative overflow-hidden rounded-xl px-4 sm:px-6 py-3 sm:py-4 font-bold text-sm sm:text-base transition-all duration-300 ${
-												activePaymentTab === "googlepay"
-													? "bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 text-white shadow-xl scale-[1.02]"
-													: "bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-											}`}
-										>
-											<div className="relative z-10 flex items-center justify-center gap-2">
-												<img src="/assets/images/google.png" alt="Google Pay" width={30} height={40} className="object-contain" />
-												<span>{getTranslation(t, "events.googlePay", "Pay")}</span>
-												{activePaymentTab === "googlepay" && (
-													<Icon icon="lucide:check-circle" className="w-5 h-5" />
-												)}
-											</div>
-											{activePaymentTab === "googlepay" && (
-												<div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
-											)}
-										</button>
-									</div>
-								</div>
-
 								{/* Ultra Premium Payment Form Container */}
 								<div className="relative">
 									{/* Section Header - Enhanced */}
-									<div className="mb-5 sm:mb-6 md:mb-7">
-										<div className="flex items-center gap-3 sm:gap-4 p-4 sm:p-5 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-2xl border border-gray-200/50 shadow-sm">
+									<div className="mb-4 sm:mb-5 md:mb-6">
+										<div className="flex items-start sm:items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
 											<div className="relative flex-shrink-0">
-												<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-2xl blur-md opacity-40 animate-pulse"></div>
-												<div className="relative flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#a797cc] via-purple-500 to-[#8ba179] rounded-2xl shadow-xl">
-													<Icon 
-														icon={activePaymentTab === "moyasar" ? "lucide:credit-card" : "logos:google-pay"} 
-														className="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" 
-													/>
+												<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc] to-[#8ba179] rounded-xl blur-lg opacity-30"></div>
+												<div className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-gradient-to-br from-[#a797cc] via-purple-500 to-[#8ba179] rounded-xl shadow-xl">
+													<Icon icon="lucide:credit-card" className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
 												</div>
 											</div>
 											<div className="flex-1 min-w-0">
-												<h3 className="text-xl sm:text-2xl md:text-2xl font-black text-gray-900 tracking-tight break-words mb-1">
-													{activePaymentTab === "moyasar" 
-														? getTranslation(t, "events.paymentDetails", "Payment Details")
-														: getTranslation(t, "events.googlePayDetails", "Google Pay Details")
-													}
+												<h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black text-gray-900 tracking-tight break-words">
+													{getTranslation(t, "events.paymentDetails", "Payment Details")}
 												</h3>
-												<p className="text-xs sm:text-sm text-gray-600 font-medium break-words">
-													{activePaymentTab === "moyasar"
-														? getTranslation(t, "events.enterCardInfo", "Enter your card information to complete the payment")
-														: getTranslation(t, "events.googlePayInfo", "Complete your payment using Google Pay")
-													}
+												<p className="text-xs sm:text-sm text-gray-500 font-medium mt-1 break-words">
+													{getTranslation(t, "events.enterCardInfo", "Enter your card information to complete the payment")}
 												</p>
 											</div>
 										</div>
 									</div>
 
-								{/* Form Container - Ultra Premium */}
-								{activePaymentTab === "moyasar" ? (
-									// Moyasar Credit Card Form
+									{/* Form Container - Ultra Premium */}
 									<div className="relative group">
-										{/* Multi-layer Glow Effect - Purple theme for Moyasar */}
+										{/* Multi-layer Glow Effect */}
 										<div className="absolute -inset-1 bg-gradient-to-r from-[#a797cc] via-purple-500 to-[#8ba179] rounded-[2rem] opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500"></div>
 										<div className="absolute -inset-0.5 bg-gradient-to-r from-[#8ba179] via-emerald-400 to-[#a797cc] rounded-[2rem] opacity-10 blur-xl"></div>
 										
 										<div
-											className="relative w-full min-h-[420px] sm:min-h-[450px] md:min-h-[480px] bg-gradient-to-br from-white via-purple-50/20 to-white rounded-[2rem] p-6 sm:p-8 md:p-10 lg:p-12 shadow-[0_20px_60px_rgba(167,151,204,0.15)] border-2 border-gray-100/80 transition-all duration-700 group-hover:border-[#a797cc]/50 group-hover:shadow-[0_25px_70px_rgba(167,151,204,0.25)] focus-within:border-[#a797cc] focus-within:shadow-[0_0_40px_rgba(167,151,204,0.3)] overflow-hidden"
+											ref={moyasarFormRef}
+											id="moyasar-payment-form"
+											className="relative w-full min-h-[360px] sm:min-h-[400px] md:min-h-[420px] bg-white rounded-[2rem] p-4 sm:p-6 md:p-8 lg:p-12 shadow-[0_20px_60px_rgba(167,151,204,0.15)] border-2 border-gray-100/80 transition-all duration-700 group-hover:border-[#a797cc]/50 group-hover:shadow-[0_25px_70px_rgba(167,151,204,0.25)] focus-within:border-[#a797cc] focus-within:shadow-[0_0_40px_rgba(167,151,204,0.3)] overflow-hidden"
+											style={{ minHeight: '360px' }}
 										>
-											{/* Moyasar Form Container */}
-											<div
-												ref={moyasarFormRef}
-												id="moyasar-payment-form"
-												className="w-full min-h-[360px]"
-											>
-												{/* Premium Loading Placeholder */}
-												{(!moyasarFormRef.current?.innerHTML || moyasarFormRef.current?.innerHTML.trim() === "") && (
-													<div className="flex flex-col justify-center items-center min-h-[360px] space-y-6">
-														<div className="relative">
-															{/* Animated Gradient Rings */}
-															<div className="absolute inset-0 bg-gradient-to-r from-[#a797cc] to-[#8ba179] rounded-full animate-ping opacity-20"></div>
-															<div className="absolute inset-0 bg-gradient-to-r from-[#8ba179] to-purple-500 rounded-full animate-pulse opacity-30" style={{ animationDelay: '0.5s' }}></div>
-															<div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-[#a797cc] rounded-full animate-pulse opacity-25" style={{ animationDelay: '1s' }}></div>
-															
-															{/* Icon Container with 3D Effect */}
-															<div className="relative z-10 flex items-center justify-center w-32 h-32 bg-gradient-to-br from-[#a797cc] via-purple-500 to-[#8ba179] rounded-3xl shadow-2xl transform hover:scale-105 transition-transform duration-500">
-																<div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent rounded-3xl"></div>
-																<Icon
-																	icon="lucide:credit-card"
-																	className="w-16 h-16 text-white drop-shadow-lg relative z-10"
-																/>
-															</div>
-														</div>
-														
-														<div className="text-center space-y-5 px-4 max-w-md">
-															<div>
-																<p className="text-xl sm:text-2xl font-black text-gray-800 mb-3 break-words">
-																	{getTranslation(t, "events.loadingPaymentForm", "Loading Secure Payment Form...")}
-																</p>
-																<p className="text-sm text-gray-600 font-medium break-words mb-6">
-																	{getTranslation(t, "events.loadingPaymentDescription", "Please wait while we securely initialize the payment gateway")}
-																</p>
-															</div>
-															
-															{/* Premium Loading Dots */}
-															<div className="flex justify-center gap-2.5">
-																<div className="w-3 h-3 bg-gradient-to-r from-[#a797cc] to-purple-500 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
-																<div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-[#8ba179] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '150ms' }}></div>
-																<div className="w-3 h-3 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
-															</div>
-
-															<div className="pt-4 border-t border-gray-200">
-																<div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-																	<Icon icon="lucide:shield-check" className="w-4 h-4 text-[#a797cc]" />
-																	<span>{getTranslation(t, "events.securedByMoyasar", "Secured by Moyasar")}</span>
-																</div>
-															</div>
-														</div>
-													</div>
-												)}
-											</div>
-										</div>
-									</div>
-								) : (
-									// Google Pay Form - Matching Moyasar Structure
-									<div className="relative group">
-										{/* Multi-layer Glow Effect - Blue theme for Google Pay */}
-										<div className="absolute -inset-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-[2rem] opacity-20 blur-2xl group-hover:opacity-30 transition-opacity duration-500"></div>
-										<div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 rounded-[2rem] opacity-10 blur-xl"></div>
-										
-										<div
-											className="relative w-full min-h-[420px] sm:min-h-[450px] md:min-h-[480px] bg-gradient-to-br from-white via-blue-50/20 to-white rounded-[2rem] p-6 sm:p-8 md:p-10 lg:p-12 shadow-[0_20px_60px_rgba(59,130,246,0.15)] border-2 border-gray-100/80 transition-all duration-700 group-hover:border-blue-500/50 group-hover:shadow-[0_25px_70px_rgba(59,130,246,0.25)] focus-within:border-blue-500 focus-within:shadow-[0_0_40px_rgba(59,130,246,0.3)] overflow-hidden"
-										>
-											{/* Google Pay Form Container */}
-											<div
-												ref={googlePayFormRef}
-												id="googlepay-payment-form"
-												className="w-full min-h-[360px]"
-											>
-												{/* Premium Loading Placeholder */}
-												{(!googlePayFormRef.current?.innerHTML || googlePayFormRef.current?.innerHTML.trim() === "") && (
-													<div className="flex flex-col justify-center items-center min-h-[360px] space-y-6">
+											{/* Premium Loading Placeholder */}
+											{(!moyasarFormRef.current?.innerHTML || moyasarFormRef.current.innerHTML.trim() === "") && (
+												<div className="flex flex-col justify-center items-center min-h-[360px] sm:min-h-[400px] md:min-h-[420px] space-y-6">
 													<div className="relative">
-														{/* Animated Gradient Rings - Blue */}
-														<div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-700 rounded-full animate-ping opacity-20"></div>
-														<div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-full animate-pulse opacity-30" style={{ animationDelay: '0.5s' }}></div>
-														<div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-blue-500 rounded-full animate-pulse opacity-25" style={{ animationDelay: '1s' }}></div>
+														{/* Animated Gradient Rings */}
+														<div className="absolute inset-0 bg-gradient-to-r from-[#a797cc] to-[#8ba179] rounded-full animate-ping opacity-20"></div>
+														<div className="absolute inset-0 bg-gradient-to-r from-[#8ba179] to-purple-500 rounded-full animate-pulse opacity-30" style={{ animationDelay: '0.5s' }}></div>
+														<div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-[#a797cc] rounded-full animate-pulse opacity-25" style={{ animationDelay: '1s' }}></div>
 														
 														{/* Icon Container with 3D Effect */}
-														<div className="relative z-10 flex items-center justify-center w-32 h-32 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-3xl shadow-2xl transform hover:scale-105 transition-transform duration-500">
+														<div className="relative z-10 flex items-center justify-center w-28 h-28 bg-gradient-to-br from-[#a797cc] via-purple-500 to-[#8ba179] rounded-3xl shadow-2xl transform rotate-3 hover:rotate-6 transition-transform duration-500">
 															<div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent rounded-3xl"></div>
 															<Icon
-																icon="logos:google-pay"
-																className="w-16 h-16 drop-shadow-lg relative z-10"
+																icon="lucide:credit-card"
+																className="w-14 h-14 text-white drop-shadow-lg relative z-10"
 															/>
 														</div>
 													</div>
 													
-													<div className="text-center space-y-5 px-4 max-w-md">
+													<div className="text-center space-y-5 px-2">
 														<div>
-															<p className="text-xl sm:text-2xl font-black text-gray-800 mb-3 break-words">
-																{getTranslation(t, "events.loadingPaymentForm", "Loading Secure Payment Form...")}
+															<p className="text-lg sm:text-xl font-black text-gray-800 mb-2 break-words">
+																{getTranslation(t, "events.loadingPaymentForm", "Loading secure payment form...")}
 															</p>
-															<p className="text-sm text-gray-600 font-medium break-words mb-6">
-																{getTranslation(t, "events.loadingPaymentDescription", "Please wait while we securely initialize the payment gateway")}
-															</p>
+															<p className="text-xs sm:text-sm text-gray-500 font-medium break-words">Please wait while we securely load the payment gateway</p>
 														</div>
 														
-														{/* Premium Loading Dots - Matching Moyasar */}
+														{/* Premium Loading Dots */}
 														<div className="flex justify-center gap-2.5">
-															<div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
-															<div className="w-3 h-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '150ms' }}></div>
-															<div className="w-3 h-3 bg-gradient-to-r from-blue-700 to-blue-500 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
-														</div>
-
-														<div className="pt-4 border-t border-gray-200">
-															<div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-																<Icon icon="lucide:shield-check" className="w-4 h-4 text-blue-500" />
-																<span>{getTranslation(t, "events.securedByGoogle", "Secured by Google")}</span>
-															</div>
+															<div className="w-3 h-3 bg-gradient-to-r from-[#a797cc] to-purple-500 rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
+															<div className="w-3 h-3 bg-gradient-to-r from-purple-500 to-[#8ba179] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '150ms' }}></div>
+															<div className="w-3 h-3 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
 														</div>
 													</div>
 												</div>
-												)}
-											</div>
+											)}
 										</div>
 									</div>
-								)}
 								</div>
 
 								{/* Ultra Premium Payment Methods Card */}
@@ -1117,24 +984,24 @@ export default function BookingModal({
 						)}
 					</div>
 
-					{/* Footer - Fixed - Enhanced */}
-					<div className="flex-shrink-0 px-4 sm:px-6 md:px-8 lg:px-10 pt-5 pb-5 sm:pb-6 border-t-2 border-gray-100 bg-gradient-to-br from-gray-50/50 via-white to-gray-50/50">
-						<div className="flex gap-3 sm:gap-4 justify-end">
+					{/* Footer - Fixed */}
+					<div className="flex-shrink-0 px-4 sm:px-6 md:px-8 pt-4 pb-4 sm:pb-6 border-t border-gray-100 bg-white">
+						<div className="flex gap-3 justify-end">
 						{step === "details" && (
 							<Button
 								onClick={handleReservation}
 								disabled={isLoading}
-								className="h-12 sm:h-14 px-6 sm:px-8 rounded-2xl bg-gradient-to-r from-[#a797cc] via-purple-500 to-[#8ba179] hover:from-[#8ba179] hover:via-purple-500 hover:to-[#a797cc] text-white font-bold text-base sm:text-lg flex items-center gap-3 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+								className="h-12 px-6 rounded-xl bg-[#a797cc] hover:bg-[#a797cc]/90 text-white font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								{isLoading ? (
 									<Icon
 										icon="lucide:loader-2"
-										className="w-5 h-5 sm:w-6 sm:h-6 animate-spin"
+										className="w-5 h-5 animate-spin"
 									/>
 								) : (
 									<Icon
 										icon="lucide:check"
-										className="w-5 h-5 sm:w-6 sm:h-6"
+										className="w-5 h-5"
 									/>
 								)}
 								{getTranslation(t, "events.reserveSpot", "Reserve Spot")}
@@ -1144,9 +1011,8 @@ export default function BookingModal({
 						{step === "payment" && (
 							<Button
 								onClick={onClose}
-								className="px-6 sm:px-8 h-12 sm:h-14 font-bold text-base sm:text-lg text-gray-700 rounded-2xl border-2 border-gray-300 transition-all duration-300 hover:bg-gray-100 hover:border-gray-400 hover:scale-105 shadow-md hover:shadow-lg"
+								className="px-6 h-12 font-medium text-gray-700 rounded-xl border border-gray-200 transition-colors hover:bg-gray-50"
 							>
-								<Icon icon="lucide:x" className="w-5 h-5 mr-2" />
 								{getTranslation(t, "events.cancel", "Cancel")}
 							</Button>
 						)}
@@ -1154,9 +1020,8 @@ export default function BookingModal({
 						{step === "reservation" && (
 							<Button
 								onClick={onClose}
-								className="px-6 sm:px-8 h-12 sm:h-14 font-bold text-base sm:text-lg text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl transition-all duration-300 hover:from-indigo-600 hover:to-blue-500 hover:scale-105 shadow-xl hover:shadow-2xl"
+								className="px-6 h-12 font-medium text-gray-700 rounded-xl border border-gray-200 transition-colors hover:bg-gray-50"
 							>
-								<Icon icon="lucide:check" className="w-5 h-5 mr-2" />
 								{getTranslation(t, "events.close", "Close")}
 							</Button>
 						)}
@@ -1164,9 +1029,8 @@ export default function BookingModal({
 						{step === "confirmation" && (
 							<Button
 								onClick={onClose}
-								className="px-6 sm:px-8 h-12 sm:h-14 font-bold text-base sm:text-lg text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl transition-all duration-300 hover:from-emerald-600 hover:to-green-500 hover:scale-105 shadow-xl hover:shadow-2xl"
+								className="px-6 h-12 font-medium text-gray-700 rounded-xl border border-gray-200 transition-colors hover:bg-gray-50"
 							>
-								<Icon icon="lucide:check-circle" className="w-5 h-5 mr-2" />
 								{getTranslation(t, "events.close", "Close")}
 							</Button>
 						)}

@@ -3,6 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 
+// Helper function to check if image URL is external
+const isExternalImage = (url) => {
+  if (!url) return false;
+  return url.startsWith("http://") || url.startsWith("https://");
+};
+
 export default function EventPlaceholder({ src, alt, className = "", aspectRatio = "aspect-video" }) {
   const [imageError, setImageError] = useState(false);
   
@@ -15,6 +21,7 @@ export default function EventPlaceholder({ src, alt, className = "", aspectRatio
           alt={alt || "Event"}
           fill
           className="object-cover w-full h-full"
+          unoptimized={isExternalImage(src)}
           onError={() => setImageError(true)}
         />
       </div>

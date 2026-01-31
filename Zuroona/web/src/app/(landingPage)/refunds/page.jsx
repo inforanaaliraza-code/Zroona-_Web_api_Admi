@@ -29,25 +29,77 @@ export default function RefundsPage() {
   ];
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !token) {
       router.push("/login");
       return;
     }
     fetchRefunds();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, token]);
 
   const fetchRefunds = async () => {
     try {
       setLoading(true);
+      console.log("[REFUND:FRONTEND] Fetching refunds...");
       const response = await GetRefundListApi({ page: 1, limit: 50 });
-      if (response?.status === 1) {
-        setRefunds(response.data?.refunds || response.data || []);
-      } else {
-        toast.error(response?.message || "Failed to load refunds");
+      console.log("[REFUND:FRONTEND] Full API Response:", JSON.stringify(response, null, 2));
+      
+      // Handle different response formats
+      let refundsData = [];
+      
+      // Check if response has status 1 or code 200
+      if (response?.status === 1 || response?.code === 200 || response?.status === true) {
+        // Response format from backend: { status: 1, data: [...], total_count: X, message: "..." }
+        if (Array.isArray(response.data)) {
+          refundsData = response.data;
+        } else if (response.data?.refunds && Array.isArray(response.data.refunds)) {
+          refundsData = response.data.refunds;
+        } else if (response.data && typeof response.data === 'object') {
+          // If data is an object, try to extract array from it
+          refundsData = Object.values(response.data).find(val => Array.isArray(val)) || [];
+        }
+      } else if (response?.status === 0) {
+        // Even if status is 0, check if there's data
+        if (Array.isArray(response.data)) {
+          refundsData = response.data;
+        } else if (response.data?.refunds && Array.isArray(response.data.refunds)) {
+          refundsData = response.data.refunds;
+        }
+        
+        // Show error message only if there's no data
+        if (refundsData.length === 0 && response?.message && response.message !== "Internal server error.") {
+          console.warn("[REFUND:FRONTEND] API returned status 0:", response.message);
+        }
+      } else if (Array.isArray(response)) {
+        // Response might be array directly
+        refundsData = response;
+      } else if (Array.isArray(response.data)) {
+        // Response.data might be array
+        refundsData = response.data;
+      }
+      
+      // Ensure all refunds have proper structure
+      refundsData = refundsData.map(refund => ({
+        ...refund,
+        booking_id: refund.booking_id?._id || refund.booking_id || refund._id,
+        currency: refund.currency || "SAR",
+        status: refund.status !== undefined ? refund.status : 0,
+      }));
+      
+      console.log("[REFUND:FRONTEND] Extracted refunds:", refundsData.length, refundsData);
+      setRefunds(refundsData);
+      
+      if (refundsData.length === 0) {
+        console.log("[REFUND:FRONTEND] No refunds found for user");
       }
     } catch (error) {
-      console.error("Error fetching refunds:", error);
-      toast.error("Failed to load refunds");
+      console.error("[REFUND:FRONTEND] Error fetching refunds:", error);
+      console.error("[REFUND:FRONTEND] Error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      setRefunds([]);
+      toast.error(error.response?.data?.message || "Failed to load refunds. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -137,8 +189,16 @@ export default function RefundsPage() {
           ))}
         </div>
 
-        {/* Request New Refund Button */}
-        <div className={`mb-6 ${isRTL ? "text-left" : "text-right"}`}>
+        {/* Request New Refund Button and Refresh */}
+        <div className={`mb-6 flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
+          <button
+            onClick={fetchRefunds}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Icon icon="lucide:refresh-cw" className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            {t("common.refresh") || "Refresh"}
+          </button>
           <Link
             href="/refunds/request"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#a797cc] text-white rounded-xl font-semibold hover:bg-[#8b7ba8] transition-colors shadow-sm hover:shadow-md"

@@ -1089,7 +1089,7 @@ class EmailService {
                                 </p>
                             </div>
                             <p style="color: #666; font-size: 16px; line-height: 1.6;">
-                                تقدر تدفع Apple Pay / Google Pay أو بطاقة.
+                                تقدر تدفع بطاقة.
                             </p>
                             ${data.remaining_seats ? `<p style="color: #ef4444; font-size: 14px; font-weight: bold;">باقي <strong>${data.remaining_seats}</strong> مقعد/مقاعد في هذا اليوم.</p>` : ''}
                             <div style="text-align: center; margin: 30px 0;">
@@ -1124,7 +1124,7 @@ class EmailService {
                                 </p>
                             </div>
                             <p style="color: #666; font-size: 16px; line-height: 1.6;">
-                                Pay with Apple Pay / Google Pay / card.
+                                Pay with card.
                             </p>
                             ${data.remaining_seats ? `<p style="color: #ef4444; font-size: 14px; font-weight: bold;">Only <strong>${data.remaining_seats}</strong> seats left for this date.</p>` : ''}
                             <div style="text-align: center; margin: 30px 0;">
@@ -1151,7 +1151,7 @@ class EmailService {
         if (isArabic) {
             return {
                 subject: `تمت الموافقة — تأكيد بخطوة واحدة`,
-                preview: `Apple Pay / Google Pay متاح.`,
+                preview: `بطاقة متاحة.`,
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl;">
                         <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -1171,7 +1171,7 @@ class EmailService {
                                 </p>
                             </div>
                             <p style="color: #666; font-size: 16px; line-height: 1.6;">
-                                تقدر تدفع Apple Pay / Google Pay أو بطاقة.
+                                تقدر تدفع بطاقة.
                             </p>
                             <div style="text-align: center; margin: 30px 0;">
                                 <a href="${payUrl}" style="background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 18px;">
@@ -1185,7 +1185,7 @@ class EmailService {
         } else {
             return {
                 subject: `You're approved — 1-tap to confirm`,
-                preview: `Apple Pay / Google Pay available.`,
+                preview: `Card payment available.`,
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                         <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -1205,7 +1205,7 @@ class EmailService {
                                 </p>
                             </div>
                             <p style="color: #666; font-size: 16px; line-height: 1.6;">
-                                Pay with Apple Pay / Google Pay / card.
+                                Pay with card.
                             </p>
                             <div style="text-align: center; margin: 30px 0;">
                                 <a href="${payUrl}" style="background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 18px;">
@@ -1230,7 +1230,7 @@ class EmailService {
         if (isArabic) {
             return {
                 subject: `مشكلة بسيطة في الدفع — جرّب مرة ثانية`,
-                preview: `Apple Pay / Google Pay / بطاقة`,
+                preview: `بطاقة`,
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; direction: rtl;">
                         <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -1256,7 +1256,7 @@ class EmailService {
         } else {
             return {
                 subject: `Payment hiccup — one more tap to confirm`,
-                preview: `Apple Pay / Google Pay / card`,
+                preview: `Card payment`,
                 html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                         <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">

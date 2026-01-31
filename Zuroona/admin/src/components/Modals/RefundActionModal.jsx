@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-function RefundActionModal({ show, onClose, onConfirm, actionType, refund }) {
+function RefundActionModal({ show, onClose, onConfirm, actionType, refund, loading = false }) {
   const { t } = useTranslation();
   const [adminResponse, setAdminResponse] = useState("");
   const [paymentRefundId, setPaymentRefundId] = useState("");
@@ -40,10 +40,10 @@ function RefundActionModal({ show, onClose, onConfirm, actionType, refund }) {
         {refund && (
           <div className="mb-4 p-3 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Amount:</span> {refund.amount || 0} {refund.currency || "SAR"}
+              <span className="font-medium">{t("refund.amount")}:</span> {refund.amount || 0} {refund.currency || "SAR"}
             </p>
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Booking ID:</span> {refund.booking_id?.slice(-8) || "N/A"}
+              <span className="font-medium">{t("refund.bookingId")}:</span> {refund.booking_id?.slice(-8) || "N/A"}
             </p>
           </div>
         )}
@@ -96,11 +96,15 @@ function RefundActionModal({ show, onClose, onConfirm, actionType, refund }) {
               isApproving 
                 ? "bg-green-600 hover:bg-green-700" 
                 : "bg-red-600 hover:bg-red-700"
-            }`}
+            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={handleConfirm}
-            disabled={!isApproving && !adminResponse.trim()}
+            disabled={loading || (!isApproving && !adminResponse.trim())}
           >
-            {isApproving ? (t("refund.approve") || "Approve") : (t("refund.reject") || "Reject")}
+            {loading
+              ? (t("common.loading") || "Processing...")
+              : isApproving
+              ? (t("refund.approve") || "Approve")
+              : (t("refund.reject") || "Reject")}
           </button>
         </div>
       </div>

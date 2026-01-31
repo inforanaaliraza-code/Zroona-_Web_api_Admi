@@ -15,6 +15,7 @@ import S3 from "react-aws-s3";
 import { config, BASE_API_URL } from "@/until";
 import { Icon } from "@iconify/react";
 import axios from "axios";
+import CountryCitySelect from "../CountryCitySelect/CountryCitySelect";
 
 export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }) {
     const [loading, setLoading] = useState(false);
@@ -38,6 +39,8 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
             phone: "",
             gender: "",
             nationality: "",
+            country: "",
+            city: "",
             date_of_birth: "",
             description: "",
             profile_image: null,
@@ -63,6 +66,8 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
             phone: Yup.string().required(t('signup.tab16')),
             gender: Yup.string().required(t('signup.tab16')),
             nationality: Yup.string().required(t('signup.tab16')),
+            country: Yup.string().required(t('signup.tab16')),
+            city: Yup.string().required(t('signup.tab16')),
             date_of_birth: Yup.string().required(t('signup.tab16')),
             description: Yup.string().required(t('signup.tab16')),
         }),
@@ -78,6 +83,8 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                     country_code: values.country_code || "+966",
                     gender: parseInt(values.gender),
                     nationality: values.nationality,
+                    country: values.country,
+                    city: values.city,
                     date_of_birth: values.date_of_birth,
                     description: values.description,
                     profile_image: values.profile_image || "",
@@ -375,6 +382,15 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                                 )}
                             </div>
 
+                            {/* Country and City Selection */}
+                            <CountryCitySelect
+                                formik={formik}
+                                countryFieldName="country"
+                                cityFieldName="city"
+                                showLabels={true}
+                                required={true}
+                            />
+
                             {/* Date of Birth */}
                             <div>
                                 <label htmlFor="date_of_birth" className={labelClasses}>
@@ -382,23 +398,46 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                                 </label>
                                 <div className="relative">
                                     <span className={iconContainerClasses}>
-                                        <Image
-                                            src="/assets/images/signup/calendar-event.png"
-                                            height={18}
-                                            width={18}
-                                            alt="Calendar Icon"
-                                            priority
-                                            unoptimized
+                                        <Icon
+                                            icon="lucide:calendar"
+                                            className="w-4 h-4 text-[#a797cc]"
                                         />
                                     </span>
                                     <input
-                                        type="date"
+                                        type="text"
                                         id="date_of_birth"
+                                        name="date_of_birth"
+                                        value={formik.values.date_of_birth || ""}
+                                        onChange={(e) => {
+                                            let value = e.target.value;
+                                            // Allow only digits and slashes
+                                            value = value.replace(/[^\d/]/g, '');
+                                            // Auto-format as DD/MM/YYYY
+                                            if (value.length <= 10) {
+                                                // Remove existing slashes and add new ones
+                                                const digits = value.replace(/\//g, '');
+                                                if (digits.length <= 2) {
+                                                    value = digits;
+                                                } else if (digits.length <= 4) {
+                                                    value = digits.slice(0, 2) + '/' + digits.slice(2);
+                                                } else {
+                                                    value = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4, 8);
+                                                }
+                                            }
+                                            formik.setFieldValue("date_of_birth", value);
+                                            formik.setFieldTouched("date_of_birth", true);
+                                        }}
+                                        onBlur={() => {
+                                            formik.setFieldTouched("date_of_birth", true);
+                                        }}
+                                        placeholder="DD/MM/YYYY"
+                                        maxLength={10}
                                         className={`pl-10 ${inputClasses}`}
-                                        max={new Date().toISOString().split("T")[0]}
-                                        {...formik.getFieldProps("date_of_birth")}
                                     />
                                 </div>
+                                <p className="mt-1.5 text-xs text-gray-500">
+                                    {t("auth.dateFormatHint") || "Format: DD/MM/YYYY (e.g., 25/12/1990)"}
+                                </p>
                                 {formik.touched.date_of_birth && formik.errors.date_of_birth && (
                                     <p className={errorClasses}>{formik.errors.date_of_birth}</p>
                                 )}

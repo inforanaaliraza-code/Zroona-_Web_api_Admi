@@ -71,6 +71,7 @@ router.get(
 router.patch("/language", AuthenticateUser, userController.updateLanguage);
 router.post("/event/review/add", AuthenticateUser, userController.addReview);
 router.get("/event/review/list", AuthenticateUser, userController.reviewList);
+router.get("/event/review/my-reviews", AuthenticateUser, userController.myEventReviews);
 router.get(
 	"/notification/list",
 	AuthenticateUser,

@@ -29,8 +29,10 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 	const dispatch = useDispatch();
 	const [loading, setLoading] = useState(false);
 	const [step, setStep] = useState(1); // 1: Phone input, 2: OTP verification
-	const [seconds, setSeconds] = useState(30);
+	const [seconds, setSeconds] = useState(60); // 1 minute timer
 	const [timerActive, setTimerActive] = useState(false);
+	const [otpExpired, setOtpExpired] = useState(false);
+	const [otpSentTime, setOtpSentTime] = useState(null); // Track when OTP was sent
 	const login = useAuthStore((state) => state.login);
 
 	// Phone number form validation
@@ -65,6 +67,8 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 				if (response?.status === 1) {
 					toast.success(response.message || "OTP sent successfully!");
 					setStep(2); // Move to OTP verification step
+					setOtpSentTime(Date.now()); // Record when OTP was sent
+					setOtpExpired(false);
 					startTimer();
 				} else {
 					toast.error(response.message || "Failed to send OTP");
@@ -72,7 +76,7 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 			} catch (error) {
 				setLoading(false);
 				console.error("[LOGIN-MODAL] Error:", error);
-				
+
 				// Check if it's a network/connection error
 				if (error?.message === "Network Error" || error?.code === "ERR_NETWORK" || error?.code === "ERR_CONNECTION_REFUSED") {
 					const errorMsg = "Cannot connect to API server. Please make sure the server is running on port 3434.\n\nTo start: cd api && npm run dev";
@@ -80,9 +84,9 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 					console.error("[LOGIN-MODAL] API server connection failed. Server may not be running.");
 					return;
 				}
-				
-				const errorMessage = error?.response?.data?.message || 
-					error?.message || 
+
+				const errorMessage = error?.response?.data?.message ||
+					error?.message ||
 					"An error occurred. Please try again.";
 				toast.error(errorMessage);
 			}
@@ -103,6 +107,21 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 		validationSchema: otpValidationSchema,
 		onSubmit: async (values) => {
 			setLoading(true);
+
+			// Check if OTP has expired (1 minute = 60000 ms)
+			if (otpSentTime && (Date.now() - otpSentTime) > 60000) {
+				setLoading(false);
+				toast.error(t("auth.otpExpired") || "OTP has expired. Please request a new one.");
+				setOtpExpired(true);
+				otpFormik.setFieldValue("otp", "");
+				return;
+			}
+			if (otpExpired) {
+				setLoading(false);
+				toast.error(t("auth.otpExpired") || "OTP has expired. Please request a new one.");
+				otpFormik.setFieldValue("otp", "");
+				return;
+			}
 
 			try {
 				const payload = {
@@ -160,8 +179,8 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 			} catch (error) {
 				setLoading(false);
 				console.error("[LOGIN-MODAL] Error:", error);
-				const errorMessage = error?.response?.data?.message || 
-					error?.message || 
+				const errorMessage = error?.response?.data?.message ||
+					error?.message ||
 					"An error occurred. Please try again.";
 				toast.error(errorMessage);
 			}
@@ -170,14 +189,16 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 
 	// Timer for OTP resend
 	const startTimer = () => {
-		setSeconds(30);
+		setSeconds(60); // 1 minute
 		setTimerActive(true);
+		setOtpExpired(false);
 
 		const interval = setInterval(() => {
 			setSeconds((prevSeconds) => {
 				if (prevSeconds <= 1) {
 					clearInterval(interval);
 					setTimerActive(false);
+					setOtpExpired(true);
 					return 0;
 				}
 				return prevSeconds - 1;
@@ -196,6 +217,9 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 		}).then((data) => {
 			setLoading(false);
 			if (data?.status === 1) {
+				setOtpSentTime(Date.now()); // Record when OTP was sent
+				setOtpExpired(false);
+				otpFormik.setFieldValue("otp", ""); // Clear previous OTP
 				toast.success(data?.message || "OTP resent successfully!");
 				startTimer();
 			} else {
@@ -259,7 +283,7 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 			>
 				{/* Animated background gradient */}
 				<div className="absolute inset-0 bg-gradient-to-br from-[#a797cc]/5 via-transparent to-brand-orange/5 animate-gradient-xy"></div>
-				
+
 				{/* Decorative elements */}
 				<div className="absolute top-0 right-0 w-64 h-64 bg-purple-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 				<div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-200/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
@@ -319,25 +343,24 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 										animate={{ opacity: 1, x: 0 }}
 										transition={{ delay: 0.4 }}
 									>
-									<label className="block mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-										<Icon icon="material-symbols:phone-android" className="w-4 h-4 text-[#a797cc]" />
-										{t("auth.phoneNumber") || "Phone Number"} *
-										<span className="text-xs font-normal text-gray-500">(Pakistan & Saudi Arabia)</span>
-									</label>
-									<div className="relative group" style={{ zIndex: 10 }}>
-										<div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/10 to-brand-orange/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-										<div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-1 shadow-sm group-hover:border-[#a797cc]/50 transition-all duration-300" style={{ zIndex: 10 }}>
-											<NumberInput
-												formik={phoneFormik}
-												mobileNumberField="phone_number"
-												countryCodeField="country_code"
-												disabled={loading}
-												enableSearch={true}
-												onlyCountries={['sa', 'pk']}
-												countryCodeEditable={false}
-											/>
+										<label className="block mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+											<Icon icon="material-symbols:phone-android" className="w-4 h-4 text-[#a797cc]" />
+											{t("auth.phoneNumber") || "Phone Number"} *
+										</label>
+										<div className="relative group" style={{ zIndex: 10 }}>
+											<div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/10 to-brand-orange/10 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+											<div className="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-1 shadow-sm group-hover:border-[#a797cc]/50 transition-all duration-300" style={{ zIndex: 10 }}>
+												<NumberInput
+													formik={phoneFormik}
+													mobileNumberField="phone_number"
+													countryCodeField="country_code"
+													disabled={loading}
+													enableSearch={true}
+													onlyCountries={['sa']}
+													countryCodeEditable={false}
+												/>
+											</div>
 										</div>
-									</div>
 									</motion.div>
 
 									{/* Send OTP Button */}
@@ -356,7 +379,7 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 											{/* Animated background */}
 											<div className="absolute inset-0 bg-gradient-to-r from-brand-orange/20 to-[#a797cc]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 											<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-											
+
 											{/* Button content */}
 											<span className="relative z-10 flex items-center gap-2">
 												{loading ? (
@@ -474,11 +497,26 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 										</motion.p>
 									)}
 
-									{/* Timer */}
-									<div className="flex justify-center items-center my-4">
-										<span className="text-[#a797cc] text-sm font-medium">
-											Resend code in 00:{seconds > 9 ? seconds : `0${seconds}`}
-										</span>
+									{/* Timer and Resend */}
+									<div className="flex justify-center items-center gap-3 my-4">
+										{seconds > 0 && !otpExpired ? (
+											<span className="text-gray-600 text-sm font-medium">
+												{t("auth.otpTimer") || "Resend in"} {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}
+											</span>
+										) : (
+											<button
+												onClick={resendCode}
+												disabled={loading}
+												className="text-[#a797cc] hover:text-[#8ba179] text-sm font-medium transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
+											>
+												{t("auth.resendOTP") || "Resend OTP"}
+											</button>
+										)}
+										{otpExpired && (
+											<span className="text-red-600 text-sm font-medium">
+												{t("auth.otpExpired") || "OTP Expired"}
+											</span>
+										)}
 									</div>
 
 									{/* Verify OTP Button */}
@@ -496,7 +534,7 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 											{/* Animated background */}
 											<div className="absolute inset-0 bg-gradient-to-r from-brand-orange/20 to-[#a797cc]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 											<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-											
+
 											{/* Button content */}
 											<span className="relative z-10 flex items-center gap-2">
 												{loading ? (

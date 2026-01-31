@@ -25,7 +25,7 @@ const HeroSection = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-white overflow-x-visible overflow-y-hidden">
+        <div className="relative min-h-screen bg-white overflow-x-visible overflow-y-hidden max-w-[100%] mx-auto w-full [overflow-x:hidden]">
             {/* Background Pattern */}
             <div className="fixed inset-0 bg-[url('/assets/images/home/bg-img.png')] bg-cover bg-center opacity-5 -z-10"></div>
 

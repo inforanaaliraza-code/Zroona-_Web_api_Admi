@@ -3,6 +3,9 @@ const router = express.Router();
 const UserReviewController = require("../controllers/userReviewController");
 const { AuthenticateUser } = require("../middleware/authenticate");
 
+// Get all reviews given by current user/guest
+router.get("/my-reviews", AuthenticateUser, UserReviewController.getMyReviews);
+
 // Create a new review
 router.post("/", AuthenticateUser, UserReviewController.createReview);
 

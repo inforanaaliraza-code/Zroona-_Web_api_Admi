@@ -295,6 +295,113 @@ export default function RefundDetailPage() {
               )}
             </div>
           </div>
+
+          {/* Status Timeline */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {t("refunds.statusTimeline") || "Refund Status Timeline"}
+              </h2>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                {/* Step 1: Request Submitted */}
+                <div className="flex items-start gap-4">
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                    refund.status >= 0 ? "bg-[#a797cc] text-white" : "bg-gray-200 text-gray-400"
+                  }`}>
+                    <Icon icon="lucide:check" className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {t("refunds.timeline.requested") || "Refund Request Submitted"}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {refund.createdAt
+                        ? format(new Date(refund.createdAt), "MMM dd, yyyy 'at' hh:mm a")
+                        : "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 2: Under Review */}
+                <div className="flex items-start gap-4">
+                  <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                    refund.status >= 0 ? "bg-yellow-500 text-white" : "bg-gray-200 text-gray-400"
+                  }`}>
+                    <Icon icon="lucide:clock" className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {t("refunds.timeline.review") || "Under Review"}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {refund.status === 0 
+                        ? t("refunds.timeline.currentStatus") || "Current Status"
+                        : refund.status >= 1 
+                        ? t("refunds.timeline.completed") || "Completed"
+                        : t("refunds.timeline.pending") || "Pending"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 3: Approved/Rejected */}
+                {refund.status >= 1 && (
+                  <div className="flex items-start gap-4">
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                      refund.status === 1 
+                        ? "bg-green-500 text-white" 
+                        : refund.status === 2 
+                        ? "bg-red-500 text-white"
+                        : "bg-gray-200 text-gray-400"
+                    }`}>
+                      <Icon 
+                        icon={refund.status === 1 ? "lucide:check-circle" : "lucide:x-circle"} 
+                        className="w-5 h-5" 
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {refund.status === 1 
+                          ? t("refunds.timeline.approved") || "Refund Approved"
+                          : t("refunds.timeline.rejected") || "Refund Rejected"}
+                      </p>
+                      {refund.admin_response && (
+                        <p className="text-xs text-gray-600 mt-1 bg-gray-50 p-2 rounded">
+                          {refund.admin_response}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 4: Processed */}
+                {refund.status === 3 && (
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-blue-500 text-white">
+                      <Icon icon="lucide:check-circle-2" className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {t("refunds.timeline.processed") || "Refund Processed"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {refund.processed_at
+                          ? format(new Date(refund.processed_at), "MMM dd, yyyy 'at' hh:mm a")
+                          : "N/A"}
+                      </p>
+                      {refund.payment_refund_id && (
+                        <p className="text-xs text-gray-600 mt-1 font-mono bg-gray-50 p-2 rounded">
+                          {t("refunds.paymentRefundId") || "Payment Refund ID"}: {refund.payment_refund_id}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

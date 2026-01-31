@@ -4,14 +4,14 @@ import Modal from '../common/Modal';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { getEventListDetail } from '@/redux/slices/EventListDetail';
 import { useFormik } from 'formik';
 import { AddEventListApi, EditEventListApi, UploadFileApi } from '@/app/api/setting';
 import * as Yup from "yup";
 import { toast } from 'react-toastify';
 import Loader from '../Loader/Loader';
-import SelectDate from '../common/SelectDate';
+import { DatePickerTime } from '@/components/ui/date-picker-time';
 import { getEventList } from '@/redux/slices/EventList';
 import { useTranslation } from 'react-i18next';
 import { getProfile } from '@/redux/slices/profileInfo';
@@ -19,6 +19,10 @@ import { format } from 'date-fns';
 import { BASE_API_URL } from '@/until';
 import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 import { Icon } from '@iconify/react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { ChevronDownIcon } from 'lucide-react';
 
 // Professional Time Picker Component with Buttons
 const TimePicker = ({ value, onChange, minTime, error, errorMessage }) => {
@@ -267,6 +271,102 @@ const TimePicker = ({ value, onChange, minTime, error, errorMessage }) => {
                     </p>
                 )}
             </div>
+        </div>
+    );
+};
+
+// Date Picker Component integrated with formik
+const DatePicker = ({ 
+    value, 
+    onChange, 
+    onBlur, 
+    label, 
+    error, 
+    errorMessage, 
+    minDate,
+    className = "" 
+}) => {
+    // Convert YYYY-MM-DD string to Date object, handling invalid dates
+    const dateValue = useMemo(() => {
+        if (!value) return undefined;
+        const date = new Date(value);
+        // Check if date is valid
+        if (isNaN(date.getTime())) return undefined;
+        return date;
+    }, [value]);
+    
+    // Handle date selection
+    const handleDateSelect = (selectedDate) => {
+        if (selectedDate) {
+            // Convert Date to YYYY-MM-DD format
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+            onChange(formattedDate);
+        } else {
+            onChange('');
+        }
+    };
+
+    // Convert minDate string to Date if provided
+    const minDateObj = minDate ? new Date(minDate) : undefined;
+
+    return (
+        <div className={className}>
+            {label && (
+                <label className="block text-gray-700 text-sm font-semibold mb-3">
+                    {label}
+                </label>
+            )}
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className={`w-full justify-between text-left font-normal h-[44px] ${
+                            error 
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                                : 'border-gray-300 hover:border-[#a797cc] focus:border-[#a797cc] focus:ring-[#a797cc]'
+                        } ${!dateValue ? 'text-gray-400' : 'text-gray-900'}`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <Icon icon="lucide:calendar" className="w-4 h-4 text-gray-400" />
+                            <span>
+                                {dateValue ? format(dateValue, "PPP") : "Select date"}
+                            </span>
+                        </div>
+                        <ChevronDownIcon className="h-4 w-4 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        mode="single"
+                        selected={dateValue}
+                        onSelect={handleDateSelect}
+                        defaultMonth={dateValue}
+                        disabled={(date) => {
+                            if (minDateObj) {
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                const minDateOnly = new Date(minDateObj);
+                                minDateOnly.setHours(0, 0, 0, 0);
+                                return date < minDateOnly;
+                            }
+                            return false;
+                        }}
+                        className="rounded-md border-0"
+                    />
+                </PopoverContent>
+            </Popover>
+            {error && errorMessage && (
+                <div className="min-h-[20px] mt-2">
+                    <p className="text-red-500 text-xs font-medium flex items-center gap-1">
+                        <Icon icon="lucide:alert-circle" className="w-4 h-4 flex-shrink-0" />
+                        <span className="leading-tight">{errorMessage}</span>
+                    </p>
+                </div>
+            )}
         </div>
     );
 };
@@ -1045,7 +1145,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
 
                 {/* Basic Information Section */}
                 {activeSection === 'basic' && (
-                    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-gray-50 to-white">
+                    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-white">
                         <div className="mb-6 pb-4 border-b border-gray-200">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-gradient-to-br from-[#a797cc]/10 to-[#a3cc69]/10 rounded-lg">
@@ -1058,66 +1158,60 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             </div>
                         </div>
 
-                        {/* Calendar */}
-                        <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                            <label className="block text-gray-700 text-sm font-semibold mb-3">
-                                {t('detail.tab5') || 'Event Date'} <span className="text-red-500">*</span>
-                            </label>
-                            <SelectDate
-                                selectedDate={formik.values.event_date}
-                                onDateChange={(date) => {
-                                    const formattedDate = typeof date === 'string' 
-                                        ? date 
-                                        : date instanceof Date 
-                                            ? format(date, 'yyyy-MM-dd')
-                                            : date;
-                                    formik.setFieldValue("event_date", formattedDate);
-                                    formik.setFieldTouched("event_date", true);
-                                }}
-                            />
-                            <div className="min-h-[20px] mt-2">
-                                {formik.touched.event_date && formik.errors.event_date ? (
-                                    <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="leading-tight">{formik.errors.event_date}</span>
-                                    </p>
-                                ) : formik.values.event_date && !formik.errors.event_date ? (
-                                    <p className="text-green-600 text-xs font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="leading-tight whitespace-nowrap">
-                                            {(() => {
-                                                // Try to get translation, with fallback if key is returned as-is
-                                                let translated = t('events.selectedDate');
-                                                // If translation returns the key itself, it means translation wasn't found
-                                                if (translated === 'events.selectedDate') {
-                                                  translated = t('add.selectedDate');
-                                                  if (translated === 'add.selectedDate') {
-                                                    translated = 'Selected date';
-                                                  }
-                                                }
-                                                return `${translated}: ${formik.values.event_date}`;
-                                              })()}
-                                        </span>
-                                    </p>
-                                ) : null}
+                        {/* 2x2 Grid Layout */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Event Date - Top Left */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <DatePicker
+                                    value={formik.values.event_date}
+                                    onChange={(date) => {
+                                        formik.setFieldValue("event_date", date);
+                                        formik.setFieldTouched("event_date", true);
+                                    }}
+                                    label={`${t('detail.tab5') || 'Event Date'} *`}
+                                    minDate={new Date().toISOString().split('T')[0]}
+                                    error={formik.touched.event_date && !!formik.errors.event_date}
+                                    errorMessage={formik.errors.event_date}
+                                    className="w-full"
+                                />
                             </div>
-                        </div>
 
-                        {/* Professional Time Selection with Buttons */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                            {/* Start Time Picker */}
-                            <div className="min-h-[100px]">
-                                <label className="flex items-baseline gap-2 text-gray-700 text-sm font-semibold mb-3">
-                                    <span className="whitespace-nowrap">{t('eventTime') || 'Event Start Time'}</span>
+                            {/* Event Title - Top Right */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-3">
+                                    <span className="whitespace-nowrap">{t('add.tab2') || 'Event Title'}</span>
                                     <span className="text-red-500 flex-shrink-0">*</span>
+                                    <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
+                                        ({formik.values.event_name?.length || 0}/200)
+                                    </span>
                                 </label>
-                                <TimePicker
-                                    value={formik.values.event_start_time}
-                                    onChange={(time) => {
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                                        <Icon icon="lucide:calendar-days" className="w-5 h-5 text-gray-400" />
+                                    </span>
+                                    <input
+                                        type="text"
+                                        placeholder={t('add.tab2') || 'Enter event title'}
+                                        {...formik.getFieldProps('event_name')}
+                                        maxLength={200}
+                                        className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all min-h-[44px]"
+                                    />
+                                </div>
+                                <div className="min-h-[20px] mt-2">
+                                    {formik.touched.event_name && formik.errors.event_name ? (
+                                        <p className="text-red-500 text-xs font-medium flex items-center gap-1">
+                                            <Icon icon="lucide:alert-circle" className="w-4 h-4" />
+                                            <span>{formik.errors.event_name}</span>
+                                        </p>
+                                    ) : null}
+                                </div>
+                            </div>
+
+                            {/* Start Time - Bottom Left */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <DatePickerTime
+                                    time={formik.values.event_start_time}
+                                    onTimeChange={(time) => {
                                         setFieldIfChanged('event_start_time', time);
                                         if (formik.values.event_end_time) {
                                             setTimeout(() => {
@@ -1125,72 +1219,41 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                             }, 100);
                                         }
                                     }}
-                                    error={formik.touched.event_start_time && formik.errors.event_start_time}
-                                    errorMessage={formik.errors.event_start_time}
+                                    timeLabel={`${t('eventTime') || 'Event Start Time'} *`}
+                                    timeId="event_start_time"
+                                    showDate={false}
+                                    showTime={true}
+                                    fullWidth={true}
+                                    timeError={formik.touched.event_start_time && !!formik.errors.event_start_time}
+                                    timeErrorMessage={formik.errors.event_start_time}
+                                    className="w-full"
                                 />
                             </div>
                             
-                            {/* End Time Picker */}
-                            <div className="min-h-[100px]">
-                                <label className="flex items-baseline gap-2 text-gray-700 text-sm font-semibold mb-3">
-                                    <span className="whitespace-nowrap">{t('add.tab13') || 'Event End Time'}</span>
-                                    <span className="text-red-500 flex-shrink-0">*</span>
-                                </label>
-                                <TimePicker
-                                    value={formik.values.event_end_time}
-                                    onChange={(time) => {
+                            {/* End Time - Bottom Right */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <DatePickerTime
+                                    time={formik.values.event_end_time}
+                                    onTimeChange={(time) => {
                                         setFieldIfChanged('event_end_time', time);
                                         setTimeout(() => {
                                             formik.validateField('event_end_time');
                                         }, 100);
                                     }}
-                                    minTime={formik.values.event_start_time}
-                                    error={formik.touched.event_end_time && formik.errors.event_end_time}
-                                    errorMessage={formik.errors.event_end_time}
+                                    timeLabel={`${t('add.tab13') || 'Event End Time'} *`}
+                                    timeId="event_end_time"
+                                    showDate={false}
+                                    showTime={true}
+                                    fullWidth={true}
+                                    timeError={formik.touched.event_end_time && !!formik.errors.event_end_time}
+                                    timeErrorMessage={formik.errors.event_end_time}
+                                    className="w-full"
                                 />
                             </div>
                         </div>
 
-                        {/* Event Title */}
-                        <div className="min-h-[90px]">
-                            <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-2">
-                                <span className="whitespace-nowrap">{t('add.tab2') || 'Event Title'}</span>
-                                <span className="text-red-500 flex-shrink-0">*</span>
-                                <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
-                                    ({formik.values.event_name?.length || 0}/200 characters)
-                                </span>
-                            </label>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                                    <Image
-                                        src="/assets/images/icons/event-name.png"
-                                        height={20}
-                                        width={20}
-                                        alt="Event Title"
-                                        className="flex-shrink-0"
-                                    />
-                                </span>
-                                <input
-                                    type="text"
-                                    placeholder={t('add.tab2') || 'Enter event title'}
-                                    {...formik.getFieldProps('event_name')}
-                                    maxLength={200}
-                                    className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all min-h-[44px]"
-                                />
-                            </div>
-                            <div className="min-h-[20px] mt-1">
-                                {formik.touched.event_name && formik.errors.event_name ? (
-                                    <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        <span>{formik.errors.event_name}</span>
-                                    </p>
-                                ) : null}
-                            </div>
-                        </div>
-                        {/* Event Images */}
-                        <div>
+                        {/* Event Images - Full Width Below Grid */}
+                        <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                             <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-2">
                                 <span className="whitespace-nowrap">{t('add.tab4') || 'Event Images'}</span>
                                 <span className="text-red-500 flex-shrink-0">*</span>
@@ -1283,7 +1346,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
 
                 {/* Details Section */}
                 {activeSection === 'details' && (
-                    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-gray-50 to-white">
+                    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-white">
                         <div className="mb-6 pb-4 border-b border-gray-200">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-gradient-to-br from-[#a797cc]/10 to-[#a3cc69]/10 rounded-lg">
@@ -1296,47 +1359,105 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             </div>
                         </div>
 
-                        {/* Event Description */}
-                        <div className="min-h-[180px]">
-                            <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-2">
-                                <span className="whitespace-nowrap">{t('add.tab3') || 'Event Description'}</span>
-                                <span className="text-red-500 flex-shrink-0">*</span>
-                                <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
-                                    ({formik.values.event_description?.length || 0}/1000 characters)
-                                </span>
-                            </label>
-                            <div className="relative">
-                                <span className="absolute top-0 left-0 flex items-start pl-3 pt-3 pointer-events-none z-10">
-                                    <Image
-                                        src="/assets/images/signup/bio.png"
-                                        height={16}
-                                        width={16}
-                                        alt="Description"
-                                        className="flex-shrink-0"
+                        {/* 2x2 Grid Layout for Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Event Description - Top Left (Full Width) */}
+                            <div className="md:col-span-2 bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-3">
+                                    <span className="whitespace-nowrap">{t('add.tab3') || 'Event Description'}</span>
+                                    <span className="text-red-500 flex-shrink-0">*</span>
+                                    <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
+                                        ({formik.values.event_description?.length || 0}/1000)
+                                    </span>
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute top-0 left-0 flex items-start pl-3 pt-3 pointer-events-none z-10">
+                                        <Icon icon="lucide:file-text" className="w-5 h-5 text-gray-400" />
+                                    </span>
+                                    <textarea
+                                        placeholder={t('add.tab3') || 'Describe your event...'}
+                                        {...formik.getFieldProps('event_description')}
+                                        maxLength={1000}
+                                        className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y min-h-[120px]"
+                                        rows="6"
                                     />
-                                </span>
-                                <textarea
-                                    placeholder={t('add.tab3') || 'Describe your event...'}
-                                    {...formik.getFieldProps('event_description')}
-                                    maxLength={1000}
-                                    className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y min-h-[120px]"
-                                    rows="6"
-                                />
+                                </div>
+                                <div className="min-h-[20px] mt-2">
+                                    {formik.touched.event_description && formik.errors.event_description ? (
+                                        <p className="text-red-500 text-xs font-medium flex items-center gap-1">
+                                            <Icon icon="lucide:alert-circle" className="w-4 h-4" />
+                                            <span>{formik.errors.event_description}</span>
+                                        </p>
+                                    ) : null}
+                                </div>
                             </div>
-                            <div className="min-h-[20px] mt-1">
-                                {formik.touched.event_description && formik.errors.event_description ? (
-                                    <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="leading-tight">{formik.errors.event_description}</span>
-                                    </p>
-                                ) : null}
+
+                            {/* Event Price - Bottom Left */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <label className="flex items-baseline gap-2 text-gray-700 text-sm font-semibold mb-3">
+                                    <span className="whitespace-nowrap">{t('add.tab14') || 'Event Price'}</span>
+                                    <span className="text-red-500 flex-shrink-0">*</span>
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                                        <span className="text-gray-500 font-medium">SAR</span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        placeholder="Enter price per person"
+                                        {...formik.getFieldProps('event_price')}
+                                        min="1"
+                                        max="10000"
+                                        step="0.01"
+                                        className="w-full pl-12 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all min-h-[44px]"
+                                    />
+                                </div>
+                                <div className="min-h-[20px] mt-2">
+                                    {formik.touched.event_price && formik.errors.event_price ? (
+                                        <p className="text-red-500 text-xs font-medium flex items-center gap-1">
+                                            <Icon icon="lucide:alert-circle" className="w-4 h-4" />
+                                            <span>{formik.errors.event_price}</span>
+                                        </p>
+                                    ) : null}
+                                </div>
+                            </div>
+
+                            {/* Event Capacity - Bottom Right */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <label className="flex items-baseline gap-2 text-gray-700 text-sm font-semibold mb-3">
+                                    <span className="whitespace-nowrap">{t('add.tab10') || 'Event Capacity'}</span>
+                                    <span className="text-red-500 flex-shrink-0">*</span>
+                                    <span className="text-gray-400 text-xs font-normal ml-auto">
+                                        (Max: {maxEventCapacity})
+                                    </span>
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
+                                        <Icon icon="lucide:users" className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="number"
+                                        placeholder="Enter max attendees"
+                                        {...formik.getFieldProps('no_of_attendees')}
+                                        min="1"
+                                        max={maxEventCapacity}
+                                        step="1"
+                                        className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all min-h-[44px]"
+                                    />
+                                </div>
+                                <div className="min-h-[20px] mt-2">
+                                    {formik.touched.no_of_attendees && formik.errors.no_of_attendees ? (
+                                        <p className="text-red-500 text-xs font-medium flex items-center gap-1">
+                                            <Icon icon="lucide:alert-circle" className="w-4 h-4" />
+                                            <span>{formik.errors.no_of_attendees}</span>
+                                        </p>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
 
-                        {/* Event Category - Pill Selection */}
-                        <div>
+                        {/* Event Category - Full Width Below Grid */}
+                        <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                             <label className="flex items-baseline gap-2 text-gray-700 text-sm font-semibold mb-3">
                                 <span className="whitespace-nowrap">{t('add.tab8') || t('add.tab56') || 'Event Categories'}</span>
                                 <span className="text-red-500 flex-shrink-0">*</span>
@@ -1363,17 +1484,15 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             <div className="min-h-[20px] mt-2">
                                 {formik.touched.event_category && formik.errors.event_category ? (
                                     <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="leading-tight">{formik.errors.event_category}</span>
+                                        <Icon icon="lucide:alert-circle" className="w-4 h-4" />
+                                        <span>{formik.errors.event_category}</span>
                                     </p>
                                 ) : null}
                             </div>
                         </div>
 
-                        {/* Event For (Audience) */}
-                        <div>
+                        {/* Event For (Audience) - Full Width Below Category */}
+                        <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                             <label className="block text-gray-700 text-sm font-semibold mb-3">
                                 {t('add.tab6') || 'Event For'} <span className="text-red-500">*</span>
                             </label>
@@ -1425,9 +1544,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                             {/* Selected Indicator */}
                                             {isSelected && (
                                                 <div className="absolute top-2 right-2">
-                                                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                    </svg>
+                                                    <Icon icon="lucide:check-circle" className="w-5 h-5 text-white" />
                                                 </div>
                                             )}
                                         </button>
@@ -1436,108 +1553,17 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             </div>
                             {formik.errors.event_for && formik.touched.event_for && (
                                 <p className="text-red-500 text-xs mt-2 font-medium flex items-center gap-1">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
+                                    <Icon icon="lucide:alert-circle" className="w-4 h-4" />
                                     {formik.errors.event_for}
                                 </p>
                             )}
-                        </div>
-
-                        {/* Event Price - Compact Design */}
-                        <div className="min-h-[90px]">
-                            <label className="flex items-baseline gap-2 text-gray-700 text-sm font-semibold mb-2">
-                                <span className="whitespace-nowrap">{t('add.tab14') || 'Event Price'}</span>
-                                <span className="text-red-500 flex-shrink-0">*</span>
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                                    <span className="text-gray-500 font-medium">SAR</span>
-                                </div>
-                                <input
-                                    type="number"
-                                    placeholder="Enter price per person"
-                                    {...formik.getFieldProps('event_price')}
-                                    min="1"
-                                    max="10000"
-                                    step="0.01"
-                                    className="w-full pl-12 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all min-h-[44px]"
-                                />
-                            </div>
-                            <div className="min-h-[20px] mt-1">
-                                {formik.touched.event_price && formik.errors.event_price ? (
-                                    <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="leading-tight">{formik.errors.event_price}</span>
-                                    </p>
-                                ) : null}
-                            </div>
-                        </div>
-
-                        {/* Event Capacity */}
-                        <div className="mt-6">
-                            <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-6 rounded-2xl border-2 border-green-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <label className="block text-gray-800 text-base font-bold">
-                                            {t('add.tab10') || 'Event Capacity'} <span className="text-red-500">*</span>
-                                        </label>
-                                        <p className="text-gray-500 text-xs mt-0.5">
-                                            Enter maximum number of attendees (Max: {maxEventCapacity})
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
-                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm border border-green-200">
-                                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max={maxEventCapacity}
-                                        placeholder={`Enter number of people (Max: ${maxEventCapacity})`}
-                                        {...formik.getFieldProps('no_of_attendees')}
-                                        className="w-full pl-16 pr-4 py-4 bg-white border-2 border-green-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-200 focus:border-green-500 text-gray-900 font-semibold text-base shadow-sm hover:border-green-300 transition-all"
-                                    />
-                                </div>
-                                {formik.touched.no_of_attendees && formik.errors.no_of_attendees ? (
-                                    <div className="mt-3 bg-red-50 border-l-4 border-red-500 p-3 rounded-lg">
-                                        <p className="text-red-700 text-sm font-medium flex items-center gap-2">
-                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                            </svg>
-                                            {formik.errors.no_of_attendees}
-                                        </p>
-                                    </div>
-                                ) : formik.values.no_of_attendees && formik.values.no_of_attendees > 0 ? (
-                                    <div className="mt-3 bg-green-50 border-l-4 border-green-500 p-3 rounded-lg">
-                                        <p className="text-green-700 text-sm font-medium flex items-center gap-2">
-                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                            Capacity set: {formik.values.no_of_attendees} {formik.values.no_of_attendees === 1 ? 'person' : 'people'}
-                                        </p>
-                                    </div>
-                                ) : null}
-                            </div>
                         </div>
                     </div>
                 )}
 
                 {/* Location Section */}
                 {activeSection === 'location' && (
-                    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-gray-50 to-white">
+                    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-white">
                         <div className="mb-6 pb-4 border-b border-gray-200">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-gradient-to-br from-[#a797cc]/10 to-[#a3cc69]/10 rounded-lg">
@@ -1550,12 +1576,14 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             </div>
                         </div>
 
-                        {/* Event Address with Google Maps */}
-                        <div>
-                            <label className="block text-gray-700 text-sm font-semibold mb-2">
-                                {t('add.tab7') || 'Event Address'} <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative mb-3">
+                        {/* 2x2 Grid Layout for Location */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Event Address - Full Width */}
+                            <div className="md:col-span-2 bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <label className="block text-gray-700 text-sm font-semibold mb-3">
+                                    {t('add.tab7') || 'Event Address'} <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative mb-3">
                                 {isLoaded ? (
                                     <Autocomplete
                                         onLoad={(autocomplete) => setAutocomplete(autocomplete)}
@@ -1606,11 +1634,17 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                         />
                                     </div>
                                 )}
-                            </div>
-                            
-                            {/* Google Maps Container - Professional Ultra Pro Design */}
-                            <div className="mb-4">
-                                <div className="bg-gradient-to-r from-[#a797cc] to-purple-600 rounded-t-xl p-4 shadow-lg">
+                                </div>
+                                {formik.touched.event_address && formik.errors.event_address ? (
+                                    <p className="text-red-500 text-xs mt-2 font-medium flex items-center gap-1">
+                                        <Icon icon="lucide:alert-circle" className="w-4 h-4" />
+                                        {formik.errors.event_address}
+                                    </p>
+                                ) : null}
+                                
+                                {/* Google Maps Container */}
+                                <div className="mt-4">
+                                    <div className="bg-gradient-to-r from-[#a797cc] to-purple-600 rounded-t-xl p-4 shadow-lg">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1699,9 +1733,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                 </div>
                                 {/* Additional Help Text */}
                                 <div className="mt-3 flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                    <Icon icon="lucide:info" className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                                     <div className="flex-1">
                                         <p className="text-xs font-semibold text-blue-900 mb-1">Pro Tip</p>
                                         <p className="text-xs text-blue-700 leading-relaxed">
@@ -1710,10 +1742,11 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                     </div>
                                 </div>
                             </div>
+                            </div>
 
                             {/* Neighborhood Display */}
                             {formik.values.neighborhood && (
-                                <div className="mb-3 p-3 bg-[#a797cc]/10 border border-[#a797cc]/20 rounded-lg">
+                                <div className="md:col-span-2 mb-3 p-3 bg-[#a797cc]/10 border border-[#a797cc]/20 rounded-lg">
                                     <p className="text-xs font-semibold text-gray-700 mb-1">
                                         {t('add.neighborhood') || 'Neighborhood:'}
                                     </p>
@@ -1723,88 +1756,68 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                 </div>
                             )}
 
-                            {formik.touched.event_address && formik.errors.event_address ? (
-                                <p className="text-red-500 text-xs mt-1 font-medium flex items-center gap-1">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                    {formik.errors.event_address}
-                                </p>
-                            ) : null}
-                        </div>
-
-                        {/* Location Coordinates */}
-                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-3">
-                                <label className="block text-gray-700 text-sm font-semibold">
-                                    Location Coordinates (Optional)
-                                </label>
-                                <button
-                                    type="button"
-                                    onClick={handleGetCurrentLocation}
-                                    className="text-xs bg-[#a797cc] hover:bg-[#8ba179] text-white px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1"
-                                >
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Get Current Location
-                                </button>
-                            </div>
-                            <p className="text-xs text-gray-500 mb-3">
-                                Optional: Add coordinates for map integration
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <label className="block text-gray-600 text-xs font-medium mb-1">
+                            {/* Location Coordinates - Bottom Left */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-gray-700 text-sm font-semibold">
                                         Latitude
                                     </label>
-                                    <input
-                                        type="number"
-                                        placeholder="24.7136"
-                                        {...formik.getFieldProps('latitude')}
-                                        step="any"
-                                        min="-90"
-                                        max="90"
-                                        className="w-full px-3 py-2 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 text-sm"
-                                    />
-                                    {formik.touched.latitude && formik.errors.latitude ? (
-                                        <p className="text-red-500 text-xs mt-1">{formik.errors.latitude}</p>
-                                    ) : null}
                                 </div>
-                                <div>
-                                    <label className="block text-gray-600 text-xs font-medium mb-1">
+                                <input
+                                    type="number"
+                                    placeholder="24.7136"
+                                    {...formik.getFieldProps('latitude')}
+                                    step="any"
+                                    min="-90"
+                                    max="90"
+                                    className="w-full px-3 py-2 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 text-sm"
+                                />
+                                {formik.touched.latitude && formik.errors.latitude ? (
+                                    <p className="text-red-500 text-xs mt-2">{formik.errors.latitude}</p>
+                                ) : null}
+                            </div>
+
+                            {/* Longitude - Bottom Right */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-gray-700 text-sm font-semibold">
                                         Longitude
                                     </label>
-                                    <input
-                                        type="number"
-                                        placeholder="46.6753"
-                                        {...formik.getFieldProps('longitude')}
-                                        step="any"
-                                        min="-180"
-                                        max="180"
-                                        className="w-full px-3 py-2 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 text-sm"
-                                    />
-                                    {formik.touched.longitude && formik.errors.longitude ? (
-                                        <p className="text-red-500 text-xs mt-1">{formik.errors.longitude}</p>
-                                    ) : null}
+                                    <button
+                                        type="button"
+                                        onClick={handleGetCurrentLocation}
+                                        className="text-xs bg-[#a797cc] hover:bg-[#8ba179] text-white px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1"
+                                    >
+                                        <Icon icon="lucide:map-pin" className="w-3 h-3" />
+                                        Get Current
+                                    </button>
                                 </div>
+                                <input
+                                    type="number"
+                                    placeholder="46.6753"
+                                    {...formik.getFieldProps('longitude')}
+                                    step="any"
+                                    min="-180"
+                                    max="180"
+                                    className="w-full px-3 py-2 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 text-sm"
+                                />
+                                {formik.touched.longitude && formik.errors.longitude ? (
+                                    <p className="text-red-500 text-xs mt-2">{formik.errors.longitude}</p>
+                                ) : null}
+                                {(formik.values.latitude && formik.values.longitude) && (
+                                    <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
+                                        <Icon icon="lucide:check-circle" className="w-4 h-4" />
+                                        Coordinates saved
+                                    </p>
+                                )}
                             </div>
-                            {(formik.values.latitude && formik.values.longitude) && (
-                                <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    Location coordinates saved
-                                </p>
-                            )}
                         </div>
                     </div>
                 )}
 
                 {/* Instructions Section */}
                 {activeSection === 'instructions' && (
-                    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 md:p-8 bg-gradient-to-br from-gray-50 to-white">
+                    <div className="space-y-6 p-6 bg-gradient-to-br from-gray-50 to-white">
                         <div className="mb-6 pb-4 border-b border-gray-200">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-gradient-to-br from-[#a797cc]/10 to-[#a3cc69]/10 rounded-lg">
@@ -1817,61 +1830,66 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                             </div>
                         </div>
 
-                        {/* Do's Instructions */}
-                        <div className="min-h-[180px]">
-                            <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-2">
-                                <span className="whitespace-nowrap">Do&apos;s</span>
-                                <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
-                                    ({formik.values.dos_instruction?.length || 0}/1000 characters)
-                                </span>
-                            </label>
-                            <div className="relative">
-                                <textarea
-                                    placeholder="Enter guidelines for attendees..."
-                                    {...formik.getFieldProps('dos_instruction')}
-                                    maxLength={1000}
-                                    className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y min-h-[120px]"
-                                    rows="6"
-                                />
+                        {/* 2x2 Grid Layout for Instructions */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Do's Instructions - Left */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-3">
+                                    <span className="whitespace-nowrap">Do&apos;s</span>
+                                    <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
+                                        ({formik.values.dos_instruction?.length || 0}/1000)
+                                    </span>
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute top-0 left-0 flex items-start pl-3 pt-3 pointer-events-none z-10">
+                                        <Icon icon="lucide:check-circle" className="w-5 h-5 text-green-500" />
+                                    </span>
+                                    <textarea
+                                        placeholder="Enter guidelines for attendees..."
+                                        {...formik.getFieldProps('dos_instruction')}
+                                        maxLength={1000}
+                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y min-h-[200px]"
+                                        rows="8"
+                                    />
+                                </div>
+                                <div className="min-h-[20px] mt-2">
+                                    {formik.touched.dos_instruction && formik.errors.dos_instruction ? (
+                                        <p className="text-red-500 text-xs font-medium flex items-center gap-1">
+                                            <Icon icon="lucide:alert-circle" className="w-4 h-4" />
+                                            <span>{formik.errors.dos_instruction}</span>
+                                        </p>
+                                    ) : null}
+                                </div>
                             </div>
-                            <div className="min-h-[20px] mt-1">
-                                {formik.touched.dos_instruction && formik.errors.dos_instruction ? (
-                                    <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="leading-tight">{formik.errors.dos_instruction}</span>
-                                    </p>
-                                ) : null}
-                            </div>
-                        </div>
 
-                        {/* Don'ts Instructions */}
-                        <div className="min-h-[180px]">
-                            <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-2">
-                                <span className="whitespace-nowrap">Don&apos;ts</span>
-                                <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
-                                    ({formik.values.do_not_instruction?.length || 0}/1000 characters)
-                                </span>
-                            </label>
-                            <div className="relative">
-                                <textarea
-                                    placeholder="Enter restrictions or prohibited items..."
-                                    {...formik.getFieldProps('do_not_instruction')}
-                                    maxLength={1000}
-                                    className="w-full px-4 py-3 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y min-h-[120px]"
-                                    rows="6"
-                                />
-                            </div>
-                            <div className="min-h-[20px] mt-1">
-                                {formik.touched.do_not_instruction && formik.errors.do_not_instruction ? (
-                                    <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                                        <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                        </svg>
-                                        <span className="leading-tight">{formik.errors.do_not_instruction}</span>
-                                    </p>
-                                ) : null}
+                            {/* Don'ts Instructions - Right */}
+                            <div className="bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <label className="flex items-baseline flex-wrap gap-2 text-gray-700 text-sm font-semibold mb-3">
+                                    <span className="whitespace-nowrap">Don&apos;ts</span>
+                                    <span className="text-gray-400 text-xs font-normal ml-auto whitespace-nowrap">
+                                        ({formik.values.do_not_instruction?.length || 0}/1000)
+                                    </span>
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute top-0 left-0 flex items-start pl-3 pt-3 pointer-events-none z-10">
+                                        <Icon icon="lucide:x-circle" className="w-5 h-5 text-red-500" />
+                                    </span>
+                                    <textarea
+                                        placeholder="Enter restrictions or prohibited items..."
+                                        {...formik.getFieldProps('do_not_instruction')}
+                                        maxLength={1000}
+                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y min-h-[200px]"
+                                        rows="8"
+                                    />
+                                </div>
+                                <div className="min-h-[20px] mt-2">
+                                    {formik.touched.do_not_instruction && formik.errors.do_not_instruction ? (
+                                        <p className="text-red-500 text-xs font-medium flex items-center gap-1">
+                                            <Icon icon="lucide:alert-circle" className="w-4 h-4" />
+                                            <span>{formik.errors.do_not_instruction}</span>
+                                        </p>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
                     </div>

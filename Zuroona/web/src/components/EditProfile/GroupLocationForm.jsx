@@ -7,8 +7,8 @@ import Autocomplete from "react-google-autocomplete";
 import { toast } from "react-toastify";
 
 const GroupLocationForm = ({ handleFormSubmit, showStepImage, shwoSubmitButton }) => {
-    // Get API key from environment variable or use fallback
-    const YOUR_GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyBn1KfafJwi0QzJbiO0WcNmkzI3_z2L-VA";
+    // Get API key from environment variable
+    const YOUR_GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     const router = useRouter();
     const [loading, setLoading] = useState(false);
 
@@ -100,15 +100,21 @@ const GroupLocationForm = ({ handleFormSubmit, showStepImage, shwoSubmitButton }
                                 alt="City icon"
                             />
                         </span>
-                        <Autocomplete
-                            apiKey={YOUR_GOOGLE_MAPS_API_KEY}
-                            style={{ width: "90%" }}
-                            onPlaceSelected={handleSelect}
-                            options={{
-                                types: ["(regions)"],
-                            }}
-                            className="w-full pl-10 py-4 pr-4 border border-r-0 rounded-r-none bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm"
-                        />
+                        {YOUR_GOOGLE_MAPS_API_KEY ? (
+                            <Autocomplete
+                                apiKey={YOUR_GOOGLE_MAPS_API_KEY}
+                                style={{ width: "90%" }}
+                                onPlaceSelected={handleSelect}
+                                options={{
+                                    types: ["(regions)"],
+                                }}
+                                className="w-full pl-10 py-4 pr-4 border border-r-0 rounded-r-none bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm"
+                            />
+                        ) : (
+                            <div className="w-full pl-10 py-4 pr-4 border border-r-0 rounded-r-none bg-[#fdfdfd] border-[#f2dfba] rounded-xl text-xs text-red-600 flex items-center">
+                                Google Maps API key missing. Please set <span className="mx-1 font-mono text-[10px]">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</span> in <span className="ml-1 font-mono text-[10px]">web/.env.local</span>.
+                            </div>
+                        )}
                         <span className="absolute inset-y-0 right-0 flex items-center px-5 bg-[#fdfdfd] border border-l-0 rounded-l-none border-[#f2dfba] rounded-xl">
                             <Image
                                 src="/assets/images/icons/search-icon.png"

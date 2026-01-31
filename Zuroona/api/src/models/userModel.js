@@ -86,6 +86,16 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    country_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'country',
+        default: null
+    },
+    city_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'city',
+        default: null
+    },
     isActive: {
         type: Number,
         enum: [1, 2],

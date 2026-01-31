@@ -10,6 +10,7 @@ import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import Loader from "../Loader/Loader";
+import * as IBAN from "iban";
 
 const BankDetails = ({ title, buttonName, onNext }) => {
     const { t, i18n } = useTranslation();
@@ -28,7 +29,13 @@ const BankDetails = ({ title, buttonName, onNext }) => {
             account_holder_name: Yup.string().required(t('signup.tab16')),
             bank_name: Yup.string().required(t('signup.tab16')),
             iban: Yup.string()
-                .required(t('signup.tab16'))// Simple IBAN pattern
+                .required(t('signup.tab16'))
+                .test('is-valid-iban', t('signup.ibanInvalid') || 'Invalid IBAN format', function(value) {
+                    if (!value) return true;
+                    // Remove spaces and convert to uppercase
+                    const cleanedIban = value.replace(/\s/g, '').toUpperCase();
+                    return IBAN.isValid(cleanedIban);
+                })
         }),
         onSubmit: (values, { setFieldTouched, setFieldError }) => {
             // Pre-submit validation with specific error messages
@@ -230,10 +237,15 @@ const BankDetails = ({ title, buttonName, onNext }) => {
                             name="iban"
                             placeholder={t('signup.tab51')}
                             value={formik.values.iban}
-                            onChange={formik.handleChange}
+                            onChange={(e) => {
+                                // Allow only alphanumeric characters and spaces
+                                const value = e.target.value.toUpperCase().replace(/[^A-Z0-9\s]/g, '');
+                                formik.setFieldValue('iban', value);
+                            }}
+                            onBlur={formik.handleBlur}
                             className={`w-full ${
                         i18n.language === "ar" ? "pr-10" : "pl-10"
-                      } py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm`}
+                      } py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm uppercase`}
                         />
                     </div>
                     {formik.errors.iban && formik.touched.iban && (

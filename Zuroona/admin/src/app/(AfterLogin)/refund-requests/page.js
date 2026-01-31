@@ -1,62 +1,85 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
 import { toast } from "react-toastify";
 import { FaFileExcel, FaPrint, FaCheckCircle, FaTimesCircle, FaEye } from "react-icons/fa";
 import RefundActionModal from "@/components/Modals/RefundActionModal";
-import { GetRefundListApi, UpdateRefundStatusApi, GetRefundDetailApi } from "@/api/setting";
+import RefundDetailModal from "@/components/Modals/RefundDetailModal";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
+import {
+  fetchRefunds,
+  fetchRefundDetail,
+  updateRefundStatus,
+  setSearch,
+  setPage,
+  setStatusFilter,
+  clearRefundDetail,
+} from "@/redux/slices/refundSlice";
+import { useState } from "react";
 
 export default function RefundRequests() {
   const { t } = useTranslation();
-  const [refunds, setRefunds] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
+  const dispatch = useDispatch();
+  
+  // Redux state
+  const {
+    refunds,
+    refundDetail,
+    loading,
+    detailLoading,
+    updating,
+    error,
+    detailError,
+    totalCount,
+    filters,
+  } = useSelector((state) => state.refund);
+
+  // Local state for modals
   const [showModal, setShowModal] = useState(false);
   const [selectedRefund, setSelectedRefund] = useState(null);
   const [actionType, setActionType] = useState("");
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [refundDetail, setRefundDetail] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all"); // all, pending, approved, rejected
+  const [itemsPerPage] = useState(10);
+
+  // Fetch refunds when filters change
+  useEffect(() => {
+    const queryParams = {
+      page: filters.page,
+      limit: itemsPerPage,
+      ...(filters.search && { search: filters.search }),
+      ...(filters.status !== "all" && {
+        status:
+          filters.status === "pending"
+            ? 0
+            : filters.status === "approved"
+            ? 1
+            : filters.status === "rejected"
+            ? 2
+            : filters.status === "processed"
+            ? 3
+            : undefined,
+      }),
+    };
+    dispatch(fetchRefunds(queryParams));
+  }, [dispatch, filters.page, filters.search, filters.status, itemsPerPage]);
+
+  // Show error toast
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   useEffect(() => {
-    fetchRefunds();
-  }, [page, search, statusFilter]);
-
-  const fetchRefunds = async () => {
-    setLoading(true);
-    try {
-      const queryParams = {
-        page,
-        limit: itemsPerPage,
-        ...(search && { search }),
-        ...(statusFilter !== "all" && { status: statusFilter === "pending" ? 0 : statusFilter === "approved" ? 1 : statusFilter === "rejected" ? 2 : statusFilter === "processed" ? 3 : undefined }),
-      };
-      const res = await GetRefundListApi(queryParams);
-      console.log("[REFUND:ADMIN] API Response:", res);
-      if (res?.status === 1 || res?.code === 200) {
-        const refundData = res?.data?.refunds || res?.data || [];
-        console.log("[REFUND:ADMIN] Refund Data:", refundData);
-        console.log("[REFUND:ADMIN] Total Count:", res?.total_count);
-        setRefunds(refundData);
-        setTotalCount(res?.total_count || refundData.length);
-      } else {
-        console.error("[REFUND:ADMIN] API Error Response:", res);
-      }
-    } catch (error) {
-      console.error("Error fetching refund requests:", error);
-      toast.error(t("refund.failedToFetch"));
-    } finally {
-      setLoading(false);
+    if (detailError) {
+      toast.error(detailError);
     }
-  };
+  }, [detailError]);
 
   const handleApprove = (refund) => {
     setSelectedRefund(refund);
@@ -71,87 +94,136 @@ export default function RefundRequests() {
   };
 
   const handleViewDetail = async (refund) => {
-    try {
-      setLoading(true);
-      const res = await GetRefundDetailApi({ refund_id: refund._id });
-      if (res?.status === 1) {
-        setRefundDetail(res.data);
-        setShowDetailModal(true);
-      } else {
-        toast.error(res?.message || t("refund.failedToLoadDetails"));
-      }
-    } catch (error) {
-      console.error("Error fetching refund detail:", error);
-      toast.error(t("refund.failedToLoadDetails"));
-    } finally {
-      setLoading(false);
-    }
+    setShowDetailModal(true);
+    dispatch(fetchRefundDetail(refund._id));
   };
 
   const handleConfirm = async (formData) => {
-    setLoading(true);
-    try {
-      const status = actionType === "approve" ? 1 : 2; // 1=approved, 2=rejected
-      const payload = {
-        refund_id: selectedRefund._id,
-        status: status,
-        ...(formData.admin_response && { admin_response: formData.admin_response }),
-        ...(formData.payment_refund_id && { payment_refund_id: formData.payment_refund_id }),
+    if (!selectedRefund || !selectedRefund._id) {
+      toast.error("Refund selection is invalid. Please try again.");
+      return;
+    }
+
+    const status = actionType === "approve" ? 1 : 2;
+    const result = await dispatch(
+      updateRefundStatus({
+        refundId: selectedRefund._id,
+        status,
+        adminResponse: formData.admin_response,
+        paymentRefundId: formData.payment_refund_id,
+      })
+    );
+
+    if (updateRefundStatus.fulfilled.match(result)) {
+      toast.success(
+        actionType === "approve"
+          ? t("refund.refundApprovedSuccess")
+          : t("refund.refundRejectedSuccess")
+      );
+      setShowModal(false);
+      setSelectedRefund(null);
+      // Refetch refunds
+      const queryParams = {
+        page: filters.page,
+        limit: itemsPerPage,
+        ...(filters.search && { search: filters.search }),
+        ...(filters.status !== "all" && {
+          status:
+            filters.status === "pending"
+              ? 0
+              : filters.status === "approved"
+              ? 1
+              : filters.status === "rejected"
+              ? 2
+              : filters.status === "processed"
+              ? 3
+              : undefined,
+        }),
       };
-      
-      const res = await UpdateRefundStatusApi(payload);
-      
-      if (res?.status === 1 || res?.code === 200) {
-        toast.success(actionType === "approve" ? t("refund.refundApprovedSuccess") : t("refund.refundRejectedSuccess"));
-        setShowModal(false);
-        setSelectedRefund(null);
-        fetchRefunds();
-      } else {
-        toast.error(res?.message || t("refund.failedToUpdate"));
-      }
-    } catch (error) {
-      console.error("Error updating refund request:", error);
-      toast.error(error.response?.data?.message || t("refund.failedToUpdate"));
-    } finally {
-      setLoading(false);
+      dispatch(fetchRefunds(queryParams));
+    } else {
+      toast.error(result.payload || t("refund.failedToUpdate"));
     }
   };
 
   const getStatusBadge = (status) => {
     switch (status) {
       case 0:
-        return <span className="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">{t("refund.pending")}</span>;
+        return (
+          <span className="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">
+            {t("refund.pending")}
+          </span>
+        );
       case 1:
-        return <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">{t("refund.approved")}</span>;
+        return (
+          <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">
+            {t("refund.approved")}
+          </span>
+        );
       case 2:
-        return <span className="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">{t("refund.rejected")}</span>;
+        return (
+          <span className="px-2 py-1 text-xs font-semibold text-red-800 bg-red-100 rounded-full">
+            {t("refund.rejected")}
+          </span>
+        );
       case 3:
-        return <span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">{t("refund.processed") || "Processed"}</span>;
+        return (
+          <span className="px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full">
+            {t("refund.processed") || "Processed"}
+          </span>
+        );
       default:
-        return <span className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">{t("common.unknown")}</span>;
+        return (
+          <span className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">
+            {t("common.unknown") || "Unknown"}
+          </span>
+        );
     }
   };
 
   const exportToCSV = () => {
-    const headers = [t("refund.refundId"), t("refund.bookingId"), t("refund.user"), t("refund.amount"), t("refund.reason"), t("refund.status"), t("refund.requestDate")];
+    const headers = [
+      t("refund.refundId"),
+      t("refund.bookingId"),
+      t("refund.user"),
+      t("refund.amount"),
+      t("refund.reason"),
+      t("refund.status"),
+      t("refund.requestDate"),
+    ];
     const csvContent = [
       headers.join(","),
-      ...refunds.map(refund => [
-        refund._id,
-        refund.booking_id,
-        refund.user?.email || "N/A",
-        refund.amount,
-        `"${(refund.refund_reason || "").replace(/"/g, '""')}"`,
-        refund.status === 0 ? t("refund.pending") : refund.status === 1 ? t("refund.approved") : refund.status === 2 ? t("refund.rejected") : refund.status === 3 ? (t("refund.processed") || "Processed") : t("common.unknown"),
-        refund.createdAt ? format(new Date(refund.createdAt), "yyyy-MM-dd") : "N/A"
-      ].join(","))
+      ...refunds.map((refund) =>
+        [
+          refund._id,
+          refund.booking_id,
+          refund.user?.email || "N/A",
+          refund.amount,
+          `"${(refund.refund_reason || "").replace(/"/g, '""')}"`,
+          refund.status === 0
+            ? t("refund.pending")
+            : refund.status === 1
+            ? t("refund.approved")
+            : refund.status === 2
+            ? t("refund.rejected")
+            : refund.status === 3
+            ? t("refund.processed") || "Processed"
+            : t("common.unknown") || "Unknown",
+          refund.createdAt
+            ? format(new Date(refund.createdAt), "yyyy-MM-dd")
+            : "N/A",
+        ].join(",")
+      ),
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `refund-requests-${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `refund-requests-${new Date().toISOString().split("T")[0]}.csv`
+    );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -172,19 +244,20 @@ export default function RefundRequests() {
             <input
               type="text"
               placeholder={t("refund.searchPlaceholder")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={filters.search}
+              onChange={(e) => dispatch(setSearch(e.target.value))}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              value={filters.status}
+              onChange={(e) => dispatch(setStatusFilter(e.target.value))}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">{t("refund.allStatus")}</option>
               <option value="pending">{t("refund.pending")}</option>
               <option value="approved">{t("refund.approved")}</option>
               <option value="rejected">{t("refund.rejected")}</option>
+              <option value="processed">{t("refund.processed") || "Processed"}</option>
             </select>
           </div>
           <div className="flex items-center gap-2">
@@ -264,11 +337,11 @@ export default function RefundRequests() {
                       <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                         {refund.refund_reason || t("refund.noReasonProvided")}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(refund.status)}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(refund.status)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {refund.createdAt ? format(new Date(refund.createdAt), "MMM dd, yyyy") : "N/A"}
+                        {refund.createdAt
+                          ? format(new Date(refund.createdAt), "MMM dd, yyyy")
+                          : "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-2">
@@ -285,6 +358,7 @@ export default function RefundRequests() {
                                 onClick={() => handleApprove(refund)}
                                 className="text-green-600 hover:text-green-900"
                                 title={t("refund.approve")}
+                                disabled={updating}
                               >
                                 <FaCheckCircle />
                               </button>
@@ -292,13 +366,20 @@ export default function RefundRequests() {
                                 onClick={() => handleReject(refund)}
                                 className="text-red-600 hover:text-red-900"
                                 title={t("refund.reject")}
+                                disabled={updating}
                               >
                                 <FaTimesCircle />
                               </button>
                             </>
                           )}
                           {refund.status === 1 && (
-                            <span className="text-xs text-gray-500" title={t("refund.approvedWaitingProcess") || "Approved - awaiting processing"}>
+                            <span
+                              className="text-xs text-gray-500"
+                              title={
+                                t("refund.approvedWaitingProcess") ||
+                                "Approved - awaiting processing"
+                              }
+                            >
                               {t("refund.approved")}
                             </span>
                           )}
@@ -311,8 +392,8 @@ export default function RefundRequests() {
             </div>
             <div className="px-6 py-4 border-t border-gray-200">
               <Paginations
-                handlePage={setPage}
-                page={page}
+                handlePage={(page) => dispatch(setPage(page))}
+                page={filters.page}
                 total={totalCount}
                 itemsPerPage={itemsPerPage}
               />
@@ -330,84 +411,20 @@ export default function RefundRequests() {
           onConfirm={handleConfirm}
           actionType={actionType}
           refund={selectedRefund}
+          loading={updating}
         />
 
-        {/* Detail Modal */}
-        {showDetailModal && refundDetail && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">{t("refund.detailsTitle")}</h2>
-                  <button
-                    onClick={() => setShowDetailModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{t("refund.refundId")}</p>
-                    <p className="text-sm text-gray-900">{refundDetail._id}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{t("refund.bookingId")}</p>
-                    <p className="text-sm text-gray-900">{refundDetail.booking_id}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{t("refund.amount")}</p>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {refundDetail.amount} {refundDetail.currency || "SAR"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{t("refund.reason")}</p>
-                    <p className="text-sm text-gray-900">{refundDetail.refund_reason || t("refund.noReasonProvided")}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{t("refund.status")}</p>
-                    {getStatusBadge(refundDetail.status)}
-                  </div>
-                  {refundDetail.admin_response && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">{t("refund.adminResponse") || "Admin Response"}</p>
-                      <p className="text-sm text-gray-900">{refundDetail.admin_response}</p>
-                    </div>
-                  )}
-                  {refundDetail.payment_refund_id && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">{t("refund.paymentRefundId") || "Payment Refund ID"}</p>
-                      <p className="text-sm text-gray-900 font-mono">{refundDetail.payment_refund_id}</p>
-                    </div>
-                  )}
-                  {refundDetail.refund_error && (
-                    <div>
-                      <p className="text-sm font-medium text-red-500">{t("refund.error")}</p>
-                      <p className="text-sm text-red-600">{refundDetail.refund_error}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">{t("refund.requestDate")}</p>
-                    <p className="text-sm text-gray-900">
-                      {refundDetail.createdAt ? format(new Date(refundDetail.createdAt), "MMM dd, yyyy 'at' hh:mm a") : "N/A"}
-                    </p>
-                  </div>
-                  {refundDetail.processed_at && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">{t("refund.processedDate") || "Processed Date"}</p>
-                      <p className="text-sm text-gray-900">
-                        {format(new Date(refundDetail.processed_at), "MMM dd, yyyy 'at' hh:mm a")}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Refund Detail Modal */}
+        <RefundDetailModal
+          show={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            dispatch(clearRefundDetail());
+          }}
+          refundDetail={refundDetail}
+          loading={detailLoading}
+        />
       </div>
     </DefaultLayout>
   );
 }
-

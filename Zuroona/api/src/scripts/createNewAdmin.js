@@ -26,9 +26,9 @@ const createNewAdmin = async () => {
         await mongoose.connect(mongoURI);
         console.log('✅ Connected to database\n');
 
-        // New Admin credentials
-        const adminEmail = 'admin@zuroona.com'; // LOWERCASE - matches login API
-        const adminPassword = '87654321';
+        // New Admin credentials (requested)
+        const adminEmail = 'dyna@admin.com'; // LOWERCASE - matches login API
+        const adminPassword = '@api';
 
         const newAdminData = {
             firstName: 'Admin',

@@ -260,6 +260,12 @@ app.get("/api/admin/", (req, res) => {
 
 // Routes
 app.use("/api/admin", adminRoutes);
+
+// Admin login route alias - handle /api/login for backward compatibility
+// Must be before allRoutes to ensure it's matched first
+const adminController = require("./controllers/adminController");
+app.post("/api/login", adminController.adminLogin);
+
 app.use("/api/", allRoutes);
 
 // Upload endpoints (fallback - already handled by routes)
