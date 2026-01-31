@@ -9,18 +9,18 @@ const fs = require('fs');
 const path = require('path');
 
 const LocalInvoiceGenerator = {
-	/**
-	 * Generate a simple text-based invoice
-	 */
-	generateTextInvoice(booking, event, user, organizer) {
-		const invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-		const invoiceDate = new Date().toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric'
-		});
+    /**
+     * Generate a simple text-based invoice
+     */
+    generateTextInvoice(booking, event, user, organizer) {
+        const invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+        const invoiceDate = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
 
-		const invoice = `
+        const invoice = `
 ╔══════════════════════════════════════════════════════════════╗
 ║                    ZUROONA EVENT RECEIPT                      ║
 ║                        Invoice/Receipt                        ║
@@ -71,29 +71,29 @@ Generated on: ${new Date().toISOString()}
 ───────────────────────────────────────────────────────────────
 `;
 
-		return {
-			id: invoiceId,
-			text: invoice,
-			created_at: new Date().toISOString(),
-			booking_id: booking._id,
-			user_id: user._id,
-			event_id: event._id,
-			amount: booking.total_amount,
-		};
-	},
+        return {
+            id: invoiceId,
+            text: invoice,
+            created_at: new Date().toISOString(),
+            booking_id: booking._id,
+            user_id: user._id,
+            event_id: event._id,
+            amount: booking.total_amount,
+        };
+    },
 
-	/**
-	 * Generate HTML invoice
-	 */
-	generateHTMLInvoice(booking, event, user, organizer) {
-		const invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-		const invoiceDate = new Date().toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric'
-		});
+    /**
+     * Generate HTML invoice
+     */
+    generateHTMLInvoice(booking, event, user, organizer) {
+        const invoiceId = `INV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+        const invoiceDate = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
 
-		const html = `
+        const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -210,76 +210,76 @@ Generated on: ${new Date().toISOString()}
 </html>
 `;
 
-		return {
-			id: invoiceId,
-			html: html,
-			created_at: new Date().toISOString(),
-			booking_id: booking._id,
-			user_id: user._id,
-			event_id: event._id,
-			amount: booking.total_amount,
-		};
-	},
+        return {
+            id: invoiceId,
+            html: html,
+            created_at: new Date().toISOString(),
+            booking_id: booking._id,
+            user_id: user._id,
+            event_id: event._id,
+            amount: booking.total_amount,
+        };
+    },
 
-	/**
-	 * Save invoice to file system
-	 */
-	async saveInvoiceToFile(invoice, format = 'html') {
-		try {
-			const invoicesDir = path.join(__dirname, '../../invoices');
-			
-			// Create directory if it doesn't exist
-			if (!fs.existsSync(invoicesDir)) {
-				fs.mkdirSync(invoicesDir, { recursive: true });
-			}
+    /**
+     * Save invoice to file system
+     */
+    async saveInvoiceToFile(invoice, format = 'html') {
+        try {
+            const invoicesDir = path.join(__dirname, '../../invoices');
 
-			const filename = `invoice-${invoice.id}.${format}`;
-			const filepath = path.join(invoicesDir, filename);
+            // Create directory if it doesn't exist
+            if (!fs.existsSync(invoicesDir)) {
+                fs.mkdirSync(invoicesDir, { recursive: true });
+            }
 
-			const content = format === 'html' ? invoice.html : invoice.text;
-			fs.writeFileSync(filepath, content, 'utf8');
+            const filename = `invoice-${invoice.id}.${format}`;
+            const filepath = path.join(invoicesDir, filename);
 
-			// Return public URL (you'll need to serve this directory)
-			const publicUrl = `/invoices/${filename}`;
+            const content = format === 'html' ? invoice.html : invoice.text;
+            fs.writeFileSync(filepath, content, 'utf8');
 
-			return {
-				success: true,
-				filepath: filepath,
-				url: publicUrl,
-				filename: filename,
-			};
-		} catch (error) {
-			console.error('Error saving invoice:', error);
-			throw error;
-		}
-	},
+            // Return public URL (you'll need to serve this directory)
+            const publicUrl = `invoices/${filename}`;
 
-	/**
-	 * Generate and save invoice (complete flow)
-	 */
-	async generateAndSaveInvoice(booking, event, user, organizer) {
-		try {
-			// Generate HTML invoice
-			const invoice = this.generateHTMLInvoice(booking, event, user, organizer);
+            return {
+                success: true,
+                filepath: filepath,
+                url: publicUrl,
+                filename: filename,
+            };
+        } catch (error) {
+            console.error('Error saving invoice:', error);
+            throw error;
+        }
+    },
 
-			// Save to file
-			const saved = await this.saveInvoiceToFile(invoice, 'html');
+    /**
+     * Generate and save invoice (complete flow)
+     */
+    async generateAndSaveInvoice(booking, event, user, organizer) {
+        try {
+            // Generate HTML invoice
+            const invoice = this.generateHTMLInvoice(booking, event, user, organizer);
 
-			return {
-				id: invoice.id,
-				invoice_url: saved.url,
-				invoice_pdf_url: saved.url,
-				receipt_pdf_url: saved.url,
-				created_at: invoice.created_at,
-				amount: invoice.amount,
-				booking_id: invoice.booking_id,
-				method: 'local', // To track this was generated locally
-			};
-		} catch (error) {
-			console.error('Error generating invoice:', error);
-			throw error;
-		}
-	},
+            // Save to file
+            const saved = await this.saveInvoiceToFile(invoice, 'html');
+
+            return {
+                id: invoice.id,
+                invoice_url: saved.url,
+                invoice_pdf_url: saved.url,
+                receipt_pdf_url: saved.url,
+                created_at: invoice.created_at,
+                amount: invoice.amount,
+                booking_id: invoice.booking_id,
+                method: 'local', // To track this was generated locally
+            };
+        } catch (error) {
+            console.error('Error generating invoice:', error);
+            throw error;
+        }
+    },
 };
 
 module.exports = LocalInvoiceGenerator;

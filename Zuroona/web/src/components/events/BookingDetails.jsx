@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { BASE_API_URL } from "@/until";
 
 // Helper functions for booking status
 // Backend status mapping: 1 = Pending, 2 = Approved/Confirmed, 3 = Cancelled, 4 = Rejected
@@ -138,15 +139,15 @@ export default function BookingDetails({
 	// Payment button shows when: booking is pending (1) OR approved (2) AND payment is not completed
 	const bookStatus = booking.book_status;
 	const paymentStatus = booking.payment_status;
-	
+
 	// Payment button shows for: pending (1) or approved (2) bookings that are unpaid
 	const isPendingOrApproved = bookStatus === 1 || bookStatus === 2;
 	const isUnpaid = paymentStatus === 0 || paymentStatus === null || paymentStatus === undefined || paymentStatus === false || !paymentStatus;
 	const isApproved = bookStatus === 2;
-	
+
 	// Show button for pending or approved bookings that are unpaid
 	const showPaymentButton = isPendingOrApproved && isUnpaid;
-	
+
 	// Debug logging
 	console.log('[BOOKING-DETAILS] Payment button check:', {
 		bookStatus,
@@ -284,11 +285,10 @@ export default function BookingDetails({
 				{/* Payment Status - Only show for approved/confirmed bookings with payment status */}
 				{(booking.book_status === 1 || booking.book_status === 2) &&
 					booking.payment_status !== undefined && (
-						<div className={`p-4 rounded-xl border shadow-sm ${
-							showPaymentButton 
-								? "bg-gradient-to-br from-blue-50 via-[#a797cc]/10 to-orange-50 border-2 border-[#a797cc]/30" 
-								: "bg-gradient-to-br from-green-50 to-green-100/50 border border-green-200/50"
-						}`}>
+						<div className={`p-4 rounded-xl border shadow-sm ${showPaymentButton
+							? "bg-gradient-to-br from-blue-50 via-[#a797cc]/10 to-orange-50 border-2 border-[#a797cc]/30"
+							: "bg-gradient-to-br from-green-50 to-green-100/50 border border-green-200/50"
+							}`}>
 							<div className="flex justify-between items-center mb-3">
 								<div className="flex items-center gap-3">
 									<Icon
@@ -304,11 +304,10 @@ export default function BookingDetails({
 									</span>
 								</div>
 								<span
-									className={`px-3 py-1.5 font-bold rounded-lg ${
-										booking.payment_status === 1
-											? "bg-green-100 text-green-700 border border-green-300"
-											: "bg-blue-100 text-blue-700 border border-blue-300"
-									}`}
+									className={`px-3 py-1.5 font-bold rounded-lg ${booking.payment_status === 1
+										? "bg-green-100 text-green-700 border border-green-300"
+										: "bg-blue-100 text-blue-700 border border-blue-300"
+										}`}
 								>
 									{getPaymentStatusLabel(
 										booking.payment_status,
@@ -316,7 +315,7 @@ export default function BookingDetails({
 									)}
 								</span>
 							</div>
-							
+
 							{/* Payment Button - Show prominently right below payment status if pending/approved and unpaid */}
 							{showPaymentButton && (
 								<div className="mt-4 pt-4 border-t-2 border-[#a797cc]/20">
@@ -411,9 +410,27 @@ export default function BookingDetails({
 				{/* Invoice Button - Show if invoice is available */}
 				{showInvoiceButton && (
 					<Button
-						onClick={() =>
-							window.open(booking.invoice_url, "_blank")
-						}
+						onClick={() => {
+							try {
+								// Extract filename to ensure we build a clean URL
+								const rawUrl = booking.invoice_url || "";
+								const filename = rawUrl.split('/').pop(); // Get just the filename (e.g. invoice-XYZ.html)
+
+								if (filename) {
+									// Remove trailing slash from base if present
+									const cleanBase = BASE_API_URL.replace(/\/+$/, "");
+									// Construct precise URL
+									const url = `${cleanBase}/invoices/${filename}`;
+
+									console.log("[INVOICE] Opening clean URL:", url);
+									window.open(url, "_blank");
+								} else {
+									console.error("[INVOICE] Invalid invoice URL or filename");
+								}
+							} catch (e) {
+								console.error("[INVOICE] Error opening invoice:", e);
+							}
+						}}
 						className="w-full text-green-700 text-sm font-semibold h-12 rounded-xl bg-white border-2 border-green-300 hover:bg-green-50 transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg hover:scale-[1.02]"
 					>
 						<span className="inline-flex justify-center items-center gap-2">
@@ -446,11 +463,10 @@ export default function BookingDetails({
 				{showCancelButton && (
 					<Button
 						onClick={onCancelBooking}
-						className={`w-full text-sm font-semibold h-12 rounded-xl transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg hover:scale-[1.02] ${
-							showPaymentButton || showInvoiceButton
-								? "text-red-700 bg-white border-2 border-red-400 hover:bg-red-50"
-								: "text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-						}`}
+						className={`w-full text-sm font-semibold h-12 rounded-xl transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg hover:scale-[1.02] ${showPaymentButton || showInvoiceButton
+							? "text-red-700 bg-white border-2 border-red-400 hover:bg-red-50"
+							: "text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+							}`}
 					>
 						<span className="inline-flex justify-center items-center gap-2">
 							<Icon
@@ -462,6 +478,6 @@ export default function BookingDetails({
 					</Button>
 				)}
 			</div>
-		</div>
+		</div >
 	);
 }

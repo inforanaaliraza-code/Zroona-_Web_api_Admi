@@ -78,7 +78,6 @@ export default function PaymentModal({
         return;
       }
 
-      const currentLang = i18n.language || "ar";
       const apiKey = process.env.NEXT_PUBLIC_MOYASAR_KEY;
       if (!apiKey) {
         console.error("[PAYMENT-MODAL] Moyasar API key not configured");
@@ -86,10 +85,14 @@ export default function PaymentModal({
         return;
       }
 
-      // Clear previous form safely
-      if (moyasarFormRef.current) {
-        moyasarFormRef.current.innerHTML = "";
-      }
+      // MANUALLY manage the DOM for the library to avoid React conflicts
+      // 1. Clear container
+      moyasarFormRef.current.innerHTML = "";
+
+      // 2. Create a dedicated div for the form
+      const formDiv = document.createElement("div");
+      formDiv.className = "moyasar-form-container";
+      moyasarFormRef.current.appendChild(formDiv);
 
       if (!totalAmount || totalAmount <= 0) {
         console.error("[PAYMENT-MODAL] Invalid amount:", totalAmount);
@@ -99,6 +102,7 @@ export default function PaymentModal({
 
       const amountInHalala = Math.round(totalAmount * 100);
       const callbackUrl = `${window.location.origin}/events/${event?._id}?booking_id=${event?.booked_event?._id}&status=paid`;
+      const currentLang = i18n.language || "ar";
 
       // Determine payment methods based on selection
       let paymentMethods = ['creditcard'];
@@ -107,7 +111,7 @@ export default function PaymentModal({
       }
 
       const moyasarConfig = {
-        element: moyasarFormRef.current,
+        element: formDiv, // Pass our manually created div
         amount: amountInHalala,
         currency: "SAR",
         callback_url: callbackUrl,
@@ -233,8 +237,10 @@ export default function PaymentModal({
 
     return () => {
       clearTimeout(timeoutId);
-      // No manual DOM cleanup needed here - React unmounts the node automatically.
-      // Trying to manually modify DOM during unmount can cause "NotFoundError: Failed to execute 'removeChild'" conflicts.
+      // Safe cleanup: just empty the container we control
+      if (moyasarFormRef.current) {
+        moyasarFormRef.current.innerHTML = "";
+      }
     };
   }, [isOpen, selectedMethod, initializeMoyasarForm, t]);
 
@@ -398,24 +404,9 @@ export default function PaymentModal({
               <div className="relative">
                 <div
                   ref={moyasarFormRef}
-                  id="moyasar-payment-form"
-                  className="w-full min-h-[400px] bg-white rounded-2xl p-6 border-2 border-gray-100"
+                  className="w-full bg-transparent"
                 >
-                  {isInitializing && (
-                    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-                      <div className="relative">
-                        <div className="w-20 h-20 bg-gradient-to-br from-[#a797cc] to-purple-600 rounded-2xl flex items-center justify-center animate-pulse">
-                          <Icon icon="lucide:credit-card" className="w-10 h-10 text-white" />
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-bold text-gray-800">
-                          {getTranslation(t, "events.loadingPaymentForm", "Loading secure payment form...")}
-                        </p>
-                        <p className="text-sm text-gray-500">Please wait</p>
-                      </div>
-                    </div>
-                  )}
+                  {/* Moyasar form injected here */}
                 </div>
               </div>
 
@@ -454,6 +445,83 @@ export default function PaymentModal({
           </Button>
         </DialogFooter>
       </DialogContent>
+      {/* Custom Styles for Moyasar Form */}
+      <style jsx global>{`
+        .moyasar-form-container {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+        }
+        
+        /* Form Container */
+        .mysr-form {
+          max-width: 100% !important;
+          width: 100% !important;
+          padding: 1rem 0 !important;
+        }
+
+        /* Labels */
+        .mysr-label {
+          font-size: 0.875rem !important;
+          font-weight: 500 !important;
+          color: #374151 !important;
+          margin-bottom: 0.5rem !important;
+        }
+
+        /* Inputs */
+        .mysr-input {
+          width: 100% !important;
+          padding: 0.75rem 1rem !important;
+          border-radius: 0.75rem !important;
+          border: 1px solid #e5e7eb !important;
+          font-size: 1rem !important;
+          transition: all 0.2s !important;
+          background-color: #ffffff !important;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+        
+        .mysr-input:focus {
+          border-color: #a797cc !important;
+          box-shadow: 0 0 0 4px rgba(167, 151, 204, 0.1) !important;
+          outline: none !important;
+        }
+
+        .mysr-input.mysr-error {
+          border-color: #ef4444 !important;
+        }
+
+        /* Pay Button */
+        .mysr-form-button {
+          width: 100% !important;
+          padding: 0.875rem !important;
+          background: linear-gradient(135deg, #a797cc 0%, #9333ea 100%) !important;
+          border: none !important;
+          border-radius: 0.75rem !important;
+          color: white !important;
+          font-weight: 600 !important;
+          font-size: 1rem !important;
+          cursor: pointer !important;
+          transition: all 0.3s !important;
+          margin-top: 1.5rem !important;
+          box-shadow: 0 4px 6px -1px rgba(167, 151, 204, 0.3) !important;
+        }
+
+        .mysr-form-button:hover {
+          opacity: 0.9 !important;
+          transform: translateY(-1px) !important;
+          box-shadow: 0 6px 8px -1px rgba(167, 151, 204, 0.4) !important;
+        }
+
+        .mysr-form-button:active {
+          transform: translateY(0) !important;
+        }
+        
+        /* Hide Powered By if desired, or style it */
+        .mysr-footer {
+          margin-top: 1rem !important;
+          opacity: 0.6 !important;
+        }
+      `}</style>
     </Dialog>
   );
 }

@@ -1,4 +1,5 @@
 const express = require("express");
+const fs = require("fs");
 const dotenv = require("dotenv");
 const allRoutes = require("./routes/allRoutes.js");
 const adminRoutes = require("./routes/adminRoutes.js");
@@ -100,6 +101,14 @@ const corsOptions = {
 // Apply CORS middleware FIRST - before any other middleware (including helmet)
 app.use(cors(corsOptions));
 
+// Normalize URLs to remove double slashes (e.g. /api//invoices -> /api/invoices)
+app.use((req, res, next) => {
+	if (req.url.includes('//')) {
+		req.url = req.url.replace(/\/+/g, '/');
+	}
+	next();
+});
+
 // Add a simple health check endpoint before other middleware
 app.get("/api/health", (req, res) => {
 	res.json({
@@ -142,8 +151,36 @@ app.use(cookieParser(process.env.COOKIE_SECRET || 'zuroona-cookie-secret-key-cha
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Custom route to serve invoices reliably
+app.get(['/api/invoices/:filename', '/api//invoices/:filename', '/invoices/:filename'], (req, res) => {
+	try {
+		const filename = req.params.filename;
+		// Sanitize filename to prevent directory traversal
+		const safeFilename = path.basename(filename);
+		const filepath = path.join(__dirname, '../invoices', safeFilename);
+
+		if (fs.existsSync(filepath)) {
+			console.log(`[INVOICE] Serving file: ${filepath}`);
+			res.sendFile(filepath);
+		} else {
+			console.error(`[INVOICE] File not found: ${filepath}`);
+			res.status(404).json({
+				status: 0,
+				message: `Invoice not found: ${safeFilename}`
+			});
+		}
+	} catch (error) {
+		console.error(`[INVOICE] Error serving file:`, error);
+		res.status(500).json({
+			status: 0,
+			message: "Internal server error serving invoice"
+		});
+	}
+});
+
 // Serve static invoice files
-app.use('/invoices', express.static(path.join(__dirname, '../invoices')));
+// Handle both standard and double-slash paths explicitly
+app.use(['/api/invoices', '/api//invoices', '/invoices'], express.static(path.join(__dirname, '../invoices')));
 
 // Rate limiting - DISABLED: Removed global API rate limiter to prevent "Too Many Requests" errors
 // Both web and mobile app share the same backend/IP, causing rate limit conflicts
