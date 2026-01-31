@@ -4,7 +4,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "node ./node_modules/nodemon/bin/nodemon.js src/app.js",
+    "kill-port": "./kill-port.sh 3000",
+    "dev": "./kill-port.sh 3000 && node ./node_modules/nodemon/bin/nodemon.js src/app.js",
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
     "build": "npm run lint",
     "seed:locations": "node src/scripts/seedCountriesAndCities.js",

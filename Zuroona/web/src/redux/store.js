@@ -20,6 +20,7 @@ import EarningReducer from "./slices/Earning";
 import WithdrawalListReducer from "./slices/WithdrawalList";
 import languageReducer from "./slices/language";
 import signupFormReducer from "./slices/signupFormSlice";
+import paymentMethodReducer from "./slices/paymentMethodSlice";
 
 export const store = configureStore({
   reducer: {
@@ -42,5 +43,6 @@ export const store = configureStore({
     UserNotificatonCountData: UserNotificatonCountReducer,
     language: languageReducer,
     signupForm: signupFormReducer,
+    paymentMethod: paymentMethodReducer,
   },
 });
