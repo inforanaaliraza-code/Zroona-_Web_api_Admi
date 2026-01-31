@@ -195,7 +195,11 @@ export default function ProfilePage() {
                         
                         <div>
                           <p className={`text-sm font-medium text-gray-500 ${textAlign}`}>{t("signup.tab4") || "Phone"}</p>
-                          <p className={`mt-1 text-sm text-gray-900 ${textAlign}`}>{profile?.user?.phone || "-"}</p>
+                          <p className={`mt-1 text-sm text-gray-900 ${textAlign}`}>
+                            {profile?.user?.phone_number 
+                              ? `${profile?.user?.country_code || ""} ${profile?.user?.phone_number}`.trim()
+                              : "-"}
+                          </p>
                         </div>
                         
                         <div>
@@ -204,13 +208,19 @@ export default function ProfilePage() {
                         </div>
                         
                         <div>
-                          <p className={`text-sm font-medium text-gray-500 ${textAlign}`}>{t("signup.tab6") || "Gender"}</p>
+                          <p className={`text-sm font-medium text-gray-500 ${textAlign}`}>Gender</p>
                           <p className={`mt-1 text-sm text-gray-900 ${textAlign}`}>
-                            {profile?.user?.gender === "1" 
-                              ? (t("signup.tab7") || "Male")
-                              : profile?.user?.gender === "2" 
-                                ? (t("signup.tab8") || "Female")
-                                : "-"}
+                            {(() => {
+                              const gender = profile?.user?.gender;
+                              if (gender === 1 || gender === "1") {
+                                return t("signup.tab7") || "Male";
+                              } else if (gender === 2 || gender === "2") {
+                                return t("signup.tab8") || "Female";
+                              } else if (gender === 3 || gender === "3") {
+                                return t("signup.tab9") || "Both";
+                              }
+                              return "-";
+                            })()}
                           </p>
                         </div>
                         

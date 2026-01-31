@@ -5,12 +5,12 @@ const nextConfig = {
   logging: {
     fetches: {
       fullUrl: false,
+    
     },
   },
   // Reduc webpack stats 6z
   webpack: (config, { isServer }) => {
     config.stats = 'errors-only';
-
     // Suppress source map warnings for third-party CSS
     if (!isServer) {
       config.ignoreWarnings = [

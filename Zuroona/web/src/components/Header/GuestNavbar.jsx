@@ -6,7 +6,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Icon } from "@iconify/react";
-import SearchBar from "../Searchbar/Searchbar";
 import useAuthStore from "@/store/useAuthStore";
 import ClickOutside from "./ClickOutside";
 import { useRTL } from "@/utils/rtl";
@@ -26,13 +25,15 @@ const GuestNavbar = ({ search, setSearch, setPage }) => {
   };
 
   // Define all navigation items with authentication requirements
+  // Using same text as sidebar for matching items
   const allNavItems = [
     { label: t("header.homepage", "Homepage"), href: "/", icon: "lucide:home", requiresAuth: false, hideWhenLoggedIn: true },
     { label: t("header.events", "Events"), href: "/events", icon: "lucide:calendar-days", requiresAuth: false },
     { label: t("header.messaging", "Messaging"), href: "/messaging", icon: "lucide:message-circle", requiresAuth: true },
-    { label: t("header.booking", "Booking"), href: "/myEvents", icon: "lucide:calendar", requiresAuth: true },
-    { label: t("header.reviews", "Reviews"), href: "/my-reviews", icon: "lucide:star", requiresAuth: true },
-    { label: t("header.profile", "Profile"), href: "/profile", icon: "lucide:user", requiresAuth: true },
+    { label: t("sidemenu.tab4") || "My Bookings", href: "/myEvents", icon: "lucide:calendar-check", requiresAuth: true },
+    { label: t("header.reviews") || t("sidemenu.tab13") || "My Reviews", href: "/my-reviews", icon: "lucide:star", requiresAuth: true },
+    { label: t("refunds.title") || "Refunds", href: "/refunds", icon: "lucide:undo-2", requiresAuth: true },
+    { label: t("profile.personalInfo") || "Profile", href: "/profile", icon: "lucide:user", requiresAuth: true },
   ];
 
   // Filter nav items based on authentication status
@@ -85,13 +86,6 @@ const GuestNavbar = ({ search, setSearch, setPage }) => {
                 </Link>
               ))}
             </div>
-
-            {/* Search Bar */}
-            {token && isAuthenticated && (
-              <div className={`flex-1 max-w-md ${isRTL ? "mr-auto" : "ml-auto"}`}>
-                <SearchBar search={search} setSearch={setSearch} setPage={setPage} />
-              </div>
-            )}
 
             {/* Support Dropdown */}
             <ClickOutside onClick={() => setShowSupportDropdown(false)} className="relative">
@@ -163,13 +157,6 @@ const GuestNavbar = ({ search, setSearch, setPage }) => {
                   <span>{item.label}</span>
                 </Link>
               ))}
-
-              {/* Mobile Search */}
-              {token && isAuthenticated && (
-                <div className="px-4 py-2">
-                  <SearchBar search={search} setSearch={setSearch} setPage={setPage} />
-                </div>
-              )}
 
               {/* Mobile Support */}
               <div className="px-4 py-2 border-t border-white/20">
