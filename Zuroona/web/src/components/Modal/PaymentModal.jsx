@@ -319,8 +319,8 @@ export default function PaymentModal({
                               : 'bg-gray-100'
                               }`}>
                               <Icon
-                                icon="lucide:smartphone"
-                                className={`w-7 h-7 ${selectedMethod === 'applepay' ? 'text-white' : 'text-gray-600'
+                                icon="simple-icons:apple"
+                                className={`w-7 h-7 ${selectedMethod === 'applepay' ? 'text-white' : 'text-gray-900'
                                   }`}
                               />
                             </div>
@@ -447,79 +447,111 @@ export default function PaymentModal({
       </DialogContent>
       {/* Custom Styles for Moyasar Form */}
       <style jsx global>{`
+        /* Main Container */
         .moyasar-form-container {
           width: 100%;
           display: flex;
           justify-content: center;
+          font-family: inherit;
         }
         
-        /* Form Container */
+        /* Form Reset */
         .mysr-form {
           max-width: 100% !important;
           width: 100% !important;
-          padding: 1rem 0 !important;
+          padding: 0.5rem 0 !important;
+          margin: 0 !important;
+        }
+
+        /* Input Group Helper */
+        .mysr-form-group {
+          margin-bottom: 1.25rem !important;
         }
 
         /* Labels */
         .mysr-label {
-          font-size: 0.875rem !important;
-          font-weight: 500 !important;
-          color: #374151 !important;
+          font-size: 0.9rem !important;
+          font-weight: 600 !important;
+          color: #1f2937 !important; /* Gray 800 */
           margin-bottom: 0.5rem !important;
+          display: block !important;
+          text-transform: capitalize !important;
         }
 
         /* Inputs */
         .mysr-input {
           width: 100% !important;
-          padding: 0.75rem 1rem !important;
+          height: 3rem !important; /* Fixed height for consistency */
+          padding: 0 1rem !important;
           border-radius: 0.75rem !important;
           border: 1px solid #e5e7eb !important;
-          font-size: 1rem !important;
-          transition: all 0.2s !important;
+          font-size: 0.95rem !important;
+          line-height: normal !important;
+          transition: all 0.2s ease-in-out !important;
           background-color: #ffffff !important;
+          color: #111827 !important;
           box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
         }
         
+        .mysr-input:hover {
+          border-color: #d1d5db !important;
+        }
+
         .mysr-input:focus {
           border-color: #a797cc !important;
-          box-shadow: 0 0 0 4px rgba(167, 151, 204, 0.1) !important;
+          background-color: #ffffff !important;
+          box-shadow: 0 0 0 4px rgba(167, 151, 204, 0.15) !important;
           outline: none !important;
+        }
+
+        .mysr-input::placeholder {
+          color: #9ca3af !important;
         }
 
         .mysr-input.mysr-error {
           border-color: #ef4444 !important;
+          background-color: #fef2f2 !important;
+          box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1) !important;
         }
 
-        /* Pay Button */
+        /* Row Layout fixes for CC/Date */
+        /* Moyasar puts these in a specific grid, we target the inputs directly usually */
+        
+        /* Submit Button */
         .mysr-form-button {
           width: 100% !important;
-          padding: 0.875rem !important;
-          background: linear-gradient(135deg, #a797cc 0%, #9333ea 100%) !important;
+          height: 3.5rem !important;
+          padding: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          background: linear-gradient(135deg, #a797cc 0%, #8ba179 100%) !important;
           border: none !important;
-          border-radius: 0.75rem !important;
+          border-radius: 1rem !important;
           color: white !important;
-          font-weight: 600 !important;
-          font-size: 1rem !important;
+          font-weight: 700 !important;
+          font-size: 1.125rem !important;
           cursor: pointer !important;
-          transition: all 0.3s !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
           margin-top: 1.5rem !important;
-          box-shadow: 0 4px 6px -1px rgba(167, 151, 204, 0.3) !important;
+          box-shadow: 0 4px 6px -1px rgba(167, 151, 204, 0.2) !important;
+          text-transform: none !important; /* Don't force uppercase */
         }
 
         .mysr-form-button:hover {
-          opacity: 0.9 !important;
-          transform: translateY(-1px) !important;
-          box-shadow: 0 6px 8px -1px rgba(167, 151, 204, 0.4) !important;
+          opacity: 0.95 !important;
+          transform: translateY(-2px) !important;
+          box-shadow: 0 10px 15px -3px rgba(167, 151, 204, 0.3) !important;
         }
 
         .mysr-form-button:active {
           transform: translateY(0) !important;
+          box-shadow: 0 4px 6px -1px rgba(167, 151, 204, 0.2) !important;
         }
         
-        /* Hide Powered By if desired, or style it */
+        /* Footer/Powered By - Hidden for cleaner look */
         .mysr-footer {
-          margin-top: 1rem !important;
-          opacity: 0.6 !important;
+          display: none !important;
         }
       `}</style>
     </Dialog>
