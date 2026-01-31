@@ -27,10 +27,10 @@ dotenv.config();
 
 // Initialize Sentry error tracking
 if (process.env.SENTRY_DSN) {
-    initSentry();
-    logger.info('Sentry error tracking initialized');
+	initSentry();
+	logger.info('Sentry error tracking initialized');
 } else {
-    logger.warn('Sentry DSN not configured. Error tracking disabled.');
+	logger.warn('Sentry DSN not configured. Error tracking disabled.');
 }
 
 const app = express();
@@ -67,12 +67,12 @@ const corsOptions = {
 		if (!origin) {
 			return callback(null, true);
 		}
-		
+
 		// Allow all origins in development (not production)
 		if (process.env.NODE_ENV !== 'production') {
 			return callback(null, true);
 		}
-		
+
 		// Check against allowed list in production
 		if (allowedOrigins.indexOf(origin) !== -1) {
 			callback(null, true);
@@ -98,7 +98,7 @@ const corsOptions = {
 };
 
 // Apply CORS middleware FIRST - before any other middleware (including helmet)
-	app.use(cors(corsOptions));
+app.use(cors(corsOptions));
 
 // Add a simple health check endpoint before other middleware
 app.get("/api/health", (req, res) => {
@@ -316,24 +316,24 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (err, promise) => {
 	console.error("Unhandled Rejection:", err);
 	console.error("Promise:", promise);
-	
+
 	// Log error details
 
 
-	
+
 	if (err?.http_code) {
 		console.error(`HTTP Code: ${err.http_code}, Name: ${err.name || 'Unknown'}`);
 	}
 	if (err?.stack) {
 		console.error("Stack trace:", err.stack);
 	}
-	
+
 	// Capture rejection in Sentry if initialized
 	if (process.env.SENTRY_DSN || process.env.NODE_ENV === 'production') {
 		const Sentry = require("@sentry/node");
 		Sentry.captureException(err);
 	}
-	
+
 	// Only exit in production for critical errors
 	// In development, log and continue to allow debugging
 	if (process.env.NODE_ENV === 'production') {
@@ -356,116 +356,116 @@ startServer();
 
 // Schedule auto-close group chats task (runs every hour)
 if (process.env.ENABLE_AUTO_CLOSE_GROUP_CHATS !== 'false') {
-    // Run immediately on startup (after 30 seconds to ensure DB is connected)
-    setTimeout(() => {
-        autoCloseGroupChats().catch(err => {
-            console.error('[AUTO-CLOSE] Error in scheduled task:', err);
-        });
-    }, 30000);
+	// Run immediately on startup (after 30 seconds to ensure DB is connected)
+	setTimeout(() => {
+		autoCloseGroupChats().catch(err => {
+			console.error('[AUTO-CLOSE] Error in scheduled task:', err);
+		});
+	}, 30000);
 
-    // Then run every hour
-    setInterval(() => {
-        autoCloseGroupChats().catch(err => {
-            console.error('[AUTO-CLOSE] Error in scheduled task:', err);
-        });
-    }, 60 * 60 * 1000); // 1 hour in milliseconds
-    
-    console.log('[AUTO-CLOSE] Scheduled task enabled - will run every hour');
+	// Then run every hour
+	setInterval(() => {
+		autoCloseGroupChats().catch(err => {
+			console.error('[AUTO-CLOSE] Error in scheduled task:', err);
+		});
+	}, 60 * 60 * 1000); // 1 hour in milliseconds
+
+	console.log('[AUTO-CLOSE] Scheduled task enabled - will run every hour');
 }
 
 // Schedule auto-update completed bookings task (runs daily)
 if (process.env.ENABLE_AUTO_COMPLETE_BOOKINGS !== 'false') {
-    // Run immediately on startup (after 60 seconds to ensure DB is connected)
-    setTimeout(() => {
-        updateCompletedBookings().catch(err => {
-            console.error('[AUTO-COMPLETE] Error in scheduled task:', err);
-        });
-    }, 60000);
+	// Run immediately on startup (after 60 seconds to ensure DB is connected)
+	setTimeout(() => {
+		updateCompletedBookings().catch(err => {
+			console.error('[AUTO-COMPLETE] Error in scheduled task:', err);
+		});
+	}, 60000);
 
-    // Then run every 24 hours
-    setInterval(() => {
-        updateCompletedBookings().catch(err => {
-            console.error('[AUTO-COMPLETE] Error in scheduled task:', err);
-        });
-    }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
-    
-    console.log('[AUTO-COMPLETE] Scheduled task enabled - will run daily');
+	// Then run every 24 hours
+	setInterval(() => {
+		updateCompletedBookings().catch(err => {
+			console.error('[AUTO-COMPLETE] Error in scheduled task:', err);
+		});
+	}, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+
+	console.log('[AUTO-COMPLETE] Scheduled task enabled - will run daily');
 }
 
 // Schedule auto-cancel unpaid bookings task (runs every hour)
 if (process.env.ENABLE_AUTO_CANCEL_UNPAID_BOOKINGS !== 'false') {
-    // Run immediately on startup (after 90 seconds to ensure DB is connected)
-    setTimeout(() => {
-        autoCancelUnpaidBookings().catch(err => {
-            console.error('[AUTO-CANCEL-UNPAID] Error in scheduled task:', err);
-        });
-    }, 90000);
+	// Run immediately on startup (after 90 seconds to ensure DB is connected)
+	setTimeout(() => {
+		autoCancelUnpaidBookings().catch(err => {
+			console.error('[AUTO-CANCEL-UNPAID] Error in scheduled task:', err);
+		});
+	}, 90000);
 
-    // Then run every hour
-    setInterval(() => {
-        autoCancelUnpaidBookings().catch(err => {
-            console.error('[AUTO-CANCEL-UNPAID] Error in scheduled task:', err);
-        });
-    }, 60 * 60 * 1000); // 1 hour in milliseconds
-    
-    console.log('[AUTO-CANCEL-UNPAID] Scheduled task enabled - will run every hour');
+	// Then run every hour
+	setInterval(() => {
+		autoCancelUnpaidBookings().catch(err => {
+			console.error('[AUTO-CANCEL-UNPAID] Error in scheduled task:', err);
+		});
+	}, 60 * 60 * 1000); // 1 hour in milliseconds
+
+	console.log('[AUTO-CANCEL-UNPAID] Scheduled task enabled - will run every hour');
 }
 
 // Schedule host response reminders task (runs every hour)
 if (process.env.ENABLE_HOST_RESPONSE_REMINDERS !== 'false') {
-    // Run immediately on startup (after 120 seconds to ensure DB is connected)
-    setTimeout(() => {
-        sendHostResponseReminders().catch(err => {
-            console.error('[HOST-REMINDER] Error in scheduled task:', err);
-        });
-    }, 120000);
+	// Run immediately on startup (after 120 seconds to ensure DB is connected)
+	setTimeout(() => {
+		sendHostResponseReminders().catch(err => {
+			console.error('[HOST-REMINDER] Error in scheduled task:', err);
+		});
+	}, 120000);
 
-    // Then run every hour
-    setInterval(() => {
-        sendHostResponseReminders().catch(err => {
-            console.error('[HOST-REMINDER] Error in scheduled task:', err);
-        });
-    }, 60 * 60 * 1000); // 1 hour in milliseconds
-    
-    console.log('[HOST-REMINDER] Scheduled task enabled - will run every hour');
+	// Then run every hour
+	setInterval(() => {
+		sendHostResponseReminders().catch(err => {
+			console.error('[HOST-REMINDER] Error in scheduled task:', err);
+		});
+	}, 60 * 60 * 1000); // 1 hour in milliseconds
+
+	console.log('[HOST-REMINDER] Scheduled task enabled - will run every hour');
 }
 
 // Schedule hold expired notifications task (runs every 15 minutes)
 if (process.env.ENABLE_HOLD_EXPIRED_NOTIFICATIONS !== 'false') {
-    // Run immediately on startup (after 150 seconds to ensure DB is connected)
-    setTimeout(() => {
-        sendHoldExpiredNotifications().catch(err => {
-            console.error('[HOLD-EXPIRED] Error in scheduled task:', err);
-        });
-    }, 150000);
+	// Run immediately on startup (after 150 seconds to ensure DB is connected)
+	setTimeout(() => {
+		sendHoldExpiredNotifications().catch(err => {
+			console.error('[HOLD-EXPIRED] Error in scheduled task:', err);
+		});
+	}, 150000);
 
-    // Then run every 15 minutes
-    setInterval(() => {
-        sendHoldExpiredNotifications().catch(err => {
-            console.error('[HOLD-EXPIRED] Error in scheduled task:', err);
-        });
-    }, 15 * 60 * 1000); // 15 minutes in milliseconds
-    
-    console.log('[HOLD-EXPIRED] Scheduled task enabled - will run every 15 minutes');
+	// Then run every 15 minutes
+	setInterval(() => {
+		sendHoldExpiredNotifications().catch(err => {
+			console.error('[HOLD-EXPIRED] Error in scheduled task:', err);
+		});
+	}, 15 * 60 * 1000); // 15 minutes in milliseconds
+
+	console.log('[HOLD-EXPIRED] Scheduled task enabled - will run every 15 minutes');
 }
 
 // Schedule review prompts task (runs every hour)
 if (process.env.ENABLE_REVIEW_PROMPTS !== 'false') {
-    // Run immediately on startup (after 180 seconds to ensure DB is connected)
-    setTimeout(() => {
-        sendReviewPrompts().catch(err => {
-            console.error('[REVIEW-PROMPT] Error in scheduled task:', err);
-        });
-    }, 180000);
+	// Run immediately on startup (after 180 seconds to ensure DB is connected)
+	setTimeout(() => {
+		sendReviewPrompts().catch(err => {
+			console.error('[REVIEW-PROMPT] Error in scheduled task:', err);
+		});
+	}, 180000);
 
-    // Then run every hour
-    setInterval(() => {
-        sendReviewPrompts().catch(err => {
-            console.error('[REVIEW-PROMPT] Error in scheduled task:', err);
-        });
-    }, 60 * 60 * 1000); // 1 hour in milliseconds
-    
-    console.log('[REVIEW-PROMPT] Scheduled task enabled - will run every hour');
+	// Then run every hour
+	setInterval(() => {
+		sendReviewPrompts().catch(err => {
+			console.error('[REVIEW-PROMPT] Error in scheduled task:', err);
+		});
+	}, 60 * 60 * 1000); // 1 hour in milliseconds
+
+	console.log('[REVIEW-PROMPT] Scheduled task enabled - will run every hour');
 }
 
 // Create test users on startup (DISABLED - run manually with: npm run script:create-users)

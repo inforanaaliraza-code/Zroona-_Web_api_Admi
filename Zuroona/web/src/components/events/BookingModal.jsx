@@ -40,7 +40,7 @@ export default function BookingModal({
 	const ticketPrice = event?.event_price || 0;
 	// Use booked_event total_amount if available (includes tax), otherwise calculate
 	const totalAmount =
-		event?.booked_event?.total_amount || 
+		event?.booked_event?.total_amount ||
 		(ticketPrice * attendees);
 
 	useEffect(() => {
@@ -79,12 +79,12 @@ export default function BookingModal({
 						paymentId: payment.id,
 						amount: totalAmount,
 					});
-					
+
 					// If callback returns a promise, wait for it
 					if (result && typeof result.then === 'function') {
 						await result;
 					}
-					
+
 					setStep("confirmation");
 					setIsPaymentModalOpen(false);
 					toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully!"));
@@ -173,14 +173,14 @@ export default function BookingModal({
 			toast.error(getTranslation(t, "events.invalidAttendees", "Number of attendees must be at least 1"));
 			return;
 		}
-		
+
 		// Check against available seats with detailed error message
 		if (event.available_seats !== undefined) {
 			if (attendees > event.available_seats) {
 				toast.error(
 					getTranslation(
-						t, 
-						"events.exceedsAvailableSeats", 
+						t,
+						"events.exceedsAvailableSeats",
 						`Cannot book ${attendees} seat(s). Only ${event.available_seats} seat(s) available.`
 					),
 					{
@@ -231,21 +231,21 @@ export default function BookingModal({
 			console.error("Reservation error:", error);
 			// Show user-friendly error message
 			const errorMessage = error?.message || getTranslation(t, "events.reservationFailed", "Failed to make reservation");
-			
+
 			// Check if it's a duplicate/pending booking error (show as warning, not error)
-			if (errorMessage.toLowerCase().includes("already") || 
-			    errorMessage.toLowerCase().includes("pending") ||
-			    errorMessage.toLowerCase().includes("duplicate") ||
-			    errorMessage.toLowerCase().includes("wait for the host")) {
+			if (errorMessage.toLowerCase().includes("already") ||
+				errorMessage.toLowerCase().includes("pending") ||
+				errorMessage.toLowerCase().includes("duplicate") ||
+				errorMessage.toLowerCase().includes("wait for the host")) {
 				toast.warning(errorMessage, {
 					duration: 6000, // Show longer for important warnings
 				});
-			} 
+			}
 			// Check if it's a seat availability error
-			else if (errorMessage.toLowerCase().includes("seats not available") || 
-			    errorMessage.toLowerCase().includes("seat") ||
-			    errorMessage.toLowerCase().includes("sold out") ||
-			    errorMessage.toLowerCase().includes("capacity")) {
+			else if (errorMessage.toLowerCase().includes("seats not available") ||
+				errorMessage.toLowerCase().includes("seat") ||
+				errorMessage.toLowerCase().includes("sold out") ||
+				errorMessage.toLowerCase().includes("capacity")) {
 				toast.error(errorMessage, {
 					duration: 5000, // Show longer for important errors
 				});
@@ -261,8 +261,8 @@ export default function BookingModal({
 	return (
 		<Dialog.Root open={isOpen} onOpenChange={onClose}>
 			<Dialog.Portal>
-				<Dialog.Overlay className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-				<Dialog.Content className="fixed left-[50%] top-[50%] z-50 max-h-[95vh] w-[95vw] sm:w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] rounded-2xl bg-white shadow-2xl transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] border border-gray-100 flex flex-col overflow-hidden">
+				<Dialog.Overlay className={`fixed inset-0 bg-black/30 backdrop-blur-sm z-[1050] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 ${isPaymentModalOpen ? 'opacity-0 pointer-events-none' : ''}`} />
+				<Dialog.Content className={`fixed left-[50%] top-[50%] z-[1051] max-h-[95vh] w-[95vw] sm:w-[90vw] max-w-[600px] translate-x-[-50%] translate-y-[-50%] rounded-2xl bg-white shadow-2xl transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] border border-gray-100 flex flex-col overflow-hidden ${isPaymentModalOpen ? 'opacity-0 pointer-events-none translate-y-[-40%]' : ''}`}>
 					{/* Header - Fixed */}
 					<div className="flex-shrink-0 px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 pb-4 border-b border-gray-100">
 						<div className="flex items-start justify-between gap-4">
@@ -334,7 +334,7 @@ export default function BookingModal({
 										</div>
 									</div>
 								)}
-								
+
 								<div className="space-y-2">
 									<Label.Root className="text-sm font-medium text-gray-900">
 										{getTranslation(t, "events.numberOfAttendees", "Number of Attendees")}
@@ -364,7 +364,7 @@ export default function BookingModal({
 											type="button"
 											onClick={incrementAttendees}
 											disabled={
-												event.available_seats !== undefined 
+												event.available_seats !== undefined
 													? attendees >= event.available_seats || event.available_seats === 0
 													: attendees >= event.no_of_attendees
 											}
@@ -381,7 +381,7 @@ export default function BookingModal({
 											icon="lucide:info"
 											className="w-4 h-4"
 										/>
-										{event.available_seats !== undefined 
+										{event.available_seats !== undefined
 											? getTranslation(t, "events.maxAttendeesAvailable", `Maximum ${event.available_seats || 0} attendees available`, {
 												count: event.available_seats || 0,
 											})
@@ -492,58 +492,58 @@ export default function BookingModal({
 					{/* Footer - Fixed */}
 					<div className="flex-shrink-0 px-4 sm:px-6 md:px-8 pt-4 pb-4 sm:pb-6 border-t border-gray-100 bg-white">
 						<div className="flex gap-3 justify-end">
-						{step === "details" && (
-							<Button
-								onClick={handleReservation}
-								disabled={isLoading}
-								className="h-12 px-6 rounded-xl bg-[#a797cc] hover:bg-[#a797cc]/90 text-white font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-							>
-								{isLoading ? (
-									<Icon
-										icon="lucide:loader-2"
-										className="w-5 h-5 animate-spin"
-									/>
-								) : (
-									<Icon
-										icon="lucide:check"
-										className="w-5 h-5"
-									/>
-								)}
-								{getTranslation(t, "events.reserveSpot", "Reserve Spot")}
-							</Button>
-						)}
+							{step === "details" && (
+								<Button
+									onClick={handleReservation}
+									disabled={isLoading}
+									className="h-12 px-6 rounded-xl bg-[#a797cc] hover:bg-[#a797cc]/90 text-white font-medium flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									{isLoading ? (
+										<Icon
+											icon="lucide:loader-2"
+											className="w-5 h-5 animate-spin"
+										/>
+									) : (
+										<Icon
+											icon="lucide:check"
+											className="w-5 h-5"
+										/>
+									)}
+									{getTranslation(t, "events.reserveSpot", "Reserve Spot")}
+								</Button>
+							)}
 
-						{step === "payment" && (
-							<Button
-								onClick={onClose}
-								className="px-6 h-12 font-medium text-gray-700 rounded-xl border border-gray-200 transition-colors hover:bg-gray-50"
-							>
-								{getTranslation(t, "events.cancel", "Cancel")}
-							</Button>
-						)}
+							{step === "payment" && (
+								<Button
+									onClick={onClose}
+									className="px-6 h-12 font-medium text-gray-700 rounded-xl border border-gray-200 transition-colors hover:bg-gray-50"
+								>
+									{getTranslation(t, "events.cancel", "Cancel")}
+								</Button>
+							)}
 
-						{step === "reservation" && (
-							<Button
-								onClick={onClose}
-								className="px-6 h-12 font-medium text-gray-700 rounded-xl border border-gray-200 transition-colors hover:bg-gray-50"
-							>
-								{getTranslation(t, "events.close", "Close")}
-							</Button>
-						)}
+							{step === "reservation" && (
+								<Button
+									onClick={onClose}
+									className="px-6 h-12 font-medium text-gray-700 rounded-xl border border-gray-200 transition-colors hover:bg-gray-50"
+								>
+									{getTranslation(t, "events.close", "Close")}
+								</Button>
+							)}
 
-						{step === "confirmation" && (
-							<Button
-								onClick={onClose}
-								className="px-6 h-12 font-medium text-gray-700 rounded-xl border border-gray-200 transition-colors hover:bg-gray-50"
-							>
-								{getTranslation(t, "events.close", "Close")}
-							</Button>
-						)}
+							{step === "confirmation" && (
+								<Button
+									onClick={onClose}
+									className="px-6 h-12 font-medium text-gray-700 rounded-xl border border-gray-200 transition-colors hover:bg-gray-50"
+								>
+									{getTranslation(t, "events.close", "Close")}
+								</Button>
+							)}
 						</div>
 					</div>
 				</Dialog.Content>
 			</Dialog.Portal>
-			
+
 			{/* New Payment Modal */}
 			<PaymentModal
 				isOpen={isPaymentModalOpen}

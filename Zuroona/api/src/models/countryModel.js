@@ -22,7 +22,7 @@ const CountrySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Index for faster queries
-CountrySchema.index({ code: 1 });
+// CountrySchema.index({ code: 1 }); // Removed to avoid duplicate index warning (defined in schema)
 CountrySchema.index({ 'translations.locale': 1 });
 
 const Country = mongoose.model('country', CountrySchema);

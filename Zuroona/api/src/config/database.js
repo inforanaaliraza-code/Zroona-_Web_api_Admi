@@ -8,31 +8,31 @@ let isReconnecting = false;
 const ensureConnection = async () => {
 	const state = mongoose.connection.readyState;
 	// 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
-	
+
 	if (state === 1) {
 		// Already connected
 		return true;
 	}
-	
+
 	if (state === 2) {
 		// Currently connecting, wait for it
 		return new Promise((resolve, reject) => {
 			const timeout = setTimeout(() => {
 				reject(new Error("Connection timeout while waiting for MongoDB"));
 			}, 10000); // 10 second timeout
-			
+
 			mongoose.connection.once("connected", () => {
 				clearTimeout(timeout);
 				resolve(true);
 			});
-			
+
 			mongoose.connection.once("error", (err) => {
 				clearTimeout(timeout);
 				reject(err);
 			});
 		});
 	}
-	
+
 	// Not connected, try to reconnect
 	if (!isReconnecting) {
 		isReconnecting = true;
@@ -45,7 +45,7 @@ const ensureConnection = async () => {
 			throw error;
 		}
 	}
-	
+
 	// Already reconnecting, wait for it
 	return new Promise((resolve, reject) => {
 		const checkInterval = setInterval(() => {
@@ -57,7 +57,7 @@ const ensureConnection = async () => {
 				reject(new Error("Reconnection failed"));
 			}
 		}, 500);
-		
+
 		setTimeout(() => {
 			clearInterval(checkInterval);
 			reject(new Error("Reconnection timeout"));
@@ -66,7 +66,15 @@ const ensureConnection = async () => {
 };
 
 const connectWithRetry = async (retries = 5, interval = 5000) => {
-	const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI || "mongodb+srv://aditya:1234@cluster0.jw8wy.mongodb.net/jeena";
+	const preferFallback = process.env.MONGO_PREFER_FALLBACK === 'true';
+	const fallbackURI = process.env.MONGO_FALLBACK;
+
+	let mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI || "mongodb+srv://aditya:1234@cluster0.jw8wy.mongodb.net/jeena";
+
+	if (preferFallback && fallbackURI) {
+		console.log(`Using fallback MongoDB URI: ${fallbackURI}`);
+		mongoURI = fallbackURI;
+	}
 
 	const options = {
 		serverSelectionTimeoutMS: 15000,
@@ -143,7 +151,7 @@ const connectWithRetry = async (retries = 5, interval = 5000) => {
 			if (mongoose.connection.readyState === 1) {
 				return;
 			}
-			
+
 			await mongoose.connect(mongoURI, options);
 			return;
 		} catch (error) {

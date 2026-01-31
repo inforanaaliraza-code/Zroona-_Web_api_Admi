@@ -46,7 +46,7 @@ export default function PaymentModal({
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const { selectedMethod, isProcessing } = useSelector((state) => state.paymentMethod);
-  
+
   const [showApplePay, setShowApplePay] = useState(false);
   const moyasarFormRef = useRef(null);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -86,15 +86,9 @@ export default function PaymentModal({
         return;
       }
 
-      // Clear previous form
-      if (moyasarFormRef.current && moyasarFormRef.current.parentNode) {
-        try {
-          while (moyasarFormRef.current.firstChild) {
-            moyasarFormRef.current.removeChild(moyasarFormRef.current.firstChild);
-          }
-        } catch (error) {
-          moyasarFormRef.current.textContent = "";
-        }
+      // Clear previous form safely
+      if (moyasarFormRef.current) {
+        moyasarFormRef.current.innerHTML = "";
       }
 
       if (!totalAmount || totalAmount <= 0) {
@@ -239,21 +233,14 @@ export default function PaymentModal({
 
     return () => {
       clearTimeout(timeoutId);
-      if (moyasarFormRef.current) {
-        try {
-          while (moyasarFormRef.current.firstChild) {
-            moyasarFormRef.current.removeChild(moyasarFormRef.current.firstChild);
-          }
-        } catch (error) {
-          moyasarFormRef.current.textContent = "";
-        }
-      }
+      // No manual DOM cleanup needed here - React unmounts the node automatically.
+      // Trying to manually modify DOM during unmount can cause "NotFoundError: Failed to execute 'removeChild'" conflicts.
     };
   }, [isOpen, selectedMethod, initializeMoyasarForm, t]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto z-[1100] bg-white/95 backdrop-blur-xl border border-white/20 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <Icon icon="lucide:credit-card" className="w-6 h-6 text-[#a797cc]" />
@@ -266,7 +253,7 @@ export default function PaymentModal({
 
         <div className="space-y-6 py-4">
           {/* Payment Summary Card */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#a797cc]/10 via-purple-50/30 to-[#8ba179]/10 p-6 border border-[#a797cc]/20">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#a797cc]/10 via-purple-50/50 to-[#8ba179]/10 p-6 border border-[#a797cc]/20 shadow-sm backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-gray-600 mb-2">
@@ -304,7 +291,7 @@ export default function PaymentModal({
             <h3 className="text-lg font-bold text-gray-900">
               {getTranslation(t, "events.selectPaymentMethod", "Select Payment Method")}
             </h3>
-            
+
             <div className="grid gap-4">
               {/* Apple Pay Option (Mac only) */}
               {showApplePay && (
@@ -314,24 +301,21 @@ export default function PaymentModal({
                       <button
                         onClick={() => handleMethodSelect('applepay')}
                         disabled={isProcessing}
-                        className={`relative w-full p-6 rounded-2xl border-2 transition-all duration-300 ${
-                          selectedMethod === 'applepay'
-                            ? 'border-[#a797cc] bg-[#a797cc]/5 shadow-lg'
-                            : 'border-gray-200 bg-white hover:border-[#a797cc]/50 hover:bg-gray-50'
-                        } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`relative w-full p-6 rounded-2xl border-2 transition-all duration-300 ${selectedMethod === 'applepay'
+                          ? 'border-[#a797cc] bg-[#a797cc]/5 shadow-lg'
+                          : 'border-gray-200 bg-white hover:border-[#a797cc]/50 hover:bg-gray-50'
+                          } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                              selectedMethod === 'applepay'
-                                ? 'bg-gradient-to-br from-[#a797cc] to-purple-600'
-                                : 'bg-gray-100'
-                            }`}>
-                              <Icon 
-                                icon="lucide:smartphone" 
-                                className={`w-7 h-7 ${
-                                  selectedMethod === 'applepay' ? 'text-white' : 'text-gray-600'
-                                }`}
+                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${selectedMethod === 'applepay'
+                              ? 'bg-gradient-to-br from-[#a797cc] to-purple-600'
+                              : 'bg-gray-100'
+                              }`}>
+                              <Icon
+                                icon="lucide:smartphone"
+                                className={`w-7 h-7 ${selectedMethod === 'applepay' ? 'text-white' : 'text-gray-600'
+                                  }`}
                               />
                             </div>
                             <div className="text-left">
@@ -361,24 +345,21 @@ export default function PaymentModal({
                     <button
                       onClick={() => handleMethodSelect('card')}
                       disabled={isProcessing}
-                      className={`relative w-full p-6 rounded-2xl border-2 transition-all duration-300 ${
-                        selectedMethod === 'card'
-                          ? 'border-[#a797cc] bg-[#a797cc]/5 shadow-lg'
-                          : 'border-gray-200 bg-white hover:border-[#a797cc]/50 hover:bg-gray-50'
-                      } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      className={`relative w-full p-6 rounded-2xl border-2 transition-all duration-300 ${selectedMethod === 'card'
+                        ? 'border-[#a797cc] bg-[#a797cc]/5 shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-[#a797cc]/50 hover:bg-gray-50'
+                        } ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-                            selectedMethod === 'card'
-                              ? 'bg-gradient-to-br from-[#a797cc] to-purple-600'
-                              : 'bg-gray-100'
-                          }`}>
-                            <Icon 
-                              icon="lucide:credit-card" 
-                              className={`w-7 h-7 ${
-                                selectedMethod === 'card' ? 'text-white' : 'text-gray-600'
-                              }`}
+                          <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${selectedMethod === 'card'
+                            ? 'bg-gradient-to-br from-[#a797cc] to-purple-600'
+                            : 'bg-gray-100'
+                            }`}>
+                            <Icon
+                              icon="lucide:credit-card"
+                              className={`w-7 h-7 ${selectedMethod === 'card' ? 'text-white' : 'text-gray-600'
+                                }`}
                             />
                           </div>
                           <div className="text-left">
