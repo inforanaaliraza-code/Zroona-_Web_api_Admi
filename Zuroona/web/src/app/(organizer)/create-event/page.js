@@ -1231,7 +1231,7 @@ export default function CreateEventPage() {
                                         <div>
                                             <Label className="text-xs font-semibold mb-1.5 block flex items-center gap-2">
                                                 <Icon icon="lucide:thumbs-up" className="w-4 h-4 text-green-600" />
-                                                Do's Instructions (Optional)
+                                                Do&apos;s Instructions (Optional)
                                             </Label>
                                             <textarea
                                                 placeholder="Add things guests SHOULD do or follow (e.g., Wear comfortable shoes, Bring water bottle, etc.)"
@@ -1248,7 +1248,7 @@ export default function CreateEventPage() {
                                         <div>
                                             <Label className="text-xs font-semibold mb-1.5 block flex items-center gap-2">
                                                 <Icon icon="lucide:thumbs-down" className="w-4 h-4 text-red-600" />
-                                                Don'ts Instructions (Optional)
+                                                Don&apos;ts Instructions (Optional)
                                             </Label>
                                             <textarea
                                                 placeholder="Add things guests SHOULD NOT do (e.g., Do not wear high heels, Do not bring pets, etc.)"
