@@ -219,14 +219,14 @@ const DaftraService = {
 			// Ensure client exists
 			const client = await this.createOrGetClient(invoiceData.client, subdomain, apiKey, clientSecret);
 
-			// Try invoice payload with Invoice wrapper and client_id inside
+			// Try invoice payload with correct InvoiceItem structure
 			const invoicePayload = {
 				Invoice: {
 					client_id: client.id,
 					date: invoiceData.date || new Date().toISOString().split('T')[0],
 					currency_code: 'SAR',
 					notes: 'Test invoice from Zuroona',
-					invoice_items: [{
+					InvoiceItem: [{
 						product_name: 'Test Event Booking',
 						description: 'Test event booking for integration testing',
 						quantity: 2,

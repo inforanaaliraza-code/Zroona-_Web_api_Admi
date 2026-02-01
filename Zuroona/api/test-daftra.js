@@ -12,14 +12,14 @@
 
 require('dotenv').config();
 const axios = require('axios');
-const DaftraService = require('./src/helpers/daftraService.js');
+const daftraService = require('./src/services/daftraService.js');
 
 async function testDaftraIntegration() {
     console.log('🧪 Testing Daftra Integration...\n');
 
     try {
         // Test data
-        const testClient = {
+        let testClient = {
             first_name: 'Test',
             last_name: 'User',
             email: `test${Date.now()}@zuroona.com`,
@@ -30,7 +30,7 @@ async function testDaftraIntegration() {
             currency: 'SAR'
         };
 
-        const testInvoice = {
+        let testInvoice = {
             client: testClient,
             date: new Date().toISOString().split('T')[0],
             currency: 'SAR',
@@ -47,40 +47,29 @@ async function testDaftraIntegration() {
             }]
         };
 
-        console.log('1️⃣ Testing OAuth2 Authentication...');
-        try {
-            // Test OAuth2 authentication by getting access token
-            const token = await DaftraService.getOAuthToken(
-                process.env.DAFTRA_SUBDOMAIN,
-                process.env.DAFTRA_API_KEY
-            );
-            console.log('✅ OAuth2 authentication successful\n');
-        } catch (authError) {
-            console.log('❌ OAuth2 authentication failed:', authError.message);
-            if (authError.response) {
-                console.log('Response Status:', authError.response.status);
-                console.log('Response Data:', JSON.stringify(authError.response.data, null, 2));
-            }
-            throw authError;
-        }
-
-        console.log('2️⃣ Testing Client Creation...');
-        const client = await DaftraService.createOrGetClient(
-            testClient,
-            process.env.DAFTRA_SUBDOMAIN,
-            process.env.DAFTRA_API_KEY,
-            process.env.DAFTRA_CLIENT_SECRET
-        );
+        console.log('1️⃣ Testing Client Creation...');
+        const client = await daftraService.createOrGetClient(testClient);
         console.log(`✅ Client created/found with ID: ${client.id}\n`);
 
-        console.log('3️⃣ Testing Invoice Creation...');
+        console.log('2️⃣ Testing Invoice Creation...');
+        testInvoice = {
+            client_id: client.id,
+            date: new Date().toISOString().split('T')[0],
+            currency: 'SAR',
+            discount: 0,
+            deposit: 0,
+            notes: 'Test invoice from Zuroona integration',
+            items: [{
+                name: 'Test Event Booking',
+                description: 'Test event booking for integration testing',
+                quantity: 2,
+                unit_price: 100,
+                discount: 0,
+                tax_rate: 15 // 15% VAT for Saudi Arabia
+            }]
+        };
         console.log('Invoice payload:', JSON.stringify(testInvoice, null, 2));
-        const invoice = await DaftraService.createInvoice(
-            testInvoice,
-            process.env.DAFTRA_SUBDOMAIN,
-            process.env.DAFTRA_API_KEY,
-            process.env.DAFTRA_CLIENT_SECRET
-        );
+        const invoice = await daftraService.createInvoice(testInvoice);
         console.log(`✅ Invoice created successfully!`);
         console.log(`   Invoice ID: ${invoice.id}`);
         console.log(`   Invoice Number: ${invoice.number}`);

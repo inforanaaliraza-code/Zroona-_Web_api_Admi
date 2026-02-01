@@ -7,63 +7,8 @@ class DaftraService {
         this.clientSecret = process.env.DAFTRA_CLIENT_SECRET;
         this.subdomain = process.env.DAFTRA_SUBDOMAIN;
         this.baseUrl = process.env.DAFTRA_BASE_URL?.replace('{{subdomain}}', this.subdomain);
-        this.oauthUrl = process.env.DAFTRA_OAUTH_URL?.replace('{{subdomain}}', this.subdomain);
         this.invoiceUrl = process.env.DAFTRA_INVOICE_URL?.replace('{{subdomain}}', this.subdomain);
         this.clientUrl = process.env.DAFTRA_CLIENT_URL?.replace('{{subdomain}}', this.subdomain);
-
-        this.accessToken = null;
-        this.tokenExpiry = null;
-    }
-
-    /**
-     * Generate OAuth2 access token
-     */
-    async generateAccessToken() {
-        try {
-            if (!this.apiKey || !this.clientSecret || !this.subdomain) {
-                throw new Error('DAFTRA_API_KEY, DAFTRA_CLIENT_SECRET, and DAFTRA_SUBDOMAIN must be configured in .env');
-            }
-
-            const formData = new FormData();
-            formData.append('grant_type', 'client_credentials');
-            formData.append('client_id', this.apiKey);
-            formData.append('client_secret', this.clientSecret);
-            formData.append('scope', 'all');
-
-            const response = await axios.post(this.oauthUrl, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (response.data && response.data.access_token) {
-                this.accessToken = response.data.access_token;
-                // Set token expiry (typically 1 hour, but adjust based on response)
-                this.tokenExpiry = Date.now() + (response.data.expires_in || 3600) * 1000;
-
-                logger.info('[DAFTRA] Access token generated successfully');
-                return this.accessToken;
-            } else {
-                throw new Error('Invalid response from Daftra OAuth endpoint');
-            }
-        } catch (error) {
-            logger.error('[DAFTRA] Error generating access token:', error.message);
-            if (error.response) {
-                logger.error('[DAFTRA] Response data:', error.response.data);
-            }
-            throw error;
-        }
-    }
-
-    /**
-     * Get valid access token (generate if expired or missing)
-     */
-    async getAccessToken() {
-        if (!this.accessToken || !this.tokenExpiry || Date.now() >= this.tokenExpiry) {
-            await this.generateAccessToken();
-        }
-        return this.accessToken;
     }
 
     /**
@@ -71,15 +16,13 @@ class DaftraService {
      */
     async makeRequest(method, url, data = null) {
         try {
-            const token = await this.getAccessToken();
-
             const config = {
                 method: method,
                 url: url,
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'apikey': this.apiKey
                 }
             };
 
@@ -108,17 +51,7 @@ class DaftraService {
      */
     async createOrGetClient(clientData) {
         try {
-            // First, try to find existing client by email
-            const existingClients = await this.makeRequest('GET', `${this.clientUrl}.json`, {
-                email: clientData.email
-            });
-
-            if (existingClients && existingClients.data && existingClients.data.length > 0) {
-                logger.info('[DAFTRA] Found existing client:', existingClients.data[0].id);
-                return existingClients.data[0];
-            }
-
-            // Create new client
+            // Always create new client for testing
             const clientPayload = {
                 Client: {
                     business_name: clientData.business_name || `${clientData.first_name} ${clientData.last_name}`,
@@ -153,27 +86,29 @@ class DaftraService {
      */
     async createInvoice(invoiceData) {
         try {
-            // Ensure client exists
-            const client = await this.createOrGetClient(invoiceData.client);
+            let clientId = invoiceData.client_id;
+            if (!clientId && invoiceData.client) {
+                // Create client if not provided
+                const client = await this.createOrGetClient(invoiceData.client);
+                clientId = client.id;
+            }
 
             const invoicePayload = {
                 Invoice: {
-                    client_id: client.id,
-                    date: invoiceData.date || new Date().toISOString().split('T')[0],
+                    client_id: parseInt(clientId),
+                    date: "2024-02-01",
                     type: invoiceData.type || 1, // 1 = Invoice, 2 = Quote, etc.
                     currency_code: invoiceData.currency || 'SAR',
                     discount: invoiceData.discount || 0,
                     deposit: invoiceData.deposit || 0,
                     notes: invoiceData.notes || '',
-                    InvoiceItems: invoiceData.items.map(item => ({
-                        InvoiceItem: {
-                            product_name: item.name,
-                            description: item.description || '',
-                            quantity: item.quantity,
-                            unit_price: item.unit_price,
-                            discount: item.discount || 0,
-                            tax1_rate: item.tax_rate || 0
-                        }
+                    InvoiceItem: invoiceData.items.map(item => ({
+                        product_name: item.name,
+                        description: item.description || '',
+                        quantity: item.quantity,
+                        unit_price: item.unit_price,
+                        discount: item.discount || 0,
+                        tax1_rate: item.tax_rate || 0
                     }))
                 }
             };
