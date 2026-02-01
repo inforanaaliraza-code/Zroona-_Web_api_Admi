@@ -883,6 +883,10 @@ const UserController = {
 			
 			console.log(`[PHONE:LOGIN] Formatted phone for OTP: ${fullPhoneNumber} (original: "${phoneStr}", length: ${phoneStr.length}, country: ${country_code})`);
 
+			// Ensure MongoDB connection before database operations
+			const { ensureConnection } = require("../config/database");
+			await ensureConnection();
+
 			// Check if user exists with this phone number
 			const User = require("../models/userModel");
 			const Organizer = require("../models/organizerModel");
@@ -3813,10 +3817,11 @@ const UserController = {
 			if (!invoiceGenerated) {
 				const daftraSubdomain = process.env.DAFTRA_SUBDOMAIN;
 				const daftraApiKey = process.env.DAFTRA_API_KEY;
+				const daftraClientSecret = process.env.DAFTRA_CLIENT_SECRET;
 				
-				if (daftraSubdomain && daftraApiKey && daftraSubdomain.trim() !== "" && daftraApiKey.trim() !== "") {
+				if (daftraSubdomain && daftraApiKey && daftraClientSecret && daftraSubdomain.trim() !== "" && daftraApiKey.trim() !== "" && daftraClientSecret.trim() !== "") {
 					try {
-						console.log("[RECEIPT] Attempting to generate receipt via Daftra Receipts API");
+						console.log("[RECEIPT] Attempting to generate receipt via Daftra API");
 						const daftraResponse = await DaftraService.generateEventReceipt(
 						bookingDetails,
 						event,
@@ -3824,7 +3829,8 @@ const UserController = {
 						organizer,
 						{
 							subdomain: daftraSubdomain,
-							apiKey: daftraApiKey
+							apiKey: daftraApiKey,
+							clientSecret: daftraClientSecret
 						}
 					);
 
