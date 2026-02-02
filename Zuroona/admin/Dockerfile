@@ -9,8 +9,7 @@ RUN apk add --no-cache libc6-compat python3 make g++
 COPY package.json package-lock.json ./
 
 # Install dependencies
-# Use npm install with legacy peer deps to handle lock file mismatches
-RUN npm install --legacy-peer-deps
+RUN npm ci
 
 # Stage 2: Builder
 FROM node:18-alpine AS builder
@@ -33,7 +32,7 @@ WORKDIR /app
 # Set environment variables
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+ENV PORT=3002
 ENV HOSTNAME=0.0.0.0
 
 # Add non-root user for security
@@ -42,17 +41,15 @@ RUN addgroup --system --gid 1001 nodejs && \
     chown -R nextjs:nodejs /app
 
 # Copy necessary files from builder
-# Next.js standalone output includes server.js automatically in the standalone directory
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
 
 # Switch to non-root user
 USER nextjs
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3002
 
 # Start the application
-# Next.js standalone creates server.js in the root of standalone output
 CMD ["node", "server.js"]

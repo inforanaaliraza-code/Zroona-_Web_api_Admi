@@ -92,6 +92,9 @@ const nextConfig = {
       },
     ],
   },
+  
+  // Output configuration for Docker
+  output: 'standalone',
 };
 
 export default nextConfig;

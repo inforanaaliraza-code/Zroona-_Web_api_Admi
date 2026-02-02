@@ -1,0 +1,60 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies
+node_modules
+**/node_modules
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+**/logs/
+
+# Build artifacts
+.next
+**/.next
+out
+dist
+build
+
+# Documentation
+*.md
+README*
+LICENSE
+docs/
+
+# Test files
+coverage/
+.nyc_output
+*.test.js
+**/tests/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Project specific
+ecosystem.config.js
+nginx.conf

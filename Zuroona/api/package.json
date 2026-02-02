@@ -8,6 +8,7 @@
     "dev": "./kill-port.sh 3000 && node ./node_modules/nodemon/bin/nodemon.js src/app.js",
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
     "build": "npm run lint",
+    "type-check": "node --check src/app.js && echo 'Type check passed'",
     "seed:locations": "node src/scripts/seedCountriesAndCities.js",
     "seed:database": "node src/scripts/seedDatabase.js",
     "update:schema": "node src/scripts/updateDatabaseSchema.js",
