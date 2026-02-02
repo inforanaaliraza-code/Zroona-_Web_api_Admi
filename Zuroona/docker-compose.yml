@@ -32,6 +32,7 @@ services:
       - "${API_PORT:-3434}:${API_PORT:-3434}"
     environment:
       - NODE_ENV=production
+      - CORS_ALLOW_ALL=true
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017/jeena}
       - PORT=${API_PORT:-3434}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}

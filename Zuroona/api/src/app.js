@@ -47,10 +47,19 @@ const allowedOrigins = [
 	// Development URLs
 	"http://localhost:3000",
 	"http://localhost:3001",
+
+	"http://localhost:3002", // Admin panel
 	"http://localhost:3434",
+
 	"http://127.0.0.1:3000",
 	"http://127.0.0.1:3001",
+
+	"http://127.0.0.1:3002", // Admin panel
 	"http://127.0.0.1:3434",
+	// Docker service URLs (for internal communication)
+	"http://web:3000",
+	"http://admin:3002",
+	"http://api:3434",
 	// Production URLs
 	"https://zuroona.sa",
 	"https://www.zuroona.sa",
@@ -65,12 +74,12 @@ const allowedOrigins = [
 const corsOptions = {
 	origin: function (origin, callback) {
 		// Allow requests with no origin (like mobile apps, Postman, or curl)
-		if (!origin) {
+		if (!origin) {mra
 			return callback(null, true);
 		}
 
-		// Allow all origins in development (not production)
-		if (process.env.NODE_ENV !== 'production') {
+		// Allow all origins in development OR if CORS_ALLOW_ALL is set (for Docker testing)
+		if (process.env.NODE_ENV !== 'production' || process.env.CORS_ALLOW_ALL === 'true') {
 			return callback(null, true);
 		}
 
