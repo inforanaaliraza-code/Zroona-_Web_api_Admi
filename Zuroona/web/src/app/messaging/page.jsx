@@ -256,7 +256,7 @@ export default function MessagingPage() {
       }
 
       if (!isGroupChat && !receiverId) {
-        toast.error(t("messaging.failedToSend") || "Failed to send message: Missing conversation data");
+        toast.error(t("messaging.failedToSend") || t("common.errorOccurred") || "Failed to send message: Missing conversation data");
         return;
       }
 
@@ -745,7 +745,7 @@ export default function MessagingPage() {
                                   {selectedConversation.group_name || `${selectedConversation.event_id?.event_name} - Group Chat`}
                                 </h2>
                                 {selectedConversation.status === 'closed' && (
-                                  <Icon icon="lucide:lock" className="h-4 w-4 text-gray-400" title="Group chat closed" />
+                                  <Icon icon="lucide:lock" className="h-4 w-4 text-gray-400" title={t("messaging.groupChatClosed") || "Group chat closed"} />
                                 )}
                               </div>
                               <p className="text-xs text-gray-500">
@@ -1131,7 +1131,7 @@ export default function MessagingPage() {
                           <label
                             htmlFor="file-input"
                             className="p-2 text-gray-600 hover:text-[#a797cc] cursor-pointer transition-colors"
-                            title="Attach file"
+                            title={t("messaging.attachFile") || "Attach file"}
                           >
                             <Icon icon="lucide:paperclip" className="h-5 w-5" />
                           </label>

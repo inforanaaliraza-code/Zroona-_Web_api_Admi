@@ -25,7 +25,7 @@ export default function BookingSection({
           </span>
         </div>
         <span className="text-sm font-medium text-gray-600">
-          {t("Per Person")}
+          {t("eventsMain.perPerson") || "per person"}
         </span>
       </div>
 

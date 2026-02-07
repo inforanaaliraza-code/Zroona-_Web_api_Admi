@@ -115,7 +115,6 @@
     "tab32": "Meet-ly groups meet locally, in person and online. We'll connect you with people in your area, and more can join you online.",
     "tab33": "City",
     "tab34": "Enter a location",
-    "city": "City",
     "tab35": "What will your group be about?",
     "tab36": "Select at least 3 topics to help us promote your group to the right place.",
     "tab37": "Search",
@@ -166,7 +165,6 @@
     "uploaded": "Uploaded",
     "basicInfoFromStep1": "Basic Information (from Step 1)",
     "personalDetails": "Personal Details",
-    "selectCity": "Select City",
     "countries": {
       "SA": "Saudi Arabia",
       "AE": "United Arab Emirates",
@@ -293,12 +291,10 @@
     "whatNotToDo": "What Not to Do",
     "organizer": "Organizer",
     "reviews": "Reviews",
-    "bookNow": "Book Now",
     "secureBooking": "Secure Booking",
     "eventType": "Event Type",
     "eventDetails": "Event Details",
     "imageGallery": "Image Gallery",
-    "perPerson": "per person",
     "previousImage": "Previous Image",
     "nextImage": "Next Image",
     "viewAllImages": "View All Images",
@@ -375,7 +371,6 @@
     "paid": "Paid",
     "bookNow": "Book Now & Pay",
     "clickToPay": "Click to proceed with secure payment",
-    "waitingForApproval": "Waiting for Host Approval",
     "approvalRequired": "Payment will be available after host approves your booking",
     "paymentProcessed": "Payment processed successfully",
     "paymentProcessingFailed": "Payment processing failed",
@@ -549,7 +544,14 @@
     "organizeUnique": "Organize unique experiences that showcase Saudi culture and traditions",
     "buildMeaningful": "Build meaningful connections and grow your community through shared experiences",
     "toBecomeLeading": "To become the leading platform for authentic cultural experiences in Saudi Arabia, connecting millions of people through meaningful interactions and shared moments.",
-    "processingGeneral": "Processing..."
+    "processingGeneral": "Processing...",
+    "perPerson": "per person",
+    "readyToPay": "Ready to Pay",
+    "clickToProceed": "Click the button below to proceed with payment",
+    "exceedsTotalSeats": "Cannot book more than {{max}} seats",
+    "paymentProcessingError": "Error processing payment. Please contact support.",
+    "invalidInvoiceUrl": "Invalid invoice URL or filename",
+    "errorOpeningInvoice": "Error opening invoice"
   },
   "interview": {
     "tab1": "Interview Questions",
@@ -611,14 +613,12 @@
     "missingInfoResend": "Missing information to resend OTP",
     "missingInfoVerify": "Missing information to verify OTP",
     "otpResentSuccess": "OTP resent successfully!",
-    "otpResendFailed": "Failed to resend OTP.",
     "otpVerifyFailed": "Failed to verify OTP. Please try again.",
     "invalidOTP": "Invalid OTP. Please try again.",
     "otpExpired": "OTP has expired. Please request a new one.",
     "otpTimer": "Resend in",
     "emailTimer": "Resend in",
     "emailLinkExpired": "Verification link has expired. Please request a new one.",
-    "selectDateOfBirth": "Select your date of birth",
     "dateFormatHint": "Format: DD/MM/YYYY (e.g., 25/12/1990)",
     "dobInvalidFormat": "Date must be in DD/MM/YYYY format",
     "accountVerifiedLogin": "Account verified successfully! You can now login.",
@@ -665,7 +665,6 @@
     "signupTime10min": "10-15 minutes signup",
     "requiresApproval": "Requires Approval",
     "alreadyHaveAccount": "Already have an account?",
-    "login": "Login",
     "needHelp": "Need help choosing?",
     "roleHelpText": "Choose 'Guest' if you want to attend events. Choose 'Host' if you want to create and manage your own events. You can always upgrade to a Host account later!",
     "createGuestAccount": "Create Guest Account",
@@ -681,6 +680,7 @@
     "lastNamePlaceholder": "Enter your last name",
     "phoneRequired": "Phone number is required",
     "phoneInvalid": "Phone number must contain only digits",
+    "phoneMinLength": "Phone number must be at least 9 digits",
     "countryCodeRequired": "Country code is required",
     "emailInvalid": "Invalid email address",
     "emailRequired": "Email is required",
@@ -756,7 +756,19 @@
     "tryAgain": "Try Again",
     "developmentInProgress": "Development in Progress",
     "hostRegistrationNote": "The complete host registration form with all 4 steps, email verification, and admin approval system is currently being finalized. For now, you can create a guest account to explore events.",
-    "verificationSuccessEmail": "Email verified successfully! You can now login to your account."
+    "verificationSuccessEmail": "Email verified successfully! You can now login to your account.",
+    "apiConnectionError": "Cannot connect to API server. Please make sure the server is running on port 3434.\n\nTo start: cd api && npm run dev",
+    "loginFailedUserNotFound": "Login failed. User data not found.",
+    "privacyRequired": "You must accept the privacy policy",
+    "termsRequired": "You must accept the terms and conditions",
+    "verificationEmailResentSuccess": "Verification email resent successfully!",
+    "failedToResendVerificationEmail": "Failed to resend verification email",
+    "failedToResendVerificationEmailTryAgain": "Failed to resend verification email. Please try again.",
+    "otpResendFailed": "Failed to resend OTP.",
+    "otpResendFailedTryAgain": "Failed to resend OTP. Please try again.",
+    "failedToChangeLanguage": "Failed to change language",
+    "commercialLicense": "Commercial License: 1009107101, Oasis Exploration Company Limited.",
+    "commercialLicenseAr": "١٠٠٩١٠٧١٠١ شركة واحة الاستكشاف المحدودة"
   },
   "Nationality": "Nationality",
   "Enter your nationality": "Enter your nationality",
@@ -843,6 +855,28 @@
     "selectedDate": "Selected date",
     "tab55": "Event Types",
     "tab56": "Event Categories",
+    "thisFieldRequired": "This field is required",
+    "pleaseSelectAtLeastOneCategory": "Please select at least one category",
+    "eventPriceMin1SAR": "Event price must be at least 1 SAR. Events with price less than 1 SAR cannot be created.",
+    "pleaseUploadAtLeastOneImage": "Please upload at least one event image",
+    "imageUploadedSuccess": "Image uploaded successfully",
+    "uploadFailed": "Upload failed",
+    "pleaseSelectCategory": "Please select a category",
+    "cannotSelectPastTime": "Cannot select past time! Please select a future time.",
+    "endTimeCannotBeBeforeStart": "End time cannot be before or equal to start time! Please select a later time.",
+    "eventCapacityAtLeast1": "Event capacity must be at least 1",
+    "eventCapacityCannotExceed": "Event capacity cannot exceed {{max}}",
+    "dosInstructionsMaxChars": "Do's instructions cannot exceed 500 characters",
+    "dontsInstructionsMaxChars": "Don'ts instructions cannot exceed 500 characters",
+    "enterEventTitle": "Enter Event Title",
+    "describeEventDetail": "Describe your event in detail...",
+    "enterAddressManually": "Enter address manually or select from map",
+    "orSearchOnMap": "Or search on map...",
+    "enterAmount": "Enter Amount",
+    "zuroonaLogo": "Zuroona Logo",
+    "profilePicture": "Profile Picture",
+    "decorativeArrow": "Decorative arrow",
+    "login": "Login",
     "eventTypes": {
       "conference": "Conference",
       "workshop": "Workshop",
@@ -879,6 +913,7 @@
     "tab8": "Pay Now",
     "tab9": "View Details",
     "tab10": "Book Now",
+    "tab11": "My Events",
     "tab13": "Approved",
     "tab14": "Rejected",
     "tab15": "Create Event",
@@ -894,10 +929,13 @@
     "pending": "Pending",
     "rejected": "Rejected",
     "completed": "Completed",
+    "searchEvents": "Search for events",
     "manageYourEvents": "Manage and organize your events",
+    "manageBookings": "Manage all bookings for your events",
     "noEventsFound": "No events found",
     "createFirstEvent": "Create your first event to get started and share amazing experiences with others",
     "noEventsForFilter": "No events found for this filter",
+    "perPerson": "per person",
     "totalReviews": "Total Reviews",
     "ratingBreakdown": "Rating Breakdown",
     "customerFeedback": "Customer Feedback",
@@ -1044,7 +1082,15 @@
     "capacityInfoDesc": "Event capacity is now managed individually for each event you create. You can set specific capacity limits when creating or editing events.",
     "deactivateSuccess": "Account deactivated successfully",
     "confirmDeactivate": "Are you sure you want to deactivate your account?",
-    "deactivateWarning": "This action will disable all your events and prevent you from creating new ones. You can reactivate your account later by contacting support."
+    "deactivateWarning": "This action will disable all your events and prevent you from creating new ones. You can reactivate your account later by contacting support.",
+    "maxCapacityMin": "Max event capacity must be at least 1",
+    "maxCapacityMax": "Max event capacity cannot exceed 1000",
+    "maxCapacityRequired": "Max event capacity is required",
+    "maxCapacityInteger": "Max event capacity must be a whole number",
+    "maxCapacityPositive": "Max event capacity must be a positive number",
+    "failedToSave": "Failed to save settings",
+    "failedToDeactivate": "Failed to deactivate account",
+    "deactivateError": "An error occurred while deactivating your account"
   },
   "breadcrumb": {
     "tab1": "Home",
@@ -1094,7 +1140,15 @@
     "tab5": "Resend Code",
     "tab6": "Verify",
     "tab7": "OTP is required",
-    "tab8": "OTP must be 6 digits"
+    "tab8": "OTP must be 6 digits",
+    "sendingOTP": "Sending OTP...",
+    "sendOTP": "Send OTP",
+    "verifying": "Verifying...",
+    "otpSentSuccess": "OTP sent successfully!",
+    "failedToSendOTP": "Failed to send OTP",
+    "invalidOTP": "Invalid OTP. Please try again.",
+    "otpResentSuccess": "OTP resent successfully!",
+    "failedToResendOTP": "Failed to resend OTP"
   },
   "Back": "Back",
   "review": {
@@ -1260,7 +1314,9 @@
     "read": "Read",
     "failedToLoad": "Failed to load conversations",
     "failedToLoadMessages": "Failed to load messages",
-    "failedToSend": "Failed to send message"
+    "failedToSend": "Failed to send message",
+    "attachFile": "Attach file",
+    "groupChatClosed": "Group chat closed"
   },
   "common": {
     "loading": "Loading...",
@@ -1273,6 +1329,10 @@
     "view": "View",
     "search": "Search",
     "filter": "Filter",
+    "price": "Price",
+    "currency": "SAR",
+    "clear": "Clear",
+    "perPerson": "per person",
     "export": "Export",
     "import": "Import",
     "print": "Print",
@@ -1310,7 +1370,6 @@
     "showingResults": "Showing {{from}} to {{to}} of {{total}} results",
     "required": "Required",
     "processing": "Processing...",
-    "pleaseWait": "Please wait...",
     "tryAgain": "Try again",
     "refresh": "Refresh",
     "close": "Close",
@@ -1489,5 +1548,81 @@
     "secureNote": "This is an official receipt generated by Zuroona",
     "downloadStarted": "Invoice download started",
     "copiedToClipboard": "Invoice ID copied to clipboard"
+  },
+  "settings": {
+    "title": "Settings",
+    "dangerZone": "Danger Zone",
+    "deactivateAccount": "Deactivate Account",
+    "deactivateMessage": "If you decide to use Zuroona again, you'll need to create a new account"
+  },
+  "withdrawal": {
+    "minimumAmount": "Minimum",
+    "processingTime": "Processing time: 3-5 business days",
+    "important": "Important Information",
+    "transferBank": "Amount will be transferred to your registered bank account",
+    "notification": "You'll receive a notification once processed",
+    "minimumLimitError": "Minimum withdrawal amount is {{amount}} SAR",
+    "maximumLimitError": "Maximum withdrawal amount is {{amount}} SAR",
+    "insufficientFunds": "Insufficient balance. Your available balance is {{balance}} SAR",
+    "withdrawalSuccess": "Withdrawal request submitted successfully",
+    "requestPending": "Your withdrawal request is pending approval"
+  },
+  "event": {
+    "createTitle": "Create Event",
+    "dateSelectedSuccess": "Date selected successfully!",
+    "step2Title": "Images & Location",
+    "step3Title": "Categories & Details",
+    "step4Title": "Do's & Don'ts",
+    "step5Title": "Review & Submit"
+  },
+  "aboutZuroona": "About Zuroona",
+  "logout": {
+    "title": "Logout Confirmation",
+    "description": "Are you sure you want to logout?",
+    "confirm": "Yes, Logout"
+  },
+  "notification": {
+    "title": "Notifications",
+    "date": "Date",
+    "noNotifications": "No notifications"
+  },
+  "analytics": {
+    "title": "Event Analytics",
+    "views": "Views",
+    "bookings": "Bookings",
+    "revenue": "Revenue"
+  },
+  "aboutUs": {
+    "title": "About Us",
+    "description": "Learn more about Zuroona"
+  },
+  "completedEvents": "Completed Events",
+  "payment": {
+    "processed": "Processed",
+    "pending": "Pending"
+  },
+  "refund": {
+    "invalidAuth": "Invalid authorization credentials"
+  },
+  "bookNow": {
+    "title": "Book Now",
+    "selectAttendees": "Select Attendees"
+  },
+  "eventDetail": {
+    "title": "Event Details",
+    "location": "Location",
+    "date": "Date",
+    "time": "Time",
+    "duration": "Duration"
+  },
+  "filter": {
+    "categories": "Categories",
+    "price": "Price",
+    "date": "Date"
+  },
+  "modal": {
+    "close": "Close",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   }
 }

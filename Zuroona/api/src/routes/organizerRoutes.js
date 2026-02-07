@@ -40,10 +40,11 @@ router.get('/event/analytics', AuthenticateUser, AuthenticateOrganizer, organize
 router.patch('/event/booking/update-status', AuthenticateUser, AuthenticateOrganizer, organizerController.changeBookingStatus);
 router.get('/event/review/list', AuthenticateUser, organizerController.reviewList);
 router.get('/earning', AuthenticateUser, AuthenticateOrganizer, organizerController.earningList);
+router.get('/wallet-info', AuthenticateUser, AuthenticateOrganizer, organizerController.getWalletInfo);
 router.put('/deviceToken', AuthenticateUser, AuthenticateOrganizer, commonController.deviceToken);
 router.patch('/paymentStatus', AuthenticateUser ,UserController.updatePaymentStatus);
-router.post('/withdrawal', AuthenticateUser ,organizerController.withdrawal);
-router.get('/withdrawalList', AuthenticateUser ,organizerController.withdrawalList )
+router.post('/withdrawal', AuthenticateUser, AuthenticateOrganizer, organizerController.withdrawal);
+router.get('/withdrawalList', AuthenticateUser, AuthenticateOrganizer, organizerController.withdrawalList )
 
 // Messaging routes for organizers
 router.get('/conversations', AuthenticateUser, AuthenticateOrganizer, messageController.getConversations);

@@ -197,7 +197,7 @@ export default function RefundRequests() {
         [
           refund._id,
           refund.booking_id,
-          refund.user?.email || "N/A",
+          refund.user?.email || (t("eventTypeLegacy.notAvailable") || "N/A"),
           refund.amount,
           `"${(refund.refund_reason || "").replace(/"/g, '""')}"`,
           refund.status === 0
@@ -211,7 +211,7 @@ export default function RefundRequests() {
             : t("common.unknown") || "Unknown",
           refund.createdAt
             ? format(new Date(refund.createdAt), "yyyy-MM-dd")
-            : "N/A",
+            : (t("eventTypeLegacy.notAvailable") || "N/A"),
         ].join(",")
       ),
     ].join("\n");
@@ -323,16 +323,16 @@ export default function RefundRequests() {
                   {refunds.map((refund) => (
                     <tr key={refund._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {refund._id?.slice(-8) || "N/A"}
+                        {refund._id?.slice(-8) || (t("eventTypeLegacy.notAvailable") || "N/A")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {refund.booking_id?.slice(-8) || "N/A"}
+                        {refund.booking_id?.slice(-8) || (t("eventTypeLegacy.notAvailable") || "N/A")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {refund.user?.email || refund.user_id || "N/A"}
+                        {refund.user?.email || refund.user_id || (t("eventTypeLegacy.notAvailable") || "N/A")}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        {refund.amount || 0} {refund.currency || "SAR"}
+                        {refund.amount || 0} {refund.currency || t("common.currency") || "SAR"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                         {refund.refund_reason || t("refund.noReasonProvided")}

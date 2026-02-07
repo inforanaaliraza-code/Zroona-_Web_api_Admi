@@ -62,7 +62,7 @@ const RefundDetailModal = ({ show, onClose, refundDetail, loading }) => {
                     {t("refund.refundId") || "Refund ID"}
                   </p>
                   <p className="text-sm text-gray-900 font-mono break-all">
-                    {refundDetail._id || "N/A"}
+                    {refundDetail._id || (t("eventTypeLegacy.notAvailable") || "N/A")}
                   </p>
                 </div>
 
@@ -72,7 +72,7 @@ const RefundDetailModal = ({ show, onClose, refundDetail, loading }) => {
                     {t("refund.bookingId") || "Booking ID"}
                   </p>
                   <p className="text-sm text-gray-900 font-mono break-all">
-                    {refundDetail.booking_id?._id || refundDetail.booking_id || "N/A"}
+                    {refundDetail.booking_id?._id || refundDetail.booking_id || (t("eventTypeLegacy.notAvailable") || "N/A")}
                   </p>
                 </div>
               </div>
@@ -83,7 +83,7 @@ const RefundDetailModal = ({ show, onClose, refundDetail, loading }) => {
                   {t("refund.amount") || "Amount"}
                 </p>
                 <p className="text-2xl font-bold text-white">
-                  {refundDetail.amount || 0} {refundDetail.currency || "SAR"}
+                  {refundDetail.amount || 0} {refundDetail.currency || t("common.currency") || "SAR"}
                 </p>
               </div>
 
@@ -155,7 +155,7 @@ const RefundDetailModal = ({ show, onClose, refundDetail, loading }) => {
                   <p className="text-sm text-gray-900">
                     {refundDetail.createdAt
                       ? format(new Date(refundDetail.createdAt), "MMM dd, yyyy 'at' hh:mm a")
-                      : "N/A"}
+                      : (t("eventTypeLegacy.notAvailable") || "N/A")}
                   </p>
                 </div>
 
@@ -181,7 +181,7 @@ const RefundDetailModal = ({ show, onClose, refundDetail, loading }) => {
                     <p className="text-sm text-gray-900">
                       {refundDetail.user.first_name && refundDetail.user.last_name
                         ? `${refundDetail.user.first_name} ${refundDetail.user.last_name}`
-                        : refundDetail.user.email || "N/A"}
+                        : refundDetail.user.email || (t("eventTypeLegacy.notAvailable") || "N/A")}
                     </p>
                     {refundDetail.user.email && (
                       <p className="text-xs text-gray-500 mt-1">{refundDetail.user.email}</p>

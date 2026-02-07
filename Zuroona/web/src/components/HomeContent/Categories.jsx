@@ -13,7 +13,7 @@ export default function Categories() {
     const currentCategories = eventCategories[activeSection][currentLanguage];
 
     return (
-        <section className="relative pt-40 pb-24 bg-gray-50 overflow-hidden">
+        <section className="relative pt-20 pb-12 bg-gray-50 overflow-hidden">
             {/* Background decorative elements */}
             <div className="absolute inset-0 opacity-5">
                 <div className="absolute top-20 right-20 w-32 h-32">

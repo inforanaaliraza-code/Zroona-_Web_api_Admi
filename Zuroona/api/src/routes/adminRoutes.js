@@ -120,4 +120,8 @@ router.get("/bookings/invoices", adminController.getAllBookingsWithInvoices);
 // Cleanup duplicate bookings
 router.post("/cleanup/duplicate-bookings", adminController.cleanupDuplicateBookings);
 
+// Withdrawal Limits Management
+router.put("/organizer/withdrawal-limits", adminController.updateWithdrawalLimits);
+router.get("/organizer/withdrawal-limits", adminController.getWithdrawalLimits);
+
 module.exports = router;

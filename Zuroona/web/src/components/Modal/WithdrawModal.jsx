@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
 import { useFormik } from 'formik';
 import * as Yup from "yup";
@@ -18,21 +18,65 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [withdrawalLimits, setWithdrawalLimits] = useState({ minimum: 100, maximum: 50000 });
+    const [limitsLoading, setLimitsLoading] = useState(true);
 
     const availableBalance = data?.total_earnings || 0;
-    const minWithdrawal = 50; // Minimum withdrawal amount
-    const maxWithdrawal = availableBalance;
+    const minWithdrawal = withdrawalLimits.minimum || 100;
+    const maxWithdrawal = Math.min(withdrawalLimits.maximum || 50000, availableBalance);
+
+    // Fetch withdrawal limits when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            fetchWithdrawalLimits();
+        }
+    }, [isOpen]);
+
+    const fetchWithdrawalLimits = async () => {
+        try {
+            setLimitsLoading(true);
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const response = await fetch(`${baseUrl}/api/organizer/wallet-info`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+                }
+            });
+            
+            const responseData = await response.json();
+            
+            if (responseData?.status === 1 && responseData?.data) {
+                setWithdrawalLimits({
+                    minimum: responseData.data.minimum_withdrawal || 100,
+                    maximum: responseData.data.maximum_withdrawal || 50000
+                });
+            } else {
+                // Keep default values if API fails
+                setWithdrawalLimits({ minimum: 100, maximum: 50000 });
+            }
+        } catch (error) {
+            console.error("Error fetching withdrawal limits:", error);
+            // Keep default values on error
+            setWithdrawalLimits({ minimum: 100, maximum: 50000 });
+        } finally {
+            setLimitsLoading(false);
+        }
+    };
+
+    const validationSchema = Yup.object({
+        amount: Yup.number()
+            .required(t("earning.tab9") || "Amount is required")
+            .typeError(t("earning.tab9") || "Amount is required")
+            .min(minWithdrawal, `Minimum withdrawal amount is ${minWithdrawal} SAR`)
+            .max(maxWithdrawal, `Maximum withdrawal amount is ${maxWithdrawal} SAR`),
+    });
 
     const formik = useFormik({
         initialValues: {
             amount: "",
         },
-        validationSchema: Yup.object({
-            amount: Yup.number()
-                .required(t("earning.tab9") || "Amount is required")
-                .min(minWithdrawal, `Minimum withdrawal amount is ${minWithdrawal} SAR`)
-                .max(maxWithdrawal, `Maximum withdrawal amount is ${maxWithdrawal} SAR`),
-        }),
+        validationSchema: validationSchema,
         enableReinitialize: true,
         onSubmit: (values, { resetForm }) => {
             if (!showConfirm) {
@@ -45,7 +89,7 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                 .then((response) => {
                     setLoading(false);
                     if (response?.status === 1) {
-                        toast.success(response.message || "Withdrawal request submitted successfully!");
+                        toast.success(response.message || t("withdrawal.withdrawalSuccess") || "Withdrawal request submitted successfully!");
                         onClose(); 
                         dispatch(getWithdrawalList({ page: page, limit: limit }));
                         dispatch(getEarning({ page: 1 })); // Refresh balance
@@ -58,7 +102,8 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                 })
                 .catch((error) => {
                     setLoading(false);
-                    toast.error(t("error.submitFailed") || "Failed to submit the request");
+                    const errorMessage = error?.response?.data?.message || t("error.submitFailed") || "Failed to submit the request";
+                    toast.error(errorMessage);
                     setShowConfirm(false);
                 });
         },
@@ -95,7 +140,7 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
 
                             {/* Info Badge */}
                             <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                                <p className="text-sm font-medium">Minimum: {minWithdrawal} SAR</p>
+                                <p className="text-sm font-medium">{t('withdrawal.minimumAmount')}: {minWithdrawal} SAR</p>
                             </div>
                         </div>
                     </div>
@@ -143,9 +188,9 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                                     key={amount}
                                     type="button"
                                     onClick={() => formik.setFieldValue('amount', amount)}
-                                    disabled={amount > availableBalance}
+                                    disabled={amount > maxWithdrawal || amount < minWithdrawal}
                                     className={`py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
-                                        amount > availableBalance
+                                        amount > maxWithdrawal || amount < minWithdrawal
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             : 'bg-gradient-to-r from-[#a3cc69]/10 to-[#a797cc]/10 text-gray-700 hover:from-[#a3cc69]/20 hover:to-[#a797cc]/20 border-2 border-transparent hover:border-[#a3cc69]'
                                     }`}
@@ -160,19 +205,20 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                             <div className="flex items-start gap-3">
                                 <FaInfoCircle className="text-blue-500 text-xl mt-0.5 flex-shrink-0" />
                                 <div className="text-sm text-blue-900">
-                                    <p className="font-semibold mb-1">Important Information:</p>
+                                    <p className="font-semibold mb-1">{t('withdrawal.important')}:</p>
                                     <ul className="space-y-1 text-blue-800">
-                                        <li>• Minimum withdrawal: {minWithdrawal} SAR</li>
-                                        <li>• Processing time: 3-5 business days</li>
-                                        <li>• Amount will be transferred to your registered bank account</li>
-                                        <li>• You&apos;ll receive a notification once processed</li>
+                                        <li>• {t('withdrawal.minimumAmount')}: {minWithdrawal} SAR</li>
+                                        <li>• {t('withdrawal.maximumLimitError') ? 'Maximum Amount' : 'Maximum'}: {maxWithdrawal} SAR</li>
+                                        <li>• {t('withdrawal.processingTime')}</li>
+                                        <li>• {t('withdrawal.transferBank')}</li>
+                                        <li>• {t('withdrawal.notification')}</li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
 
                         {/* Submit Button */}
-                        <div className='flex justify-center mt-8'>
+                        <div className='flex justify-center mt-8 mb-8'>
                             <button
                                 type="submit"
                                 className="py-4 px-20 text-white bg-gradient-to-r from-[#a3cc69] to-[#a797cc] rounded-xl text-lg font-bold hover:from-[#9fb68b] hover:to-[#a08ec8] transition-all shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
@@ -210,14 +256,14 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                         </div>
 
                         {/* Buttons */}
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 mb-8">
                             <button
                                 type="button"
                                 onClick={() => setShowConfirm(false)}
                                 disabled={loading}
                                 className="flex-1 py-4 px-6 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition disabled:opacity-50"
                             >
-                                Go Back
+                                {t('modal.cancel') || 'Go Back'}
                             </button>
                             <button
                                 type="button"

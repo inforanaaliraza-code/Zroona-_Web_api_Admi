@@ -15,8 +15,8 @@ export default function CancelConfirmDialog({
   type = "booking", // "booking" for guest, "event" for host
   showRefundWarning = false, // Show refund warning for guest cancellations
 }) {
-  const { t } = useTranslation();
-  const { isRTL, textAlign, flexDirection } = useRTL();
+  const { t, i18n } = useTranslation();
+  const { isRTL, textAlign, flexDirection } = useRTL({ i18n });
   const [reason, setReason] = useState("");
   const [showReasonInput, setShowReasonInput] = useState(false);
 

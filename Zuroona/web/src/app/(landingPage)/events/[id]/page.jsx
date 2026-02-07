@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
+import { useRTL } from '@/utils/rtl';
 import { formatDate, formatTime } from "@/utils/dateUtils";
 import Link from "next/link";
 import Image from "next/image";
@@ -882,9 +883,15 @@ export default function EventDetailsPage() {
 													))}
 												</div>
 												{/* Image counter */}
-												<div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold z-10 shadow-lg">
-													{currentImageIndex + 1} / {images.length}
-												</div>
+												{(() => {
+													const { isRTL } = useRTL();
+													const pos = isRTL ? 'left-4' : 'right-4';
+													return (
+														<div className={`absolute top-4 ${pos} bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold z-10 shadow-lg`}>
+															{currentImageIndex + 1} / {images.length}
+														</div>
+													);
+												})()}
 											</>
 										)}
 									</div>

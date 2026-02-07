@@ -419,16 +419,16 @@ const EventsPage = () => {
 				{/* Search and Filter Bar */}
 				<div className={`flex flex-col gap-4 mb-6 md:${flexDirection}`}>
 					<div className="relative flex-grow">
-						<div className={`absolute inset-y-0 ${isRTL ? "right-0" : "left-0"} flex items-center ${isRTL ? "pr-3" : "pl-3"} pointer-events-none`}>
-							<Icon
-								icon="lucide:search"
-								className="h-5 w-5 text-[#a797cc]"
-							/>
-						</div>
+							<div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+								<Icon
+									icon="lucide:search"
+									className="h-5 w-5 text-[#a797cc]"
+								/>
+							</div>
 						<Input
 							type="text"
 							placeholder={getTranslation(t, "events.searchEvents", "Search events...")}
-							className={`${isRTL ? "pr-10 pl-4" : "pl-10 pr-4"} py-2.5 w-full rounded-lg border-2 border-gray-200 bg-gray-50 shadow-sm focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-700 font-medium ${textAlign}`}
+							className={`pl-10 pr-4 py-2.5 w-full rounded-lg border-2 border-gray-200 bg-gray-50 shadow-sm focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-700 font-medium ${textAlign}`}
 							value={searchTerm}
 							onChange={(e) => setSearchTerm(e.target.value)}
 						/>

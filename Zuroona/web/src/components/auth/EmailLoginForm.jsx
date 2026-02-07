@@ -63,13 +63,13 @@ export default function EmailLoginForm() {
 
                 setLoading(false);
                 if (response?.status === 1) {
-                    toast.success(response.message || "OTP sent successfully!");
+                    toast.success(response.message || t("OTP.otpSentSuccess") || "OTP sent successfully!");
                     setStep(2); // Move to OTP verification step
                     setOtpSentTime(Date.now()); // Record when OTP was sent
                     setOtpExpired(false);
                     startTimer();
                 } else {
-                    toast.error(response.message || "Failed to send OTP");
+                    toast.error(response.message || t("OTP.failedToSendOTP") || "Failed to send OTP");
                 }
             } catch (error) {
                 setLoading(false);
@@ -477,10 +477,7 @@ export default function EmailLoginForm() {
                                         {/* Button content */}
                                         <span className="relative z-10 flex items-center gap-2">
                                             {loading ? (
-                                                <>
-                                                    <Loader />
-                                                    <span>Verifying...</span>
-                                                </>
+                                                <span className="w-full flex justify-center items-center text-center font-semibold mx-auto">Verifying</span>
                                             ) : (
                                                 <>
                                                     <Icon icon="material-symbols:verified" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

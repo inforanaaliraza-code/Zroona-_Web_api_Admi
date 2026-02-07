@@ -9,6 +9,12 @@ export const metadata = {
   description: "Zuroona - Discover and book amazing events in Saudi Arabia",
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export default function RootLayout({ children }) {
   // Always use "en" for SSR to prevent hydration mismatch
   // RTLHandler will update it on client side

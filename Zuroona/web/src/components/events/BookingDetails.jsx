@@ -425,10 +425,10 @@ export default function BookingDetails({
 									console.log("[INVOICE] Opening clean URL:", url);
 									window.open(url, "_blank");
 								} else {
-									console.error("[INVOICE] Invalid invoice URL or filename");
+									console.error("[INVOICE]", t("eventsMain.invalidInvoiceUrl") || "Invalid invoice URL or filename");
 								}
 							} catch (e) {
-								console.error("[INVOICE] Error opening invoice:", e);
+								console.error("[INVOICE]", t("eventsMain.errorOpeningInvoice") || "Error opening invoice:", e);
 							}
 						}}
 						className="w-full text-green-700 text-sm font-semibold h-12 rounded-xl bg-white border-2 border-green-300 hover:bg-green-50 transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-lg hover:scale-[1.02]"

@@ -36,7 +36,7 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
     const phoneValidationSchema = Yup.object({
         phone_number: Yup.string()
             .required(t("auth.phoneRequired") || "Phone number is required")
-            .min(9, t("Phone Min Length") || "Phone number must be at least 9 digits"),
+            .min(9, t("auth.phoneMinLength") || "Phone number must be at least 9 digits"),
         country_code: Yup.string()
             .required(t("auth.countryCodeRequired") || "Country code is required"),
     });
@@ -62,11 +62,11 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
 
                 setLoading(false);
                 if (response?.status === 1) {
-                    toast.success(response.message || "OTP sent successfully!");
+                    toast.success(response.message || t("OTP.otpSentSuccess") || "OTP sent successfully!");
                     setStep(2); // Move to OTP verification step
                     startTimer();
                 } else {
-                    toast.error(response.message || "Failed to send OTP");
+                    toast.error(response.message || t("OTP.failedToSendOTP") || "Failed to send OTP");
                 }
             } catch (error) {
                 setLoading(false);
@@ -136,7 +136,7 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
                         push("/events");
                     }
                 } else {
-                    toast.error(response?.message || "Invalid OTP. Please try again.");
+                    toast.error(response?.message || t("OTP.invalidOTP") || "Invalid OTP. Please try again.");
                 }
             } catch (error) {
                 setLoading(false);
@@ -293,12 +293,12 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
                                 {loading ? (
                                     <>
                                         <Loader />
-                                        <span>Sending OTP...</span>
+                                        <span>{t("OTP.sendingOTP") || "Sending OTP..."}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Icon icon="material-symbols:sms" className="w-5 h-5" />
-                                        <span>Send OTP</span>
+                                        <span>{t("OTP.sendOTP") || "Send OTP"}</span>
                                     </>
                                 )}
                             </button>
@@ -394,7 +394,7 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
                                 {loading ? (
                                     <>
                                         <Loader />
-                                        <span>Verifying...</span>
+                                        <span>{t("OTP.verifying") || "Verifying..."}</span>
                                     </>
                                 ) : (
                                     <>

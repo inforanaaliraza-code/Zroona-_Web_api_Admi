@@ -25,7 +25,7 @@ const HeroSection = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-white overflow-x-visible overflow-y-hidden max-w-[100%] mx-auto w-full [overflow-x:hidden]">
+        <div className="relative min-h-screen bg-white overflow-hidden max-w-[100%] mx-auto w-full">
             {/* Background Pattern */}
             <div className="fixed inset-0 bg-[url('/assets/images/home/bg-img.png')] bg-cover bg-center opacity-5 -z-10"></div>
 
@@ -61,10 +61,10 @@ const HeroSection = () => {
 
             <Header />
 
-            <main className="container relative flex items-center justify-center min-h-[calc(100vh-80px)] px-4 mx-auto overflow-visible pt-20">
+            <main className="container relative flex items-center justify-center min-h-[calc(100vh-80px)] px-4 mx-auto overflow-visible pt-2 md:pt-1 lg:pt-2">
                 <div className="relative w-full max-w-6xl overflow-visible">
                     {/* Dotted Arrow Line Image - Positioned to the right of heading */}
-                    <div className="absolute right-0 top-[5%] translate-x-[60%] md:translate-x-[55%] lg:translate-x-[45%] hidden md:block z-1 overflow-visible">
+                    <div className="absolute right-0 top-[5%] translate-x-[60%] md:translate-x-[55%] lg:translate-x-[45%] hidden lg:block z-1 overflow-visible">
                         <Image
                             src="/assets/images/dotedArrow line.jpeg"
                             alt="Decorative arrow"
@@ -82,7 +82,7 @@ const HeroSection = () => {
                         </span>
 
                         {/* Main Heading */}
-                        <h1 className="mb-6 text-5xl md:text-7xl lg:text-8xl font-bold leading-tight text-gray-900">
+                        <h1 className="mb-6 text-4xl md:text-7xl lg:text-8xl font-bold leading-tight text-gray-900">
                             {t('home.slogan')}
                         </h1>
 

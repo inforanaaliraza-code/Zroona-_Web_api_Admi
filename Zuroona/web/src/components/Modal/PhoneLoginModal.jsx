@@ -56,7 +56,7 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
         const data = await SendPhoneOTPApi(payload);
         setLoading(false);
         if (data?.status === 1) {
-          toast.success(data.message || "OTP sent successfully");
+          toast.success(data.message || t("OTP.otpSentSuccess") || "OTP sent successfully");
           setOtpSentTime(Date.now()); // Record when OTP was sent
           setOtpExpired(false);
           if (onLogin) {
@@ -69,7 +69,7 @@ export default function PhoneLoginModal({ isOpen, onClose, onLogin }) {
             startTimer();
           }
         } else {
-          toast.error(data.message || "Failed to send OTP");
+          toast.error(data.message || t("OTP.failedToSendOTP") || "Failed to send OTP");
         }
       } catch (error) {
         setLoading(false);

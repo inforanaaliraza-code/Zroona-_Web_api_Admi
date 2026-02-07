@@ -33,7 +33,13 @@ const eventValidation = Joi.object({
 
 	no_of_attendees: Joi.number().min(1).default(1),
 
-	event_price: Joi.number().required(),
+	event_price: Joi.number()
+		.min(1)
+		.required()
+		.messages({
+			"number.min": "Event price must be at least 1 SAR",
+			"any.required": "Event price is required",
+		}),
 
 	dos_instruction: Joi.string().optional(),
 

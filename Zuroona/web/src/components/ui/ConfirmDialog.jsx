@@ -35,8 +35,8 @@ export default function ConfirmDialog({
   isLoading = false,
   showIcon = true,
 }) {
-  const { t } = useTranslation();
-  const { isRTL, textAlign, flexDirection } = useRTL();
+  const { t, i18n } = useTranslation();
+  const { isRTL, textAlign, flexDirection } = useRTL({ i18n });
 
   // Default texts if not provided
   const defaultTitle = t("confirm.areYouSure") || "Are you sure?";

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Icon } from '@iconify/react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
+import { useRTL } from '@/utils/rtl';
 import { TOKEN_NAME, BASE_API_URL } from '@/until';
 import Cookies from 'js-cookie';
 import LoginModal from '../Modal/LoginModal';
@@ -27,6 +28,7 @@ export default function EventCard({
 }) {
 
     const { t, i18n } = useTranslation();
+    const { isRTL } = useRTL({ i18n });
     
     // Helper function to check if image URL is external
     const isExternalImage = (url) => {
@@ -172,23 +174,23 @@ export default function EventCard({
                     />
                     {/* Gradient overlay for better text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    {/* Date & Time Badge - Enhanced */}
-                    <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg">
-                        <Icon icon="lucide:calendar" className="w-4 h-4 text-white" />
-                        <div className="flex items-center gap-1.5">
-                            <span>
+                    {/* Date & Time Badge - Enhanced - Fixed overflow */}
+                    <div className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg max-w-[calc(100%-24px)]`}>
+                        <Icon icon="lucide:calendar" className="w-4 h-4 text-white flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 truncate">
+                            <span className="truncate">
                                 {new Date(event.event_date).getDate()}{" "}
                                 {new Date(event.event_date).toLocaleString(
-                                    "en-US",
+                                    i18n.language || "en-US",
                                     {
                                         month: "short",
                                     }
                                 )}{" "}
                                 {new Date(event.event_date).getFullYear()}
                             </span>
-                            <span className="text-white/70">•</span>
-                            <span>
-                                {new Date(`1970-01-01T${event.event_start_time}`).toLocaleTimeString([], {
+                            <span className="text-white/70 flex-shrink-0">•</span>
+                            <span className="truncate">
+                                {new Date(`1970-01-01T${event.event_start_time}`).toLocaleTimeString(i18n.language || [], {
                                     hour: "2-digit",
                                     minute: "2-digit",
                                 })}
@@ -200,7 +202,7 @@ export default function EventCard({
                     {
                         showEventType && (
                             <div
-                                className={`absolute -top-3 left-5 flex items-center text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md z-10
+                                className={`absolute top-3 ${isRTL ? 'right-5' : 'left-5'} flex items-center text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md z-10
                                     ${event?.event_type === 1
                                         ? 'bg-gradient-to-r from-[#a797cc] to-[#8ba179]'
                                         : event?.event_type === 2
@@ -241,12 +243,12 @@ export default function EventCard({
                         </div>
                         {/* Price Box - Enhanced & Prominent */}
                         <div className="flex flex-col items-end bg-gradient-to-br from-[#a797cc]/10 to-[#8ba179]/10 rounded-xl px-4 py-3 border-2 border-[#a797cc]/20 shadow-sm flex-shrink-0 self-start">
-                            <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wide">Price</p>
+                            <p className="text-xs text-gray-600 font-medium mb-1 uppercase tracking-wide">{t('common.price') || t('card.tab1') || 'Price'}</p>
                             <div className="flex items-baseline gap-1">
                                 <p className="text-xl font-bold text-[#a797cc] leading-tight">{event.event_price}</p>
-                                <span className="text-sm font-semibold text-gray-700">SAR</span>
+                                <span className="text-sm font-semibold text-gray-700">{t('common.currency') || t('card.tab2') || 'SAR'}</span>
                             </div>
-                            <span className="text-xs text-gray-500 mt-0.5">per person</span>
+                            <span className="text-xs text-gray-500 mt-0.5">{t('eventsMain.perPerson') || t('events.perPerson') || 'per person'}</span>
                         </div>
                     </div>
                 </div>
@@ -335,7 +337,7 @@ export default function EventCard({
                                                 };
                                                 return getImageUrl(event.user_profile_image);
                                             })()} 
-                                            alt="Profile Picture" 
+                                            alt={t("add.profilePicture") || "Profile Picture"} 
                                             height={40} 
                                             width={40}
                                             unoptimized={isExternalImage(event.user_profile_image)}
@@ -433,7 +435,7 @@ export default function EventCard({
                                                 };
                                                 return getImageUrl(event.organizer_profile_image);
                                             })()} 
-                                            alt="Profile Picture" 
+                                            alt={t("add.profilePicture") || "Profile Picture"} 
                                             height={40} 
                                             width={40}
                                             onError={(e) => {

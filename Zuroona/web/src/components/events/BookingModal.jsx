@@ -90,7 +90,7 @@ export default function BookingModal({
 					toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully!"));
 				} catch (error) {
 					console.error("Error in payment completion:", error);
-					toast.error(getTranslation(t, "events.paymentProcessingError", "Error processing payment. Please contact support."));
+					toast.error(getTranslation(t, "eventsMain.paymentProcessingError", "Error processing payment. Please contact support."));
 				}
 			} else {
 				toast.error(getTranslation(t, "events.paymentFailed", "Payment was not successful. Please try again."));
@@ -191,7 +191,7 @@ export default function BookingModal({
 			}
 		} else if (event.no_of_attendees && attendees > event.no_of_attendees) {
 			// Fallback to checking total seats if available_seats not provided
-			toast.error(getTranslation(t, "events.exceedsTotalSeats", `Cannot book more than ${event.no_of_attendees} seats`));
+			toast.error(getTranslation(t, "eventsMain.exceedsTotalSeats", { max: event.no_of_attendees }) || `Cannot book more than ${event.no_of_attendees} seats`);
 			return;
 		}
 
@@ -283,10 +283,10 @@ export default function BookingModal({
 									{step === "details" &&
 										getTranslation(t, "events.enterBookingDetails", "Enter booking details")}
 									{step === "reservation" &&
-										getTranslation(t, "events.reservationPending", "Reservation Pending")}
-									{step === "payment" && getTranslation(t, "events.processPayment", "Process Payment")}
-									{step === "confirmation" &&
-										getTranslation(t, "events.bookingConfirmed", "Booking Confirmed")}
+										getTranslation(t, "eventsMain.reservationPending", "Reservation Pending")}
+									{step === "payment" && getTranslation(t, "eventsMain.processPayment", "Process Payment")}
+									{step === "bookingConfirmed" &&
+										getTranslation(t, "eventsMain.bookingConfirmed", "Booking Confirmed")}
 								</Dialog.Description>
 							</div>
 							<Dialog.Close className="flex-shrink-0 p-2 rounded-full transition-colors hover:bg-gray-100">
@@ -435,10 +435,10 @@ export default function BookingModal({
 									/>
 								</div>
 								<h3 className="mb-2 text-xl font-semibold text-gray-900">
-									{getTranslation(t, "events.readyToPay", "Ready to Pay")}
+									{getTranslation(t, "eventsMain.readyToPay", "Ready to Pay")}
 								</h3>
 								<p className="text-gray-600 mb-6">
-									{getTranslation(t, "events.clickToProceed", "Click the button below to proceed with payment")}
+									{getTranslation(t, "eventsMain.clickToProceed", "Click the button below to proceed with payment")}
 								</p>
 								<Button
 									onClick={initiateMoyasarPayment}

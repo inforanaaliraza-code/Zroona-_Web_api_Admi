@@ -102,8 +102,6 @@
     "userDeleted": "User deleted successfully",
     "failedToDelete": "Failed to delete",
     "userManagement": "Guests Management",
-    "active": "Active",
-    "inactive": "Inactive",
     "blocked": "Blocked",
     "suspendGuest": "Suspend Guest",
     "activateGuest": "Activate Guest",
@@ -128,7 +126,6 @@
     "wallet": "Wallet",
     "hostWithdrawalRequests": "Host Withdrawal Requests",
     "guestInvoices": "Guest Invoices",
-    "refundRequests": "Refund Requests",
     "manageOrganizers": "Manage Organizers",
     "organizerDetails": "Organizer Details",
     "addOrganizer": "Add Organizer",
@@ -148,11 +145,7 @@
     "activeOrganizers": "Active Organizers",
     "pendingVerification": "Pending Verification",
     "totalEarnings": "Total Earnings",
-    "approveOrganizer": "Approve Organizer",
-    "rejectOrganizer": "Reject Organizer",
-    "viewProfile": "View Profile",
     "rejectionReason": "Rejection Reason",
-    "rejectionReasonRequired": "Please provide a reason for rejection",
     "rejectEventPlaceholder": "Please specify the reason for rejecting this event...",
     "rejectOrganizerPlaceholder": "Please specify the reason for rejecting this organizer...",
     "rejectEvent": "Reject Event",
@@ -180,7 +173,6 @@
     "withdrawalAmount": "Withdrawal Amount",
     "transactionReference": "Transaction Reference (Optional)",
     "enterTransactionReference": "Enter transaction reference number",
-    "rejectionReasonRequired": "Please provide a reason for rejection (required)",
     "adminNotes": "Admin Notes (Optional)",
     "addInternalNotes": "Add internal notes (optional)",
     "approveWithdrawalRequest": "Approve Withdrawal Request",
@@ -203,7 +195,6 @@
     "refundRequests": "Refund Requests",
     "manageRefunds": "Manage Refunds",
     "refundDetails": "Refund Details",
-    "refundApproved": "Refund request approved successfully",
     "refundRejected": "Refund request rejected successfully",
     "failedToUpdateRequest": "Failed to update request",
     "failedToLoadDetails": "Failed to load refund details",
@@ -222,9 +213,7 @@
     "passwordTip2": "Include uppercase and lowercase letters",
     "passwordTip3": "Add numbers and special characters",
     "passwordTip4": "Avoid common words or personal information",
-    "manageCMS": "Manage CMS",
     "updateContent": "Update your website content & policies",
-    "privacyPolicy": "Privacy Policy",
     "termsConditions": "Terms & Conditions",
     "aboutUs": "About Us",
     "editContent": "Edit Content",
@@ -243,7 +232,10 @@
     "mobileNumberLabel": "Mobile Number *",
     "emailLabel": "Email *",
     "passwordLabel": "Password",
-    "enterPasswordPlaceholder": "Enter Password"
+    "enterPasswordPlaceholder": "Enter Password",
+    "arrow": "Arrow",
+    "zuroonaLogo": "Zuroona Logo",
+    "otpSentToMobile": "OTP sent to your mobile number"
   },
   "auth": {
     "login": "Login",
@@ -432,9 +424,6 @@
     "suspended": "Suspended",
     "deleted": "Deleted",
     "reactivate": "Reactivate Account",
-    "unsuspend": "Unsuspend",
-    "suspend": "Suspend",
-    "activate": "Activate",
     "searchPlaceholder": "Search by Guests",
     "userId": "User ID",
     "name": "Name",
@@ -447,9 +436,6 @@
     "status": "Status",
     "action": "Action",
     "viewDetails": "View Details",
-    "suspend": "Suspend",
-    "unsuspend": "Unsuspend",
-    "activate": "Activate",
     "delete": "Delete",
     "noDataFound": "No Data Found",
     "male": "Male",
@@ -870,6 +856,28 @@
     "failedToFetch": "Failed to fetch event details",
     "eventApprovedSuccess": "Event approved successfully",
     "eventRejectedSuccess": "Event rejected successfully",
-    "failedToUpdateStatus": "Failed to update event status"
+    "failedToUpdateStatus": "Failed to update event status",
+    "eventIdNotFound": "Event ID not found",
+    "instructionsLabel": "Instructions"
+  },
+  "eventTypes": {
+    "conference": "Conference",
+    "workshop": "Workshop",
+    "exhibition": "Exhibition",
+    "concert": "Concert",
+    "festival": "Festival",
+    "seminar": "Seminar",
+    "webinar": "Webinar",
+    "networking": "Networking Event",
+    "corporate": "Corporate Event",
+    "privateParty": "Private Party"
+  },
+  "eventTypeLegacy": {
+    "joinUs": "Join Us",
+    "welcome": "Welcome",
+    "notAvailable": "N/A"
+  },
+  "footer": {
+    "copyright": "© 2024 All Rights Reserved"
   }
 }

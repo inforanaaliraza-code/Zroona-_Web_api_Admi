@@ -7,11 +7,14 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
+import { useRTL } from '@/utils/rtl';
 
 export default function RoleSelectionPage() {
     const { t, i18n } = useTranslation();
     const router = useRouter();
     const [selectedRole, setSelectedRole] = useState(null);
+    // Pass i18n instance to useRTL to avoid calling useTranslation twice
+    const { isRTL } = useRTL({ i18n });
 
     const handleLanguageChange = (newLang) => {
         i18n.changeLanguage(newLang);
@@ -26,7 +29,6 @@ export default function RoleSelectionPage() {
             icon: "material-symbols:person",
             color: "from-[#a797cc] to-[#a797cc]/80",
             hoverColor: "hover:from-[#a797cc]/80 hover:to-[#a797cc]/90",
-            
             route: "/signup/guest",
         },
         {
@@ -36,7 +38,6 @@ export default function RoleSelectionPage() {
             icon: "material-symbols:star",
             color: "from-brand-orange to-brand-orange/80",
             hoverColor: "hover:from-brand-orange/80 hover:to-brand-orange/90",
-        
             route: "/signup/host",
             badge: t("auth.requiresApproval") || "Requires Approval",
         },
@@ -52,7 +53,7 @@ export default function RoleSelectionPage() {
     return (
         <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
             {/* Language Switcher - Fixed Top Right */}
-            <div className="fixed top-6 right-6 z-50">
+            <div className={`fixed top-6 ${isRTL ? 'left-6' : 'right-6'} z-50`}>
                 <LanguageSwitcher ChangeLanguage={handleLanguageChange} />
             </div>
 
@@ -103,7 +104,7 @@ export default function RoleSelectionPage() {
                             >
                                 {/* Badge */}
                                 {role.badge && (
-                                    <div className="absolute top-4 right-4">
+                                    <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'}`}>
                                         <span className="bg-brand-light-orange-1 text-brand-orange text-xs font-semibold px-3 py-1 rounded-full">
                                             {role.badge}
                                         </span>
@@ -132,14 +133,13 @@ export default function RoleSelectionPage() {
 
                                     {/* Features */}
                                     <ul className="space-y-3 mb-6">
-                                        
                                     </ul>
                                 </div>
 
                                 {/* Arrow */}
-                                <div className="absolute bottom-4 right-4">
+                                <div className={`absolute bottom-4 ${isRTL ? 'left-4' : 'right-4'}`}>
                                     <Icon 
-                                        icon="material-symbols:arrow-forward" 
+                                        icon={isRTL ? "material-symbols:arrow-back" : "material-symbols:arrow-forward"} 
                                         className={`w-6 h-6 transition-colors ${
                                             selectedRole === role.id ? 'text-brand-orange' : 'text-gray-400'
                                         }`}

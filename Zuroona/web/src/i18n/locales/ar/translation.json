@@ -115,7 +115,6 @@
     "tab32": "مجموعات زرونا تلتقي محليًا، شخصيًا وعبر الإنترنت. سنربطك بأشخاص في منطقتك، ويمكن للمزيد الانضمام إليك عبر الإنترنت.",
     "tab33": "المدينة",
     "tab34": "أدخل موقعًا",
-    "city": "المدينة",
     "tab35": "ما الذي ستكون مجموعتك عنه؟",
     "tab36": "اختر 3 مواضيع على الأقل لمساعدتنا في الترويج لمجموعتك في المكان المناسب.",
     "tab37": "بحث",
@@ -166,7 +165,6 @@
     "uploaded": "تم التحميل",
     "basicInfoFromStep1": "المعلومات الأساسية (من الخطوة 1)",
     "personalDetails": "التفاصيل الشخصية",
-    "selectCity": "اختر المدينة",
     "countries": {
       "SA": "المملكة العربية السعودية",
       "AE": "الإمارات العربية المتحدة",
@@ -293,12 +291,10 @@
     "whatNotToDoLabel": "ما لا يجب فعله",
     "organizerLabel": "المنظم",
     "reviewsLabel": "التقييمات",
-    "bookNow": "احجز الآن",
     "secureBooking": "حجز آمن",
     "eventType": "نوع الفعالية",
     "eventDetails": "تفاصيل الفعالية",
     "imageGallery": "معرض الصور",
-    "perPerson": "للشخص الواحد",
     "previousImage": "الصورة السابقة",
     "nextImage": "الصورة التالية",
     "viewAllImages": "عرض جميع الصور",
@@ -375,7 +371,6 @@
     "paid": "مدفوع",
     "bookNow": "احجز الآن وادفع",
     "clickToPay": "انقر للمتابعة مع الدفع الآمن",
-    "waitingForApproval": "في انتظار موافقة المضيف",
     "approvalRequired": "سيكون الدفع متاحاً بعد موافقة المضيف على حجزك",
     "paymentProcessed": "تمت معالجة الدفع بنجاح",
     "paymentProcessingFailed": "فشلت معالجة الدفع",
@@ -546,7 +541,14 @@
     "organizeUnique": "نظم تجارب فريدة تعرض الثقافة والتقاليد السعودية",
     "buildMeaningful": "بناء روابط ذات معنى وتنمية مجتمعك من خلال التجارب المشتركة",
     "toBecomeLeading": "أن نصبح المنصة الرائدة للتجارب الثقافية الأصيلة في المملكة العربية السعودية، وربط الملايين من الناس من خلال التفاعلات الهادفة واللحظات المشتركة.",
-    "processingGeneral": "جاري المعالجة..."
+    "processingGeneral": "جاري المعالجة...",
+    "perPerson": "للشخص الواحد",
+    "readyToPay": "جاهز للدفع",
+    "clickToProceed": "انقر على الزر أدناه للمتابعة مع الدفع",
+    "exceedsTotalSeats": "لا يمكن حجز أكثر من {{max}} مقعد",
+    "paymentProcessingError": "خطأ في معالجة الدفع. يرجى الاتصال بالدعم.",
+    "invalidInvoiceUrl": "رابط الفاتورة أو اسم الملف غير صحيح",
+    "errorOpeningInvoice": "خطأ في فتح الفاتورة"
   },
   "interview": {
     "tab1": "أسئلة المقابلة",
@@ -659,7 +661,6 @@
     "signupTime10min": "التسجيل في 10-15 دقيقة",
     "requiresApproval": "يتطلب موافقة",
     "alreadyHaveAccount": "لديك حساب بالفعل؟",
-    "login": "تسجيل الدخول",
     "needHelp": "تحتاج مساعدة في الاختيار؟",
     "roleHelpText": "اختر 'ضيف' إذا كنت تريد حضور الفعاليات. اختر 'مضيف' إذا كنت تريد إنشاء وإدارة فعالياتك الخاصة. يمكنك دائماً الترقية لحساب مضيف لاحقاً!",
     "createGuestAccount": "إنشاء حساب ضيف",
@@ -675,6 +676,7 @@
     "lastNamePlaceholder": "أدخل اسم عائلتك",
     "phoneRequired": "رقم الهاتف مطلوب",
     "phoneInvalid": "رقم الهاتف يجب أن يحتوي على أرقام فقط",
+    "phoneMinLength": "يجب أن يكون رقم الهاتف 9 أرقام على الأقل",
     "countryCodeRequired": "كود الدولة مطلوب",
     "emailInvalid": "عنوان البريد الإلكتروني غير صحيح",
     "emailRequired": "البريد الإلكتروني مطلوب",
@@ -744,6 +746,18 @@
     "developmentInProgress": "التطوير قيد التقدم",
     "hostRegistrationNote": "نموذج تسجيل المضيف الكامل مع جميع الخطوات الأربع والتحقق من البريد الإلكتروني ونظام الموافقة من الإدارة قيد الإنجاز حالياً. في الوقت الحالي، يمكنك إنشاء حساب ضيف لاستكشاف الفعاليات.",
     "verificationSuccessEmail": "تم التحقق من البريد الإلكتروني بنجاح! يمكنك الآن تسجيل الدخول إلى حسابك.",
+    "apiConnectionError": "لا يمكن الاتصال بخادم API. يرجى التأكد من أن الخادم يعمل على المنفذ 3434.\n\nللبدء: cd api && npm run dev",
+    "loginFailedUserNotFound": "فشل تسجيل الدخول. لم يتم العثور على بيانات المستخدم.",
+    "privacyRequired": "يجب عليك قبول سياسة الخصوصية",
+    "termsRequired": "يجب عليك قبول الشروط والأحكام",
+    "verificationEmailResentSuccess": "تم إعادة إرسال بريد التحقق بنجاح!",
+    "failedToResendVerificationEmail": "فشل إعادة إرسال بريد التحقق",
+    "failedToResendVerificationEmailTryAgain": "فشل إعادة إرسال بريد التحقق. يرجى المحاولة مرة أخرى.",
+    "otpResendFailed": "فشل إعادة إرسال رمز التحقق.",
+    "otpResendFailedTryAgain": "فشل إعادة إرسال رمز التحقق. يرجى المحاولة مرة أخرى.",
+    "failedToChangeLanguage": "فشل تغيير اللغة",
+    "commercialLicense": "الترخيص التجاري: 1009107101، شركة واحة الاستكشاف المحدودة.",
+    "commercialLicenseAr": "١٠٠٩١٠٧١٠١ شركة واحة الاستكشاف المحدودة",
     "host": "مضيف",
     "guest": "ضيف",
     "pendingApproval": "الحساب في انتظار الموافقة",
@@ -864,6 +878,27 @@
     "selectedDate": "التاريخ المحدد",
     "tab55": "أنواع الفعاليات",
     "tab56": "فئات الفعاليات",
+    "thisFieldRequired": "هذا الحقل مطلوب",
+    "pleaseSelectAtLeastOneCategory": "يرجى اختيار فئة واحدة على الأقل",
+    "eventPriceMin1SAR": "يجب أن يكون سعر الفعالية 1 ريال سعودي على الأقل. لا يمكن إنشاء فعاليات بسعر أقل من 1 ريال سعودي.",
+    "pleaseUploadAtLeastOneImage": "يرجى تحميل صورة واحدة على الأقل للفعالية",
+    "imageUploadedSuccess": "تم تحميل الصورة بنجاح",
+    "uploadFailed": "فشل التحميل",
+    "pleaseSelectCategory": "يرجى اختيار فئة",
+    "cannotSelectPastTime": "لا يمكن اختيار وقت ماضي! يرجى اختيار وقت مستقبلي.",
+    "endTimeCannotBeBeforeStart": "لا يمكن أن يكون وقت الانتهاء قبل أو يساوي وقت البدء! يرجى اختيار وقت لاحق.",
+    "eventCapacityAtLeast1": "يجب أن تكون سعة الفعالية 1 على الأقل",
+    "eventCapacityCannotExceed": "لا يمكن أن تتجاوز سعة الفعالية {{max}}",
+    "dosInstructionsMaxChars": "لا يمكن أن تتجاوز تعليمات ما يجب فعله 500 حرف",
+    "dontsInstructionsMaxChars": "لا يمكن أن تتجاوز تعليمات ما لا يجب فعله 500 حرف",
+    "enterEventTitle": "أدخل عنوان الفعالية",
+    "describeEventDetail": "اوصف فعاليتك بالتفصيل...",
+    "enterAddressManually": "أدخل العنوان يدوياً أو اختر من الخريطة",
+    "orSearchOnMap": "أو ابحث على الخريطة...",
+    "enterAmount": "أدخل المبلغ",
+    "zuroonaLogo": "شعار زرونا",
+    "profilePicture": "صورة الملف الشخصي",
+    "decorativeArrow": "سهم زخرفي",
     "eventTypes": {
       "conference": "مؤتمر",
       "workshop": "ورشة عمل",
@@ -900,6 +935,7 @@
     "tab8": "ادفع الآن",
     "tab9": "عرض التفاصيل",
     "tab10": "احجز الآن",
+    "tab11": "فعالياتي",
     "tab13": "موافق عليه",
     "tab14": "مرفوض",
     "tab15": "إنشاء فعالية",
@@ -915,10 +951,13 @@
     "pending": "قيد الانتظار",
     "rejected": "مرفوض",
     "completed": "مكتمل",
+    "searchEvents": "البحث عن فعاليات",
     "manageYourEvents": "إدارة وتنظيم فعالياتك",
+    "manageBookings": "إدارة جميع الحجوزات لفعالياتك",
     "noEventsFound": "لم يتم العثور على فعاليات",
     "createFirstEvent": "أنشئ فعاليتك الأولى للبدء ومشاركة تجارب مذهلة مع الآخرين",
     "noEventsForFilter": "لم يتم العثور على فعاليات لهذا الفلتر",
+    "perPerson": "للشخص الواحد",
     "totalReviews": "إجمالي التقييمات",
     "ratingBreakdown": "تفصيل التقييم",
     "customerFeedback": "تعليقات العملاء",
@@ -1079,7 +1118,15 @@
     "capacityInfoDesc": "يتم الآن إدارة سعة الفعالية بشكل فردي لكل فعالية تقوم بإنشائها. يمكنك تعيين حدود سعة محددة عند إنشاء الفعاليات أو تعديلها.",
     "deactivateSuccess": "تم تعطيل الحساب بنجاح",
     "confirmDeactivate": "هل أنت متأكد من تعطيل حسابك؟",
-    "deactivateWarning": "سيؤدي هذا الإجراء إلى تعطيل جميع فعالياتك ومنعك من إنشاء فعاليات جديدة. يمكنك إعادة تنشيط حسابك لاحقًا عن طريق الاتصال بالدعم."
+    "deactivateWarning": "سيؤدي هذا الإجراء إلى تعطيل جميع فعالياتك ومنعك من إنشاء فعاليات جديدة. يمكنك إعادة تنشيط حسابك لاحقًا عن طريق الاتصال بالدعم.",
+    "maxCapacityMin": "يجب أن تكون السعة القصوى للفعالية 1 على الأقل",
+    "maxCapacityMax": "لا يمكن أن تتجاوز السعة القصوى للفعالية 1000",
+    "maxCapacityRequired": "السعة القصوى للفعالية مطلوبة",
+    "maxCapacityInteger": "يجب أن تكون السعة القصوى للفعالية رقماً صحيحاً",
+    "maxCapacityPositive": "يجب أن تكون السعة القصوى للفعالية رقماً موجباً",
+    "failedToSave": "فشل حفظ الإعدادات",
+    "failedToDeactivate": "فشل تعطيل الحساب",
+    "deactivateError": "حدث خطأ أثناء تعطيل حسابك"
   },
   "breadcrumb": {
     "tab1": "الرئيسية",
@@ -1129,7 +1176,15 @@
     "tab5": "إعادة إرسال الرمز",
     "tab6": "تحقق",
     "tab7": "الرمز مطلوب",
-    "tab8": "يجب أن يكون الرمز 6 أرقام"
+    "tab8": "يجب أن يكون الرمز 6 أرقام",
+    "sendingOTP": "جاري إرسال رمز التحقق...",
+    "sendOTP": "إرسال رمز التحقق",
+    "verifying": "جاري التحقق...",
+    "otpSentSuccess": "تم إرسال رمز التحقق بنجاح!",
+    "failedToSendOTP": "فشل إرسال رمز التحقق",
+    "invalidOTP": "رمز التحقق غير صحيح. يرجى المحاولة مرة أخرى.",
+    "otpResentSuccess": "تم إعادة إرسال رمز التحقق بنجاح!",
+    "failedToResendOTP": "فشل إعادة إرسال رمز التحقق"
   },
   "Back": "رجوع",
   "review": {
@@ -1295,7 +1350,9 @@
     "read": "مقروءة",
     "failedToLoad": "فشل تحميل المحادثات",
     "failedToLoadMessages": "فشل تحميل الرسائل",
-    "failedToSend": "فشل إرسال الرسالة"
+    "failedToSend": "فشل إرسال الرسالة",
+    "attachFile": "إرفاق ملف",
+    "groupChatClosed": "الدردشة الجماعية مغلقة"
   },
   "common": {
     "loading": "جاري التحميل...",
@@ -1308,6 +1365,10 @@
     "view": "عرض",
     "search": "بحث",
     "filter": "تصفية",
+    "price": "السعر",
+    "currency": "ريال",
+    "clear": "مسح",
+    "perPerson": "للشخص الواحد",
     "export": "تصدير",
     "import": "استيراد",
     "print": "طباعة",
@@ -1529,5 +1590,81 @@
     "secureNote": "هذا إيصال رسمي تم إنشاؤه بواسطة زرونا",
     "downloadStarted": "بدأ تحميل الفاتورة",
     "copiedToClipboard": "تم نسخ رقم الفاتورة إلى الحافظة"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "dangerZone": "منطقة الخطر",
+    "deactivateAccount": "تعطيل الحساب",
+    "deactivateMessage": "إذا قررت استخدام زرونا مرة أخرى، ستحتاج إلى إنشاء حساب جديد"
+  },
+  "withdrawal": {
+    "minimumAmount": "الحد الأدنى",
+    "processingTime": "وقت المعالجة: 3-5 أيام عمل",
+    "important": "معلومات مهمة",
+    "transferBank": "سيتم تحويل المبلغ إلى حسابك البنكي المسجل",
+    "notification": "ستتلقى إشعارًا عند معالجته",
+    "minimumLimitError": "الحد الأدنى لمبلغ السحب هو {{amount}} ريال سعودي",
+    "maximumLimitError": "الحد الأقصى لمبلغ السحب هو {{amount}} ريال سعودي",
+    "insufficientFunds": "رصيد غير كافي. رصيدك المتاح هو {{balance}} ريال سعودي",
+    "withdrawalSuccess": "تم إرسال طلب السحب بنجاح",
+    "requestPending": "طلب السحب الخاص بك قيد الانتظار للموافقة"
+  },
+  "event": {
+    "createTitle": "إنشاء حدث",
+    "dateSelectedSuccess": "تم تحديد التاريخ بنجاح!",
+    "step2Title": "الصور والموقع",
+    "step3Title": "الفئات والتفاصيل",
+    "step4Title": "القواعس والممنوعات",
+    "step5Title": "مراجعة وإرسال"
+  },
+  "aboutZuroona": "عن زرونا",
+  "logout": {
+    "title": "تأكيد تسجيل الخروج",
+    "description": "هل أنت متأكد من أنك تريد تسجيل الخروج؟",
+    "confirm": "نعم، تسجيل الخروج"
+  },
+  "notification": {
+    "title": "الإشعارات",
+    "date": "التاريخ",
+    "noNotifications": "لا توجد إشعارات"
+  },
+  "analytics": {
+    "title": "تحليلات الحدث",
+    "views": "المشاهدات",
+    "bookings": "الحجوزات",
+    "revenue": "الإيراد"
+  },
+  "aboutUs": {
+    "title": "عن إصدارنا",
+    "description": "تعرف على مزيد من المعلومات عن زرونا"
+  },
+  "completedEvents": "الفعاليات المكتملة",
+  "payment": {
+    "processed": "معالج",
+    "pending": "قيد الانتظار"
+  },
+  "refund": {
+    "invalidAuth": "بيانات اعتماد تفويض غير صالحة"
+  },
+  "bookNow": {
+    "title": "احجز الآن",
+    "selectAttendees": "حدد الحضور"
+  },
+  "eventDetail": {
+    "title": "تفاصيل الحدث",
+    "location": "الموقع",
+    "date": "التاريخ",
+    "time": "الوقت",
+    "duration": "المدة"
+  },
+  "filter": {
+    "categories": "الفئات",
+    "price": "السعر",
+    "date": "التاريخ"
+  },
+  "modal": {
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "cancel": "إلغاء"
   }
 }

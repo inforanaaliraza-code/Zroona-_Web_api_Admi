@@ -178,8 +178,8 @@ export default function Footer() {
                 <div className="pt-8 mt-12 border-t border-gray-800">
                     <p className="text-sm text-center text-gray-400">
                         {i18n.language === 'ar'
-                            ? "١٠٠٩١٠٧١٠١ شركة واحة الاستكشاف المحدودة"
-                            : "Commercial License: 1009107101, Oasis Exploration Company Limited."}
+                            ? t("auth.commercialLicenseAr") || "١٠٠٩١٠٧١٠١ شركة واحة الاستكشاف المحدودة"
+                            : t("auth.commercialLicense") || "Commercial License: 1009107101, Oasis Exploration Company Limited."}
                     </p>
                 </div>
 

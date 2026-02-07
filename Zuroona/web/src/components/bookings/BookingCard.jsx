@@ -34,12 +34,20 @@ const BookingCard = ({ booking, onCancelBooking, isRTL }) => {
       icon: "lucide:x-circle",
       label: t("events.cancelled") || "Cancelled"
     },
+
+
+
+
     4: { 
       color: "bg-gray-100 text-gray-800 border-gray-300", 
       icon: "lucide:x",
       label: t("events.rejected") || "Rejected"
     },
   };
+
+
+
+
 
   // Format helpers
   const formatDate = (dateString) => {

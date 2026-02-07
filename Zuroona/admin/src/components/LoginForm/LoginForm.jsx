@@ -98,12 +98,12 @@ function LoginForm(props) {
               disabled
             >
               <span>{props.page === "forgot" ? "Continue" : "Login"}</span>
-              <Image
-                src="/assets/images/login/arrow.png"
-                alt="Arrow"
-                height={22}
-                width={20}
-              />
+                      <Image
+                        src="/assets/images/login/arrow.png"
+                        alt={mounted ? t("common.arrow") : "Arrow"}
+                        height={22}
+                        width={20}
+                      />
             </button>
           </div>
         </div>
@@ -139,7 +139,7 @@ function LoginForm(props) {
               mobile_number: values.mobile_number || values.email, // Support both for backward compatibility
             }).then((res) => {
               if (res?.status === 1) {
-                toast.success(res?.message || "OTP sent to your mobile number");
+                toast.success(res?.message || t("common.otpSentToMobile") || "OTP sent to your mobile number");
                 Cookies.set(TOKEN_NAME, res?.data?.token);
                 push("/otp-verify");
               } else {
@@ -283,7 +283,7 @@ function LoginForm(props) {
                       </span>
                       <Image
                         src="/assets/images/login/arrow.png"
-                        alt="Arrow"
+                        alt={mounted ? t("common.arrow") : "Arrow"}
                         height={22}
                         width={20}
                       />

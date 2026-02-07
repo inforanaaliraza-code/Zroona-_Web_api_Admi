@@ -11,12 +11,11 @@ import { useRouter } from "next/navigation";
 import Paginations from "@/components/Paginations/Pagination";
 import Loader from "@/components/Loader/Loader";
 import { useTranslation } from "react-i18next";
-import { useRTL } from "@/utils/rtl";
+import { Icon } from "@iconify/react";
 
 export default function JoinUsEvent() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { isRTL, flexDirection, textAlign } = useRTL();
   const breadcrumbItems = [
     { label: t('breadcrumb.tab1'), href: "/joinUsEvent" },
     { label: t('myEventOnly'), href: "/joinUsEvent" },
@@ -108,25 +107,25 @@ export default function JoinUsEvent() {
         <div className="mx-auto px-4 md:px-8 xl:px-28 max-w-[95%] sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%] xl:max-w-7xl">
           {/* Enhanced Header Section */}
           <div className="mb-8">
-            <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6 mb-6 ${flexDirection}`}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6 mb-6">
               <div className="flex-1">
-                <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 ${textAlign}`}>
-                  Events
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2">
+                  {t('card.tab11') || 'Events'}
                 </h1>
-                <p className={`text-gray-600 text-sm sm:text-base mt-1 ${textAlign}`}>
+                <p className="text-gray-600 text-sm sm:text-base mt-1">
                   {t('events.manageYourEvents') || 'Manage and organize your events'}
                 </p>
               </div>
               <button
                 onClick={() => router.push("/create-event?type=1")}
-                className={`group relative bg-gradient-to-r from-[#a797cc] to-[#8ba179] flex items-center justify-center text-white px-6 sm:px-8 gap-x-2 py-3.5 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 whitespace-nowrap ${flexDirection}`}
+                className="group relative bg-gradient-to-r from-[#a797cc] to-[#8ba179] flex items-center justify-center text-white px-6 sm:px-8 gap-x-2 py-3.5 sm:py-4 rounded-xl text-sm sm:text-base font-semibold transition-all duration-300 ease-in-out shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 whitespace-nowrap"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <Image
                   src="/assets/images/icons/bx-calendar-plus.png"
                   height={20} 
                   width={20}
-                  alt="Create Event"
+                  alt={t('card.tab15') || 'Create Event'}
                   className="relative z-10"
                 />
                 <span className="relative z-10">{t('card.tab15') || 'Create Event'}</span>
@@ -134,7 +133,7 @@ export default function JoinUsEvent() {
             </div>
 
             {/* Enhanced Status Filters */}
-            <div className={`mb-6 flex flex-wrap gap-2.5 ${flexDirection}`}>
+            <div className="mb-6 flex flex-wrap gap-2.5">
               <button
                 onClick={() => setStatusFilter("all")}
                 className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
@@ -202,29 +201,29 @@ export default function JoinUsEvent() {
               </button>
             </div>
 
-            {/* Enhanced Search Bar */}
+            {/* Enhanced Search Bar - RTL Support via CSS */}
             <div className="mb-8 relative">
               <div className="relative">
-                <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-4' : 'left-0 pl-4'} flex items-center pointer-events-none z-10`}>
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none z-10 [dir=rtl]:right-auto [dir=rtl]:left-0 [dir=rtl]:pl-4 [dir=rtl]:pr-0">
+                  <Icon icon="lucide:search" className="w-5 h-5 text-gray-400" />
                 </div>
                 <input
                   type="text"
                   value={search}
                   onChange={handleSearch}
-                  placeholder={t('placeholder.search') || 'Search events...'}
-                  className={`w-full ${isRTL ? 'pr-4 pl-12' : 'pl-12 pr-4'} py-4 rounded-xl border-2 border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent shadow-sm hover:shadow-md transition-all duration-300 text-sm sm:text-base`}
+                  placeholder={t('events.searchEvents') || t('placeholder.search') || 'Search for events'}
+                  className="w-full pr-4 pl-12 py-4 rounded-xl border-2 border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent shadow-sm hover:shadow-md transition-all duration-300 text-sm sm:text-base [dir=rtl]:pl-4 [dir=rtl]:pr-12"
                 />
                 {search && (
                   <button
-                    onClick={() => setSearch("")}
-                    className={`absolute inset-y-0 ${isRTL ? 'left-0 pl-4' : 'right-0 pr-4'} flex items-center z-10`}
+                    onClick={() => {
+                      setSearch("");
+                      dispatch(getEventList({ page: 1, search: "" }));
+                    }}
+                    className="absolute inset-y-0 left-0 pl-4 flex items-center z-10 [dir=rtl]:left-auto [dir=rtl]:right-0 [dir=rtl]:pr-4 [dir=rtl]:pl-0"
+                    aria-label={t('common.clear') || 'Clear search'}
                   >
-                    <svg className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <Icon icon="lucide:x" className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />
                   </button>
                 )}
               </div>
@@ -300,19 +299,17 @@ export default function JoinUsEvent() {
                   {statusFilter === "all" && (
                     <button
                       onClick={() => router.push("/create-event?type=1")}
-                      className="group relative bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white px-8 py-4 rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 shadow-lg"
+                      className="group relative bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white px-8 py-4 rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 shadow-lg flex items-center justify-center gap-2"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-[#8ba179] to-[#a797cc] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <span className="relative z-10 flex items-center gap-2">
-                        <Image
-                          src="/assets/images/icons/bx-calendar-plus.png"
-                          height={20}
-                          width={20}
-                          alt=""
-                          className="relative z-10"
-                        />
-                        {t('card.tab15') || 'Create Event'}
-                      </span>
+                      <Image
+                        src="/assets/images/icons/bx-calendar-plus.png"
+                        height={20}
+                        width={20}
+                        alt={t('card.tab15') || 'Create Event'}
+                        className="relative z-10"
+                      />
+                      <span className="relative z-10">{t('card.tab15') || 'Create Event'}</span>
                     </button>
                   )}
                 </div>

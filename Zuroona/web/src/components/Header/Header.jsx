@@ -60,7 +60,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
       })
       .catch((error) => {
         setLoading(false);
-        toast.error("Failed to change language");
+        toast.error(t("auth.failedToChangeLanguage") || "Failed to change language");
       });
   };
 
@@ -117,7 +117,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                         src="/assets/images/x_F_logo.png"
                         width={300}
                         height={90}
-                        alt="Zuroona Logo"
+                        alt={t("add.zuroonaLogo") || "Zuroona Logo"}
                         className="object-contain w-auto h-auto 
                           max-h-[60px] sm:max-h-[65px] md:max-h-[75px] lg:max-h-[85px] xl:max-h-[90px]
                           max-w-[220px] sm:max-w-[250px] md:max-w-[280px] lg:max-w-[300px] xl:max-w-[320px]
@@ -127,18 +127,19 @@ const Header = ({ bgColor, hideLogo = false }) => {
                     </Link>
                   </div>
                   {/* Mobile Logo - Bigger sizes */}
-                  <div className="block sm:hidden">
+                  <div className="block sm:hidden flex-grow">
                     <Link
                       href={isAuthenticated && user ? (user.role === 2 ? "/joinUsEvent" : "/events") : "/"}
                       className="flex items-center h-full transition-transform duration-300 hover:scale-105"
                     >
                       <Image
                         src="/assets/images/x_F_logo.png"
-                        width={200}
-                        height={60}
-                        alt="Zuroona Logo"
+                        width={250}
+                        height={75}
+                        alt={t("add.zuroonaLogo") || "Zuroona Logo"}
                         className="object-contain w-auto h-auto 
-                          max-h-[50px] max-w-[50px]
+                          max-h-[55px] sm:max-h-[65px]
+                          max-w-[180px] sm:max-w-[250px]
                           brightness-0 invert"
                         priority
                       />
@@ -160,7 +161,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                         src="/assets/images/icons/lock-solid.png"
                         height={14}
                         width={12}
-                        alt="Login"
+                        alt={t("add.login") || "Login"}
                         className="opacity-80 group-hover:opacity-100"
                       />
                       <span suppressHydrationWarning>{t("header.tab5") || "Login"}</span>
@@ -210,7 +211,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
 
               {/* Mobile Menu Button */}
               <button
-                className="p-2 sm:hidden"
+                className="mobile-menu-button p-2 sm:hidden"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
                 <svg
@@ -240,11 +241,13 @@ const Header = ({ bgColor, hideLogo = false }) => {
 
             {/* Mobile Menu */}
             <div
-              className={`
+              className={`mobile-menu
                                 absolute top-[72px] left-0 right-0 
-                                bg-white/80 backdrop-blur-md backdrop-saturate-150
+                                bg-white/95 backdrop-blur-md backdrop-saturate-150
                                 border-t border-gray-100/50
                                 transition-all duration-300 ease-in-out
+                                max-h-[calc(100vh-72px)] overflow-y-auto
+                                z-50
                                 ${
                                   isMobileMenuOpen
                                     ? "visible opacity-100"
@@ -253,7 +256,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                                 sm:hidden
                             `}
             >
-              <div className="px-4 py-6 space-y-6">
+              <div className="px-4 py-6 space-y-6 min-h-max">
                 <div className="flex justify-center">
                   <LanguageSwitcher ChangeLanguage={ChangeLanguage} />
                 </div>
@@ -261,13 +264,13 @@ const Header = ({ bgColor, hideLogo = false }) => {
                   <div className="flex flex-col gap-4">
                     <button
                       onClick={openLoginModal}
-                      className="flex justify-center items-center gap-2 px-5 py-3 text-sm font-medium text-white bg-white/20 rounded-xl border border-white/30 hover:bg-white/30 transition-all duration-300 w-full"
+                      className="flex justify-center items-center gap-2 px-5 py-3 text-sm font-medium text-white bg-gray-700 rounded-xl border border-gray-600 hover:bg-gray-600 transition-all duration-300 w-full"
                     >
                       <Image
                         src="/assets/images/icons/lock-solid.png"
                         height={14}
                         width={12}
-                        alt="Login"
+                        alt={t("add.login") || "Login"}
                         className="opacity-80"
                       />
                       <span suppressHydrationWarning>{t("header.tab5") || "Login"}</span>
@@ -275,7 +278,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                     <Link
                       href="/signup"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex justify-center items-center gap-2 px-5 py-3 text-sm font-medium text-white bg-[#a797cc] rounded-xl hover:shadow-lg transition-all duration-300 w-full"
+                      className="flex justify-center items-center gap-2 px-5 py-3 text-sm font-medium text-white bg-[#a797cc] rounded-xl hover:bg-[#9680bb] transition-all duration-300 w-full"
                     >
                       <span suppressHydrationWarning>{t("header.tab4") || "Sign Up"}</span>
                     </Link>

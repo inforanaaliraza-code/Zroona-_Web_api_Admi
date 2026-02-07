@@ -23,7 +23,7 @@ export default function SuspendHostModal({ isOpen, onClose, onConfirm, organizer
           >
             <Image
               src="/assets/images/home/close-circle-outline.png"
-              alt="Close"
+              alt={t("common.close") || "Close"}
               width={24}
               height={24}
             />

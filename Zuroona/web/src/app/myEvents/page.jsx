@@ -222,7 +222,7 @@ export default function MyEventsPage() {
                 <Icon icon="lucide:info" className="h-5 w-5 text-[#a797cc]" />
                 {getTranslation(t, "events.bookingFlow", "Booking Flow")}
               </h3>
-              <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+              <div className={`flex flex-wrap items-center justify-center gap-4 text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
                 {[
                   { step: 1, label: t("events.bookEvent") || "Book Event", color: "bg-blue-500" },
                   { step: 2, label: t("events.waitApproval") || "Wait for Host Approval", color: "bg-yellow-500" },
@@ -234,10 +234,10 @@ export default function MyEventsPage() {
                       <div className={`flex items-center justify-center w-10 h-10 rounded-full ${item.color} text-white font-bold shadow-md`}>
                         {item.step}
                       </div>
-                      <span className="text-gray-700 font-medium">{item.label}</span>
+                      <span className={`text-gray-700 font-medium ${textAlign}`}>{item.label}</span>
                     </div>
                     {index < array.length - 1 && (
-                      <Icon icon="lucide:arrow-right" className="w-5 h-5 text-gray-400" />
+                      <Icon icon={isRTL ? "lucide:arrow-left" : "lucide:arrow-right"} className="w-5 h-5 text-gray-400" />
                     )}
                   </React.Fragment>
                 ))}
@@ -396,7 +396,7 @@ export default function MyEventsPage() {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start gap-2">
                                   <Badge variant="outline" className={`${status.color} border-2 text-xs`}>
-                                    <Icon icon={status.icon} className="w-3 h-3 mr-1" />
+                                    <Icon icon={status.icon} className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                     {status.label}
                                   </Badge>
                                 </div>
@@ -415,12 +415,12 @@ export default function MyEventsPage() {
                           {/* Date & Time */}
                           <td className={`px-6 py-4 whitespace-nowrap ${textAlign}`}>
                             <div className="text-sm text-gray-900">
-                              <div className="flex items-center gap-1 mb-1">
+                              <div className={`flex items-center gap-1 mb-1 ${flexDirection}`}>
                                 <Icon icon="lucide:calendar" className="w-4 h-4 text-[#a797cc]" />
                                 <span className="font-medium">{formatDate(booking.event?.event_date)}</span>
                               </div>
                               {(booking.event?.event_start_time || booking.event_start_time) && (
-                                <div className="flex items-center gap-1 text-xs text-gray-600">
+                                <div className={`flex items-center gap-1 text-xs text-gray-600 ${flexDirection}`}>
                                   <Icon icon="lucide:clock" className="w-3 h-3" />
                                   <span>
                                     {formatTime(booking.event?.event_start_time || booking.event_start_time)}
@@ -436,7 +436,7 @@ export default function MyEventsPage() {
                           {/* Location */}
                           <td className={`px-6 py-4 ${textAlign}`}>
                             {(booking.event?.event_address || booking.event_address) ? (
-                              <div className="flex items-start gap-1 text-sm text-gray-600 max-w-[200px]">
+                              <div className={`flex items-start gap-1 text-sm text-gray-600 max-w-[200px] ${flexDirection}`}>
                                 <Icon icon="lucide:map-pin" className="w-4 h-4 text-[#a797cc] flex-shrink-0 mt-0.5" />
                                 <span className="line-clamp-2">{booking.event?.event_address || booking.event_address}</span>
                               </div>
@@ -447,7 +447,7 @@ export default function MyEventsPage() {
 
                           {/* Attendees */}
                           <td className={`px-6 py-4 whitespace-nowrap ${textAlign}`}>
-                            <div className="flex items-center gap-1 text-sm text-gray-900">
+                            <div className={`flex items-center gap-1 text-sm text-gray-900 ${flexDirection}`}>
                               <Icon icon="lucide:users" className="w-4 h-4 text-gray-400" />
                               <span className="font-medium">{booking.attendees || booking.no_of_attendees || 0}</span>
                             </div>
@@ -455,7 +455,7 @@ export default function MyEventsPage() {
 
                           {/* Total Amount */}
                           <td className={`px-6 py-4 whitespace-nowrap ${textAlign}`}>
-                            <div className="flex items-center gap-1 text-sm font-semibold text-[#a797cc]">
+                            <div className={`flex items-center gap-1 text-sm font-semibold text-[#a797cc] ${flexDirection}`}>
                               <Icon icon="lucide:dollar-sign" className="w-4 h-4" />
                               <span>{formatCurrency(booking.total_amount)}</span>
                             </div>
@@ -479,7 +479,7 @@ export default function MyEventsPage() {
                             >
                               <Icon 
                                 icon={booking.payment_status ? "lucide:check-circle-2" : "lucide:clock"} 
-                                className="w-3 h-3 mr-1" 
+                                className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} 
                               />
                               {booking.payment_status 
                                 ? getTranslation(t, "events.paid", "Paid") 
@@ -504,7 +504,7 @@ export default function MyEventsPage() {
                                     asChild
                                   >
                                     <Link href={`/events/${booking.event?._id}`}>
-                                      <Icon icon="lucide:eye" className="w-3 h-3 mr-1" />
+                                      <Icon icon="lucide:eye" className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                       {getTranslation(t, "events.viewDetails", "View")}
                                     </Link>
                                   </Button>
@@ -524,7 +524,7 @@ export default function MyEventsPage() {
                                       asChild
                                     >
                                       <Link href={`/messaging?event_id=${booking.event._id}`}>
-                                        <Icon icon="lucide:message-circle" className="w-3 h-3 mr-1" />
+                                        <Icon icon="lucide:message-circle" className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                         {getTranslation(t, "events.chat", "Chat")}
                                       </Link>
                                     </Button>
@@ -545,7 +545,7 @@ export default function MyEventsPage() {
                                       asChild
                                     >
                                       <Link href={`/events/${booking.event?._id}?initiate_payment=true`}>
-                                        <Icon icon="lucide:credit-card" className="w-3 h-3 mr-1" />
+                                        <Icon icon="lucide:credit-card" className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                         {getTranslation(t, "events.pay", "Pay")}
                                       </Link>
                                     </Button>
@@ -565,7 +565,7 @@ export default function MyEventsPage() {
                                       className="h-8 px-3 text-xs"
                                       onClick={() => handleCancelBookingClick(booking._id)}
                                     >
-                                      <Icon icon="lucide:x-circle" className="w-3 h-3 mr-1" />
+                                      <Icon icon="lucide:x-circle" className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                       {getTranslation(t, "events.cancel", "Cancel")}
                                     </Button>
                                   </TooltipTrigger>
@@ -585,7 +585,7 @@ export default function MyEventsPage() {
                                       asChild
                                     >
                                       <Link href={`/refunds/request?booking_id=${booking._id}`}>
-                                        <Icon icon="lucide:receipt-refund" className="w-3 h-3 mr-1" />
+                                        <Icon icon="lucide:receipt-refund" className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                         {getTranslation(t, "events.refund", "Refund")}
                                       </Link>
                                     </Button>
@@ -606,7 +606,7 @@ export default function MyEventsPage() {
                                       asChild
                                     >
                                       <Link href={`/refunds/${booking.refund_request_id}`}>
-                                        <Icon icon="lucide:receipt" className="w-3 h-3 mr-1" />
+                                        <Icon icon="lucide:receipt" className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                         {getTranslation(t, "events.viewRefund", "View Refund")}
                                       </Link>
                                     </Button>
@@ -674,7 +674,7 @@ export default function MyEventsPage() {
                         </h3>
                         
                         <div className="space-y-2 text-sm">
-                          <div className="flex items-center gap-2">
+                          <div className={`flex items-center gap-2 ${flexDirection}`}>
                             <Icon icon="lucide:calendar" className="w-4 h-4 text-[#a797cc]" />
                             <span className="text-gray-700">{formatDate(booking.event?.event_date)}</span>
                             {(booking.event?.event_start_time || booking.event_start_time) && (
@@ -692,7 +692,7 @@ export default function MyEventsPage() {
                           </div>
 
                           {(booking.event?.event_address || booking.event_address) && (
-                            <div className="flex items-start gap-2">
+                            <div className={`flex items-start gap-2 ${flexDirection}`}>
                               <Icon icon="lucide:map-pin" className="w-4 h-4 text-[#a797cc] flex-shrink-0 mt-0.5" />
                               <span className="text-gray-600">{booking.event?.event_address || booking.event_address}</span>
                             </div>
@@ -718,7 +718,7 @@ export default function MyEventsPage() {
                             >
                               <Icon 
                                 icon={booking.payment_status ? "lucide:check-circle-2" : "lucide:clock"} 
-                                className="w-3 h-3 mr-1" 
+                                className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} 
                               />
                               {booking.payment_status 
                                 ? getTranslation(t, "events.paid", "Paid") 
@@ -734,14 +734,14 @@ export default function MyEventsPage() {
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm" className="flex-1" asChild>
                             <Link href={`/events/${booking.event?._id}`}>
-                              <Icon icon="lucide:eye" className="w-4 h-4 mr-1" />
+                              <Icon icon="lucide:eye" className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                               {getTranslation(t, "events.viewDetails", "View Details")}
                             </Link>
                           </Button>
                           {showGroupChat && (
                             <Button variant="default" size="sm" className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600" asChild>
                               <Link href={`/messaging?event_id=${booking.event._id}`}>
-                                <Icon icon="lucide:message-circle" className="w-4 h-4 mr-1" />
+                                <Icon icon="lucide:message-circle" className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                 {getTranslation(t, "events.chat", "Chat")}
                               </Link>
                             </Button>
@@ -749,7 +749,7 @@ export default function MyEventsPage() {
                           {showPayment && (
                             <Button variant="default" size="sm" className="flex-1 bg-gradient-to-r from-[#a797cc] to-[#8ba179]" asChild>
                               <Link href={`/events/${booking.event?._id}?initiate_payment=true`}>
-                                <Icon icon="lucide:credit-card" className="w-4 h-4 mr-1" />
+                                <Icon icon="lucide:credit-card" className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                 {getTranslation(t, "events.pay", "Pay")}
                               </Link>
                             </Button>
@@ -759,14 +759,14 @@ export default function MyEventsPage() {
                           <div className="flex gap-2">
                             {showCancel && (
                               <Button variant="destructive" size="sm" className="flex-1" onClick={() => handleCancelBookingClick(booking._id)}>
-                                <Icon icon="lucide:x-circle" className="w-4 h-4 mr-1" />
+                                <Icon icon="lucide:x-circle" className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                 {getTranslation(t, "events.cancel", "Cancel")}
                               </Button>
                             )}
                             {showRefundRequest && (
                               <Button variant="outline" size="sm" className="flex-1 border-orange-300 text-orange-700" asChild>
                                 <Link href={`/refunds/request?booking_id=${booking._id}`}>
-                                  <Icon icon="lucide:receipt-refund" className="w-4 h-4 mr-1" />
+                                  <Icon icon="lucide:receipt-refund" className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                   {getTranslation(t, "events.refund", "Refund")}
                                 </Link>
                               </Button>
@@ -774,7 +774,7 @@ export default function MyEventsPage() {
                             {showViewRefund && (
                               <Button variant="outline" size="sm" className="flex-1 border-blue-300 text-blue-700" asChild>
                                 <Link href={`/refunds/${booking.refund_request_id}`}>
-                                  <Icon icon="lucide:receipt" className="w-4 h-4 mr-1" />
+                                  <Icon icon="lucide:receipt" className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                   {getTranslation(t, "events.viewRefund", "View Refund")}
                                 </Link>
                               </Button>

@@ -172,7 +172,7 @@ export default function AdminManagement() {
                       <td className="px-2 py-2">{admin.admin_name}</td>
                       <td className="px-2 py-2">{admin.username}</td>
                       <td className="px-2 py-2">{admin.mobile_number}</td>
-                      <td className="px-2 py-2">{admin.email || "N/A"}</td>
+                      <td className="px-2 py-2">{admin.email || (t("eventTypeLegacy.notAvailable") || "N/A")}</td>
                       <td className="px-2 py-2">
                         <span className={`text-sm font-medium ${
                           admin.is_main ? "text-[#a797cc]" : "text-gray-600"

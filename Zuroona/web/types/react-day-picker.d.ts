@@ -11,6 +11,10 @@ declare module 'react-day-picker' {
     IconLeft?: ComponentType<any>;
     IconRight?: ComponentType<any>;
     [key: string]: ComponentType<any> | undefined;
+
+
+
+    
   }
   
   export interface DayPickerProps {

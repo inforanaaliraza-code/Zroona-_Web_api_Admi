@@ -141,7 +141,7 @@ export default function UpcomingEvents() {
 	};
 
 	return (
-		<section className="pb-12 bg-white">
+		<section className="py-8 bg-white">
 			<div className="mx-auto px-4 md:px-8 xl:px-28">
 				<div className="flex justify-between items-end mb-6">
 					<h1 className="text-3xl font-bold">{t("home.tab8")}</h1>

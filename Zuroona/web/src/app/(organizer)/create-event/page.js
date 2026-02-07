@@ -45,12 +45,12 @@ const PERMANENT_CATEGORIES = [
     { _id: 'photography-sightseeing', name: 'Photography & Sightseeing' },
 ];
 
-const STEPS = [
-    { id: 1, title: 'Basic Information', icon: 'lucide:info' },
-    { id: 2, title: 'Images & Location', icon: 'lucide:image' },
-    { id: 3, title: 'Categories & Details', icon: 'lucide:tag' },
-    { id: 4, title: "Do's & Don'ts", icon: 'lucide:lightbulb' },
-    { id: 5, title: 'Review & Submit', icon: 'lucide:check-circle' },
+const STEP_CONFIG = [
+    { id: 1, key: 'event.createTitle', fallback: 'Basic Information', icon: 'lucide:info' },
+    { id: 2, key: 'event.step2Title', fallback: 'Images & Location', icon: 'lucide:image' },
+    { id: 3, key: 'event.step3Title', fallback: 'Categories & Details', icon: 'lucide:tag' },
+    { id: 4, key: 'event.step4Title', fallback: "Do's & Don'ts", icon: 'lucide:lightbulb' },
+    { id: 5, key: 'event.step5Title', fallback: 'Review & Submit', icon: 'lucide:check-circle' },
 ];
 
 // Professional Time Picker Component with Buttons - With Time Restrictions
@@ -134,7 +134,7 @@ const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDat
         if (isTimeAllowed(h24, minutes)) {
             setHours(newHours);
         } else {
-            toast.warning("⏰ Cannot select past time! Please select a future time.");
+            toast.warning(t("add.cannotSelectPastTime") || "⏰ Cannot select past time! Please select a future time.");
         }
     };
 
@@ -144,7 +144,7 @@ const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDat
         if (isTimeAllowed(h24, minutes)) {
             setHours(newHours);
         } else {
-            toast.warning("⏰ Cannot select past time! Please select a future time.");
+            toast.warning(t("add.cannotSelectPastTime") || "⏰ Cannot select past time! Please select a future time.");
         }
     };
 
@@ -154,7 +154,7 @@ const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDat
         if (isTimeAllowed(h24, newMinutes)) {
             setMinutes(newMinutes);
         } else {
-            toast.warning("⏰ Cannot select past time! Please select a future time.");
+            toast.warning(t("add.cannotSelectPastTime") || "⏰ Cannot select past time! Please select a future time.");
         }
     };
 
@@ -164,7 +164,7 @@ const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDat
         if (isTimeAllowed(h24, newMinutes)) {
             setMinutes(newMinutes);
         } else {
-            toast.warning("⏰ Cannot select past time! Please select a future time.");
+            toast.warning(t("add.cannotSelectPastTime") || "⏰ Cannot select past time! Please select a future time.");
         }
     };
 
@@ -174,7 +174,7 @@ const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDat
         if (isTimeAllowed(newH24, minutes)) {
             setIsAM(prev => !prev);
         } else {
-            toast.warning("⏰ Cannot select past time! Please select a future time.");
+            toast.warning(t("add.cannotSelectPastTime") || "⏰ Cannot select past time! Please select a future time.");
         }
     };
 
@@ -488,25 +488,35 @@ export default function CreateEventPage() {
                 .max(1000, 'Event description cannot exceed 1000 characters'),
             event_address: Yup.string().required(t('signup.tab16')),
             no_of_attendees: Yup.number()
-                .min(1, "Event capacity must be at least 1")
-                .max(maxEventCapacity, `Event capacity cannot exceed ${maxEventCapacity}`)
-                .required("This field is required"),
-            event_price: Yup.number().required(t('signup.tab16')).positive(t('signup.tab16')),
+                .min(1, t("add.eventCapacityAtLeast1") || "Event capacity must be at least 1")
+                .max(maxEventCapacity, t("add.eventCapacityCannotExceed", { max: maxEventCapacity }) || `Event capacity cannot exceed ${maxEventCapacity}`)
+                .required(t("add.thisFieldRequired") || "This field is required"),
+            event_price: Yup.number()
+                .required(t('signup.tab16') || 'Event price is required')
+                .min(1, t('add.eventPriceMin1SAR') || 'Event price must be at least 1 SAR')
+                .positive(t('signup.tab16') || 'Event price must be greater than 0'),
             event_for: Yup.string()
                 .required(t('signup.tab16'))
                 .oneOf(['1', '2', '3'], t('signup.tab17')),
             event_category: Number(eventType) === 1 
                 ? Yup.string().required(t('signup.tab16'))
-                : Yup.array().min(1, "Please select at least one category").required(t('signup.tab16')),
+                : Yup.array().min(1, t("add.pleaseSelectAtLeastOneCategory") || "Please select at least one category").required(t('signup.tab16')),
             dos_instruction: Yup.string()
-                .max(500, "Do's instructions cannot exceed 500 characters"),
+                .max(500, t("add.dosInstructionsMaxChars") || "Do's instructions cannot exceed 500 characters"),
             do_not_instruction: Yup.string()
-                .max(500, "Don'ts instructions cannot exceed 500 characters"),
+                .max(500, t("add.dontsInstructionsMaxChars") || "Don'ts instructions cannot exceed 500 characters"),
         }),
         enableReinitialize: true,
         onSubmit: async (values, { resetForm }) => {
+            // Validate price immediately - must be at least 1 SAR
+            const price = Number(values.event_price);
+            if (isNaN(price) || price < 1) {
+                toast.error(t('add.eventPriceMin1SAR') || 'Event price must be at least 1 SAR. Events with price less than 1 SAR cannot be created.');
+                return;
+            }
+
             if (eventImages.length === 0) {
-                toast.error("Please upload at least one event image");
+                toast.error(t("add.pleaseUploadAtLeastOneImage") || "Please upload at least one event image");
                 return;
             }
             
@@ -522,6 +532,15 @@ export default function CreateEventPage() {
     const submitEvent = async (valuesOrPayload, resetForm) => {
         const values = valuesOrPayload?.values || valuesOrPayload;
         const actualResetForm = valuesOrPayload?.resetForm || resetForm;
+        
+        // Validate price before submitting - must be at least 1 SAR
+        const price = Number(values.event_price);
+        if (isNaN(price) || price < 1) {
+            setLoading(false);
+            toast.error(t('add.eventPriceMin1SAR') || 'Event price must be at least 1 SAR. Events with price less than 1 SAR cannot be created.');
+            if (setShowCreateConfirm) setShowCreateConfirm(false);
+            return;
+        }
         
         setLoading(true);
         let payload;
@@ -637,13 +656,13 @@ export default function CreateEventPage() {
             
             if (resp?.status === 1 && resp?.data?.location) {
                 setEventImages(prev => [...prev, resp.data.location]);
-                toast.success("Image uploaded successfully");
+                toast.success(t("add.imageUploadedSuccess") || "Image uploaded successfully");
             } else {
-                throw new Error(resp?.message || "Upload failed");
+                throw new Error(resp?.message || t("add.uploadFailed") || "Upload failed");
             }
         } catch (error) {
             console.error("[EVENT-IMAGE-UPLOAD] Error:", error);
-            toast.error(error?.message || "Image upload failed");
+            toast.error(error?.message || t("add.uploadFailed") || "Image upload failed");
             setPreviewUrls(prev => prev.slice(0, -1));
         } finally {
             setImageLoading(false);
@@ -740,7 +759,7 @@ export default function CreateEventPage() {
             if (!formik.values.no_of_attendees || formik.values.no_of_attendees < 1) errors.no_of_attendees = 'Required';
         } else if (step === 2) {
             if (eventImages.length === 0) {
-                toast.error("Please upload at least one event image");
+                toast.error(t("add.pleaseUploadAtLeastOneImage") || "Please upload at least one event image");
                 return false;
             }
             if (!formik.values.event_address) errors.event_address = 'Required';
@@ -748,14 +767,14 @@ export default function CreateEventPage() {
             if (Number(eventType) === 1) {
                 // Join events - single category string
                 if (!formik.values.event_category || formik.values.event_category === "") {
-                    toast.error("Please select a category");
+                    toast.error(t("add.pleaseSelectCategory") || "Please select a category");
                     return false;
                 }
             } else {
                 // Welcome events - array of categories
                 const selectedCategories = Array.isArray(formik.values.event_category) ? formik.values.event_category : [];
                 if (selectedCategories.length === 0) {
-                    toast.error("Please select at least one category");
+                    toast.error(t("add.pleaseSelectAtLeastOneCategory") || "Please select at least one category");
                     return false;
                 }
             }
@@ -771,7 +790,7 @@ export default function CreateEventPage() {
 
     const handleNext = () => {
         if (validateStep(currentStep)) {
-            setCurrentStep(prev => Math.min(prev + 1, STEPS.length));
+            setCurrentStep(prev => Math.min(prev + 1, STEP_CONFIG.length));
         }
     };
 
@@ -793,7 +812,7 @@ export default function CreateEventPage() {
                     {/* Step Indicator */}
                     <div className="mb-6">
                         <div className="flex items-center justify-between mb-4">
-                            {STEPS.map((step, index) => (
+                            {STEP_CONFIG.map((step, index) => (
                                 <div key={step.id} className="flex items-center flex-1">
                                     <div className="flex flex-col items-center flex-1">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
@@ -810,10 +829,10 @@ export default function CreateEventPage() {
                                         <span className={`text-xs mt-1.5 font-medium ${
                                             currentStep >= step.id ? 'text-[#a797cc]' : 'text-gray-400'
                                         }`}>
-                                            {step.title}
+                                            {t(step.key) || step.fallback}
                                         </span>
                                     </div>
-                                    {index < STEPS.length - 1 && (
+                                    {index < STEP_CONFIG.length - 1 && (
                                         <div className={`h-0.5 flex-1 mx-1.5 transition-all ${
                                             currentStep > step.id ? 'bg-[#a797cc]' : 'bg-gray-300'
                                         }`} />
@@ -826,7 +845,7 @@ export default function CreateEventPage() {
                     <Card className="border border-gray-200 shadow-md overflow-visible relative">
                         <CardHeader className="pb-3 px-4 pt-4">
                             <CardTitle className="text-lg font-bold text-center">
-                                {eventId ? t('add.tab21') || 'Edit Event' : t('add.tab18') || 'Create Event'} - Step {currentStep} of {STEPS.length}
+                                {eventId ? t('add.tab21') || 'Edit Event' : t('add.tab18') || 'Create Event'} - Step {currentStep} of {STEP_CONFIG.length}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3 px-4 pb-4 overflow-visible">
@@ -838,7 +857,7 @@ export default function CreateEventPage() {
                                         <Label className="text-xs font-semibold mb-1.5 block">Event Title <span className="text-red-500">*</span></Label>
                                         <Input
                                             type="text"
-                                            placeholder="Enter Event Title"
+                                            placeholder={t("add.enterEventTitle") || "Enter Event Title"}
                                             {...formik.getFieldProps('event_name')}
                                             maxLength={200}
                                             className="h-8 text-xs"
@@ -895,7 +914,7 @@ export default function CreateEventPage() {
                                                         const endTotalMinutes = endH * 60 + endM;
                                                         
                                                         if (endTotalMinutes <= startTotalMinutes) {
-                                                            toast.error("❌ End time cannot be before or equal to start time! Please select a later time.");
+                                                            toast.error(t("add.endTimeCannotBeBeforeStart") || "❌ End time cannot be before or equal to start time! Please select a later time.");
                                                             return;
                                                         }
                                                     }
@@ -914,7 +933,7 @@ export default function CreateEventPage() {
                                     <div>
                                         <Label className="text-xs font-semibold mb-1.5 block">Event Description *</Label>
                                         <textarea
-                                            placeholder="Describe your event in detail..."
+                                            placeholder={t("add.describeEventDetail") || "Describe your event in detail..."}
                                             {...formik.getFieldProps('event_description')}
                                             maxLength={1000}
                                             className="w-full h-20 px-3 py-2 bg-gray-50 rounded-md text-xs resize-none focus:outline-none focus:ring-2 focus:ring-[#a797cc]"
@@ -1007,7 +1026,7 @@ export default function CreateEventPage() {
                                             {/* Manual Address Input */}
                                             <Input
                                                 type="text"
-                                                placeholder="Enter address manually or select from map"
+                                                placeholder={t("add.enterAddressManually") || "Enter address manually or select from map"}
                                                 {...formik.getFieldProps('event_address')}
                                                 className="h-8 text-xs"
                                                 onChange={(e) => {
@@ -1057,7 +1076,7 @@ export default function CreateEventPage() {
                                                 >
                                                     <Input
                                                         type="text"
-                                                        placeholder="Or search on map..."
+                                                        placeholder={t("add.orSearchOnMap") || "Or search on map..."}
                                                         className="h-8 text-xs"
                                                     />
                                                 </Autocomplete>
@@ -1186,7 +1205,7 @@ export default function CreateEventPage() {
                                         <Label className="text-xs font-semibold mb-1.5 block">{t('add.tab14')} *</Label>
                                         <Input
                                             type="number"
-                                            placeholder="Enter Amount"
+                                            placeholder={t("add.enterAmount") || "Enter Amount"}
                                             {...formik.getFieldProps('event_price')}
                                             className="h-8 text-xs"
                                         />
@@ -1346,7 +1365,7 @@ export default function CreateEventPage() {
                                     <Icon icon="lucide:arrow-left" className="w-3 h-3 mr-1.5" />
                                     Back
                                 </Button>
-                                {currentStep < STEPS.length ? (
+                                {currentStep < STEP_CONFIG.length ? (
                                     <Button
                                         type="button"
                                         onClick={handleNext}

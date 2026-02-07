@@ -74,7 +74,7 @@ const allowedOrigins = [
 const corsOptions = {
 	origin: function (origin, callback) {
 		// Allow requests with no origin (like mobile apps, Postman, or curl)
-		if (!origin) {mra
+		if (!origin) {
 			return callback(null, true);
 		}
 

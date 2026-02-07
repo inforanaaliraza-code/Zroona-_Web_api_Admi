@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
+import { useRTL } from "@/utils/rtl";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,9 @@ import { Button } from "@/components/ui/button";
 
 export default function ImageModal({ images, isOpen, onClose, initialIndex = 0 }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  
+  // Call hooks at the top level of the component
+  const { isRTL } = useRTL();
 
   // Always call hooks before any conditional returns
   useEffect(() => {
@@ -72,26 +76,34 @@ export default function ImageModal({ images, isOpen, onClose, initialIndex = 0 }
         
         <div className="relative w-full h-full flex items-center justify-center">
           {/* Close Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white border border-white/20"
-          >
-            <Icon icon="lucide:x" className="h-5 w-5" />
-          </Button>
+          {(() => {
+            const posClass = isRTL ? 'left-4' : 'right-4';
+            return (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className={`absolute top-4 ${posClass} z-50 bg-black/50 hover:bg-black/70 text-white border border-white/20`}
+              >
+                <Icon icon="lucide:x" className="h-5 w-5" />
+              </Button>
+            );
+          })()}
 
           {/* Previous Button */}
-          {hasMultiple && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handlePrevious}
-              className="absolute left-4 z-50 bg-black/50 hover:bg-black/70 text-white border border-white/20"
-            >
-              <Icon icon="lucide:chevron-left" className="h-6 w-6" />
-            </Button>
-          )}
+          {hasMultiple && (() => {
+            const leftPos = isRTL ? 'right-4' : 'left-4';
+            return (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePrevious}
+                className={`absolute ${leftPos} z-50 bg-black/50 hover:bg-black/70 text-white border border-white/20`}
+              >
+                <Icon icon={isRTL ? "lucide:chevron-right" : "lucide:chevron-left"} className="h-6 w-6" />
+              </Button>
+            );
+          })()}
 
           {/* Main Image */}
           <div className="relative w-full h-full flex items-center justify-center p-4">
@@ -108,16 +120,19 @@ export default function ImageModal({ images, isOpen, onClose, initialIndex = 0 }
           </div>
 
           {/* Next Button */}
-          {hasMultiple && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleNext}
-              className="absolute right-4 z-50 bg-black/50 hover:bg-black/70 text-white border border-white/20"
-            >
-              <Icon icon="lucide:chevron-right" className="h-6 w-6" />
-            </Button>
-          )}
+          {hasMultiple && (() => {
+            const rightPos = isRTL ? 'left-4' : 'right-4';
+            return (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNext}
+                className={`absolute ${rightPos} z-50 bg-black/50 hover:bg-black/70 text-white border border-white/20`}
+              >
+                <Icon icon={isRTL ? "lucide:chevron-left" : "lucide:chevron-right"} className="h-6 w-6" />
+              </Button>
+            );
+          })()}
 
           {/* Image Counter */}
           {hasMultiple && (

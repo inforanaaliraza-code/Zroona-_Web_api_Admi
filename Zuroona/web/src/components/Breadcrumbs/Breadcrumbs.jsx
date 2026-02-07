@@ -13,14 +13,23 @@ const Breadcrumbs = ({ items }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [language, setLanguage] = useState('en');
 
+
+
+
+
+
   useEffect(() => {
     setIsMounted(true);
     setLanguage(i18n.language || 'en');
+    
   }, [i18n.language]);
 
   const handleBackClick = () => {
     router.back(); // Navigates to the previous page
   };
+
+
+
 
   // Use default language during SSR to prevent hydration mismatch
   const isRTL = isMounted ? language === 'ar' : false;

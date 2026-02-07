@@ -39,7 +39,7 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 	const phoneValidationSchema = Yup.object({
 		phone_number: Yup.string()
 			.required(t("auth.phoneRequired") || "Phone number is required")
-			.min(9, t("Phone Min Length") || "Phone number must be at least 9 digits"),
+			.min(9, t("auth.phoneMinLength") || "Phone number must be at least 9 digits"),
 		country_code: Yup.string()
 			.required(t("auth.countryCodeRequired") || "Country code is required"),
 	});
@@ -65,13 +65,13 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 
 				setLoading(false);
 				if (response?.status === 1) {
-					toast.success(response.message || "OTP sent successfully!");
+					toast.success(response.message || t("OTP.otpSentSuccess") || "OTP sent successfully!");
 					setStep(2); // Move to OTP verification step
 					setOtpSentTime(Date.now()); // Record when OTP was sent
 					setOtpExpired(false);
 					startTimer();
 				} else {
-					toast.error(response.message || "Failed to send OTP");
+					toast.error(response.message || t("OTP.failedToSendOTP") || "Failed to send OTP");
 				}
 			} catch (error) {
 				setLoading(false);
@@ -79,7 +79,7 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 
 				// Check if it's a network/connection error
 				if (error?.message === "Network Error" || error?.code === "ERR_NETWORK" || error?.code === "ERR_CONNECTION_REFUSED") {
-					const errorMsg = "Cannot connect to API server. Please make sure the server is running on port 3434.\n\nTo start: cd api && npm run dev";
+					const errorMsg = t("auth.apiConnectionError") || "Cannot connect to API server. Please make sure the server is running on port 3434.\n\nTo start: cd api && npm run dev";
 					toast.error(errorMsg);
 					console.error("[LOGIN-MODAL] API server connection failed. Server may not be running.");
 					return;
@@ -140,7 +140,7 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 					const user = response?.data?.user || response?.data?.organizer;
 
 					if (!user) {
-						toast.error(t("auth.loginFailed") || "Login failed. User data not found.");
+						toast.error(t("auth.loginFailedUserNotFound") || "Login failed. User data not found.");
 						return;
 					}
 
@@ -174,7 +174,7 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 						push("/events");
 					}
 				} else {
-					toast.error(response?.message || "Invalid OTP. Please try again.");
+					toast.error(response?.message || t("OTP.invalidOTP") || "Invalid OTP. Please try again.");
 				}
 			} catch (error) {
 				setLoading(false);
@@ -220,14 +220,14 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 				setOtpSentTime(Date.now()); // Record when OTP was sent
 				setOtpExpired(false);
 				otpFormik.setFieldValue("otp", ""); // Clear previous OTP
-				toast.success(data?.message || "OTP resent successfully!");
+				toast.success(data?.message || t("OTP.otpResentSuccess") || "OTP resent successfully!");
 				startTimer();
 			} else {
-				toast.error(data?.message || "Failed to resend OTP");
+				toast.error(data?.message || t("OTP.failedToResendOTP") || "Failed to resend OTP");
 			}
 		}).catch((error) => {
 			setLoading(false);
-			toast.error("Failed to resend OTP");
+			toast.error(t("OTP.failedToResendOTP") || "Failed to resend OTP");
 		});
 	};
 
@@ -301,7 +301,7 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 								<div className="absolute inset-0 bg-gradient-to-r from-[#a797cc]/20 to-brand-orange/20 rounded-2xl blur-xl"></div>
 								<Image
 									src="/assets/images/x_F_logo.png"
-									alt="Zuroona Logo"
+									alt={t("add.zuroonaLogo") || "Zuroona Logo"}
 									width={240}
 									height={70}
 									className="h-auto relative z-10 drop-shadow-lg"
@@ -381,16 +381,13 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 											<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
 
 											{/* Button content */}
-											<span className="relative z-10 flex items-center gap-2">
+											<span className="relative z-10 flex items-center justify-center gap-2">
 												{loading ? (
-													<>
-														<Loader />
-														<span>Sending OTP...</span>
-													</>
+													<span>{t("OTP.sendingOTP") || "Sending OTP..."}</span>
 												) : (
 													<>
 														<Icon icon="material-symbols:sms" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-														<span>Send OTP</span>
+														<span>{t("OTP.sendOTP") || "Send OTP"}</span>
 														<Icon icon="material-symbols:arrow-forward" className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
 													</>
 												)}
@@ -536,12 +533,9 @@ export default function LoginModal({ isOpen, onClose, returnUrl = "/" }) {
 											<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
 
 											{/* Button content */}
-											<span className="relative z-10 flex items-center gap-2">
+											<span className="relative z-10 flex items-center justify-center gap-2">
 												{loading ? (
-													<>
-														<Loader />
-														<span>Verifying...</span>
-													</>
+													<span>{t("OTP.verifying") || "Verifying..."}</span>
 												) : (
 													<>
 														<Icon icon="material-symbols:verified" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

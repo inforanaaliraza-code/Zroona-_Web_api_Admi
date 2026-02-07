@@ -9,7 +9,7 @@ import { useRTL } from "@/utils/rtl";
 
 export default function TermsOfServiceModal({ isOpen, onClose }) {
   const { t, i18n } = useTranslation();
-  const { isRTL, textAlign } = useRTL();
+  const { isRTL, textAlign } = useRTL({ i18n });
   const CMSDetail = useDataStore((store) => store.CMSDetail);
   const { fetchCMSDetail } = useDataStore();
 

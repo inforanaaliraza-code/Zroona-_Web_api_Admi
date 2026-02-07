@@ -24,22 +24,8 @@ export default function RecentTransaction({ data }) {
                             {/* Premium Gradient Accent */}
                             <div className="absolute top-0 left-0 right-0 h-0.5 md:h-1 bg-gradient-to-r from-[#a797cc] via-[#8ba179] to-[#7251CE]"></div>
                             
-                            {/* Date Badge - Compact */}
-                            <div className="absolute -top-3 md:-top-4 right-4 md:right-6 z-10">
-                                <div className="bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl shadow-lg flex items-center gap-1.5 border border-white">
-                                    <Icon icon="lucide:calendar" className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                                    <span className="text-xs font-semibold">
-                                        {new Intl.DateTimeFormat('en-US', {
-                                            year: 'numeric',
-                                            month: 'short',
-                                            day: 'numeric',
-                                        }).format(new Date(transition.createdAt))}
-                                    </span>
-                                </div>
-                            </div>
-                            
                             {/* Content - Compact */}
-                            <div className="p-4 md:p-5 pt-6 md:pt-7">
+                            <div className="p-4 md:p-5">
                                 <div className="flex items-center justify-between gap-3">
                                     <div className="flex items-center gap-3 flex-1 min-w-0">
                                         {/* Profile Image with Premium Border - Smaller */}

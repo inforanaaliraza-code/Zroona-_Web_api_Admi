@@ -220,7 +220,7 @@ export default function GuestSignUpForm() {
                 acceptPrivacy: Yup.boolean()
                     .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
                 acceptTerms: Yup.boolean()
-                    .oneOf([true], t("termsRequired") || "You must accept the terms and conditions"),
+                    .oneOf([true], t("auth.termsRequired") || "You must accept the terms and conditions"),
             });
         }
 
@@ -395,13 +395,13 @@ export default function GuestSignUpForm() {
                 // Reset email timer
                 setEmailTimer(60);
                 setEmailExpired(false);
-                toast.success(data.message || t("auth.verificationEmailResent") || "Verification email resent successfully!");
+                toast.success(data.message || t("auth.verificationEmailResentSuccess") || "Verification email resent successfully!");
             } else {
-                toast.error(data.message || t("auth.resendFailed") || "Failed to resend verification email.");
+                toast.error(data.message || t("auth.failedToResendVerificationEmail") || "Failed to resend verification email.");
             }
         } catch (error) {
             console.error("Resend verification error:", error);
-            toast.error(t("auth.resendFailed") || "Failed to resend verification email. Please try again.");
+            toast.error(t("auth.failedToResendVerificationEmailTryAgain") || "Failed to resend verification email. Please try again.");
         }
     };
 
@@ -432,11 +432,11 @@ export default function GuestSignUpForm() {
                 setOtp(""); // Clear previous OTP
                 toast.success(data.message || t("auth.otpResentSuccess") || "OTP resent successfully!");
             } else {
-                toast.error(data.message || t("auth.otpResendFailed") || "Failed to resend OTP.");
+                toast.error(data.message || t("OTP.failedToResendOTP") || "Failed to resend OTP.");
             }
         } catch (error) {
             console.error("Resend OTP error:", error);
-            toast.error(t("auth.otpResendFailed") || "Failed to resend OTP. Please try again.");
+            toast.error(t("OTP.failedToResendOTP") || "Failed to resend OTP. Please try again.");
         } finally {
             setLoading(false);
         }

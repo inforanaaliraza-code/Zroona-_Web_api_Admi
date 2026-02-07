@@ -31,11 +31,11 @@ export default function Settings({ title, buttonText }) {
         },
         validationSchema: Yup.object({
             max_event_capacity: Yup.number()
-                .min(1, "Max event capacity must be at least 1")
-                .max(1000, "Max event capacity cannot exceed 1000")
-                .required("Max event capacity is required")
-                .integer("Max event capacity must be a whole number")
-                .positive("Max event capacity must be a positive number"),
+                .min(1, t("settings.maxCapacityMin") || "Max event capacity must be at least 1")
+                .max(1000, t("settings.maxCapacityMax") || "Max event capacity cannot exceed 1000")
+                .required(t("settings.maxCapacityRequired") || "Max event capacity is required")
+                .integer(t("settings.maxCapacityInteger") || "Max event capacity must be a whole number")
+                .positive(t("settings.maxCapacityPositive") || "Max event capacity must be a positive number"),
         }),
         enableReinitialize: true,
         onSubmit: (values) => {
@@ -51,12 +51,12 @@ export default function Settings({ title, buttonText }) {
                         toast.success(res.message || t('Saved') || "Settings saved successfully");
                         dispatch(getProfile());
                     } else {
-                        toast.error(res.message || "Failed to save settings");
+                        toast.error(res.message || t("settings.failedToSave") || "Failed to save settings");
                     }
                 })
                 .catch((e) => {
                     setLoading(false);
-                    toast.error("An error occurred.");
+                    toast.error(t("common.errorOccurred") || "An error occurred.");
                 });
         },
     });
@@ -77,11 +77,11 @@ export default function Settings({ title, buttonText }) {
                     window.location.href = '/';
                 }, 2000);
             } else {
-                toast.error(response?.message || "Failed to deactivate account");
+                toast.error(response?.message || t("settings.failedToDeactivate") || "Failed to deactivate account");
             }
         } catch (error) {
             console.error("Error deactivating account:", error);
-            toast.error("An error occurred while deactivating your account");
+            toast.error(t("settings.deactivateError") || "An error occurred while deactivating your account");
         } finally {
             setLoading(false);
         }
@@ -90,7 +90,7 @@ export default function Settings({ title, buttonText }) {
     return (
         <>
             <div className="flex-grow bg-white h-max p-7 rounded-xl">
-                <h2 className="text-2xl font-semibold mb-6">{title || t('Settings') || 'Settings'}</h2>
+                <h2 className="text-2xl font-semibold mb-6">{title || t('settings.title') || 'Settings'}</h2>
 
                 {/* Max Event Capacity - Hidden */}
                 {/* 
@@ -158,7 +158,7 @@ export default function Settings({ title, buttonText }) {
                 {/* Deactivate Account Section */}
                 <div className="mt-12 pt-8 border-t border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {t('Danger Zone') || 'Danger Zone'}
+                        {t('settings.dangerZone') || 'Danger Zone'}
                     </h3>
                  
                     <button
@@ -166,7 +166,7 @@ export default function Settings({ title, buttonText }) {
                         onClick={handleDeactivate}
                         className="px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors"
                     >
-                        Deactivate Account
+                        {t('settings.deactivateAccount') || 'Deactivate Account'}
                     </button>
                 </div>
             </div>

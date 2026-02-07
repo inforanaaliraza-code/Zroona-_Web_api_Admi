@@ -35,7 +35,7 @@ RUN npm ci --omit=dev --legacy-peer-deps && \
 
 # Copy source code
 COPY --from=builder /app/src ./src
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                
 # Set ownership to non-root user
 RUN chown -R appuser:appgroup /app
 

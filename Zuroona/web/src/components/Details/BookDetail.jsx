@@ -6,7 +6,7 @@ import { Icon } from "@iconify/react";
 
 export default function BookDetail({ detail }) {
     const { t, i18n } = useTranslation();
-    const { isRTL } = useRTL();
+    const { isRTL } = useRTL({ i18n });
     
     const getEventTypeText = () => {
         if (detail?.event_type === 1) return t('detail.tab32');

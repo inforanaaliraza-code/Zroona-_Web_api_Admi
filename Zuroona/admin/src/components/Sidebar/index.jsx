@@ -49,7 +49,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 width={280}
                 height={80}
                 src="/assets/images/x_F_logo.png"
-                alt="Zuroona Logo"
+                alt={t("common.zuroonaLogo") || "Zuroona Logo"}
                 className="object-contain relative z-10 transform transition-transform duration-300 w-full h-auto max-h-[70px]"
                 priority
               />
@@ -92,7 +92,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         <div className="mt-auto px-5 py-5 relative z-10 flex-shrink-0 border-t-2 border-purple-200/60 bg-white/60">
           <div className="flex items-center justify-center">
             <span className="text-xs font-medium text-center text-purple-700/70">
-              © 2024 All Rights Reserved
+              {t("footer.copyright") || "© 2024 All Rights Reserved"}
             </span>
           </div>
         </div>

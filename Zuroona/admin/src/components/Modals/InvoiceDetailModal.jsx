@@ -115,14 +115,14 @@ const InvoiceDetailModal = ({ show, onClose, invoice }) => {
                             <div className="w-full h-24 rounded-lg overflow-hidden mb-2 border border-gray-200">
                                 <Image
                                     src={`${process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3434"}${invoice.event.event_main_image}`}
-                                    alt="Event"
+                                    alt={t("invoice.event") || "Event"}
                                     width={200}
                                     height={96}
                                     className="object-cover w-full h-full"
                                 />
                             </div>
                         )}
-                        <p className="font-semibold text-gray-800 mb-1">{invoice.event?.event_name || 'N/A'}</p>
+                        <p className="font-semibold text-gray-800 mb-1">{invoice.event?.event_name || (t("eventTypeLegacy.notAvailable") || 'N/A')}</p>
                         {invoice.event?.event_date && (
                             <p className="text-sm text-gray-600">
                                 <Icon icon="mdi:calendar-clock" className="inline-block w-4 h-4 mr-1" />
@@ -157,7 +157,7 @@ const InvoiceDetailModal = ({ show, onClose, invoice }) => {
                         <div className="space-y-2">
                             <div className="flex justify-between">
                                 <span className="text-sm text-gray-600">{t('invoice.modal.amount')}:</span>
-                                <span className="text-lg font-bold text-gray-800">{invoice.total_amount?.toFixed(2) || '0.00'} SAR</span>
+                                <span className="text-lg font-bold text-gray-800">{invoice.total_amount?.toFixed(2) || '0.00'} {t("common.currency") || "SAR"}</span>
                             </div>
                             {invoice.payment_id && (
                                 <div className="flex justify-between">

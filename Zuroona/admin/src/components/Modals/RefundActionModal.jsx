@@ -43,7 +43,7 @@ function RefundActionModal({ show, onClose, onConfirm, actionType, refund, loadi
               <span className="font-medium">{t("refund.amount")}:</span> {refund.amount || 0} {refund.currency || "SAR"}
             </p>
             <p className="text-sm text-gray-600">
-              <span className="font-medium">{t("refund.bookingId")}:</span> {refund.booking_id?.slice(-8) || "N/A"}
+              <span className="font-medium">{t("refund.bookingId")}:</span> {refund.booking_id?.slice(-8) || (t("eventTypeLegacy.notAvailable") || "N/A")}
             </p>
           </div>
         )}

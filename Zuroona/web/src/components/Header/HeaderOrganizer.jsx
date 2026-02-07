@@ -81,7 +81,7 @@ const HeaderOrganizer = ({ bgColor, hideLogo = false }) => {
             })
             .catch((error) => {
                 setLoading(false);
-                toast.error("Failed to change language");
+                toast.error(t("auth.failedToChangeLanguage") || "Failed to change language");
             });
     };
 

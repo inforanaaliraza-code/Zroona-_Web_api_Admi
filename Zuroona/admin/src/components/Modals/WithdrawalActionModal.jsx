@@ -88,7 +88,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
               <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
                 <Image
                   src={request.host_image || "/assets/images/dummyImage.png"}
-                  alt={request.host_name}
+                  alt={request.host_name || t("withdrawal.host") || "Host"}
                   width={64}
                   height={64}
                   className="w-full h-full object-cover"

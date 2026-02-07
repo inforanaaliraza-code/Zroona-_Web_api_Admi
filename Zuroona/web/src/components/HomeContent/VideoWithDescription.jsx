@@ -10,8 +10,8 @@ export default function VideoWithDescription({
     videoId = "WNjUOq-MM0Y",
     description = null // Will use translation if not provided
 }) {
-    const { t } = useTranslation();
-    const { isRTL } = useRTL();
+    const { t, i18n } = useTranslation();
+    const { isRTL } = useRTL({ i18n });
     const [isVisible, setIsVisible] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const sectionRef = useRef(null);
@@ -92,7 +92,7 @@ export default function VideoWithDescription({
     return (
         <section 
             ref={sectionRef}
-            className="relative py-16 md:py-20 lg:py-24 bg-gradient-to-br from-white via-purple-50/30 to-white overflow-hidden"
+            className="relative py-8 md:py-12 lg:py-16 bg-gradient-to-br from-white via-purple-50/30 to-white overflow-hidden"
         >
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">

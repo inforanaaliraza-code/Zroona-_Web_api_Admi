@@ -2599,7 +2599,7 @@ const adminController = {
                 console.error("[ADMIN:REFUND:UPDATE] Failed to convert refund_id to ObjectId:", refund_id, objectIdError);
                 return Response.validationErrorResponse(
                     res,
-                    "Invalid refund ID format"
+                    resp_messages(lang).invalid_refund_id
                 );
             }
             
@@ -2647,14 +2647,14 @@ const adminController = {
             if (refundRequest.status === 3) {
                 return Response.badRequestResponse(
                     res,
-                    "Refund request already processed"
+                    resp_messages(lang).refund_already_processed
                 );
             }
 
             if (refundRequest.status === 1 && parseInt(status) === 1) {
                 return Response.badRequestResponse(
                     res,
-                    "Refund request already approved"
+                    resp_messages(lang).refund_request_approved
                 );
             }
 
@@ -4272,6 +4272,138 @@ const adminController = {
             return Response.serverErrorResponse(
                 res,
                 resp_messages(req.lang).internalServerError || "Error during cleanup"
+            );
+        }
+    },
+
+    updateWithdrawalLimits: async (req, res) => {
+        try {
+            const { organizer_id, minimum_withdrawal, maximum_withdrawal } = req.body;
+            const lang = req.lang || "en";
+
+            // Validate inputs
+            if (!organizer_id) {
+                return Response.badRequestResponse(
+                    res,
+                    lang === "ar" ? "معرف المنظم مطلوب" : "Organizer ID is required"
+                );
+            }
+
+            if (minimum_withdrawal === undefined && maximum_withdrawal === undefined) {
+                return Response.badRequestResponse(
+                    res,
+                    lang === "ar" ? "يجب تحديد حد أدنى أو أقصى على الأقل" : "At least minimum or maximum withdrawal must be provided"
+                );
+            }
+
+            // Validate organizer exists
+            const organizer = await organizerService.FindOneService({ _id: organizer_id });
+            if (!organizer) {
+                return Response.notFoundResponse(
+                    res,
+                    lang === "ar" ? "المنظم غير موجود" : "Organizer not found"
+                );
+            }
+
+            // Get or create wallet for organizer
+            let wallet = await WalletService.FindOneService({ organizer_id: organizer_id });
+            if (!wallet) {
+                wallet = await WalletService.CreateService({
+                    organizer_id: organizer_id,
+                    total_amount: 0,
+                    minimum_withdrawal: minimum_withdrawal || 100,
+                    maximum_withdrawal: maximum_withdrawal || 50000
+                });
+            } else {
+                // Update withdrawal limits
+                if (minimum_withdrawal !== undefined) {
+                    wallet.minimum_withdrawal = Math.max(0, minimum_withdrawal);
+                }
+                if (maximum_withdrawal !== undefined) {
+                    wallet.maximum_withdrawal = Math.max(100, maximum_withdrawal);
+                }
+
+                // Ensure minimum is not greater than maximum
+                if (wallet.minimum_withdrawal > wallet.maximum_withdrawal) {
+                    return Response.badRequestResponse(
+                        res,
+                        lang === "ar" 
+                            ? "الحد الأدنى لا يمكن أن يكون أكبر من الحد الأقصى"
+                            : "Minimum withdrawal cannot be greater than maximum"
+                    );
+                }
+
+                await wallet.save();
+            }
+
+            // Create audit log
+            console.log(`[ADMIN:WITHDRAWAL-LIMITS] Admin updated withdrawal limits for organizer ${organizer_id}: min=${wallet.minimum_withdrawal}, max=${wallet.maximum_withdrawal}`);
+
+            return Response.ok(
+                res,
+                {
+                    organizer_id: organizer_id,
+                    minimum_withdrawal: wallet.minimum_withdrawal,
+                    maximum_withdrawal: wallet.maximum_withdrawal,
+                    total_amount: wallet.total_amount
+                },
+                200,
+                lang === "ar" ? "تم تحديث حدود السحب بنجاح" : "Withdrawal limits updated successfully"
+            );
+        } catch (error) {
+            console.error("[ADMIN:WITHDRAWAL-LIMITS] Error:", error.message);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(req.lang).internalServerError || "Error updating withdrawal limits"
+            );
+        }
+    },
+
+    getWithdrawalLimits: async (req, res) => {
+        try {
+            const { organizer_id } = req.query;
+            const lang = req.lang || "en";
+
+            if (!organizer_id) {
+                return Response.badRequestResponse(
+                    res,
+                    lang === "ar" ? "معرف المنظم مطلوب" : "Organizer ID is required"
+                );
+            }
+
+            const wallet = await WalletService.FindOneService({ organizer_id: organizer_id });
+            
+            if (!wallet) {
+                // Return default limits
+                return Response.ok(
+                    res,
+                    {
+                        organizer_id: organizer_id,
+                        minimum_withdrawal: 100,
+                        maximum_withdrawal: 50000,
+                        total_amount: 0
+                    },
+                    200,
+                    lang === "ar" ? "تم جلب حدود السحب" : "Withdrawal limits retrieved"
+                );
+            }
+
+            return Response.ok(
+                res,
+                {
+                    organizer_id: organizer_id,
+                    minimum_withdrawal: wallet.minimum_withdrawal || 100,
+                    maximum_withdrawal: wallet.maximum_withdrawal || 50000,
+                    total_amount: wallet.total_amount
+                },
+                200,
+                lang === "ar" ? "تم جلب حدود السحب" : "Withdrawal limits retrieved"
+            );
+        } catch (error) {
+            console.error("[ADMIN:GET-WITHDRAWAL-LIMITS] Error:", error.message);
+            return Response.serverErrorResponse(
+                res,
+                resp_messages(req.lang).internalServerError || "Error retrieving withdrawal limits"
             );
         }
     },

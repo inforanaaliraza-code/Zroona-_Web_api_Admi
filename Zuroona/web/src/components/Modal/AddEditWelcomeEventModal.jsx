@@ -92,7 +92,10 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                 .min(1, "Event capacity must be at least 1")
                 .max(maxEventCapacity, `Event capacity cannot exceed ${maxEventCapacity} (your max event capacity setting)`)
                 .required("This field is required"),
-            event_price: Yup.number().required(t('signup.tab16')).positive(t('signup.tab16')),
+            event_price: Yup.number()
+                .required(t('signup.tab16') || 'Event price is required')
+                .min(1, t('add.eventPriceMin1SAR') || 'Event price must be at least 1 SAR')
+                .positive(t('signup.tab16') || 'Event price must be greater than 0'),
             event_for: Yup.string()
                 .required(t('signup.tab16'))
                 .oneOf(['1', '2', '3'], t('signup.tab17')),
@@ -102,6 +105,13 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
         }),
         enableReinitialize: true,
         onSubmit: async (values, { resetForm }) => {
+            // Validate price immediately - must be at least 1 SAR
+            const price = Number(values.event_price);
+            if (isNaN(price) || price < 1) {
+                toast.error(t('add.eventPriceMin1SAR') || 'Event price must be at least 1 SAR. Events with price less than 1 SAR cannot be created.');
+                return;
+            }
+
             if (eventImages.length === 0) {
                 toast.error("Please upload at least one event image");
                 return;
@@ -158,6 +168,15 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
     const submitEvent = async (valuesOrPayload, resetForm) => {
         const values = valuesOrPayload?.values || valuesOrPayload;
         const actualResetForm = valuesOrPayload?.resetForm || resetForm;
+        
+        // Validate price before submitting - must be at least 1 SAR
+        const price = Number(values.event_price);
+        if (isNaN(price) || price < 1) {
+            setLoding(false);
+            toast.error(t('add.eventPriceMin1SAR') || 'Event price must be at least 1 SAR. Events with price less than 1 SAR cannot be created.');
+            if (setShowCreateConfirm) setShowCreateConfirm(false);
+            return;
+        }
         
         setLoding(true);
         let payload;

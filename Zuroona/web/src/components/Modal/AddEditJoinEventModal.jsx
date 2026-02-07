@@ -23,6 +23,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ChevronDownIcon } from 'lucide-react';
+import { useRTL } from '@/utils/rtl';
 
 // Professional Time Picker Component with Buttons
 const TimePicker = ({ value, onChange, minTime, error, errorMessage }) => {
@@ -394,6 +395,7 @@ const PERMANENT_CATEGORIES = [
 
 const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit }) => {
     const { t } = useTranslation();
+    const { isRTL } = useRTL();
     const [previewUrls, setPreviewUrls] = useState([]);
     const [eventImages, setEventImages] = useState([]);
     const [imageLoading, setImageLoading] = useState(false);
@@ -628,6 +630,14 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
         }),
         enableReinitialize: true,
         onSubmit: async (values, { resetForm, setSubmitting }) => {
+            // Validate price immediately - must be at least 1 SAR
+            const price = Number(values.event_price);
+            if (isNaN(price) || price < 1) {
+                toast.error(t('add.eventPriceMin1SAR') || 'Event price must be at least 1 SAR. Events with price less than 1 SAR cannot be created.');
+                setSubmitting(false);
+                return;
+            }
+
             // Validate images
             if (eventImages.length === 0) {
                 toast.error(t('events.imageRequired') || "Please upload at least one event image");
@@ -753,10 +763,10 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             return;
         }
 
-        // Ensure event_price is a valid number
+        // Ensure event_price is a valid number and at least 1 SAR
         const eventPrice = Number(values.event_price);
-        if (isNaN(eventPrice) || eventPrice <= 0) {
-            toast.error('Event price must be a valid number greater than 0');
+        if (isNaN(eventPrice) || eventPrice < 1) {
+            toast.error(t('add.eventPriceMin1SAR') || 'Event price must be at least 1 SAR. Events with price less than 1 SAR cannot be created.');
             setLoding(false);
             if (actualSetSubmitting) actualSetSubmitting(false);
             return;
@@ -1720,14 +1730,20 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                                 )}
                                             </GoogleMap>
                                             {/* Map Overlay Instructions */}
-                                            <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 z-10 border border-gray-200">
-                                                <div className="flex items-center gap-2">
-                                                    <svg className="w-4 h-4 text-[#a797cc]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    <span className="text-xs font-semibold text-gray-700">Click to place marker</span>
-                                                </div>
-                                            </div>
+                                            {(() => {
+                                                const pos = isRTL ? 'left-4' : 'right-4';
+                                                return (
+                                                    <div className={`absolute top-4 ${pos} bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 z-10 border border-gray-200`}>
+                                                        <div className="flex items-center gap-2">
+                                                            <svg className="w-4 h-4 text-[#a797cc]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            <span className="text-xs font-semibold text-gray-700">Click to place marker</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+                                            
                                         </>
                                     )}
                                 </div>

@@ -51,12 +51,6 @@ const SPECIAL_LOCAL_TEST_PHONES = new Set([
 	"597832271",
 ]);
 
-const getLocalPhoneFromString = (phone) => {
-	if (!phone) return "";
-	const digits = phone.toString().replace(/\D/g, "");
-	return digits.slice(-9);
-};
-
 const organizerController = {
 	/**
 	 * Organizer/Host Registration - Complete 4-step process
@@ -1436,6 +1430,15 @@ const organizerController = {
 			req.body.neighborhood = req.body.neighborhood.trim();
 		}
 
+		// Validate event price - must be at least 1 SAR
+		const eventPrice = Number(req.body.event_price);
+		if (isNaN(eventPrice) || eventPrice < 1) {
+			return Response.validationErrorResponse(
+				res,
+				"Event price must be at least 1 SAR. Events with price less than 1 SAR cannot be created."
+			);
+		}
+
 		console.log("[ADD-EVENT] Creating event with payload:", JSON.stringify(req.body, null, 2));
 		const event = await EventService.CreateService(req.body);
 
@@ -1581,6 +1584,17 @@ const organizerController = {
 				res,
 				resp_messages(req.lang).eventNotFound
 			);
+		}
+
+		// Validate event price if provided - must be at least 1 SAR
+		if (req.body.event_price !== undefined) {
+			const eventPrice = Number(req.body.event_price);
+			if (isNaN(eventPrice) || eventPrice < 1) {
+				return Response.validationErrorResponse(
+					res,
+					"Event price must be at least 1 SAR. Events with price less than 1 SAR cannot be created."
+				);
+			}
 		}
 
 		const event = await EventService.FindByIdAndUpdateService(
@@ -2986,6 +3000,59 @@ const organizerController = {
 			);
 		}
 	},
+
+	getWalletInfo: async (req, res) => {
+		try {
+			const { userId } = req;
+			const lang = req.lang || "en";
+
+			// Get wallet information for the organizer
+			const wallet = await WalletService.FindOneService({
+				organizer_id: userId,
+			});
+
+			if (!wallet) {
+				// Create default wallet if it doesn't exist
+				const newWallet = await WalletService.CreateService({
+					organizer_id: userId,
+					total_amount: 0,
+					minimum_withdrawal: 100,
+					maximum_withdrawal: 50000
+				});
+
+				return Response.ok(
+					res,
+					{
+						organizer_id: userId,
+						total_amount: 0,
+						minimum_withdrawal: 100,
+						maximum_withdrawal: 50000
+					},
+					200,
+					lang === "ar" ? "تم جلب معلومات المحفظة" : "Wallet information retrieved"
+				);
+			}
+
+			return Response.ok(
+				res,
+				{
+					organizer_id: userId,
+					total_amount: wallet.total_amount || 0,
+					minimum_withdrawal: wallet.minimum_withdrawal || 100,
+					maximum_withdrawal: wallet.maximum_withdrawal || 50000
+				},
+				200,
+				lang === "ar" ? "تم جلب معلومات المحفظة" : "Wallet information retrieved"
+			);
+		} catch (error) {
+			console.error("[WALLET-INFO] Error:", error.message);
+			return Response.serverErrorResponse(
+				res,
+				resp_messages(req.lang).internalServerError || "Error retrieving wallet information"
+			);
+		}
+	},
+
 	withdrawal: async (req, res) => {
 		try {
 			const { amount } = req.body;
@@ -2993,10 +3060,54 @@ const organizerController = {
 			const organizerWallet = await WalletService.FindOneService({
 				organizer_id: userId,
 			});
+			
+			// Check if wallet exists, create if not
+			if (!organizerWallet) {
+				return Response.badRequestResponse(
+					res,
+					req.lang === "ar"
+						? "لم يتم العثور على محفظة. يرجى الاتصال بالدعم"
+						: "Wallet not found. Please contact support"
+				);
+			}
+			
+			// Validate amount is provided
+			if (!amount || amount <= 0) {
+				return Response.badRequestResponse(
+					res,
+					req.lang === "ar" 
+						? "يجب تحديد مبلغ صحيح"
+						: "Please enter a valid amount"
+				);
+			}
+			
+			// Check if amount is greater than available balance
 			if (amount > organizerWallet.total_amount) {
 				return Response.badRequestResponse(
 					res,
 					resp_messages(req.lang).insufficient_funds
+				);
+			}
+			
+			// Validate minimum withdrawal limit
+			const minimum_withdrawal = organizerWallet.minimum_withdrawal || 100;
+			if (amount < minimum_withdrawal) {
+				return Response.badRequestResponse(
+					res,
+					req.lang === "ar" 
+						? `الحد الأدنى للسحب هو ${minimum_withdrawal} ريال سعودي`
+						: `Minimum withdrawal amount is ${minimum_withdrawal} SAR`
+				);
+			}
+			
+			// Validate maximum withdrawal limit
+			const maximum_withdrawal = organizerWallet.maximum_withdrawal || 50000;
+			if (amount > maximum_withdrawal) {
+				return Response.badRequestResponse(
+					res,
+					req.lang === "ar"
+						? `الحد الأقصى للسحب هو ${maximum_withdrawal} ريال سعودي`
+						: `Maximum withdrawal amount is ${maximum_withdrawal} SAR`
 				);
 			}
 			
@@ -3491,7 +3602,7 @@ const organizerController = {
 				console.error("[ORGANIZER:RESEND-SIGNUP-OTP] Error sending OTP:", otpError.message);
 				return Response.validationErrorResponse(
 					res,
-					otpError.message || "Failed to send OTP. Please try again later."
+					otpError.message || resp_messages(lang).otp_send_failed
 				);
 			}
 
@@ -3505,12 +3616,8 @@ const organizerController = {
 				},
 				200,
 				otpSent
-					? (lang === "ar"
-						? "تم إرسال رمز التحقق بنجاح"
-						: "OTP sent successfully to your phone number")
-					: (lang === "ar"
-						? "فشل إرسال رمز التحقق"
-						: "Failed to send OTP")
+					? resp_messages(lang).otp_sent_phone
+					: resp_messages(lang).otp_send_failed
 			);
 		} catch (error) {
 			console.error("[ORGANIZER:RESEND-SIGNUP-OTP] Error:", error);

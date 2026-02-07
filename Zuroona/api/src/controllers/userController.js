@@ -361,7 +361,7 @@ const UserController = {
 				console.error("[USER:REGISTRATION] Full error:", createError);
 				return Response.serverErrorResponse(
 					res,
-					"Failed to create user account. Please try again later."
+					resp_messages(lang).internalServerError || "Failed to create user account. Please try again later."
 				);
 			}
 
@@ -1005,16 +1005,14 @@ const UserController = {
 			return Response.ok(
 				res,
 				{
-					message: "OTP sent successfully to your phone number",
+					message: resp_messages(lang).otp_sent_phone,
 					phone_number: phoneStr, // Return without country code for security
 					...(process.env.NODE_ENV === 'development' && otpValue ? { 
 						debug_otp: otpValue // Only in development
 					} : {})
 				},
 				200,
-				lang === "ar" 
-					? "تم إرسال رمز التحقق إلى رقم هاتفك" 
-					: "OTP sent successfully to your phone number"
+				resp_messages(lang).otp_sent_phone
 			);
 		} else {
 			throw new Error("Failed to generate OTP");
@@ -3418,7 +3416,7 @@ const UserController = {
 			if (!order_id || !payment_id || !signature) {
 				return Response.badRequestResponse(
 					res,
-					"order_id, payment_id and signature are required"
+					resp_messages(lang).payment_fields_required || "order_id, payment_id and signature are required"
 				);
 			}
 
@@ -3430,7 +3428,7 @@ const UserController = {
 			if (!signatureSecret) {
 				return Response.serverErrorResponse(
 					res,
-					"Payment signature secret is not configured"
+					resp_messages(lang).payment_signature_secret_missing || "Payment signature secret is not configured"
 				);
 			}
 
@@ -3442,7 +3440,7 @@ const UserController = {
 			if (expectedSignature !== signature) {
 				return Response.badRequestResponse(
 					res,
-					"Invalid payment signature"
+					resp_messages(lang).invalid_payment_signature || "Invalid payment signature"
 				);
 			}
 
@@ -3450,7 +3448,7 @@ const UserController = {
 				res,
 				{ verified: true },
 				200,
-				"Payment verified successfully"
+				resp_messages(lang).payment_verified || "Payment verified successfully"
 			);
 		} catch (error) {
 			const lang = req.lang || req.headers["lang"] || "en";
@@ -3505,12 +3503,17 @@ const UserController = {
 
 	receivedWebhook: async (req, res) => {
 		try {
+			const lang = req.lang || req.headers["lang"] || "en";
 			const { headers, body } = req;
 			console.log("headers", headers);
 			const receivedSignature = headers["x-event-secret"];
 			console.log(receivedSignature, "receivedSignature");
 
-			const sharedSecret = "$2b$12$qx37f2bgws.TD1piwHj6Kuf";
+			// Use environment variable for webhook secret (preferably the Moyasar secret key)
+			const sharedSecret = process.env.MOYASAR_SIGNATURE_SECRET || 
+			                     process.env.MOYASAR_SECRET_KEY || 
+			                     process.env.MOYASAR_SECRET ||
+			                     "$2b$12$qx37f2bgws.TD1piwHj6Kuf"; // Fallback for compatibility
 
 			const calculatedSignature = crypto
 				.createHmac("sha256", sharedSecret)
@@ -3535,21 +3538,21 @@ const UserController = {
 					await TransactionService.FindOneService({
 						payment_id: body.id,
 					});
-				if (existingTransaction) {
+					if (existingTransaction) {
 					console.log(
 						`Transaction for payment_id ${body.id} already exists.`
 					);
-					return res.status(200).send("Webhook already processed.");
+						return res.status(200).send(resp_messages(lang).webhook_already_processed || "Webhook already processed.");
 				}
 
 				const booking_details = await BookEventService.FindOneService({
 					_id: book_id,
 				});
 
-				if (!booking_details) {
-					console.error("Booking not found for webhook", book_id);
-					return res.status(404).send("Booking not found");
-				}
+					if (!booking_details) {
+						console.error("Booking not found for webhook", book_id);
+						return res.status(404).send(resp_messages(lang).bookingNotFound || "Booking not found");
+					}
 
 				if (body.data.status === "authorized") {
 					const captureResponse = await MoyasarService.capturePayment(
@@ -3567,7 +3570,7 @@ const UserController = {
 							.status(500)
 							.send(
 								captureResponse.message ||
-									"Failed to capture payment."
+									resp_messages(lang).payment_capture_failed
 							);
 					}
 				}
@@ -3640,12 +3643,10 @@ const UserController = {
 				);
 			}
 
-			res.status(200).send("Webhook processed successfully.");
+			res.status(200).send(resp_messages(lang).webhook_processed || "Webhook processed successfully.");
 		} catch (error) {
 			console.error("Error occurred while processing webhook:", error);
-			res.status(500).send(
-				"An error occurred while processing the webhook."
-			);
+				res.status(500).send(resp_messages(lang).webhook_processing_error || "An error occurred while processing the webhook.");
 		}
 	},
 
@@ -4831,12 +4832,8 @@ const UserController = {
 				},
 				200,
 				otpSent
-					? (lang === "ar"
-						? "تم إرسال رمز التحقق بنجاح"
-						: "OTP sent successfully to your phone number")
-					: (lang === "ar"
-						? "فشل إرسال رمز التحقق"
-						: "Failed to send OTP")
+					? resp_messages(lang).otp_sent_phone
+					: "Failed to send OTP"
 			);
 		} catch (error) {
 			console.error("[USER:RESEND-SIGNUP-OTP] Error:", error);
@@ -4863,7 +4860,7 @@ const UserController = {
 			if (!booking_id) {
 				return Response.validationErrorResponse(
 					res,
-					"Booking ID is required"
+					resp_messages(lang).id_required
 				);
 			}
 
@@ -4884,7 +4881,7 @@ const UserController = {
 			if (!booking) {
 				return Response.notFoundResponse(
 					res,
-					"Booking not found or you don't have permission to request refund for this booking"
+					resp_messages(lang).bookingNotFound
 				);
 			}
 
@@ -4892,7 +4889,7 @@ const UserController = {
 			if (booking.book_status !== 3) {
 				return Response.badRequestResponse(
 					res,
-					"Refund can only be requested for cancelled bookings"
+					resp_messages(lang).refund_booking_not_cancelled
 				);
 			}
 
@@ -4900,7 +4897,7 @@ const UserController = {
 			if (booking.payment_status !== 1) {
 				return Response.badRequestResponse(
 					res,
-					"Refund can only be requested for paid bookings"
+					resp_messages(lang).refund_booking_not_paid
 				);
 			}
 
@@ -4915,12 +4912,12 @@ const UserController = {
 				return Response.badRequestResponse(
 					res,
 					existingRefund.status === 0
-						? "Refund request already submitted and pending review"
+						? resp_messages(lang).refund_request_pending
 						: existingRefund.status === 1
-						? "Refund request already approved"
+						? resp_messages(lang).refund_request_approved
 						: existingRefund.status === 2
-						? "Refund request was rejected"
-						: "Refund already processed"
+						? resp_messages(lang).refund_request_rejected
+						: resp_messages(lang).refund_already_processed
 				);
 			}
 
@@ -4931,7 +4928,7 @@ const UserController = {
 			});
 
 			if (!event) {
-				return Response.notFoundResponse(res, "Event not found");
+				return Response.notFoundResponse(res, resp_messages(lang).eventNotFound);
 			}
 
 			// Create refund request
@@ -4958,7 +4955,7 @@ const UserController = {
 				console.error("[REFUND:REQUEST] Failed to create refund request");
 				return Response.serverErrorResponse(
 					res,
-					"Failed to create refund request. Please try again."
+					resp_messages(lang).refund_creation_failed
 				);
 			}
 

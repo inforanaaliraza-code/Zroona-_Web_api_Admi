@@ -1,0 +1,62 @@
+### Zuroona API Testing
+### REST Client for VS Code
+
+@baseUrl = http://localhost:3434/api
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTc4Y2NhZmFkNDI3NWJjNjhjNjE3OWMiLCJyb2xlIjozLCJpYXQiOjE3NzA0NjgwNDd9.Z6CsEoDwIbHpvA8bXleIYMz01xAFJiSfNAhEfiEFRqc
+
+###
+### 1. LOGIN - Admin ko token lene ke liye
+### Response se "token" copy karke @adminToken mein paste karo
+###
+POST {{baseUrl}}/admin/login
+Content-Type: application/json
+
+{
+  "email": "admin@zuroona.sa",
+  "password": "@api"
+}
+
+###
+### 2. UPDATE WITHDRAWAL LIMITS - Admin by organizer ke limits set karna
+### Pehle organizer_id change karo
+###
+PUT {{baseUrl}}/admin/organizer/withdrawal-limits
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "organizer_id": "ORGANIZER_ID_YAHAN_PASTE_KARO",
+  "minimum_withdrawal": 100,
+  "maximum_withdrawal": 50000
+}
+
+###
+### 3. GET WITHDRAWAL LIMITS - Limits check karna
+### organizer_id change karo
+###
+GET {{baseUrl}}/admin/organizer/withdrawal-limits?organizer_id=ORGANIZER_ID_YAHAN_PASTE_KARO
+Authorization: Bearer {{adminToken}}
+
+###
+### 4. GET WALLET INFO - Frontend sy limits fetch karna
+### Organizer ka token use karo
+###
+GET {{baseUrl}}/organizer/wallet-info
+Authorization: Bearer {{adminToken}}
+
+###
+### 5. SUBMIT WITHDRAWAL - Organizer withdrawal request submit karna
+###
+POST {{baseUrl}}/organizer/withdrawal
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "amount": 1000
+}
+
+###
+### 6. GET WITHDRAWAL LIST - Submitted requests check karna
+###
+GET {{baseUrl}}/organizer/withdrawalList?page=1&limit=10
+Authorization: Bearer {{adminToken}}

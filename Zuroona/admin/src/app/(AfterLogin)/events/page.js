@@ -14,22 +14,24 @@ import { toast } from "react-toastify";
 import RejectEventModal from "@/components/Modals/RejectEventModal";
 import { useTranslation } from "react-i18next";
 
-// Predefined Event Types (matching organizer side)
-const EVENT_TYPES = [
-  { value: 'conference', label: 'Conference' },
-  { value: 'workshop', label: 'Workshop' },
-  { value: 'exhibition', label: 'Exhibition' },
-  { value: 'concert', label: 'Concert' },
-  { value: 'festival', label: 'Festival' },
-  { value: 'seminar', label: 'Seminar' },
-  { value: 'webinar', label: 'Webinar' },
-  { value: 'networking', label: 'Networking Event' },
-  { value: 'corporate', label: 'Corporate Event' },
-  { value: 'privateParty', label: 'Private Party' },
+// Helper function to get event types with translations
+const getEventTypes = (t) => [
+  { value: 'conference', label: t("eventTypes.conference") || 'Conference' },
+  { value: 'workshop', label: t("eventTypes.workshop") || 'Workshop' },
+  { value: 'exhibition', label: t("eventTypes.exhibition") || 'Exhibition' },
+  { value: 'concert', label: t("eventTypes.concert") || 'Concert' },
+  { value: 'festival', label: t("eventTypes.festival") || 'Festival' },
+  { value: 'seminar', label: t("eventTypes.seminar") || 'Seminar' },
+  { value: 'webinar', label: t("eventTypes.webinar") || 'Webinar' },
+  { value: 'networking', label: t("eventTypes.networking") || 'Networking Event' },
+  { value: 'corporate', label: t("eventTypes.corporate") || 'Corporate Event' },
+  { value: 'privateParty', label: t("eventTypes.privateParty") || 'Private Party' },
 ];
 
 // Helper function to format event types
-const formatEventTypes = (eventTypes, eventType = null) => {
+const formatEventTypes = (eventTypes, eventType = null, t) => {
+  const EVENT_TYPES = getEventTypes(t);
+  
   // If event_types array exists and has values, use it
   if (eventTypes && Array.isArray(eventTypes) && eventTypes.length > 0) {
     // Filter out any null/undefined/empty values
@@ -50,16 +52,20 @@ const formatEventTypes = (eventTypes, eventType = null) => {
   // This handles old events that don't have event_types field
   if (eventType !== null && eventType !== undefined) {
     // event_type: 1 = Join Us, 2 = Welcome (legacy field)
-    return eventType === 1 ? "Join Us" : eventType === 2 ? "Welcome" : "N/A";
+    return eventType === 1 
+      ? (t("eventTypeLegacy.joinUs") || "Join Us") 
+      : eventType === 2 
+        ? (t("eventTypeLegacy.welcome") || "Welcome") 
+        : (t("eventTypeLegacy.notAvailable") || "N/A");
   }
   
-  return "N/A";
+  return t("eventTypeLegacy.notAvailable") || "N/A";
 };
 
 // Helper function to format event categories
-const formatEventCategories = (eventCategoryDetails) => {
+const formatEventCategories = (eventCategoryDetails, t) => {
   if (!eventCategoryDetails || !Array.isArray(eventCategoryDetails) || eventCategoryDetails.length === 0) {
-    return "N/A";
+    return t("eventTypeLegacy.notAvailable") || "N/A";
   }
   
   // Extract category names (support both en and ar)
@@ -72,10 +78,11 @@ const formatEventCategories = (eventCategoryDetails) => {
       }
       return cat.name;
     }
-    return "N/A";
+    return t("eventTypeLegacy.notAvailable") || "N/A";
   });
   
-  return categoryNames.filter(name => name !== "N/A").join(", ") || "N/A";
+  const notAvailable = t("eventTypeLegacy.notAvailable") || "N/A";
+  return categoryNames.filter(name => name !== notAvailable).join(", ") || notAvailable;
 };
 
 // Helper function to get proper image URL
@@ -412,7 +419,7 @@ export default function ManageEvents() {
                            (event?.event_status === 2 || event?.is_approved === 1) ? t("events.upcoming") :
                            event?.event_status === 3 ? t("events.completed") :
                            (event?.event_status === 4 || event?.is_approved === 2) ? t("events.rejected") :
-                           "N/A"}
+                           t("eventTypeLegacy.notAvailable") || "N/A"}
                         </span>
                       </td>
                       <td className="px-2 py-3">

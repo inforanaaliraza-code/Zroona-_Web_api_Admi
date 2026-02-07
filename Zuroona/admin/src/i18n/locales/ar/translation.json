@@ -242,7 +242,10 @@
     "mobileNumberLabel": "رقم الهاتف المحمول *",
     "emailLabel": "البريد الإلكتروني *",
     "passwordLabel": "كلمة المرور",
-    "enterPasswordPlaceholder": "أدخل كلمة المرور"
+    "enterPasswordPlaceholder": "أدخل كلمة المرور",
+    "arrow": "سهم",
+    "zuroonaLogo": "شعار زرونا",
+    "otpSentToMobile": "تم إرسال رمز التحقق إلى رقم هاتفك المحمول"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -823,6 +826,28 @@
     "failedToFetch": "فشل جلب تفاصيل الفعالية",
     "eventApprovedSuccess": "تمت الموافقة على الفعالية بنجاح",
     "eventRejectedSuccess": "تم رفض الفعالية بنجاح",
-    "failedToUpdateStatus": "فشل تحديث حالة الفعالية"
+    "failedToUpdateStatus": "فشل تحديث حالة الفعالية",
+    "eventIdNotFound": "لم يتم العثور على معرف الفعالية",
+    "instructionsLabel": "التعليمات"
+  },
+  "eventTypes": {
+    "conference": "مؤتمر",
+    "workshop": "ورشة عمل",
+    "exhibition": "معرض",
+    "concert": "حفلة موسيقية",
+    "festival": "مهرجان",
+    "seminar": "ندوة",
+    "webinar": "ندوة عبر الإنترنت",
+    "networking": "فعالية تواصل",
+    "corporate": "فعالية شركات",
+    "privateParty": "حفلة خاصة"
+  },
+  "eventTypeLegacy": {
+    "joinUs": "انضم إلينا",
+    "welcome": "ترحيب",
+    "notAvailable": "غير متاح"
+  },
+  "footer": {
+    "copyright": "© 2024 جميع الحقوق محفوظة"
   }
 }

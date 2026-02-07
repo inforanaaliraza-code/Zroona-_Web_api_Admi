@@ -95,7 +95,7 @@ export default function EventDetail() {
   // Function to change event status (Accept/Reject)
   const ChangeEventStatus = (newStatus, rejectionReason = "") => {
     if (!detail?._id) {
-      toast.error("Event ID not found");
+      toast.error(t("eventDetail.eventIdNotFound") || "Event ID not found");
       return;
     }
 
@@ -279,14 +279,18 @@ export default function EventDetail() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
                         <h2 className="text-2xl font-bold text-gray-900">
-                          {detail?.event_name || "Event Name"}
+                          {detail?.event_name || t("events.eventName") || "Event Name"}
                         </h2>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           detail?.event_for === 1 ? "bg-blue-100 text-blue-800" :
                           detail?.event_for === 2 ? "bg-pink-100 text-pink-800" :
                           "bg-purple-100 text-purple-800"
                         }`}>
-                          {detail?.event_for === 1 ? "Male Only" : detail?.event_for === 2 ? "Female Only" : "Everyone"}
+                          {detail?.event_for === 1 
+                            ? (t("eventsMain.menOnlyLabel") || "Men Only") 
+                            : detail?.event_for === 2 
+                              ? (t("eventsMain.womenOnlyLabel") || "Women Only") 
+                              : (t("eventsMain.allWelcomeLabel") || "All Welcome")}
                         </span>
                       </div>
                       
@@ -327,7 +331,7 @@ export default function EventDetail() {
                               ? detail?.organizer?.profile_image
                               : "/assets/images/dummyImage.png"
                           }
-                          alt="Organizer"
+                          alt={t("events.organizer") || "Organizer"}
                           width={64}
                           height={64}
                           className="w-full h-full object-cover"
@@ -371,7 +375,7 @@ export default function EventDetail() {
                         }
                         return allImages.length > 0 ? getEventImageUrl({ event_image: allImages[currentImageIndex || 0] }) : "/assets/images/dummyImage.png";
                       })()}
-                      alt={detail?.event_name || "Event Image"}
+                          alt={detail?.event_name || t("events.eventImage") || "Event Image"}
                       fill
                       className="object-cover"
                       priority
@@ -442,7 +446,7 @@ export default function EventDetail() {
                             >
                               <Image
                                 src={getEventImageUrl({ event_image: img })}
-                                alt={`Event image ${idx + 1}`}
+                                alt={t("events.eventImage") + ` ${idx + 1}` || `Event image ${idx + 1}`}
                                 fill
                                 className="object-cover"
                                 onError={(e) => {
@@ -485,7 +489,7 @@ export default function EventDetail() {
                             year: "numeric",
                             month: "long",
                             day: "numeric"
-                          }) : "N/A"}
+                          }) : (t("eventTypeLegacy.notAvailable") || "N/A")}
                         </p>
                       </div>
                     </div>
@@ -497,7 +501,7 @@ export default function EventDetail() {
                         <p className="text-sm font-semibold text-gray-900">
                           {detail?.event_start_time && detail?.event_end_time
                             ? `${new Date(`1970-01-01T${detail.event_start_time}`).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${new Date(`1970-01-01T${detail.event_end_time}`).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                            : "N/A"}
+                            : (t("eventTypeLegacy.notAvailable") || "N/A")}
                         </p>
                       </div>
                     </div>
@@ -507,7 +511,7 @@ export default function EventDetail() {
                       <div>
                         <p className="text-xs font-medium text-gray-500">{t("common.address")}</p>
                         <p className="text-sm font-semibold text-gray-900">
-                          {detail?.event_address || "N/A"}
+                          {detail?.event_address || (t("eventTypeLegacy.notAvailable") || "N/A")}
                         </p>
                       </div>
                     </div>
@@ -517,7 +521,9 @@ export default function EventDetail() {
                       <div>
                         <p className="text-xs font-medium text-gray-500">{t("eventDetail.eventPrice")}</p>
                         <p className="text-sm font-semibold text-gray-900">
-                          {detail?.event_price ? `${detail.event_price} SAR` : "N/A"}
+                          {detail?.event_price 
+                            ? `${detail.event_price} ${t("common.currency") || "SAR"}` 
+                            : (t("eventTypeLegacy.notAvailable") || "N/A")}
                         </p>
                       </div>
                     </div>
@@ -527,7 +533,9 @@ export default function EventDetail() {
                       <div>
                         <p className="text-xs font-medium text-gray-500">{t("eventDetail.maxAttendees")}</p>
                         <p className="text-sm font-semibold text-gray-900">
-                          {detail?.no_of_attendees || "N/A"} {detail?.no_of_attendees === 1 ? "person" : "people"}
+                          {detail?.no_of_attendees || (t("eventTypeLegacy.notAvailable") || "N/A")} {detail?.no_of_attendees === 1 
+                            ? (t("eventsMain.personsLabel") || "person") 
+                            : (t("eventsMain.peopleLabel") || "people")}
                         </p>
                       </div>
                     </div>
@@ -536,13 +544,13 @@ export default function EventDetail() {
 
                 {/* Instructions Card */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Instructions</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">{t("events.instructionsLabel") || "Instructions"}</h3>
                   <div className="space-y-5">
                     {detail?.dos_instruction && (
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <CheckCircle2 className="w-4 h-4 text-green-600" />
-                          <h4 className="text-sm font-semibold text-gray-900">Do&apos;s</h4>
+                          <h4 className="text-sm font-semibold text-gray-900">{t("eventsMain.dosLabel") || "Do's"}</h4>
                         </div>
                         <p className="text-sm text-gray-700 pl-6">{detail.dos_instruction}</p>
                       </div>
@@ -551,13 +559,13 @@ export default function EventDetail() {
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <XCircle className="w-4 h-4 text-red-600" />
-                          <h4 className="text-sm font-semibold text-gray-900">Don&apos;ts</h4>
+                          <h4 className="text-sm font-semibold text-gray-900">{t("eventsMain.dontsLabel") || "Don'ts"}</h4>
                         </div>
                         <p className="text-sm text-gray-700 pl-6">{detail.do_not_instruction}</p>
                       </div>
                     )}
                     {!detail?.dos_instruction && !detail?.do_not_instruction && (
-                      <p className="text-sm text-gray-500 italic">No instructions provided.</p>
+                      <p className="text-sm text-gray-500 italic">{t("eventsMain.noInstructionsProvided") || "No instructions provided."}</p>
                     )}
                   </div>
                 </div>

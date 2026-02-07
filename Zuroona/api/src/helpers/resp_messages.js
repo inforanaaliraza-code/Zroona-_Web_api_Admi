@@ -27,6 +27,51 @@ module.exports = (lang = "en") => {
         ar: "خطأ في الخادم الداخلي."
     };
 
+    const email_not_verified = {
+        en: "Please verify your email address before logging in. Check your inbox for the verification link.",
+        ar: "يرجى تأكيد بريدك الإلكتروني قبل تسجيل الدخول. تحقق من صندوق الوارد الخاص بك للعثور على رابط التحقق."
+    };
+
+    const account_pending_approval = {
+        en: "Your account is pending admin approval. You will be notified via email once approved.",
+        ar: "حسابك قيد انتظار موافقة المسؤول. سيتم إعلامك عبر البريد الإلكتروني عند الموافقة."
+    };
+
+    const account_rejected = {
+        en: "Your account application was rejected. Please contact support for more information.",
+        ar: "تم رفض طلب حسابك. يرجى الاتصال بالدعم للحصول على مزيد من المعلومات."
+    };
+
+    const account_not_approved = {
+        en: "Your account is not yet approved. Please wait for admin approval.",
+        ar: "لم تتم الموافقة على حسابك بعد. يرجى الانتظار حتى تتم الموافقة من قبل المشرف."
+    };
+
+    const token_required = {
+        en: "Verification token is required",
+        ar: "رمز التحقق مطلوب"
+    };
+
+    const invalid_token = {
+        en: "Invalid or expired verification link",
+        ar: "رابط التحقق غير صالح أو منتهي الصلاحية"
+    };
+
+    const already_verified = {
+        en: "Email already verified. You can login now.",
+        ar: "البريد الإلكتروني مُؤكد بالفعل. يمكنك تسجيل الدخول الآن."
+    };
+
+    const verification_success = {
+        en: "Email and phone verified successfully! You can now login.",
+        ar: "تم تأكيد البريد الإلكتروني ورقم الهاتف بنجاح! يمكنك الآن تسجيل الدخول."
+    };
+
+    const verification_email_sent = {
+        en: "A verification link has been sent to your email and OTP to your phone. Please verify your account.",
+        ar: "تم إرسال رابط التحقق إلى بريدك الإلكتروني ورمز التحقق إلى هاتفك. يرجى التحقق من حسابك."
+    };
+
     const otpWaitMessage = {
         en: "Please wait 30 seconds before requesting another OTP.",
         ar: "يرجى الانتظار 30 ثانية قبل طلب رمز OTP آخر."
@@ -122,8 +167,83 @@ module.exports = (lang = "en") => {
         ar: "تم تحديث الملف الشخصي بنجاح."
     };
     const otp_sent_phone = {
-        en: "OTP sent on given mobile number",
-        ar: "تم إرسال OTP على رقم الهاتف المحمول المعطى"
+        en: "OTP sent successfully to your phone number",
+        ar: "تم إرسال رمز التحقق بنجاح إلى رقم هاتفك"
+    };
+
+    const payment_verified = {
+        en: "Payment verified successfully",
+        ar: "تم التحقق من الدفع بنجاح"
+    };
+
+    const payment_signature_secret_missing = {
+        en: "Payment signature secret is not configured",
+        ar: "مفتاح توقيع الدفع غير مُكوّن"
+    };
+
+    const payment_fields_required = {
+        en: "order_id, payment_id and signature are required",
+        ar: "مطلوب order_id و payment_id و signature"
+    };
+
+    const invalid_payment_signature = {
+        en: "Invalid payment signature",
+        ar: "توقيع الدفع غير صالح"
+    };
+
+    const webhook_already_processed = {
+        en: "Webhook already processed.",
+        ar: "تمت معالجة الويب هوك بالفعل."
+    };
+
+    const webhook_processed = {
+        en: "Webhook processed successfully.",
+        ar: "تمت معالجة الويب هوك بنجاح."
+    };
+
+    const webhook_processing_error = {
+        en: "An error occurred while processing the webhook.",
+        ar: "حدث خطأ أثناء معالجة الويب هوك."
+    };
+
+    const payment_capture_failed = {
+        en: "Failed to capture payment.",
+        ar: "فشل في تحصيل الدفع."
+    };
+
+    const refund_booking_not_cancelled = {
+        en: "Refund can only be requested for cancelled bookings",
+        ar: "يمكن طلب الاسترداد فقط للحجوزات الملغاة"
+    };
+
+    const refund_booking_not_paid = {
+        en: "Refund can only be requested for paid bookings",
+        ar: "يمكن طلب الاسترداد فقط للحجوزات المدفوعة"
+    };
+
+    const refund_request_pending = {
+        en: "Refund request already submitted and pending review",
+        ar: "تم إرسال طلب الاسترداد وهو قيد المراجعة"
+    };
+
+    const refund_request_approved = {
+        en: "Refund request already approved",
+        ar: "تمت الموافقة على طلب الاسترداد بالفعل"
+    };
+
+    const refund_request_rejected = {
+        en: "Refund request was rejected",
+        ar: "تم رفض طلب الاسترداد"
+    };
+
+    const refund_already_processed = {
+        en: "Refund already processed",
+        ar: "تم معالجة الاسترداد بالفعل"
+    };
+
+    const refund_creation_failed = {
+        en: "Failed to create refund request. Please try again.",
+        ar: "فشل في إنشاء طلب الاسترداد. حاول مرة أخرى."
     };
 
     const eventAdded = {
@@ -228,6 +348,18 @@ module.exports = (lang = "en") => {
         en: "Request already processed",
         ar: "الطلب م��ت��حصل عليه"
     }
+    const otp_send_failed = {
+        en: "Failed to send OTP. Please try again later.",
+        ar: "فشل إرسال رمز التحقق. الرجاء المحاولة مرة أخرى لاحقًا."
+    }
+    const invalid_refund_id = {
+        en: "Invalid refund ID format",
+        ar: "صيغة معرف الاسترداد غير صالحة"
+    }
+    const password_reset_failed = {
+        en: "Failed to send password reset email. Please try again later.",
+        ar: "فشل إرسال بريد إعادة تعيين كلمة المرور. حاول مرة أخرى لاحقًا."
+    }
     return {
         request_already_processed: request_already_processed[lang],
         withdrawalSuccess: withdrawalSuccess[lang],
@@ -255,6 +387,24 @@ module.exports = (lang = "en") => {
         eventDeleted: eventDeleted[lang],
         eventUpdated: eventUpdated[lang],
         otp_sent_phone: otp_sent_phone[lang],
+        payment_verified: payment_verified[lang],
+        payment_signature_secret_missing: payment_signature_secret_missing[lang],
+        payment_fields_required: payment_fields_required[lang],
+        invalid_payment_signature: invalid_payment_signature[lang],
+        webhook_already_processed: webhook_already_processed[lang],
+        webhook_processed: webhook_processed[lang],
+        webhook_processing_error: webhook_processing_error[lang],
+        payment_capture_failed: payment_capture_failed[lang],
+        refund_booking_not_cancelled: refund_booking_not_cancelled[lang],
+        refund_booking_not_paid: refund_booking_not_paid[lang],
+        refund_request_pending: refund_request_pending[lang],
+        refund_request_approved: refund_request_approved[lang],
+        refund_request_rejected: refund_request_rejected[lang],
+        refund_already_processed: refund_already_processed[lang],
+        refund_creation_failed: refund_creation_failed[lang],
+        otp_send_failed: otp_send_failed[lang],
+        invalid_refund_id: invalid_refund_id[lang],
+        password_reset_failed: password_reset_failed[lang],
         profileUpdated: profileUpdated[lang],
         otpVerifiedSuccess: otpVerifiedSuccess[lang],
         incorrectOTP: incorrectOTP[lang],
@@ -283,6 +433,15 @@ module.exports = (lang = "en") => {
         user_not_found: user_not_found[lang],
         internalServerError: internalServerError[lang],
         otp_sent_on_mail: otp_sent_on_mail[lang],
+        email_not_verified: email_not_verified[lang],
+        account_pending_approval: account_pending_approval[lang],
+        account_rejected: account_rejected[lang],
+        account_not_approved: account_not_approved[lang],
+        token_required: token_required[lang],
+        invalid_token: invalid_token[lang],
+        already_verified: already_verified[lang],
+        verification_success: verification_success[lang],
+        verification_email_sent: verification_email_sent[lang],
 
     }
 }

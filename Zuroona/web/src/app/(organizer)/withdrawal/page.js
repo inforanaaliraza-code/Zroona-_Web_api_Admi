@@ -78,7 +78,7 @@ export default function Withdrawals() {
                   onClick={() => setIsWithdrawModalOpen(true)}
                   className="bg-[#a797cc] py-3 px-10 rounded-lg text-base text-white"
                 >
-                  Withdraw
+                  {t("earning.tab1") || "Withdraw"}
                 </button>
               </div>
             </div>
