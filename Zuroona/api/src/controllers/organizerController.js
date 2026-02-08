@@ -1,6 +1,7 @@
 const { verifyToken, generateToken } = require("../helpers/generateToken");
 const Response = require("../helpers/response");
 const { cleanEmail } = require("../helpers/emailCleaner");
+const { getLocalPhoneFromString } = require("../controllers/userController");
 // OTP functionality removed - using email-based authentication only
 const GroupCategories = require("../models/groupCategoryModel");
 const BankService = require("../services/bankService");

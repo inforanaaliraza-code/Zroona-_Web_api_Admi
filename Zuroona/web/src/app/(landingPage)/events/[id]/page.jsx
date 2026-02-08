@@ -69,6 +69,7 @@ const getTranslation = (t, key, fallback) => {
 export default function EventDetailsPage() {
 	const { t, i18n } = useTranslation();
 	const params = useParams();
+	const { isRTL: rtlCheck } = useRTL();
 	const isRTL = t("direction") === "rtl";
 	const [event, setEvent] = useState(null);
 	const [loading, setLoading] = useState(true);
@@ -884,8 +885,7 @@ export default function EventDetailsPage() {
 												</div>
 												{/* Image counter */}
 												{(() => {
-													const { isRTL } = useRTL();
-													const pos = isRTL ? 'left-4' : 'right-4';
+													const pos = rtlCheck ? 'left-4' : 'right-4';
 													return (
 														<div className={`absolute top-4 ${pos} bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold z-10 shadow-lg`}>
 															{currentImageIndex + 1} / {images.length}

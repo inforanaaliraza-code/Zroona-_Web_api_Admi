@@ -3523,8 +3523,8 @@ const UserController = {
 	},
 
 	receivedWebhook: async (req, res) => {
+		const lang = req.lang || req.headers["lang"] || "en";
 		try {
-			const lang = req.lang || req.headers["lang"] || "en";
 			const { headers, body } = req;
 			console.log("headers", headers);
 			const receivedSignature = headers["x-event-secret"];
@@ -5306,3 +5306,4 @@ const UserController = {
 };
 
 module.exports = UserController;
+module.exports.getLocalPhoneFromString = getLocalPhoneFromString;

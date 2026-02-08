@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useRTL } from '@/utils/rtl';
 
 const Modal = ({ isOpen, onClose, children, width = "lg" }) => {
+    const { isRTL } = useRTL();
+    
     useEffect(() => {
         if (typeof document === "undefined" || !document.body) {
             return;
@@ -60,7 +62,6 @@ const Modal = ({ isOpen, onClose, children, width = "lg" }) => {
                 }}
             >
                 {(() => {
-                    const { isRTL } = useRTL();
                     const posClass = isRTL ? 'left-4' : 'right-4';
                     return (
                         <button
