@@ -2915,6 +2915,23 @@ const UserController = {
 				return Response.notFoundResponse(res, resp_messages(lang).bookingNotFound || "Booking not found");
 			}
 
+			// Get event details first to check event status
+			const event = await EventService.FindOneService({
+				_id: book_event.event_id,
+			});
+
+			if (!event) {
+				return Response.notFoundResponse(res, resp_messages(lang).eventNotFound || "Event not found");
+			}
+
+			// Check if event date has passed (cannot cancel completed events)
+			const now = new Date();
+			const eventDate = new Date(event.event_date);
+			if (!isNaN(eventDate.getTime()) && eventDate < now) {
+				return Response.badRequestResponse(res, resp_messages(lang).cannotCancelCompletedEventBooking || 
+					"Cannot cancel booking for completed event. This event has already taken place.");
+			}
+
 			// Check if booking is already cancelled
 			if (book_event.book_status === 3) {
 				return Response.badRequestResponse(res, resp_messages(lang).bookingAlreadyCancelled || "Booking already cancelled");
@@ -2923,17 +2940,21 @@ const UserController = {
 			// Check if booking can be cancelled (status 1 = approved OR status 2 = confirmed)
 			// Status: 0 = pending, 1 = approved, 2 = confirmed, 3 = cancelled, 4 = rejected
 			if (book_event.book_status !== 1 && book_event.book_status !== 2) {
-				return Response.badRequestResponse(res, resp_messages(lang).onlyApprovedBookingsCanBeCancelled || "Only approved or confirmed bookings can be cancelled");
+				let errorMessage;
+				if (book_event.book_status === 0) {
+					errorMessage = resp_messages(lang).cannotCancelPendingBooking || 
+						"Cannot cancel pending booking. Please wait for host approval before cancelling.";
+				} else if (book_event.book_status === 4) {
+					errorMessage = resp_messages(lang).cannotCancelRejectedBooking || 
+						"Cannot cancel rejected booking. This booking has already been rejected by the host.";
+				} else {
+					errorMessage = resp_messages(lang).onlyApprovedBookingsCanBeCancelled || 
+						"Only approved or confirmed bookings can be cancelled.";
+				}
+				return Response.badRequestResponse(res, errorMessage);
 			}
 
-			// Get event details
-			const event = await EventService.FindOneService({
-				_id: book_event.event_id,
-			});
-
-			if (!event) {
-				return Response.notFoundResponse(res, resp_messages(lang).eventNotFound || "Event not found");
-			}
+			// Event details are already fetched above (line 2919), no need to fetch again
 
 			// Get user details
 			const user = await UserService.FindOneService({ _id: userId });

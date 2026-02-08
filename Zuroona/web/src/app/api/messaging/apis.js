@@ -7,7 +7,12 @@ const createFormData = (data, file) => {
     // Add all data fields
     Object.keys(data).forEach(key => {
         if (data[key] !== null && data[key] !== undefined) {
-            formData[key] = data[key];
+            // Ensure boolean values are converted to strings for FormData
+            if (typeof data[key] === 'boolean') {
+                formData[key] = data[key] ? 'true' : 'false';
+            } else {
+                formData[key] = data[key];
+            }
         }
     });
     
@@ -15,6 +20,14 @@ const createFormData = (data, file) => {
     if (file) {
         formData['file'] = file;
     }
+    
+    // Debug logging
+    console.log('[API] FormData created:', {
+        keys: Object.keys(formData),
+        is_group_chat: formData.is_group_chat,
+        event_id: formData.event_id,
+        hasFile: !!formData.file
+    });
     
     return formData;
 };

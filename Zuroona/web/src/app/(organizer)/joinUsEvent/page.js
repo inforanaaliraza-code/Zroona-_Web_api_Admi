@@ -12,9 +12,11 @@ import Paginations from "@/components/Paginations/Pagination";
 import Loader from "@/components/Loader/Loader";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
+import { useRTL } from "@/utils/rtl";
 
 export default function JoinUsEvent() {
   const { t } = useTranslation();
+  const { isRTL } = useRTL();
   const router = useRouter();
   const breadcrumbItems = [
     { label: t('breadcrumb.tab1'), href: "/joinUsEvent" },
@@ -201,10 +203,11 @@ export default function JoinUsEvent() {
               </button>
             </div>
 
-            {/* Enhanced Search Bar - RTL Support via CSS */}
+            {/* Enhanced Search Bar - RTL Support */}
             <div className="mb-8 relative">
               <div className="relative">
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none z-10 [dir=rtl]:right-auto [dir=rtl]:left-0 [dir=rtl]:pl-4 [dir=rtl]:pr-0">
+                {/* Search Icon - Positioned based on RTL */}
+                <div className={`absolute inset-y-0 flex items-center pointer-events-none z-10 ${isRTL ? 'left-0 pl-4' : 'right-0 pr-4'}`}>
                   <Icon icon="lucide:search" className="w-5 h-5 text-gray-400" />
                 </div>
                 <input
@@ -212,7 +215,7 @@ export default function JoinUsEvent() {
                   value={search}
                   onChange={handleSearch}
                   placeholder={t('events.searchEvents') || t('placeholder.search') || 'Search for events'}
-                  className="w-full pr-4 pl-12 py-4 rounded-xl border-2 border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent shadow-sm hover:shadow-md transition-all duration-300 text-sm sm:text-base [dir=rtl]:pl-4 [dir=rtl]:pr-12"
+                  className={`w-full py-4 rounded-xl border-2 border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent shadow-sm hover:shadow-md transition-all duration-300 text-sm sm:text-base ${isRTL ? 'pl-4 pr-12' : 'pr-4 pl-12'}`}
                 />
                 {search && (
                   <button
@@ -220,7 +223,7 @@ export default function JoinUsEvent() {
                       setSearch("");
                       dispatch(getEventList({ page: 1, search: "" }));
                     }}
-                    className="absolute inset-y-0 left-0 pl-4 flex items-center z-10 [dir=rtl]:left-auto [dir=rtl]:right-0 [dir=rtl]:pr-4 [dir=rtl]:pl-0"
+                    className={`absolute inset-y-0 flex items-center z-10 ${isRTL ? 'right-0 pr-4' : 'left-0 pl-4'}`}
                     aria-label={t('common.clear') || 'Clear search'}
                   >
                     <Icon icon="lucide:x" className="w-5 h-5 text-gray-400 hover:text-gray-600 transition-colors" />

@@ -154,7 +154,7 @@ const BookNow = ({ props, pageType }) => {
         DeleteEventsApi(payload)
             .then((res) => {
                 if (res?.status === 1) {
-                    toast.success(res?.message);
+                    toast.success(res?.message || t('events.eventDeletedSuccess') || 'Event deleted successfully');
                     
                     // Redirect based on event_type
                     if (event_type === 1) {
@@ -165,11 +165,12 @@ const BookNow = ({ props, pageType }) => {
                     
                     dispatch(getEventList({ page: page, event_type: event_type }));
                 } else {
-                    toast.error(res?.message);
+                    // Show error message from API (already translated based on language header)
+                    toast.error(res?.message || t('events.deleteFailed') || 'Failed to delete event. Please try again.');
                 }
             })
             .catch((err) => {
-                toast.error("Failed to delete event. Please try again.");
+                toast.error(t('events.deleteFailed') || 'Failed to delete event. Please try again.');
                 console.error(err);
             })
             .finally(() => {

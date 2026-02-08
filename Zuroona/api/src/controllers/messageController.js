@@ -375,7 +375,8 @@ const MessageController = {
             const { event_id, message, receiver_id, is_group_chat } = req.body;
 
             // Check if this is a group chat request
-            const isGroupChat = is_group_chat === true;
+            // Handle both boolean and string values from FormData (FormData converts booleans to strings)
+            const isGroupChat = is_group_chat === true || is_group_chat === 'true' || is_group_chat === '1';
 
             if (!event_id || !message) {
                 return Response.badRequestResponse(
@@ -763,6 +764,16 @@ const MessageController = {
             const userId = req.userId;
             const role = req.role;
             const { event_id, message, receiver_id, is_group_chat } = req.body;
+            
+            // Debug: Log incoming request body
+            console.log('[MESSAGE-ATTACHMENT] Request body:', {
+                event_id,
+                message: message ? 'provided' : 'empty',
+                receiver_id: receiver_id || 'not provided',
+                is_group_chat,
+                is_group_chat_type: typeof is_group_chat,
+                hasFile: !!(req.files && req.files.file)
+            });
 
             // Validate required fields
             if (!userId) {
@@ -788,7 +799,25 @@ const MessageController = {
             }
 
             const uploadedFile = req.files.file;
-            const isGroupChat = is_group_chat === true;
+            // Handle both boolean and string values from FormData (FormData converts booleans to strings)
+            // Also handle case-insensitive strings and various truthy values
+            const isGroupChat = is_group_chat === true || 
+                               is_group_chat === 'true' || 
+                               is_group_chat === 'True' || 
+                               is_group_chat === 'TRUE' ||
+                               is_group_chat === '1' || 
+                               is_group_chat === 1 ||
+                               String(is_group_chat).toLowerCase() === 'true';
+            
+            // Debug logging
+            console.log('[MESSAGE-ATTACHMENT] Group chat check:', {
+                is_group_chat,
+                type: typeof is_group_chat,
+                isGroupChat,
+                event_id,
+                receiver_id: receiver_id || 'not provided',
+                body: req.body
+            });
 
             if (!event_id) {
                 return Response.badRequestResponse(
@@ -875,10 +904,32 @@ const MessageController = {
                 );
             }
             
+            // IMPORTANT: Check for group chat FIRST before validating receiver_id
+            // Fallback: If is_group_chat is not explicitly set but group chat exists, treat as group chat
+            let finalIsGroupChat = isGroupChat;
+            if (!finalIsGroupChat) {
+                // Check if a group chat exists for this event (defensive check)
+                const existingGroupChat = await ConversationService.GetGroupChatByEventService(event_id);
+                if (existingGroupChat) {
+                    console.log('[MESSAGE-ATTACHMENT] Group chat exists but is_group_chat was false/undefined. Treating as group chat.');
+                    finalIsGroupChat = true;
+                }
+            }
+            
+            console.log('[MESSAGE-ATTACHMENT] Final group chat status:', {
+                isGroupChat,
+                finalIsGroupChat,
+                is_group_chat,
+                receiver_id: receiver_id || 'not provided',
+                willSkipValidation: finalIsGroupChat
+            });
+            
             // For group chats, skip user_id/organizer_id validation
-            if (!isGroupChat) {
-                // Validate receiver_id exists
+            // IMPORTANT: Check finalIsGroupChat first - if it's a group chat, skip receiver_id validation
+            if (!finalIsGroupChat) {
+                // Validate receiver_id exists only for one-on-one chats
                 if (!receiver_id) {
+                    console.error('[MESSAGE-ATTACHMENT] Missing receiver_id for one-on-one chat');
                     return Response.badRequestResponse(
                         res,
                         'Receiver ID is required for one-on-one conversations'

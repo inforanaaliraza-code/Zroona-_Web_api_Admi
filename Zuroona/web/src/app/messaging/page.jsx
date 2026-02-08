@@ -23,6 +23,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import Header from "@/components/Header/Header";
 import HostNavbar from "@/components/Header/HostNavbar";
+import GuestNavbar from "@/components/Header/GuestNavbar";
 import Footer from "@/components/Footer/Footer";
 import { BASE_API_URL } from "@/until";
 
@@ -236,8 +237,22 @@ export default function MessagingPage() {
     try {
       setSending(true);
       
-      // Check if this is a group chat
-      const isGroupChat = selectedConversation.is_group === true;
+      // Check if this is a group chat (handle various truthy values)
+      // Also check if conversation has participants array (indicates group chat)
+      const isGroupChat = selectedConversation.is_group === true || 
+                         selectedConversation.is_group === 1 || 
+                         selectedConversation.is_group === '1' || 
+                         selectedConversation.is_group === 'true' ||
+                         (selectedConversation.participants && Array.isArray(selectedConversation.participants) && selectedConversation.participants.length > 0);
+      
+      // Debug logging
+      console.log('[MESSAGING] Group chat detection:', {
+        is_group: selectedConversation.is_group,
+        is_group_type: typeof selectedConversation.is_group,
+        hasParticipants: !!(selectedConversation.participants && Array.isArray(selectedConversation.participants)),
+        participantsCount: selectedConversation.participants?.length || 0,
+        isGroupChat
+      });
       
       // Safely extract IDs with fallbacks
       const eventId = selectedConversation.event_id?._id || selectedConversation.event_id;
@@ -252,19 +267,31 @@ export default function MessagingPage() {
 
       if (!eventId) {
         toast.error(t("messaging.failedToSend") || "Failed to send message: Missing event ID");
+        setSending(false);
         return;
       }
 
+      // For group chats, receiver_id is not required
+      // For one-on-one chats, receiver_id is required
       if (!isGroupChat && !receiverId) {
-        toast.error(t("messaging.failedToSend") || t("common.errorOccurred") || "Failed to send message: Missing conversation data");
+        toast.error(t("messaging.receiverIdRequired") || "Receiver ID is required for one-on-one conversations");
+        setSending(false);
         return;
       }
 
       const payload = {
         event_id: eventId,
         message: messageInput.trim() || "",
-        is_group_chat: isGroupChat
+        is_group_chat: isGroupChat ? "true" : "false" // Send as string for FormData compatibility
       };
+      
+      // Debug: Log payload before sending
+      console.log('[MESSAGING] Payload for file attachment:', {
+        ...payload,
+        isGroupChat,
+        selectedConversationIsGroup: selectedConversation.is_group,
+        hasReceiverId: !!receiverId
+      });
 
       // Only add receiver_id for one-on-one chats
       if (!isGroupChat && receiverId) {
@@ -275,6 +302,19 @@ export default function MessagingPage() {
       
       // If file is selected, use attachment endpoint
       if (selectedFile) {
+        // Debug logging
+        console.log('[MESSAGING] Sending file attachment:', {
+          isGroupChat,
+          event_id: eventId,
+          receiver_id: receiverId,
+          payload,
+          selectedFile: {
+            name: selectedFile.name,
+            type: selectedFile.type,
+            size: selectedFile.size
+          }
+        });
+        
         const apiCall = isOrganizer ? SendMessageWithAttachmentOrganizerApi : SendMessageWithAttachmentApi;
         response = await apiCall(payload, selectedFile);
       } else {
@@ -324,7 +364,8 @@ export default function MessagingPage() {
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      const errorMessage = error.response?.data?.message || error.message || t("messaging.failedToSend") || "Failed to send message";
+      toast.error(errorMessage);
     } finally {
       setSending(false);
     }
@@ -394,11 +435,17 @@ export default function MessagingPage() {
             const currentMessageIds = new Set(messages.map(m => m._id?.toString()));
             const newMessageIds = new Set(newMessages.map(m => m._id?.toString()));
             
-            // Check if there are any new messages
+            // Check if there are any new messages or if attachment URLs changed
             const hasNewMessages = newMessages.some(m => !currentMessageIds.has(m._id?.toString()));
             const hasDifferentLength = newMessages.length !== messages.length;
             
-            if (hasNewMessages || hasDifferentLength) {
+            // Check if any existing message's attachment_url was updated (for real-time file sharing)
+            const hasUpdatedAttachments = messages.some(currentMsg => {
+              const newMsg = newMessages.find(m => m._id?.toString() === currentMsg._id?.toString());
+              return newMsg && newMsg.attachment_url !== currentMsg.attachment_url;
+            });
+            
+            if (hasNewMessages || hasDifferentLength || hasUpdatedAttachments) {
               setMessages(newMessages);
             }
           }
@@ -548,7 +595,7 @@ export default function MessagingPage() {
   return (
     <>
       <Header />
-      {isOrganizer && <HostNavbar />}
+      {isOrganizer ? <HostNavbar /> : <GuestNavbar search={""} setSearch={() => {}} setPage={() => {}} />}
       <section className="min-h-screen bg-white py-6">
         <div className="container mx-auto px-4 md:px-8 lg:px-28">
         {/* Header */}
@@ -1035,27 +1082,34 @@ export default function MessagingPage() {
                                     <div className="relative">
                                       <Image
                                         src={msg.attachment_url}
-                                        alt="Shared image"
+                                        alt={msg.message || "Shared image"}
                                         width={300}
                                         height={300}
-                                        className="max-w-full h-auto rounded-lg cursor-pointer"
+                                        className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                                         onClick={() => window.open(msg.attachment_url, '_blank')}
+                                        unoptimized={msg.attachment_url?.includes('cloudinary') || msg.attachment_url?.includes('http')}
+                                        onError={(e) => {
+                                          console.error("Failed to load image:", msg.attachment_url);
+                                          e.target.src = "/assets/images/image-error.png";
+                                        }}
                                       />
                                       {msg.message && (
-                                        <p className="text-sm mt-2 px-2 pb-2">{msg.message}</p>
+                                        <p className={`text-sm mt-2 px-2 pb-2 ${isSender ? "text-white" : "text-gray-700"}`}>{msg.message}</p>
                                       )}
                                     </div>
                                   ) : isFile && msg.attachment_url ? (
-                                    <div className="flex items-center gap-2">
-                                      <Icon icon="lucide:file" className="h-5 w-5" />
+                                    <div className="flex items-center gap-3 p-2 bg-white/10 rounded-lg">
+                                      <Icon icon="lucide:file" className="h-6 w-6 flex-shrink-0" />
                                       <a
                                         href={msg.attachment_url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-sm underline hover:opacity-80"
+                                        className={`text-sm underline hover:opacity-80 flex-1 truncate ${isSender ? "text-white" : "text-gray-700"}`}
+                                        download
                                       >
                                         {msg.message || "Download file"}
                                       </a>
+                                      <Icon icon="lucide:download" className="h-4 w-4 flex-shrink-0 opacity-70" />
                                     </div>
                                   ) : (
                                     <p className="text-sm">{msg.message}</p>
@@ -1124,7 +1178,7 @@ export default function MessagingPage() {
                             type="file"
                             ref={fileInputRef}
                             onChange={handleFileSelect}
-                            accept="image/*,.pdf,.doc,.docx,.txt"
+                            accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx,.zip,.rar"
                             className="hidden"
                             id="file-input"
                           />

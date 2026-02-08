@@ -99,7 +99,7 @@ export default function RefundsPage() {
         status: error.response?.status
       });
       setRefunds([]);
-      toast.error(error.response?.data?.message || "Failed to load refunds. Please try again.");
+      toast.error(error.response?.data?.message || t("refunds.loadFailed") || "Failed to load refunds. Please try again.");
     } finally {
       setLoading(false);
     }

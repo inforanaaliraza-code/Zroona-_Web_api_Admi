@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { LogOutIcon } from "lucide-react";
 import { useSelector } from "react-redux";
+import { useTranslation } from "react-i18next";
 import SidebarItem from "./SidebarItem";
 import ClickOutside from "../Header/ClickOutside";
 import useLocalStorage from "../hooks/useLocalStorage";
@@ -15,6 +16,7 @@ import Cookies from "js-cookie";
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const [pageName, setPageName] = useLocalStorage("selectedMenu", "dashboard");
   const { isRTL } = useSelector((state) => state.language);
+  const { t } = useTranslation();
 
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>

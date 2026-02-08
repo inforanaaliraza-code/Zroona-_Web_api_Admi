@@ -360,6 +360,63 @@ module.exports = (lang = "en") => {
         en: "Failed to send password reset email. Please try again later.",
         ar: "فشل إرسال بريد إعادة تعيين كلمة المرور. حاول مرة أخرى لاحقًا."
     }
+
+    // Event deletion and cancellation messages
+    const cannotDeleteApprovedEvent = {
+        en: "Cannot delete approved upcoming event. Please cancel the event first if you need to remove it.",
+        ar: "لا يمكن حذف فعالية معتمدة قادمة. يرجى إلغاء الفعالية أولاً إذا كنت تريد إزالتها."
+    };
+    const onlyPendingRejectedCancelledCompletedCanBeDeleted = {
+        en: "Only pending, rejected, cancelled or completed events can be deleted.",
+        ar: "يمكن حذف الفعاليات المعلقة أو المرفوضة أو الملغاة أو المكتملة فقط."
+    };
+    const cannotCancelPendingEvent = {
+        en: "Cannot cancel pending event. Please wait for admin approval or delete the event if it's not approved yet.",
+        ar: "لا يمكن إلغاء فعالية معلقة. يرجى الانتظار حتى موافقة المشرف أو حذف الفعالية إذا لم يتم اعتمادها بعد."
+    };
+    const cannotCancelRejectedEvent = {
+        en: "Cannot cancel rejected event. This event has already been rejected by admin.",
+        ar: "لا يمكن إلغاء فعالية مرفوضة. تم رفض هذه الفعالية بالفعل من قبل المشرف."
+    };
+    const eventAlreadyCancelled = {
+        en: "This event has already been cancelled.",
+        ar: "تم إلغاء هذه الفعالية بالفعل."
+    };
+    const cannotCancelCompletedEvent = {
+        en: "Cannot cancel completed event. This event has already taken place.",
+        ar: "لا يمكن إلغاء فعالية مكتملة. لقد حدثت هذه الفعالية بالفعل."
+    };
+    const onlyApprovedEventsCanBeCancelled = {
+        en: "Only approved events can be cancelled.",
+        ar: "يمكن إلغاء الفعاليات المعتمدة فقط."
+    };
+    const eventCancelled = {
+        en: "Event cancelled successfully.",
+        ar: "تم إلغاء الفعالية بنجاح."
+    };
+
+    // Guest booking cancellation messages
+    const bookingAlreadyCancelled = {
+        en: "Booking already cancelled.",
+        ar: "تم إلغاء الحجز بالفعل."
+    };
+    const cannotCancelPendingBooking = {
+        en: "Cannot cancel pending booking. Please wait for host approval before cancelling.",
+        ar: "لا يمكن إلغاء حجز معلق. يرجى الانتظار حتى موافقة المضيف قبل الإلغاء."
+    };
+    const cannotCancelRejectedBooking = {
+        en: "Cannot cancel rejected booking. This booking has already been rejected by the host.",
+        ar: "لا يمكن إلغاء حجز مرفوض. تم رفض هذا الحجز بالفعل من قبل المضيف."
+    };
+    const onlyApprovedBookingsCanBeCancelled = {
+        en: "Only approved or confirmed bookings can be cancelled.",
+        ar: "يمكن إلغاء الحجوزات المعتمدة أو المؤكدة فقط."
+    };
+    const cannotCancelCompletedEventBooking = {
+        en: "Cannot cancel booking for completed event. This event has already taken place.",
+        ar: "لا يمكن إلغاء حجز لفعالية مكتملة. لقد حدثت هذه الفعالية بالفعل."
+    };
+
     return {
         request_already_processed: request_already_processed[lang],
         withdrawalSuccess: withdrawalSuccess[lang],
@@ -442,6 +499,21 @@ module.exports = (lang = "en") => {
         already_verified: already_verified[lang],
         verification_success: verification_success[lang],
         verification_email_sent: verification_email_sent[lang],
+        // Event deletion and cancellation messages
+        cannotDeleteApprovedEvent: cannotDeleteApprovedEvent[lang],
+        onlyPendingRejectedCancelledCompletedCanBeDeleted: onlyPendingRejectedCancelledCompletedCanBeDeleted[lang],
+        cannotCancelPendingEvent: cannotCancelPendingEvent[lang],
+        cannotCancelRejectedEvent: cannotCancelRejectedEvent[lang],
+        eventAlreadyCancelled: eventAlreadyCancelled[lang],
+        cannotCancelCompletedEvent: cannotCancelCompletedEvent[lang],
+        onlyApprovedEventsCanBeCancelled: onlyApprovedEventsCanBeCancelled[lang],
+        eventCancelled: eventCancelled[lang],
+        // Guest booking cancellation messages
+        bookingAlreadyCancelled: bookingAlreadyCancelled[lang],
+        cannotCancelPendingBooking: cannotCancelPendingBooking[lang],
+        cannotCancelRejectedBooking: cannotCancelRejectedBooking[lang],
+        onlyApprovedBookingsCanBeCancelled: onlyApprovedBookingsCanBeCancelled[lang],
+        cannotCancelCompletedEventBooking: cannotCancelCompletedEventBooking[lang],
 
     }
 }

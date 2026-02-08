@@ -1670,10 +1670,18 @@ const organizerController = {
 
 			if (!isPending && !isRejected && !isCancelled && !isCompleted) {
 				// Still an active/approved upcoming event – don't allow hard delete
-				return Response.badRequestResponse(
-					res,
-					"Only pending, rejected, cancelled or completed events can be deleted."
-				);
+				// Provide specific message based on event status
+				let errorMessage;
+				if (event.is_approved === 1) {
+					// Event is approved and upcoming
+					errorMessage = resp_messages(req.lang).cannotDeleteApprovedEvent || 
+						"Cannot delete approved upcoming event. Please cancel the event first if you need to remove it.";
+				} else {
+					// Other active status
+					errorMessage = resp_messages(req.lang).onlyPendingRejectedCancelledCompletedCanBeDeleted || 
+						"Only pending, rejected, cancelled or completed events can be deleted.";
+				}
+				return Response.badRequestResponse(res, errorMessage);
 			}
 
 			// Soft delete: mark is_delete = 1 instead of removing document
@@ -3859,7 +3867,32 @@ const organizerController = {
 
 			// Check if event is approved (is_approved = 1 means approved)
 			if (event.is_approved !== 1) {
-				return Response.badRequestResponse(res, resp_messages(lang).onlyApprovedEventsCanBeCancelled || "Only approved events can be cancelled");
+				let errorMessage;
+				if (event.is_approved === 0) {
+					errorMessage = resp_messages(lang).cannotCancelPendingEvent || 
+						"Cannot cancel pending event. Please wait for admin approval or delete the event if it's not approved yet.";
+				} else if (event.is_approved === 2) {
+					errorMessage = resp_messages(lang).cannotCancelRejectedEvent || 
+						"Cannot cancel rejected event. This event has already been rejected by admin.";
+				} else {
+					errorMessage = resp_messages(lang).onlyApprovedEventsCanBeCancelled || 
+						"Only approved events can be cancelled.";
+				}
+				return Response.badRequestResponse(res, errorMessage);
+			}
+
+			// Check if event is already cancelled
+			if (event.isActive === 2) {
+				return Response.badRequestResponse(res, resp_messages(lang).eventAlreadyCancelled || 
+					"This event has already been cancelled.");
+			}
+
+			// Check if event date has passed
+			const now = new Date();
+			const eventDate = new Date(event.event_date);
+			if (!isNaN(eventDate.getTime()) && eventDate < now) {
+				return Response.badRequestResponse(res, resp_messages(lang).cannotCancelCompletedEvent || 
+					"Cannot cancel completed event. This event has already taken place.");
 			}
 
 			// Get all accepted bookings (book_status = 2 means confirmed/approved)

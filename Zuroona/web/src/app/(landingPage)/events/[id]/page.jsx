@@ -184,7 +184,7 @@ export default function EventDetailsPage() {
 				if (response.data?.attendees_info && Array.isArray(response.data.attendees_info)) {
 					const attendeesData = response.data.attendees_info.map((attendee) => ({
 						id: attendee._id || attendee.id,
-						name: `${attendee.first_name || ''} ${attendee.last_name || ''}`.trim() || 'Unknown',
+						name: `${attendee.first_name || ''} ${attendee.last_name || ''}`.trim() || getTranslation(t, "events.unknown", "Unknown"),
 						avatar: attendee.profile_image || null,
 						first_name: attendee.first_name,
 						last_name: attendee.last_name,
@@ -603,7 +603,7 @@ export default function EventDetailsPage() {
 			if (event?.attendees_info && Array.isArray(event.attendees_info)) {
 				return event.attendees_info.map((attendee) => ({
 					id: attendee._id || attendee.id,
-					name: `${attendee.first_name || ''} ${attendee.last_name || ''}`.trim() || 'Unknown',
+					name: `${attendee.first_name || ''} ${attendee.last_name || ''}`.trim() || getTranslation(t, "events.unknown", "Unknown"),
 					avatar: attendee.profile_image || null,
 					first_name: attendee.first_name,
 					last_name: attendee.last_name,
@@ -1024,8 +1024,8 @@ export default function EventDetailsPage() {
 									</div>
 									<div className="flex-1">
 										<h3 className="text-lg font-bold text-gray-900 mb-1">
-											{event.organizer?.first_name || "Demo"}{" "}
-											{event.organizer?.last_name || "User"}
+											{event.organizer?.first_name || getTranslation(t, "events.organizer", "Organizer")}{" "}
+											{event.organizer?.last_name || ""}
 										</h3>
 										<div className="flex items-center gap-2 mb-3">
 											<div className="flex items-center gap-1 bg-[#a797cc]/10 px-2 py-1 rounded-lg">
@@ -1046,7 +1046,7 @@ export default function EventDetailsPage() {
 													event.organizer?.rating
 														?.overall?.totalReviews || 0
 												}{" "}
-												Reviews)
+												{getTranslation(t, "header.reviews", "Reviews")})
 											</span>
 										</div>
 										{/* Only show View Host Profile link if organizer ID exists and is valid */}
@@ -1238,7 +1238,7 @@ export default function EventDetailsPage() {
 											alt={
 												similarEvent.title ||
 												similarEvent.event_name ||
-												"Event image"
+												getTranslation(t, "events.eventImage", "Event image")
 											}
 											className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
 											onError={(e) => {

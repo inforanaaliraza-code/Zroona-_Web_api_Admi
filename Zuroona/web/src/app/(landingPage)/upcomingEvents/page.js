@@ -167,7 +167,7 @@ export default function UpComingEvents() {
                 <div className="flex flex-col md:flex-row lg:flex-col justify-between items-center mb-4 gap-x-10">
                   {/* <Calendar onDateChange={setSelectedDate} /> */}
                   <div>
-                    <h3 className="font-semibold text-lg mb-2">Category</h3>
+                    <h3 className="font-semibold text-lg mb-2">{t("events.category", "Category")}</h3>
                     <div className="flex flex-wrap items-center gap-2">
                       {loadingCategory ? (
                         <div className="flex justify-center items-center w-full">
@@ -197,7 +197,7 @@ export default function UpComingEvents() {
                                   }
                                   height={20} // Adjust as needed
                                   width={20} // Adjust as needed
-                                  alt={category.name || "Category"}
+                                  alt={category.name || t("events.category", "Category")}
                                   className=""
                                 />
                               </div>
@@ -207,7 +207,7 @@ export default function UpComingEvents() {
                           );
                         })
                       ) : (
-                        <div className="text-gray-800">No categories available.</div>
+                        <div className="text-gray-800">{t("events.noCategoriesAvailable", "No categories available.")}</div>
                       )}
                     </div>
                   </div>
