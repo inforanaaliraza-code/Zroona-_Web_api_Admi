@@ -15,14 +15,14 @@ const updateCompletedBookings = async () => {
     try {
         console.log('[AUTO-COMPLETE] Starting to update completed bookings...');
 
-        // Connect to database
-        const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI;
-        if (!mongoURI) {
-            throw new Error('MongoDB URI not configured');
+        if (mongoose.connection.readyState !== 1) {
+            const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI;
+            if (!mongoURI) {
+                throw new Error('MongoDB URI not configured');
+            }
+            await mongoose.connect(mongoURI);
+            console.log('[AUTO-COMPLETE] Connected to database');
         }
-
-        await mongoose.connect(mongoURI);
-        console.log('[AUTO-COMPLETE] Connected to database');
 
         // Find all confirmed bookings (status 2) for events that have ended
         const currentDate = new Date();
@@ -91,14 +91,10 @@ const updateCompletedBookings = async () => {
 
         console.log(`[AUTO-COMPLETE] Completed! Updated ${updatedCount} bookings to completed status`);
 
-        await mongoose.disconnect();
         return { success: true, updatedCount };
 
     } catch (error) {
         console.error('[AUTO-COMPLETE] Error:', error);
-        if (mongoose.connection.readyState === 1) {
-            await mongoose.disconnect();
-        }
         throw error;
     }
 };

@@ -17,13 +17,11 @@ const sendHostResponseReminders = async () => {
     try {
         console.log('[HOST-REMINDER] Starting to check for pending booking requests...');
 
-        // Connect to database if not already connected
-        const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI;
-        if (!mongoURI) {
-            throw new Error('MongoDB URI not configured');
-        }
-
         if (mongoose.connection.readyState !== 1) {
+            const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI;
+            if (!mongoURI) {
+                throw new Error('MongoDB URI not configured');
+            }
             await mongoose.connect(mongoURI);
             console.log('[HOST-REMINDER] Connected to database');
         }

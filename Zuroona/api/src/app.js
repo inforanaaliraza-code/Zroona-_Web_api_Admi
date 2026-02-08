@@ -35,7 +35,7 @@ if (process.env.SENTRY_DSN) {
 }
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3434;
 
 // Trust proxy - required when behind a reverse proxy like Coolify
 // Set to 1 to trust only the first proxy hop (prevents IP spoofing and rate limit bypass)
