@@ -6,6 +6,7 @@ import { useFormik } from "formik";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
 
@@ -68,7 +69,7 @@ function PrivacyPolicy(props) {
       AddEditCMSApi(payload).then((data) => {
         setLoading(false);
         if (data?.status === 1) {
-          toast.success(t("cms.contentUpdated"));
+          showGreenTick();
           fetchCMSDetail({ cms_type: props.status });
         } else {
           setLoading(false);

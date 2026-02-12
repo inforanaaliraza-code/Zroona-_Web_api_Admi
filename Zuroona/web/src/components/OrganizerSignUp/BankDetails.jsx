@@ -9,6 +9,7 @@ import { useState } from "react";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import Loader from "../Loader/Loader";
 import * as IBAN from "iban";
 
@@ -78,7 +79,7 @@ const BankDetails = ({ title, buttonName, onNext }) => {
             OrganizerUpdateProfileApi(payload).then((res) => {
                 setLoading(false);
                 if (res?.status === 1) {
-                    toast.success(res?.message || t("signup.bankDetailsSaved") || "Bank details saved successfully");
+                    showGreenTick();
                     // Store bank details in localStorage for final submission
                     const bankData = {
                         ...personalInfo,

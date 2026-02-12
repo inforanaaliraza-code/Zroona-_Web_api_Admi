@@ -10,6 +10,7 @@ import { useFormik } from 'formik';
 import { AddEventListApi, EditEventListApi, UploadFileApi } from '@/app/api/setting';
 import * as Yup from "yup";
 import { toast } from 'react-toastify';
+import { showGreenTick } from '@/utils/toastHelpers';
 import Loader from '../Loader/Loader';
 import { DatePickerTime } from '@/components/ui/date-picker-time';
 import { getEventList } from '@/redux/slices/EventList';
@@ -837,7 +838,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                     setLoding(false);
                     if (actualSetSubmitting) actualSetSubmitting(false);
                     if (res?.status == 1) {
-                        toast.success(res?.message || t('events.eventUpdated') || 'Event updated successfully');
+                        showGreenTick();
                         onClose();
                         dispatch(getEventListDetail({ id: EventListId }));
                         // Refresh event list
@@ -1031,7 +1032,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
             
             if (resp?.status === 1 && resp?.data?.location) {
                 setEventImages(prev => [...prev, resp.data.location]);
-                toast.success("Image uploaded successfully");
+                showGreenTick();
             } else {
                 throw new Error(resp?.message || "Upload failed");
             }
@@ -1088,7 +1089,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                     
                     // Geocode the location to get address
                     geocodeLocation(location);
-                    toast.success('Location captured successfully!');
+                    showGreenTick();
                 },
                 (error) => {
                     toast.error('Unable to get your location. Please enter manually.');

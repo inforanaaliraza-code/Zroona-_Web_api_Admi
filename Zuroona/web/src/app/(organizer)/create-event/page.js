@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useFormik } from 'formik';
 import * as Yup from "yup";
 import { toast } from 'react-toastify';
+import { showGreenTick } from '@/utils/toastHelpers';
 import { useTranslation } from 'react-i18next';
 import { AddEventListApi, EditEventListApi, UploadFileApi } from '@/app/api/setting';
 import { getEventListDetail } from '@/redux/slices/EventListDetail';
@@ -304,7 +305,7 @@ const DatePicker = ({ value, onChange, label, error, errorMessage, minDate, clas
             const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
             const day = String(selectedDate.getDate()).padStart(2, '0');
             onChange(`${year}-${month}-${day}`);
-            toast.success("✅ Date selected successfully!");
+            showGreenTick();
         } else {
             onChange('');
         }
@@ -602,7 +603,7 @@ export default function CreateEventPage() {
             EditEventListApi(payload).then((res) => {
                 setLoading(false);
                 if (res?.status == 1) {
-                    toast.success(res?.message);
+                    showGreenTick();
                     router.back();
                     dispatch(getEventListDetail({ id: eventId }));
                 }
@@ -656,7 +657,7 @@ export default function CreateEventPage() {
             
             if (resp?.status === 1 && resp?.data?.location) {
                 setEventImages(prev => [...prev, resp.data.location]);
-                toast.success(t("add.imageUploadedSuccess") || "Image uploaded successfully");
+                showGreenTick();
             } else {
                 throw new Error(resp?.message || t("add.uploadFailed") || "Upload failed");
             }

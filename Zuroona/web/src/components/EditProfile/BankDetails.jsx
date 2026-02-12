@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import Loader from "../Loader/Loader";
 import { Icon } from "@iconify/react";
 import { useDispatch } from "react-redux";
@@ -62,7 +63,7 @@ const BankDetails = ({ title, buttonName, onNext }) => {
                 .then((res) => {
                     setLoading(false);
                     if (res.status === 1) {
-                        toast.success(res.message || "Bank details saved successfully");
+                        showGreenTick();
                         console.log("[BANK-DETAILS] Save successful, refreshing profile data...");
                         // Refresh profile data from both stores
                         fetchProfileDetail().then((updatedDetail) => {

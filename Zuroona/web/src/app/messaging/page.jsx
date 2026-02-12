@@ -7,6 +7,7 @@ import { Icon } from "@iconify/react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import useAuthStore from "@/store/useAuthStore";
 import { 
   GetConversationsApi, 
@@ -503,10 +504,7 @@ export default function MessagingPage() {
                 // Show toast notification for new group chat
                 newGroupChats.forEach(groupChat => {
                   const eventName = groupChat.event_id?.event_name || "Event";
-                  toast.success(
-                    t("messaging.addedToGroupChat", `You've been added to the group chat for "${eventName}"!`),
-                    { autoClose: 5000 }
-                  );
+                  showGreenTick();
                 });
               }
             }

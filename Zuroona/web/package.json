@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node ./node_modules/next/dist/bin/next dev -p 3000",
+    "dev": "npx kill-port 3000 --yes & node ./node_modules/next/dist/bin/next dev -p 3000",
     "dev:https": "node server.js",
     "build": "node ./node_modules/next/dist/bin/next build",
     "start": "node ./node_modules/next/dist/bin/next start",
@@ -76,6 +76,7 @@
     "eslint": "^8",
     "eslint-config-next": "^14.2.5",
     "https-localhost": "^4.7.1",
+    "kill-port": "^1.6.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.9.3"

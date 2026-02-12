@@ -4,6 +4,7 @@ import { useFormik } from 'formik';
 import * as Yup from "yup";
 import { WithdrawalApi } from '@/app/api/setting';
 import { toast } from 'react-toastify';
+import { showGreenTick } from '@/utils/toastHelpers';
 import { useDispatch } from 'react-redux';
 import { getWithdrawalList } from '@/redux/slices/WithdrawalList';
 import { getEarning } from '@/redux/slices/Earning';
@@ -89,7 +90,7 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                 .then((response) => {
                     setLoading(false);
                     if (response?.status === 1) {
-                        toast.success(response.message || t("withdrawal.withdrawalSuccess") || "Withdrawal request submitted successfully!");
+                        showGreenTick();
                         onClose(); 
                         dispatch(getWithdrawalList({ page: page, limit: limit }));
                         dispatch(getEarning({ page: 1 })); // Refresh balance

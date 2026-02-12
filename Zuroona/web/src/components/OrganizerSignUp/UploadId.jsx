@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import * as Yup from "yup";
 import Loader from "../Loader/Loader";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import { useTranslation } from "react-i18next";
 import TermsOfServiceModal from "@/components/Modal/TermsOfServiceModal";
 import PrivacyPolicyModal from "@/components/Modal/PrivacyPolicyModal";
@@ -146,7 +147,7 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 				const response = await OrganizerUpdateProfileApi(payload);
 				
 				if (response?.status === 1) {
-					toast.success(response?.message || t("signup.cnicUploaded") || "CNIC uploaded successfully");
+					showGreenTick();
 					// Clean up object URLs
 					if (previewUrlFront && typeof URL !== "undefined" && URL.revokeObjectURL) {
 						try {
@@ -237,7 +238,7 @@ const UploadId = ({ title, buttonName, labelName, onNext, showGovtId }) => {
 				cnicData.front = imageUrl;
 				localStorage.setItem("organizer_cnic", JSON.stringify(cnicData));
 				
-				toast.success(t("signup.cnicFrontUploaded") || "CNIC Front uploaded successfully");
+				showGreenTick();
 				// Note: previewUrlFront is kept for display - it will be cleared only when form is submitted successfully
 			} else {
 				throw new Error(resp?.message || resp?.error || "Upload failed");

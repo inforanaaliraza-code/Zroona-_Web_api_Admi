@@ -10,6 +10,7 @@ import { TOKEN_NAME, BASE_API_URL } from '@/until';
 import Cookies from 'js-cookie';
 import LoginModal from '../Modal/LoginModal';
 import { toast } from 'react-toastify';
+import { showGreenTick } from '@/utils/toastHelpers';
 import { AddBookNowApi } from '@/app/api/setting';
 
 export default function EventCard({
@@ -102,7 +103,7 @@ export default function EventCard({
             const response = await AddBookNowApi(payload);
             
             if (response.status) {
-                toast.success(t('events.reservationRequested'));
+                showGreenTick();
                 // Update the local state to reflect the pending status
                 setStatus('Pending');
                 // Update the event object to reflect the booking status

@@ -8,6 +8,7 @@ import { DeleteEventsApi } from "@/app/api/events/apis";
 import { getEventList } from "@/redux/slices/EventList";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import { useRouter } from "next/navigation";
 import ApprovalModal from "../Modal/ApprovalModal";
 import RejectReasonModal from "../Modal/RejectReasonModal";
@@ -108,7 +109,7 @@ const BookNow = ({ props, pageType }) => {
             .then((res) => {
                 setLoading(false);
                 if (res?.status === 1) {
-                    toast.success(res?.message);
+                    showGreenTick();
                     dispatch(getBookingDetail({ id: BookingListId })); // Refresh details after status change
                     setStatus(newStatus === 2 ? "Approved" : "Rejected"); // Update local status state
                     // Close modals
@@ -154,7 +155,7 @@ const BookNow = ({ props, pageType }) => {
         DeleteEventsApi(payload)
             .then((res) => {
                 if (res?.status === 1) {
-                    toast.success(res?.message || t('events.eventDeletedSuccess') || 'Event deleted successfully');
+                    showGreenTick();
                     
                     // Redirect based on event_type
                     if (event_type === 1) {

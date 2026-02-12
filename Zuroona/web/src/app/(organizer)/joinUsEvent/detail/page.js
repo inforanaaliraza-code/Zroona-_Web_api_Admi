@@ -15,6 +15,7 @@ import Audience from "@/components/Details/Audience";
 import Loader from "@/components/Loader/Loader";
 import { DeleteEventsApi, CancelEventApi } from "@/app/api/events/apis";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import { Icon } from "@iconify/react";
 import { useRTL } from "@/utils/rtl";
 import DeleteEventModal from "@/components/Modal/DeleteEventModal";
@@ -74,7 +75,7 @@ export default function JoinUsDetail() {
       });
 
       if (response?.status === 1) {
-        toast.success(response?.message || t("events.eventDeletedSuccessfully", "Event deleted successfully"));
+        showGreenTick();
         setIsDeleteModalOpen(false);
         // Redirect to events list
         setTimeout(() => {
@@ -108,9 +109,7 @@ export default function JoinUsDetail() {
       );
 
       if (response?.status === 1 || response?.status === true) {
-        toast.success(
-          response?.message || t("events.eventCancelledSuccessfully", "Event cancelled successfully")
-        );
+        showGreenTick();
         setIsCancelModalOpen(false);
         // Refresh event details
         setTimeout(() => {

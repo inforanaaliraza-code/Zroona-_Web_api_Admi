@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../LanguageSwitcher/LanguageSwitcher';
 import { LanguageApi } from '@/app/api/setting';
 import { toast } from 'react-toastify';
+import { showGreenTick } from '@/utils/toastHelpers';
 import { getCategoryList } from '@/redux/slices/CategoryList';
 import { getCategoryEventList } from '@/redux/slices/CategoryEventList';
 import { Icon } from "@iconify/react";
@@ -67,7 +68,7 @@ const HeaderOrganizer = ({ bgColor, hideLogo = false }) => {
             .then((res) => {
                 setLoading(false);
                 if (res?.status === 1) {
-                    toast.success(res?.message);
+                    showGreenTick();
                     i18n.changeLanguage(language);
 
                     console.log("Dispatching getCategoryList");

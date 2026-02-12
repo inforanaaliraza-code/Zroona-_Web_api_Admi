@@ -6,6 +6,7 @@ import { useFormik } from 'formik';
 import * as Yup from "yup";
 import { AddReviewApi } from '@/app/api/review/apis';
 import { toast } from 'react-toastify';
+import { showGreenTick } from '@/utils/toastHelpers';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { getUserBookingDetail } from '@/redux/slices/UserBookingDetail';
@@ -36,7 +37,7 @@ const AddReviewModal = ({ isOpen, onClose, eventId, eventdata }) => {
                 .then((data) => {
                     setLoading(false);
                     if (data?.status === 1) {
-                        toast.success(data.message);
+                        showGreenTick();
                         onClose(); // Close the modal
 
                         // Ensure this order for consistency

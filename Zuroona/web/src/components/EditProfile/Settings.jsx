@@ -2,6 +2,7 @@
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import { Icon } from "@iconify/react";
 import Loader from "../Loader/Loader";
 import { OrganizerEditProfileApi, DeactivateOrganizerApi } from "@/app/api/setting";
@@ -48,7 +49,7 @@ export default function Settings({ title, buttonText }) {
                 .then((res) => {
                     setLoading(false);
                     if (res.status === 1) {
-                        toast.success(res.message || t('Saved') || "Settings saved successfully");
+                        showGreenTick();
                         dispatch(getProfile());
                     } else {
                         toast.error(res.message || t("settings.failedToSave") || "Failed to save settings");
@@ -70,7 +71,7 @@ export default function Settings({ title, buttonText }) {
         try {
             const response = await DeactivateOrganizerApi({});
             if (response?.status === 1) {
-                toast.success(response.message || t('settings.deactivateSuccess') || "Account deactivated successfully");
+                showGreenTick();
                 setShowDeactivateConfirm(false);
                 // Optionally logout user after deactivation
                 setTimeout(() => {

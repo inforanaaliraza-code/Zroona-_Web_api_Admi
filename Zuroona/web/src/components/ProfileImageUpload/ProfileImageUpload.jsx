@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import Loader from "../Loader/Loader";
 import { useTranslation } from "react-i18next";
 import { UploadFileApi } from "@/app/api/setting";
@@ -223,7 +224,7 @@ export default function ProfileImageUpload({
 				}
 
 				setImageLoading(false);
-				toast.success("Profile image uploaded successfully");
+				showGreenTick();
 				// Note: previewUrl is kept for display - it will be cleared only when form is submitted successfully
 			} else {
 				throw new Error(resp?.message || resp?.error || "Upload failed");

@@ -10,6 +10,7 @@ import { useFormik } from 'formik';
 import { AddEventListApi, EditEventListApi, UploadFileApi } from '@/app/api/setting';
 import * as Yup from "yup";
 import { toast } from 'react-toastify';
+import { showGreenTick } from '@/utils/toastHelpers';
 import Loader from '../Loader/Loader';
 import { DatePickerTime } from '@/components/ui/date-picker-time';
 import { getCategoryEventList } from '@/redux/slices/CategoryEventList';
@@ -220,7 +221,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
             EditEventListApi(payload).then((res) => {
                 setLoding(false);
                 if (res?.status == 1) {
-                    toast.success(res?.message);
+                    showGreenTick();
                     onClose();
                     dispatch(getEventListDetail({ id: EventListId }));
                 }
@@ -279,7 +280,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
             
             if (resp?.status === 1 && resp?.data?.location) {
                 setEventImages(prev => [...prev, resp.data.location]);
-                toast.success("Image uploaded successfully");
+                showGreenTick();
             } else {
                 throw new Error(resp?.message || "Upload failed");
             }

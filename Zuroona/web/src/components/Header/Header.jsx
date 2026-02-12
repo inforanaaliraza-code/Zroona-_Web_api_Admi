@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../LanguageSwitcher/LanguageSwitcher";
 import { LanguageApi } from "@/app/api/setting";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import { useRTL } from "@/utils/rtl";
 import { Icon } from "@iconify/react";
 
@@ -52,7 +53,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
       .then((res) => {
         setLoading(false);
         if (res?.status === 1) {
-          toast.success(res?.message);
+          showGreenTick();
           i18n.changeLanguage(language);
         } else {
           toast.error(res?.message);

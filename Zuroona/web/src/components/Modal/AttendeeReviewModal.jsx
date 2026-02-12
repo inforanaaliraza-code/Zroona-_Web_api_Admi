@@ -7,6 +7,7 @@ import { Icon } from "@iconify/react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "react-toastify";
+import { showGreenTick } from "@/utils/toastHelpers";
 import Loader from "../Loader/Loader";
 import { postRawData } from "@/app/api/index";
 import { BASE_API_URL } from "@/until";
@@ -54,7 +55,7 @@ const AttendeeReviewModal = ({ isOpen, onClose, attendee, onReviewSubmitted }) =
                 const response = await postRawData("user-reviews", payload);
                 
                 if (response?.status === 1) {
-                    toast.success(response.message || t("reviews.reviewSubmitted") || "Review submitted successfully");
+                    showGreenTick();
                     formik.resetForm();
                     setShowConfirm(false);
                     if (onReviewSubmitted) {

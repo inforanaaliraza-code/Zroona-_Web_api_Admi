@@ -49,3 +49,15 @@ body {
   margin-inline-end: 10px !important;
   margin-inline-start: 0 !important;
 }
+
+/* Green tick only - minimal success indicator (no message box) */
+.green-tick-toast.Toastify__toast--success {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-width: auto !important;
+}
+.green-tick-toast .Toastify__toast-body {
+  padding: 0 !important;
+  margin: 0 !important;
+}
