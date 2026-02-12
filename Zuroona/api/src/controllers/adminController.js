@@ -1096,9 +1096,10 @@ const adminController = {
     deleteUser: async (req, res) => {
         const { lang } = req || 'en';
         try {
-            const { userId } = req.body;
+            // Accept userId from body or query params
+            const userId = req.body.userId || req.query.userId;
             
-            if (!mongoose.Types.ObjectId.isValid(userId)) {
+            if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
                 return Response.badRequestResponse(res, resp_messages(lang).id_required || "User ID is required");
             }
             
@@ -1399,11 +1400,32 @@ const adminController = {
     updateCms: async (req, res) => {
         const { lang } = req || 'en'
         try {
-            const { id } = req.body;
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                return Response.badRequestResponse(res, resp_messages(lang).id_required)
+            const { id, cms_type, type } = req.body;
+            // Use cms_type or type (frontend sends cms_type, model uses type)
+            const cmsTypeValue = cms_type || type;
+            let cms;
+            
+            // If valid ID is provided, update by ID
+            if (id && mongoose.Types.ObjectId.isValid(id)) {
+                cms = await CmsService.FindByIdAndUpdateService(id, req.body);
+            } 
+            // If no valid ID but cms_type/type is provided, try to find existing or create new
+            else if (cmsTypeValue !== undefined && cmsTypeValue !== null) {
+                // Try to find existing CMS entry by type (model uses 'type' field)
+                const existingCms = await CmsService.FindOneService({ type: String(cmsTypeValue) });
+                
+                if (existingCms) {
+                    // Update existing entry
+                    cms = await CmsService.FindByIdAndUpdateService(existingCms._id, req.body);
+                } else {
+                    // Create new CMS entry - make sure type is set correctly
+                    const createData = { ...req.body, type: String(cmsTypeValue) };
+                    cms = await CmsService.CreateService(createData);
+                }
+            } else {
+                return Response.badRequestResponse(res, resp_messages(lang).id_required);
             }
-            const cms = await CmsService.FindByIdAndUpdateService(id, req.body);
+            
             return Response.ok(res, cms, 200, resp_messages(lang).update_success)
         } catch (error) {
             console.log(error.message)

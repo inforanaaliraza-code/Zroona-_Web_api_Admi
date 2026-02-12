@@ -91,7 +91,7 @@ export default function EventOrganizerDetail() {
                     };
                     return getImageUrl(detail?.profile_image);
                   })()}
-                  alt={detail?.first_name || "Organizer"}
+                  alt={detail?.first_name ? `${detail.first_name} ${detail.last_name || ''}`.trim() : "Organizer profile"}
                   fill
                   className="object-cover"
                   onError={(e) => {

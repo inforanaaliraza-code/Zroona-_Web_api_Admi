@@ -68,22 +68,29 @@ const ensureConnection = async () => {
 const connectWithRetry = async (retries = 5, interval = 5000) => {
 	const preferFallback = process.env.MONGO_PREFER_FALLBACK === 'true';
 	const fallbackURI = process.env.MONGO_FALLBACK;
+	const primaryURI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
-	let mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI || "mongodb+srv://aditya:1234@cluster0.jw8wy.mongodb.net/jeena";
+	let mongoURI = primaryURI || "mongodb+srv://faith55771_db_user:%40Rana55771@cluster0.exxdpul.mongodb.net/jeena?appName=Cluster0";
 
+	// Log which URI is being used
+	const displayURI = mongoURI.replace(/:[^:]*@/, ':****@');
 	if (preferFallback && fallbackURI) {
-		console.log(`Using fallback MongoDB URI: ${fallbackURI}`);
+		console.log(`⚠️  Using fallback MongoDB URI: ${fallbackURI}`);
 		mongoURI = fallbackURI;
+	} else {
+		console.log(`🔄 Attempting MongoDB connection: ${displayURI}`);
 	}
 
 	const options = {
-		serverSelectionTimeoutMS: 15000,
+		serverSelectionTimeoutMS: 10000,
 		socketTimeoutMS: 45000,
-		connectTimeoutMS: 15000,
+		connectTimeoutMS: 10000,
 		maxPoolSize: 50,
 		minPoolSize: 10,
 		autoIndex: true,
 		family: 4, // Use IPv4, skip trying IPv6
+		retryWrites: true,
+		w: 'majority',
 		// Note: autoReconnect, reconnectTries, reconnectInterval are deprecated
 		// Mongoose handles reconnection automatically in newer versions
 	};
@@ -145,6 +152,8 @@ const connectWithRetry = async (retries = 5, interval = 5000) => {
 	}
 
 	// Try to connect
+	let networkErrorCount = 0;
+
 	for (let i = 0; i < retries; i++) {
 		try {
 			// If already connected from a previous attempt, return
@@ -153,19 +162,50 @@ const connectWithRetry = async (retries = 5, interval = 5000) => {
 			}
 
 			await mongoose.connect(mongoURI, options);
+			console.log(`✅ MongoDB connected successfully`);
 			return;
 		} catch (error) {
+			const isNetworkError = error.message.includes('ECONNREFUSED') || 
+									error.message.includes('ENOTFOUND') || 
+									error.message.includes('querySrv') ||
+									error.message.includes('getaddrinfo');
+			
+			if (isNetworkError) networkErrorCount++;
+
 			console.error(
-				`MongoDB connection attempt ${i + 1} failed:`,
+				`❌ MongoDB connection attempt ${i + 1}/${retries} failed:`,
 				error.message
 			);
+
+			// After 2 failed attempts with network errors, suggest fallback
+			if (isNetworkError && networkErrorCount >= 2 && !mongoURI.includes('localhost') && fallbackURI) {
+				console.warn(`\n⚠️  Network/DNS error detected (MongoDB Atlas or network unreachable)`);
+				console.warn(`💡 Consider using local MongoDB fallback by setting MONGO_PREFER_FALLBACK=true in .env\n`);
+			}
+
 			if (i < retries - 1) {
-				console.log(`Retrying in ${interval / 1000} seconds...`);
+				const waitTime = interval / 1000;
+				console.log(`🔄 Retrying in ${waitTime} seconds... (${i + 1}/${retries})`);
 				await new Promise((resolve) => setTimeout(resolve, interval));
 			} else {
 				console.error(
-					"Max retries reached. Could not connect to MongoDB"
+					`\n❌ Max retries reached (${retries}). Could not connect to MongoDB`
 				);
+				
+				if (isNetworkError && !mongoURI.includes('localhost') && fallbackURI) {
+					console.error(`\n🛠️  SOLUTION - Choose one option:\n`);
+					console.error(`   Option 1: Use Local MongoDB (Recommended for Development)`);
+					console.error(`   ├─ Edit api/.env: Set MONGO_PREFER_FALLBACK=true`);
+					console.error(`   ├─ Start MongoDB: mongod --dbpath "C:\\data\\db"`);
+					console.error(`   └─ Restart this application\n`);
+					console.error(`   Option 2: Fix MongoDB Atlas Connection`);
+					console.error(`   ├─ Go to: https://cloud.mongodb.com/v2`);
+					console.error(`   ├─ Select cluster0`);
+					console.error(`   ├─ Go to Network Access → IP Whitelist`);
+					console.error(`   ├─ Add your current IP address`);
+					console.error(`   └─ Restart this application\n`);
+				}
+				
 				throw error;
 			}
 		}

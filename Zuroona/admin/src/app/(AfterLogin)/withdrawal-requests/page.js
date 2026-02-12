@@ -16,8 +16,15 @@ import { GetWithdrawalRequestsApi, UpdateWithdrawalRequestApi, GetWithdrawalStat
 import { useTranslation } from "react-i18next";
 
 export default function WithdrawalRequests() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const [requests, setRequests] = useState([]);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isRTL = mounted ? i18n.language === "ar" : false;
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -182,17 +189,17 @@ export default function WithdrawalRequests() {
 
   return (
     <DefaultLayout>
-      <div className="p-6">
+      <div className="p-6" dir={isRTL ? "rtl" : "ltr"}>
         {/* Header */}
-        <div className="flex flex-wrap justify-between items-center mb-8">
-          <div>
+        <div className={`flex flex-wrap justify-between items-center mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={isRTL ? 'text-right' : ''}>
             <h1 className="text-3xl font-bold text-black">
               {t("withdrawal.hostWithdrawalRequests")}
             </h1>
             <p className="text-gray-600 mt-1">{t("withdrawal.manageAndProcess")}</p>
           </div>
 
-          <div className="flex gap-3 mt-4 lg:mt-0">
+          <div className={`flex gap-3 mt-4 lg:mt-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition shadow-md ${
@@ -307,13 +314,13 @@ export default function WithdrawalRequests() {
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+              <thead className={`bg-gradient-to-r ${isRTL ? 'from-gray-100 to-gray-50' : 'from-gray-50 to-gray-100'} border-b-2 border-gray-200`}>
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.host")}</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.contact")}</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.amount")}</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.requestDate")}</th>
-                  <th className="px-6 py-4 text-left text-sm font-bold text-gray-700">{t("withdrawal.status")}</th>
+                  <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-bold text-gray-700`}>{t("withdrawal.host")}</th>
+                  <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-bold text-gray-700`}>{t("withdrawal.contact")}</th>
+                  <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-bold text-gray-700`}>{t("withdrawal.amount")}</th>
+                  <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-bold text-gray-700`}>{t("withdrawal.requestDate")}</th>
+                  <th className={`px-6 py-4 ${isRTL ? 'text-right' : 'text-left'} text-sm font-bold text-gray-700`}>{t("withdrawal.status")}</th>
                   <th className="px-6 py-4 text-center text-sm font-bold text-gray-700">{t("withdrawal.actions")}</th>
                 </tr>
               </thead>

@@ -45,11 +45,22 @@ custom_log.useIcons = true;
 
 // ===== SPECIAL TEST PHONES (AUTO-VERIFIED) =====
 // Match against last 9 digits of the phone number (local part without country code)
+// Also supports 8-digit test numbers (50000001-50000009)
 const SPECIAL_LOCAL_TEST_PHONES = new Set([
 	"533333332",
 	"522222221",
 	"597832272",
 	"597832271",
+	// 8-digit test numbers (will match as last 8 digits)
+	"50000001",
+	"50000002",
+	"50000003",
+	"50000004",
+	"50000005",
+	"50000006",
+	"50000007",
+	"50000008",
+	"50000009",
 ]);
 
 const organizerController = {
@@ -374,7 +385,10 @@ const organizerController = {
 
 			// Auto-verify email/phone for special test numbers
 			const localPhoneForAutoVerify = getLocalPhoneFromString(phoneStr);
-			const isSpecialTestPhone = localPhoneForAutoVerify && SPECIAL_LOCAL_TEST_PHONES.has(localPhoneForAutoVerify);
+			const phoneDigits = phoneStr ? phoneStr.toString().replace(/\D/g, "") : "";
+			const last8Digits = phoneDigits.slice(-8);
+			const isSpecialTestPhone = (localPhoneForAutoVerify && SPECIAL_LOCAL_TEST_PHONES.has(localPhoneForAutoVerify)) ||
+			                           (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
 
 			if (isSpecialTestPhone) {
 				organizerData.is_verified = true;
@@ -1666,8 +1680,8 @@ const organizerController = {
 			const isPending = event.is_approved === 0;
 			const isRejected = event.is_approved === 2;
 
-			// For hosts we consider "cancelled" via isActive = 2
-			const isCancelled = event.isActive === 2;
+			// For hosts we consider "cancelled" via isActive = 2 OR is_cancelled = true OR event_status = 'cancelled'
+			const isCancelled = event.isActive === 2 || event.is_cancelled === true || event.event_status === 'cancelled';
 
 			if (!isPending && !isRejected && !isCancelled && !isCompleted) {
 				// Still an active/approved upcoming event – don't allow hard delete
@@ -1686,13 +1700,22 @@ const organizerController = {
 			}
 
 			// Soft delete: mark is_delete = 1 instead of removing document
+			console.log(`[DELETE-EVENT] Attempting soft delete for event: ${event_id}`);
+			console.log(`[DELETE-EVENT] Event status: is_cancelled=${event.is_cancelled}, event_status=${event.event_status}, isActive=${event.isActive}`);
+			
 			const updated = await EventService.FindByIdAndUpdateService(event_id, {
 				is_delete: 1,
 			});
+			
+			if (updated) {
+				console.log(`[DELETE-EVENT] Successfully soft deleted event: ${event_id}, is_delete=${updated.is_delete}`);
+			} else {
+				console.log(`[DELETE-EVENT] WARNING: FindByIdAndUpdateService returned null/undefined for event: ${event_id}`);
+			}
 
 			return Response.ok(
 				res,
-				updated,
+				{ _id: event_id, is_delete: 1, deleted: true },
 				200,
 				resp_messages(req.lang).eventDeleted
 			);
@@ -1761,6 +1784,14 @@ const organizerController = {
 						group_category: 1,
 						event_category: 1,
 						event_for: 1,
+						// Cancellation fields
+						is_cancelled: 1,
+						event_status: 1,
+						cancelled_at: 1,
+						cancelled_reason: 1,
+						cancelled_by: 1,
+						isActive: 1,
+						is_approved: 1,
 					},
 				},
 			]);
@@ -1804,6 +1835,7 @@ const organizerController = {
 			const searchQuery = {
 				$and: [
 					{ organizer_id: new mongoose.Types.ObjectId(userId) },
+					{ is_delete: { $ne: 1 } }, // Exclude soft deleted events
 					// { event_type: Number(event_type) }, // Removed event_type filter dependency for status
 				],
 			};
@@ -1835,6 +1867,7 @@ const organizerController = {
 			const count = await EventService.CountDocumentService({
 				organizer_id: userId,
 				event_type: Number(event_type),
+				is_delete: { $ne: 1 }, // Exclude soft deleted events from count
 			});
 			return Response.ok(
 				res,
@@ -3883,7 +3916,7 @@ const organizerController = {
 			}
 
 			// Check if event is already cancelled
-			if (event.isActive === 2) {
+			if (event.isActive === 2 || event.is_cancelled === true || event.event_status === 'cancelled') {
 				return Response.badRequestResponse(res, resp_messages(lang).eventAlreadyCancelled || 
 					"This event has already been cancelled.");
 			}
@@ -3963,9 +3996,18 @@ const organizerController = {
 				}
 			);
 
-			// Update event attendees count (add back the cancelled tickets)
+			// Update event status to cancelled and add back the cancelled tickets
 			event.no_of_attendees = (event.no_of_attendees || 0) + totalTicketsCancelled;
+			event.is_cancelled = true;
+			event.event_status = 'cancelled';
+			event.isActive = 2; // Also set isActive = 2 for backward compatibility
+			event.cancelled_at = new Date();
+			event.cancelled_reason = reason || null;
+			event.cancelled_by = userId;
 			await event.save();
+			
+			console.log(`[HOST:CANCEL] Event ${event_id} marked as cancelled in database`);
+			console.log(`[HOST:CANCEL] Updated fields: is_cancelled=${event.is_cancelled}, event_status=${event.event_status}, isActive=${event.isActive}`);
 
 			// Send notifications
 			const notificationMessages = {
@@ -4077,6 +4119,10 @@ const organizerController = {
 					event: {
 						_id: event._id,
 						event_name: event.event_name,
+						is_cancelled: true,
+						event_status: 'cancelled',
+						cancelled_at: event.cancelled_at,
+						cancelled_reason: reason || null,
 					},
 					cancelledBookings: allBookings.length,
 					totalTicketsCancelled,

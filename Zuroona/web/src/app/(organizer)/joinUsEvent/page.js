@@ -29,7 +29,7 @@ export default function JoinUsEvent() {
   const [search, setSearch] = useState("");
   const [event_type, setEvent_type] = useState("1");
   const [activePage, setActivePage] = useState(9);
-  const [statusFilter, setStatusFilter] = useState("all"); // all, accepted, rejected, pending, completed
+  const [statusFilter, setStatusFilter] = useState("all"); // all, accepted, rejected, pending, completed, cancelled
 
   useEffect(() => {
     dispatch(
@@ -52,6 +52,11 @@ export default function JoinUsEvent() {
     setPage(value);
   };
 
+  // Helper function to check if an event is cancelled
+  const isEventCancelled = (event) => {
+    return event.is_cancelled === true || event.event_status === 'cancelled';
+  };
+
   // Filter events based on status
   const getFilteredEvents = () => {
     if (!EventList?.data) return [];
@@ -60,23 +65,33 @@ export default function JoinUsEvent() {
     
     // Filter by admin approval status
     // is_approved: 0 or null = Pending, 1 = Accepted, 2 = Rejected
-    if (statusFilter === "accepted") {
-      filtered = filtered.filter(event => event.is_approved === 1);
+    if (statusFilter === "all") {
+      // Show all events EXCEPT cancelled ones (they have their own tab)
+      filtered = filtered.filter(event => !isEventCancelled(event));
+    } else if (statusFilter === "accepted") {
+      filtered = filtered.filter(event => event.is_approved === 1 && !isEventCancelled(event));
     } else if (statusFilter === "rejected") {
-      filtered = filtered.filter(event => event.is_approved === 2);
+      filtered = filtered.filter(event => event.is_approved === 2 && !isEventCancelled(event));
     } else if (statusFilter === "pending") {
-      filtered = filtered.filter(event => event.is_approved === 0 || event.is_approved === null || event.is_approved === undefined);
+      filtered = filtered.filter(event => 
+        (event.is_approved === 0 || event.is_approved === null || event.is_approved === undefined) && 
+        !isEventCancelled(event)
+      );
     } else if (statusFilter === "completed") {
       // Completed events: approved events where event_date is in the past
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       filtered = filtered.filter(event => {
+        if (isEventCancelled(event)) return false; // Exclude cancelled
         if (event.is_approved !== 1) return false; // Must be approved
         if (!event.event_date) return false;
         const eventDate = new Date(event.event_date);
         eventDate.setHours(0, 0, 0, 0);
         return eventDate < today; // Event date is in the past
       });
+    } else if (statusFilter === "cancelled") {
+      // Cancelled events: is_cancelled === true or event_status === 'cancelled'
+      filtered = filtered.filter(event => isEventCancelled(event));
     }
     
     return filtered;
@@ -200,6 +215,19 @@ export default function JoinUsEvent() {
                   <div className="absolute inset-0 bg-gradient-to-r from-[#8b5cf6] to-[#6366f1] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 )}
                 <span className="relative z-10">{t('events.completed') || 'Completed'}</span>
+              </button>
+              <button
+                onClick={() => setStatusFilter("cancelled")}
+                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  statusFilter === "cancelled"
+                    ? "bg-gradient-to-r from-[#6b7280] to-[#9ca3af] text-white shadow-lg shadow-gray-500/30 scale-105"
+                    : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-500 hover:bg-gray-50 hover:shadow-md"
+                }`}
+              >
+                {statusFilter === "cancelled" && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#9ca3af] to-[#6b7280] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                )}
+                <span className="relative z-10">{t('events.cancelled') || 'Cancelled'}</span>
               </button>
             </div>
 

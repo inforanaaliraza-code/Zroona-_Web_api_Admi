@@ -29,3 +29,23 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Toast Container - Always LTR */
+.Toastify__toast-container {
+  direction: ltr !important;
+}
+
+.Toastify__toast {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+.Toastify__toast-body {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+.Toastify__toast-icon {
+  margin-inline-end: 10px !important;
+  margin-inline-start: 0 !important;
+}

@@ -2,8 +2,9 @@
 
 import dynamic from "next/dynamic";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import { useState, memo } from "react";
-import { FaShieldAlt, FaFileContract, FaInfoCircle, FaEdit, FaSave } from "react-icons/fa";
+import { useState, memo, useEffect } from "react";
+import { FaShieldAlt, FaFileContract, FaInfoCircle, FaEdit } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 // Dynamically import CMS components to reduce initial bundle
 const PrivacyPolicy = dynamic(() => import("@/components/CMS/PrivacyPolicy"), {
@@ -17,26 +18,34 @@ const AboutUs = dynamic(() => import("@/components/CMS/AboutUs"), {
 });
 
 const ManageCms = memo(function ManageCms() {
+  const { t, i18n } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const [status, setStatus] = useState("2");
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isRTL = mounted ? i18n.language === "ar" : false;
   
   const tabs = [
     {
       id: "2",
-      label: "Privacy Policy",
+      label: t("cms.privacyPolicy"),
       icon: FaShieldAlt,
       color: "from-[#a797cc] to-[#b0a0df]",
       hoverColor: "hover:shadow-purple-300"
     },
     {
       id: "1",
-      label: "Terms & Conditions",
+      label: t("cms.termsConditions"),
       icon: FaFileContract,
       color: "from-[#a3cc69] to-[#9fb68b]",
       hoverColor: "hover:shadow-green-300"
     },
     {
       id: "3",
-      label: "About Us",
+      label: t("cms.aboutUs"),
       icon: FaInfoCircle,
       color: "from-[#a797cc] to-[#b0a0df]",
       hoverColor: "hover:shadow-orange-300"
@@ -46,26 +55,26 @@ const ManageCms = memo(function ManageCms() {
   return (
     <>
       <DefaultLayout>
-        <div className="container mx-auto px-4 py-6">
-          {/* Animated Header */}
-          <div className="relative mb-10">
-            <div className="flex items-center gap-4 py-6 px-8 bg-gradient-to-r from-[#a3cc69]/10 via-[#a797cc]/10 to-[#b0a0df]/10 rounded-2xl shadow-lg border border-[#a3cc69]/30 animate-fade-in">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#a3cc69] to-[#a797cc] rounded-xl flex items-center justify-center shadow-lg animate-bounce-slow">
-                <FaEdit className="text-3xl text-white" />
+        <div className="container mx-auto px-4 py-6" dir={isRTL ? "rtl" : "ltr"}>
+          {/* Header */}
+          <div className="relative mb-8">
+            <div className={`flex items-center gap-4 py-5 px-6 bg-gradient-to-r ${isRTL ? 'from-[#b0a0df]/10 via-[#a797cc]/10 to-[#a3cc69]/10' : 'from-[#a3cc69]/10 via-[#a797cc]/10 to-[#b0a0df]/10'} rounded-xl shadow-md border border-[#a3cc69]/20`}>
+              <div className="w-14 h-14 bg-gradient-to-br from-[#a3cc69] to-[#a797cc] rounded-lg flex items-center justify-center shadow-lg">
+                <FaEdit className="text-2xl text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-black">
-                  Manage CMS
+                <h1 className="text-2xl font-bold text-gray-800">
+                  {t("cms.title")}
                 </h1>
-                <p className="text-gray-600 mt-1">Update your website content & policies</p>
+                <p className="text-gray-500 text-sm mt-0.5">{t("cms.subtitle")}</p>
               </div>
             </div>
           </div>
 
-          {/* Animated Tabs */}
-          <div className="mt-8">
-            <div className="flex justify-center mb-8">
-              <div className="inline-flex gap-4 p-2 bg-white rounded-2xl shadow-xl border border-gray-100">
+          {/* Tabs */}
+          <div className="mb-6">
+            <div className="flex justify-center">
+              <div className={`inline-flex ${isRTL ? 'flex-row-reverse' : ''} gap-3 p-2 bg-white rounded-xl shadow-lg border border-gray-100`}>
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = status === tab.id;
@@ -74,104 +83,53 @@ const ManageCms = memo(function ManageCms() {
                     <button
                       key={tab.id}
                       className={`
-                        group relative px-8 py-4 rounded-xl font-semibold text-base
-                        transition-all duration-300 transform
+                        group relative px-6 py-3 rounded-lg font-medium text-sm
+                        transition-all duration-200
                         ${isActive 
-                          ? `bg-gradient-to-r ${tab.color} text-white shadow-lg scale-105` 
-                          : `bg-gray-50 text-gray-600 hover:bg-gray-100 hover:scale-105 ${tab.hoverColor} hover:shadow-md`
+                          ? `bg-gradient-to-r ${tab.color} text-white shadow-md` 
+                          : `bg-gray-50 text-gray-600 hover:bg-gray-100 ${tab.hoverColor} hover:shadow-sm`
                         }
                       `}
                       onClick={() => setStatus(tab.id)}
                     >
-                      <div className="flex items-center gap-3">
-                        <Icon className={`text-xl transition-transform duration-300 ${isActive ? 'animate-pulse' : 'group-hover:rotate-12'}`} />
+                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Icon className={`text-lg ${isActive ? '' : 'group-hover:scale-110'} transition-transform`} />
                         <span>{tab.label}</span>
                       </div>
-                      
-                      {/* Active Indicator */}
-                      {isActive && (
-                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-white rounded-full animate-pulse"></div>
-                      )}
                     </button>
                   );
                 })}
               </div>
             </div>
+          </div>
 
-            {/* Content Area with Animation */}
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 animate-slide-up">
-              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
-                {tabs.find(tab => tab.id === status) && (() => {
-                  const currentTab = tabs.find(tab => tab.id === status);
-                  const Icon = currentTab.icon;
-                  return (
-                    <>
-                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${currentTab.color} flex items-center justify-center shadow-md`}>
-                        <Icon className="text-xl text-white" />
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-bold text-gray-800">{currentTab.label}</h2>
-                        <p className="text-sm text-gray-500">Edit and update your content below</p>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
+          {/* Content Area */}
+          <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+            <div className={`flex items-center gap-3 mb-5 pb-4 border-b border-gray-100 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              {tabs.find(tab => tab.id === status) && (() => {
+                const currentTab = tabs.find(tab => tab.id === status);
+                const Icon = currentTab.icon;
+                return (
+                  <>
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${currentTab.color} flex items-center justify-center shadow-sm`}>
+                      <Icon className="text-lg text-white" />
+                    </div>
+                    <div className={isRTL ? 'text-right' : ''}>
+                      <h2 className="text-xl font-semibold text-gray-800">{currentTab.label}</h2>
+                      <p className="text-xs text-gray-400">{t("cms.editContentBelow")}</p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
 
-              <div className="animate-fade-in">
-                {status === "2" && <PrivacyPolicy status={status} />}
-                {status === "1" && <TermsConditions status={status} />}
-                {status === "3" && <AboutUs status={status} />}
-              </div>
+            <div>
+              {status === "2" && <PrivacyPolicy status={status} />}
+              {status === "1" && <TermsConditions status={status} />}
+              {status === "3" && <AboutUs status={status} />}
             </div>
           </div>
         </div>
-
-        {/* Custom Styles */}
-        <style jsx>{`
-          @keyframes fade-in {
-            from {
-              opacity: 0;
-              transform: translateY(10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes slide-up {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes bounce-slow {
-            0%, 100% {
-              transform: translateY(0);
-            }
-            50% {
-              transform: translateY(-10px);
-            }
-          }
-
-          .animate-fade-in {
-            animation: fade-in 0.5s ease-out;
-          }
-
-          .animate-slide-up {
-            animation: slide-up 0.6s ease-out;
-          }
-
-          .animate-bounce-slow {
-            animation: bounce-slow 3s infinite;
-          }
-        `}</style>
       </DefaultLayout>
     </>
   );

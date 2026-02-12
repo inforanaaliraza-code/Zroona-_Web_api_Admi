@@ -12,7 +12,10 @@
     "seed:locations": "node src/scripts/seedCountriesAndCities.js",
     "seed:database": "node src/scripts/seedDatabase.js",
     "update:schema": "node src/scripts/updateDatabaseSchema.js",
+    "migration:generate": "node src/scripts/updateDatabaseSchema.js",
+    "migration:run": "node src/scripts/updateDatabaseSchema.js",
     "create:admin": "node src/scripts/createAdmin.js",
+    "create:admins": "node src/scripts/createMultipleAdmins.js",
     "create:test-users": "node src/scripts/createTestUsers.js",
     "db:reset": "node src/scripts/resetAndSeedDatabase.js",
     "db:info": "node src/scripts/debugDbInfo.js"

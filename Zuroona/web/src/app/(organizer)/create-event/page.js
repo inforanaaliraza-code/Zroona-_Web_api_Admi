@@ -807,89 +807,151 @@ export default function CreateEventPage() {
     return (
         <>
             <Breadcrumbs items={breadcrumbItems} />
-            <section className="bg-white py-6 min-h-screen">
-                <div className="mx-auto px-4 md:px-8 xl:px-28 max-w-3xl">
-                    {/* Step Indicator */}
-                    <div className="mb-6">
-                        <div className="flex items-center justify-between mb-4">
+            <section className="bg-gradient-to-br from-gray-50 via-white to-purple-50/30 py-8 min-h-screen">
+                <div className="mx-auto px-4 md:px-8 xl:px-28 max-w-4xl">
+                    
+                    {/* Professional Header */}
+                    <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#a797cc] to-[#8ba179] shadow-lg shadow-purple-200 mb-4">
+                            <Icon icon="lucide:calendar-plus" className="w-8 h-8 text-white" />
+                        </div>
+                        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#a797cc] via-[#9688b8] to-[#8ba179] bg-clip-text text-transparent mb-2">
+                            {eventId ? t('add.tab21') || 'Edit Event' : t('add.tab18') || 'Create Event'}
+                        </h1>
+                        <p className="text-gray-500 text-sm md:text-base">
+                            {eventId ? 'Update your event details' : 'Fill in the details to create an amazing event experience'}
+                        </p>
+                    </div>
+
+                    {/* Enhanced Step Indicator */}
+                    <div className="mb-8 bg-white rounded-2xl shadow-lg shadow-gray-100 p-4 md:p-6 border border-gray-100">
+                        <div className="flex items-center justify-between relative">
+                            {/* Progress Line Background */}
+                            <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 rounded-full mx-8" style={{ zIndex: 0 }}></div>
+                            {/* Progress Line Fill */}
+                            <div 
+                                className="absolute top-5 left-0 h-1 bg-gradient-to-r from-[#a797cc] to-[#8ba179] rounded-full mx-8 transition-all duration-500" 
+                                style={{ 
+                                    zIndex: 1, 
+                                    width: `calc(${((currentStep - 1) / (STEP_CONFIG.length - 1)) * 100}% - 4rem)`,
+                                    marginLeft: '2rem'
+                                }}
+                            ></div>
+                            
                             {STEP_CONFIG.map((step, index) => (
-                                <div key={step.id} className="flex items-center flex-1">
-                                    <div className="flex flex-col items-center flex-1">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+                                <div key={step.id} className="flex flex-col items-center relative z-10 flex-1">
+                                    <div 
+                                        className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center transition-all duration-300 transform ${
                                             currentStep >= step.id
-                                                ? 'bg-gradient-to-r from-[#a797cc] to-[#8ba179] border-[#a797cc] text-white'
-                                                : 'bg-white border-gray-300 text-gray-400'
-                                        }`}>
-                                            {currentStep > step.id ? (
-                                                <Icon icon="lucide:check" className="w-4 h-4" />
-                                            ) : (
-                                                <Icon icon={step.icon} className="w-4 h-4" />
-                                            )}
-                                        </div>
-                                        <span className={`text-xs mt-1.5 font-medium ${
-                                            currentStep >= step.id ? 'text-[#a797cc]' : 'text-gray-400'
-                                        }`}>
-                                            {t(step.key) || step.fallback}
-                                        </span>
+                                                ? 'bg-gradient-to-br from-[#a797cc] to-[#8ba179] text-white shadow-lg shadow-purple-200 scale-110'
+                                                : 'bg-white border-2 border-gray-200 text-gray-400 hover:border-purple-200'
+                                        } ${currentStep === step.id ? 'ring-4 ring-purple-100' : ''}`}
+                                    >
+                                        {currentStep > step.id ? (
+                                            <Icon icon="lucide:check" className="w-5 h-5 md:w-6 md:h-6" />
+                                        ) : (
+                                            <Icon icon={step.icon} className="w-5 h-5 md:w-6 md:h-6" />
+                                        )}
                                     </div>
-                                    {index < STEP_CONFIG.length - 1 && (
-                                        <div className={`h-0.5 flex-1 mx-1.5 transition-all ${
-                                            currentStep > step.id ? 'bg-[#a797cc]' : 'bg-gray-300'
-                                        }`} />
+                                    <span className={`text-xs md:text-sm mt-2 font-semibold text-center transition-colors ${
+                                        currentStep >= step.id ? 'text-[#a797cc]' : 'text-gray-400'
+                                    }`}>
+                                        {t(step.key) || step.fallback}
+                                    </span>
+                                    {currentStep === step.id && (
+                                        <div className="absolute -bottom-3 w-2 h-2 rounded-full bg-[#8ba179] animate-pulse"></div>
                                     )}
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    <Card className="border border-gray-200 shadow-md overflow-visible relative">
-                        <CardHeader className="pb-3 px-4 pt-4">
-                            <CardTitle className="text-lg font-bold text-center">
-                                {eventId ? t('add.tab21') || 'Edit Event' : t('add.tab18') || 'Create Event'} - Step {currentStep} of {STEP_CONFIG.length}
-                            </CardTitle>
+                    <Card className="border-0 shadow-xl shadow-gray-200/50 overflow-visible relative rounded-3xl bg-white/80 backdrop-blur-sm">
+                        {/* Decorative Elements */}
+                        <div className="absolute -top-3 -right-3 w-24 h-24 bg-gradient-to-br from-[#a797cc]/20 to-[#8ba179]/20 rounded-full blur-2xl"></div>
+                        <div className="absolute -bottom-3 -left-3 w-32 h-32 bg-gradient-to-br from-[#8ba179]/10 to-[#a797cc]/10 rounded-full blur-2xl"></div>
+                        
+                        <CardHeader className="pb-4 px-6 pt-6 relative">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#a797cc] to-[#8ba179] text-white shadow-md`}>
+                                        <Icon icon={STEP_CONFIG[currentStep - 1]?.icon || 'lucide:file-text'} className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-xl font-bold text-gray-800">
+                                            {t(STEP_CONFIG[currentStep - 1]?.key) || STEP_CONFIG[currentStep - 1]?.fallback}
+                                        </CardTitle>
+                                        <p className="text-sm text-gray-500">Step {currentStep} of {STEP_CONFIG.length}</p>
+                                    </div>
+                                </div>
+                                <div className="hidden md:flex items-center gap-2 bg-gradient-to-r from-[#a797cc]/10 to-[#8ba179]/10 px-4 py-2 rounded-full">
+                                    <div className="w-2 h-2 rounded-full bg-[#8ba179] animate-pulse"></div>
+                                    <span className="text-sm font-medium text-[#8ba179]">
+                                        {Math.round((currentStep / STEP_CONFIG.length) * 100)}% Complete
+                                    </span>
+                                </div>
+                            </div>
                         </CardHeader>
-                        <CardContent className="space-y-3 px-4 pb-4 overflow-visible">
+                        <CardContent className="space-y-4 px-6 pb-6 overflow-visible relative">
                             {/* Step 1: Basic Information */}
                             {currentStep === 1 && (
-                                <div className="space-y-3">
-                                    {/* Event Title - At the top */}
-                                    <div>
-                                        <Label className="text-xs font-semibold mb-1.5 block">Event Title <span className="text-red-500">*</span></Label>
-                                        <Input
-                                            type="text"
-                                            placeholder={t("add.enterEventTitle") || "Enter Event Title"}
-                                            {...formik.getFieldProps('event_name')}
-                                            maxLength={200}
-                                            className="h-8 text-xs"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-0.5">
-                                            ({formik.values.event_name?.length || 0}/200 characters)
-                                        </p>
+                                <div className="space-y-5">
+                                    {/* Event Title - Premium Input */}
+                                    <div className="group">
+                                        <Label className="text-sm font-semibold mb-2 block text-gray-700 flex items-center gap-2">
+                                            <Icon icon="lucide:type" className="w-4 h-4 text-[#a797cc]" />
+                                            Event Title <span className="text-red-500">*</span>
+                                        </Label>
+                                        <div className="relative">
+                                            <Input
+                                                type="text"
+                                                placeholder={t("add.enterEventTitle") || "Enter a captivating event title..."}
+                                                {...formik.getFieldProps('event_name')}
+                                                maxLength={200}
+                                                className="h-12 text-base pl-4 pr-20 rounded-xl border-2 border-gray-200 focus:border-[#a797cc] focus:ring-4 focus:ring-purple-100 transition-all bg-gray-50/50 group-hover:border-purple-200"
+                                            />
+                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 bg-white px-2 py-1 rounded-full">
+                                                {formik.values.event_name?.length || 0}/200
+                                            </span>
+                                        </div>
                                         {formik.touched.event_name && formik.errors.event_name && (
-                                            <p className="text-red-500 text-xs mt-0.5">{formik.errors.event_name}</p>
+                                            <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                                                <Icon icon="lucide:alert-circle" className="w-3 h-3" />
+                                                {formik.errors.event_name}
+                                            </p>
                                         )}
                                     </div>
 
-                                    {/* Event Date - Fixed UI */}
-                                    <div>
-                                        <DatePicker
-                                            value={formik.values.event_date}
-                                            onChange={(date) => {
-                                                formik.setFieldValue("event_date", date);
-                                                formik.setFieldTouched("event_date", true);
-                                            }}
-                                            label="Event Date *"
-                                            minDate={new Date().toISOString().split('T')[0]}
-                                            error={formik.touched.event_date && !!formik.errors.event_date}
-                                            errorMessage={formik.errors.event_date}
-                                            className="w-full"
-                                        />
+                                    {/* Event Date - Enhanced */}
+                                    <div className="group">
+                                        <Label className="text-sm font-semibold mb-2 block text-gray-700 flex items-center gap-2">
+                                            <Icon icon="lucide:calendar" className="w-4 h-4 text-[#a797cc]" />
+                                            Event Date <span className="text-red-500">*</span>
+                                        </Label>
+                                        <div className="bg-gray-50/50 p-1 rounded-xl border-2 border-gray-200 hover:border-purple-200 transition-all">
+                                            <DatePicker
+                                                value={formik.values.event_date}
+                                                onChange={(date) => {
+                                                    formik.setFieldValue("event_date", date);
+                                                    formik.setFieldTouched("event_date", true);
+                                                }}
+                                                minDate={new Date().toISOString().split('T')[0]}
+                                                error={formik.touched.event_date && !!formik.errors.event_date}
+                                                errorMessage={formik.errors.event_date}
+                                                className="w-full"
+                                            />
+                                        </div>
                                     </div>
 
-                                    {/* Start Time and End Time */}
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <Label className="text-xs font-semibold mb-1.5 block">Start Time *</Label>
+                                    {/* Start Time and End Time - Enhanced Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="group bg-gradient-to-br from-green-50 to-emerald-50/50 p-4 rounded-2xl border-2 border-green-100 hover:border-green-200 transition-all">
+                                            <Label className="text-sm font-semibold mb-2 block text-gray-700 flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-lg bg-green-500 flex items-center justify-center">
+                                                    <Icon icon="lucide:play" className="w-3 h-3 text-white" />
+                                                </div>
+                                                Start Time <span className="text-red-500">*</span>
+                                            </Label>
                                             <TimePicker
                                                 value={formik.values.event_start_time}
                                                 onChange={(time) => {
@@ -901,12 +963,16 @@ export default function CreateEventPage() {
                                                 selectedDate={formik.values.event_date}
                                             />
                                         </div>
-                                        <div>
-                                            <Label className="text-xs font-semibold mb-1.5 block">End Time *</Label>
+                                        <div className="group bg-gradient-to-br from-red-50 to-orange-50/50 p-4 rounded-2xl border-2 border-red-100 hover:border-red-200 transition-all">
+                                            <Label className="text-sm font-semibold mb-2 block text-gray-700 flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-lg bg-red-500 flex items-center justify-center">
+                                                    <Icon icon="lucide:square" className="w-3 h-3 text-white" />
+                                                </div>
+                                                End Time <span className="text-red-500">*</span>
+                                            </Label>
                                             <TimePicker
                                                 value={formik.values.event_end_time}
                                                 onChange={(time) => {
-                                                    // Validate end time is not before start time
                                                     if (formik.values.event_start_time && time) {
                                                         const [startH, startM] = formik.values.event_start_time.split(':').map(Number);
                                                         const [endH, endM] = time.split(':').map(Number);
@@ -914,13 +980,12 @@ export default function CreateEventPage() {
                                                         const endTotalMinutes = endH * 60 + endM;
                                                         
                                                         if (endTotalMinutes <= startTotalMinutes) {
-                                                            toast.error(t("add.endTimeCannotBeBeforeStart") || "❌ End time cannot be before or equal to start time! Please select a later time.");
+                                                            toast.error(t("add.endTimeCannotBeBeforeStart") || "End time must be after start time");
                                                             return;
                                                         }
                                                     }
                                                     formik.setFieldValue("event_end_time", time);
                                                     formik.setFieldTouched("event_end_time", true);
-                                                    toast.success("✅ End time set successfully!");
                                                 }}
                                                 error={formik.touched.event_end_time && !!formik.errors.event_end_time}
                                                 errorMessage={formik.errors.event_end_time}
@@ -929,36 +994,58 @@ export default function CreateEventPage() {
                                         </div>
                                     </div>
 
-                                    {/* Event Description - Full Width */}
-                                    <div>
-                                        <Label className="text-xs font-semibold mb-1.5 block">Event Description *</Label>
-                                        <textarea
-                                            placeholder={t("add.describeEventDetail") || "Describe your event in detail..."}
-                                            {...formik.getFieldProps('event_description')}
-                                            maxLength={1000}
-                                            className="w-full h-20 px-3 py-2 bg-gray-50 rounded-md text-xs resize-none focus:outline-none focus:ring-2 focus:ring-[#a797cc]"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-0.5">
-                                            ({formik.values.event_description?.length || 0}/1000 characters)
-                                        </p>
+                                    {/* Event Description - Premium Textarea */}
+                                    <div className="group">
+                                        <Label className="text-sm font-semibold mb-2 block text-gray-700 flex items-center gap-2">
+                                            <Icon icon="lucide:file-text" className="w-4 h-4 text-[#a797cc]" />
+                                            Event Description <span className="text-red-500">*</span>
+                                        </Label>
+                                        <div className="relative">
+                                            <textarea
+                                                placeholder={t("add.describeEventDetail") || "Describe your event in detail. What makes it special? What will attendees experience?"}
+                                                {...formik.getFieldProps('event_description')}
+                                                maxLength={1000}
+                                                className="w-full h-32 px-4 py-3 bg-gray-50/50 rounded-xl text-base resize-none border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-[#a797cc] transition-all hover:border-purple-200"
+                                            />
+                                            <span className="absolute right-3 bottom-3 text-xs text-gray-400 bg-white px-2 py-1 rounded-full shadow-sm">
+                                                {formik.values.event_description?.length || 0}/1000
+                                            </span>
+                                        </div>
                                         {formik.touched.event_description && formik.errors.event_description && (
-                                            <p className="text-red-500 text-xs mt-0.5">{formik.errors.event_description}</p>
+                                            <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                                                <Icon icon="lucide:alert-circle" className="w-3 h-3" />
+                                                {formik.errors.event_description}
+                                            </p>
                                         )}
                                     </div>
 
-                                    {/* No of Attendees */}
-                                    <div>
-                                        <Label className="text-xs font-semibold mb-1.5 block">No of Attendees *</Label>
-                                        <Input
-                                            type="number"
-                                            min="1"
-                                            max={maxEventCapacity}
-                                            placeholder={`Max: ${maxEventCapacity}`}
-                                            {...formik.getFieldProps('no_of_attendees')}
-                                            className="h-8 text-xs"
-                                        />
+                                    {/* No of Attendees - Enhanced */}
+                                    <div className="group bg-gradient-to-br from-blue-50 to-indigo-50/50 p-4 rounded-2xl border-2 border-blue-100 hover:border-blue-200 transition-all">
+                                        <Label className="text-sm font-semibold mb-2 block text-gray-700 flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-lg bg-blue-500 flex items-center justify-center">
+                                                <Icon icon="lucide:users" className="w-3 h-3 text-white" />
+                                            </div>
+                                            Number of Attendees <span className="text-red-500">*</span>
+                                        </Label>
+                                        <div className="flex items-center gap-3">
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                max={maxEventCapacity}
+                                                placeholder="1"
+                                                {...formik.getFieldProps('no_of_attendees')}
+                                                className="h-12 text-lg font-semibold text-center rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 max-w-[120px]"
+                                            />
+                                            <div className="flex-1 bg-white/80 rounded-xl px-4 py-2 border border-blue-100">
+                                                <p className="text-xs text-gray-500">Maximum Capacity</p>
+                                                <p className="text-lg font-bold text-blue-600">{maxEventCapacity} guests</p>
+                                            </div>
+                                        </div>
                                         {formik.touched.no_of_attendees && formik.errors.no_of_attendees && (
-                                            <p className="text-red-500 text-xs mt-0.5">{formik.errors.no_of_attendees}</p>
+                                            <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                                                <Icon icon="lucide:alert-circle" className="w-3 h-3" />
+                                                {formik.errors.no_of_attendees}
+                                            </p>
                                         )}
                                     </div>
                                 </div>
@@ -966,42 +1053,66 @@ export default function CreateEventPage() {
 
                             {/* Step 2: Images & Location */}
                             {currentStep === 2 && (
-                                <div className="space-y-3">
-                                    <div>
-                                        <Label className="text-xs font-semibold mb-1.5 block">
-                                            {t('add.tab4')} ({previewUrls.length}/5)
+                                <div className="space-y-6">
+                                    {/* Event Images - Premium Upload */}
+                                    <div className="group">
+                                        <Label className="text-sm font-semibold mb-3 block text-gray-700 flex items-center gap-2">
+                                            <Icon icon="lucide:image" className="w-4 h-4 text-[#a797cc]" />
+                                            Event Images <span className="text-red-500">*</span>
+                                            <span className="ml-auto text-xs font-normal text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                                                {previewUrls.length}/5 uploaded
+                                            </span>
                                         </Label>
+                                        
+                                        {/* Image Grid */}
                                         {previewUrls.length > 0 && (
-                                            <div className="grid grid-cols-4 gap-1.5 mb-2">
+                                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
                                                 {previewUrls.map((url, index) => (
-                                                    <div key={index} className="relative group">
+                                                    <div key={index} className="relative group aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
                                                         <img
                                                             src={url}
                                                             alt={`Event image ${index + 1}`}
-                                                            className="w-full h-16 object-cover rounded border border-gray-200"
+                                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                                         />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                                         <button
                                                             type="button"
                                                             onClick={() => removeImage(index)}
-                                                            className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                                                            className="absolute top-2 right-2 bg-red-500 text-white rounded-lg w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-600 shadow-lg"
                                                         >
-                                                            ×
+                                                            <Icon icon="lucide:trash-2" className="w-4 h-4" />
                                                         </button>
+                                                        <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1 text-xs font-semibold text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            Image {index + 1}
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
                                         )}
+                                        
+                                        {/* Upload Zone */}
                                         {previewUrls.length < 5 && (
                                             <div className="w-full cursor-pointer">
-                                                <div className="w-full h-20 border-2 border-dashed bg-gray-50 border-gray-300 rounded-md flex items-center justify-center hover:border-[#a797cc] transition-colors">
-                                                    <label htmlFor="file-upload" className="flex justify-center flex-col items-center cursor-pointer w-full h-full">
+                                                <div className="w-full h-40 border-3 border-dashed bg-gradient-to-br from-purple-50 to-green-50 border-purple-200 rounded-2xl flex items-center justify-center hover:border-[#a797cc] hover:bg-purple-50/50 transition-all duration-300 group">
+                                                    <label htmlFor="file-upload" className="flex justify-center flex-col items-center cursor-pointer w-full h-full py-6">
                                                         {imageLoading ? (
-                                                            <Loader />
+                                                            <div className="flex flex-col items-center gap-2">
+                                                                <Loader />
+                                                                <span className="text-sm text-[#a797cc] font-medium">Uploading...</span>
+                                                            </div>
                                                         ) : (
                                                             <>
-                                                                <Icon icon="lucide:upload" className="w-5 h-5 text-gray-400" />
-                                                                <p className="text-gray-500 text-xs mt-0.5">
-                                                                    {t('add.tab4')} (Max 5 images)
+                                                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#a797cc] to-[#8ba179] flex items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform">
+                                                                    <Icon icon="lucide:cloud-upload" className="w-8 h-8 text-white" />
+                                                                </div>
+                                                                <p className="text-gray-700 text-base font-semibold mb-1">
+                                                                    {t('add.tab4') || 'Upload Event Images'}
+                                                                </p>
+                                                                <p className="text-gray-400 text-sm">
+                                                                    Drag & drop or click to browse (Max 5 images)
+                                                                </p>
+                                                                <p className="text-xs text-gray-400 mt-2">
+                                                                    Supported: JPG, PNG, WebP
                                                                 </p>
                                                             </>
                                                         )}
@@ -1352,28 +1463,31 @@ export default function CreateEventPage() {
                                 </div>
                             )}
 
-                            {/* Navigation Buttons */}
-                            <div className="flex justify-between pt-3 border-t">
+                            {/* Navigation Buttons - Premium */}
+                            <div className="flex justify-between items-center pt-6 mt-6 border-t-2 border-gray-100">
                                 <Button
                                     type="button"
                                     variant="outline"
                                     onClick={handleBack}
                                     disabled={currentStep === 1}
-                                    className="h-8 text-xs"
-                                    size="sm"
+                                    className={`h-12 px-6 text-sm font-semibold rounded-xl border-2 transition-all duration-300 ${
+                                        currentStep === 1 
+                                            ? 'opacity-50 cursor-not-allowed' 
+                                            : 'hover:bg-gray-50 hover:border-gray-300 hover:shadow-md'
+                                    }`}
                                 >
-                                    <Icon icon="lucide:arrow-left" className="w-3 h-3 mr-1.5" />
+                                    <Icon icon="lucide:arrow-left" className="w-4 h-4 mr-2" />
                                     Back
                                 </Button>
+                                
                                 {currentStep < STEP_CONFIG.length ? (
                                     <Button
                                         type="button"
                                         onClick={handleNext}
-                                        className="h-8 text-xs bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white"
-                                        size="sm"
+                                        className="h-12 px-8 text-sm font-semibold bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white rounded-xl shadow-lg shadow-purple-200 hover:shadow-xl hover:shadow-purple-300 transition-all duration-300 hover:scale-105"
                                     >
-                                        Next
-                                        <Icon icon="lucide:arrow-right" className="w-3 h-3 ml-1.5" />
+                                        Continue to Next Step
+                                        <Icon icon="lucide:arrow-right" className="w-4 h-4 ml-2" />
                                     </Button>
                                 ) : (
                                     <Button
@@ -1391,19 +1505,18 @@ export default function CreateEventPage() {
                                             }
                                         }}
                                         disabled={loading || eventImages.length === 0}
-                                        className="h-8 text-xs bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white"
-                                        size="sm"
+                                        className="h-12 px-8 text-sm font-semibold bg-gradient-to-r from-[#a797cc] via-purple-500 to-[#8ba179] text-white rounded-xl shadow-lg shadow-purple-200 hover:shadow-xl hover:shadow-purple-300 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                     >
                                         {loading ? (
-                                            <>
-                                                <Loader color="#fff" height="14" width="14" />
-                                                <span className="ml-1.5">Submitting...</span>
-                                            </>
+                                            <div className="flex items-center gap-2">
+                                                <Loader color="#fff" height="16" width="16" />
+                                                <span>Creating Event...</span>
+                                            </div>
                                         ) : (
-                                            <>
-                                                {eventId ? 'Update Event' : 'Create Event'}
-                                                <Icon icon="lucide:check" className="w-3 h-3 ml-1.5" />
-                                            </>
+                                            <div className="flex items-center gap-2">
+                                                <Icon icon="lucide:rocket" className="w-5 h-5" />
+                                                {eventId ? 'Update Event' : 'Submit Event'}
+                                            </div>
                                         )}
                                     </Button>
                                 )}
@@ -1413,23 +1526,42 @@ export default function CreateEventPage() {
                 </div>
             </section>
 
-            {/* Create Event Confirmation Modal */}
+            {/* Create Event Confirmation Modal - Premium */}
             {showCreateConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <Card className="w-full max-w-md mx-4 bg-white shadow-2xl border-0">
-                        <CardHeader>
-                            <CardTitle className="text-center">Confirm Create Event</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <p className="text-sm text-gray-600 text-center">
-                                Once submitted, your event will be reviewed by our team before being published.
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <Card className="w-full max-w-lg mx-4 bg-white shadow-2xl border-0 rounded-3xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        {/* Decorative Header */}
+                        <div className="bg-gradient-to-r from-[#a797cc] via-purple-500 to-[#8ba179] p-6 text-center">
+                            <div className="w-20 h-20 mx-auto bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+                                <Icon icon="lucide:rocket" className="w-10 h-10 text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-1">
+                                Ready to Launch?
+                            </h3>
+                            <p className="text-white/80 text-sm">
+                                Your event is ready for review
                             </p>
+                        </div>
+                        
+                        <CardContent className="p-6 space-y-5">
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                                <Icon icon="lucide:info" className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-semibold text-amber-800 mb-1">Review Process</p>
+                                    <p className="text-xs text-amber-700">
+                                        Once submitted, your event will be reviewed by our team before being published. 
+                                        You'll receive an email notification once approved.
+                                    </p>
+                                </div>
+                            </div>
+                            
                             <div className="flex gap-3">
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowCreateConfirm(false)}
-                                    className="flex-1"
+                                    className="flex-1 h-12 rounded-xl font-semibold border-2 hover:bg-gray-50"
                                 >
+                                    <Icon icon="lucide:x" className="w-4 h-4 mr-2" />
                                     Cancel
                                 </Button>
                                 <Button
@@ -1438,9 +1570,10 @@ export default function CreateEventPage() {
                                             submitEvent(pendingPayload.values, pendingPayload.resetForm);
                                         }
                                     }}
-                                    className="flex-1 bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white"
+                                    className="flex-1 h-12 rounded-xl font-semibold bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
                                 >
-                                    Yes, Create Event
+                                    <Icon icon="lucide:send" className="w-4 h-4 mr-2" />
+                                    Submit Event
                                 </Button>
                             </div>
                         </CardContent>
@@ -1448,20 +1581,42 @@ export default function CreateEventPage() {
                 </div>
             )}
 
-            {/* Success Popup */}
+            {/* Success Popup - Premium */}
             {showSuccessPopup && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <Card className="w-full max-w-md mx-4 bg-gradient-to-br from-blue-50 to-blue-100 shadow-2xl border-2 border-blue-200">
-                        <CardContent className="p-8 text-center">
-                            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
-                                <Icon icon="lucide:check-circle" className="w-8 h-8 text-white" />
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <Card className="w-full max-w-lg mx-4 bg-gradient-to-br from-emerald-50 via-white to-blue-50 shadow-2xl border-0 rounded-3xl overflow-hidden animate-in zoom-in-95 duration-300">
+                        <CardContent className="p-10 text-center relative">
+                            {/* Confetti Effect */}
+                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                                <div className="absolute top-4 left-8 w-3 h-3 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                                <div className="absolute top-8 right-12 w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                <div className="absolute top-16 left-16 w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                                <div className="absolute top-6 right-20 w-3 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.6s' }}></div>
                             </div>
-                            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-2">
-                                Event Submitted for Review
+                            
+                            <div className="w-24 h-24 mx-auto bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-green-200 animate-pulse">
+                                <Icon icon="lucide:party-popper" className="w-12 h-12 text-white" />
+                            </div>
+                            
+                            <h3 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 bg-clip-text text-transparent mb-3">
+                                Event Submitted!
                             </h3>
-                            <p className="text-sm text-blue-700 font-medium">
-                                Please check your email for confirmation.
+                            
+                            <p className="text-gray-600 text-base mb-4">
+                                Your event has been submitted for review.
                             </p>
+                            
+                            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4">
+                                <div className="flex items-center justify-center gap-2 text-blue-700">
+                                    <Icon icon="lucide:mail" className="w-5 h-5" />
+                                    <span className="font-medium">Check your email for confirmation</span>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
+                                <Icon icon="lucide:loader-2" className="w-4 h-4 animate-spin" />
+                                Redirecting you back...
+                            </div>
                         </CardContent>
                     </Card>
                 </div>

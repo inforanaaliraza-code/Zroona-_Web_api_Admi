@@ -25,6 +25,9 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
     const [signupCountryCode, setSignupCountryCode] = useState("+966");
     const [signupUserId, setSignupUserId] = useState(null);
     const [userEmail, setUserEmail] = useState("");
+    const [otpError, setOtpError] = useState(null); // For showing prominent OTP errors
+    const [phoneBlocked, setPhoneBlocked] = useState(false); // For phone blocked state
+    const [blockTimeRemaining, setBlockTimeRemaining] = useState(0); // Minutes remaining for block
     const { t, i18n } = useTranslation();
     const ReactS3Client = new S3(config);
 
@@ -551,6 +554,44 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                                 {t("auth.otpSentTo") || `We've sent a verification code to ${signupCountryCode}${signupPhoneNumber}`}
                             </p>
                         </div>
+
+                        {/* OTP Error Alert - Prominent Display */}
+                        {otpError && (
+                            <div className={`mb-4 p-4 rounded-lg border-2 ${
+                                phoneBlocked 
+                                    ? 'bg-red-100 border-red-400 text-red-800' 
+                                    : 'bg-orange-100 border-orange-400 text-orange-800'
+                            }`}>
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-1">
+                                        <h4 className={`font-semibold mb-1 ${phoneBlocked ? 'text-red-800' : 'text-orange-800'}`}>
+                                            {phoneBlocked 
+                                                ? (t("auth.phoneBlockedTitle") || "Phone Number Blocked")
+                                                : (t("auth.otpErrorTitle") || "Verification Failed")
+                                            }
+                                        </h4>
+                                        <p className="text-sm">
+                                            {otpError}
+                                        </p>
+                                        {phoneBlocked && blockTimeRemaining > 0 && (
+                                            <div className="mt-2 flex items-center gap-2">
+                                                <span className="text-sm font-medium">
+                                                    {t("auth.tryAgainIn") || "Try again in"}: {blockTimeRemaining} {t("auth.minutes") || "minutes"}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => { setOtpError(null); setPhoneBlocked(false); }}
+                                        className="text-gray-500 hover:text-gray-700"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         <form onSubmit={async (e) => {
                             e.preventDefault();
                             const otp = e.target.otp.value;
@@ -559,6 +600,7 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                                 return;
                             }
                             setLoading(true);
+                            setOtpError(null); // Clear previous errors
                             try {
                                 const response = await fetch(`${BASE_API_URL}user/verify-signup-otp`, {
                                     method: 'POST',
@@ -576,6 +618,8 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                                 const data = await response.json();
                                 if (data?.status === 1 || data?.success) {
                                     setIsOtpOpen(false);
+                                    setOtpError(null);
+                                    setPhoneBlocked(false);
                                     if (data?.data?.user?.is_verified) {
                                         toast.success(data.message || t("auth.accountVerified") || "Account verified successfully! You can now login.");
                                         setTimeout(() => {
@@ -585,11 +629,28 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                                         toast.success(data.message || t("auth.phoneVerified") || "Phone verified! Please verify your email to complete registration.");
                                     }
                                 } else {
-                                    toast.error(data.message || t("auth.invalidOtp") || "Invalid OTP. Please try again.");
+                                    // Parse error message for blocked phone or too many attempts
+                                    const errorMessage = data.message || "";
+                                    const isBlocked = errorMessage.toLowerCase().includes("blocked") || 
+                                                      errorMessage.toLowerCase().includes("too many") ||
+                                                      errorMessage.toLowerCase().includes("محاولات");
+                                    
+                                    const minutesMatch = errorMessage.match(/(\d+)\s*(minutes?|دقيقة)/i);
+                                    if (minutesMatch) {
+                                        setBlockTimeRemaining(parseInt(minutesMatch[1]));
+                                    }
+                                    
+                                    if (isBlocked) {
+                                        setPhoneBlocked(true);
+                                    }
+                                    setOtpError(errorMessage || t("auth.invalidOtp") || "Invalid OTP. Please try again.");
+                                    toast.error(errorMessage || t("auth.invalidOtp") || "Invalid OTP. Please try again.");
                                 }
                             } catch (error) {
                                 console.error("Verify OTP error:", error);
-                                toast.error(t("auth.otpVerifyFailed") || "Failed to verify OTP. Please try again.");
+                                const errorMsg = t("auth.otpVerifyFailed") || "Failed to verify OTP. Please try again.";
+                                setOtpError(errorMsg);
+                                toast.error(errorMsg);
                             } finally {
                                 setLoading(false);
                             }
@@ -601,20 +662,26 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                                     maxLength={6}
                                     pattern="[0-9]{6}"
                                     placeholder="000000"
-                                    className="w-full px-4 py-3 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc] outline-none"
+                                    className={`w-full px-4 py-3 text-center text-2xl font-bold border-2 rounded-lg focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc] outline-none ${
+                                        phoneBlocked ? "border-red-500 bg-red-50" : otpError ? "border-orange-500 bg-orange-50" : "border-gray-300"
+                                    }`}
                                     required
+                                    disabled={phoneBlocked}
+                                    onChange={() => { if (otpError) setOtpError(null); }}
                                 />
                             </div>
                             <div className="space-y-3">
                                 <button
                                     type="submit"
-                                    disabled={loading}
+                                    disabled={loading || phoneBlocked}
                                     className="w-full py-3 px-4 bg-[#a797cc] hover:bg-[#d66a0a] text-white font-semibold rounded-lg transition-colors disabled:opacity-50"
                                 >
                                     {loading ? (
                                         <span className="flex items-center justify-center">
                                             <Loader /> {t("auth.verifying") || "Verifying..."}
                                         </span>
+                                    ) : phoneBlocked ? (
+                                        t("auth.phoneBlocked") || "Phone Blocked"
                                     ) : (
                                         t("auth.verify") || "Verify"
                                     )}
@@ -622,7 +689,7 @@ export default function SignUpForm({ title = "Sign Up", buttonText = "Sign Up" }
                                 <button
                                     type="button"
                                     onClick={handleResendOtp}
-                                    disabled={loading}
+                                    disabled={loading || phoneBlocked}
                                     className="w-full py-3 px-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-colors disabled:opacity-50"
                                 >
                                     {t("auth.resendOtp") || "Resend OTP"}

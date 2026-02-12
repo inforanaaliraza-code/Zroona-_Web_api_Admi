@@ -50,8 +50,18 @@ fetchEventsDetail: async (data) => {
 },
 
 CMSDetail: {},
+CMSDetailLoading: false,
 fetchCMSDetail: async (data) => {
-  const res = await CMSDetailApi(data);
-  set({ CMSDetail: await res?.data });
+  set({ CMSDetailLoading: true });
+  try {
+    const res = await CMSDetailApi(data);
+    // Ensure CMSDetail is always an object, never undefined
+    set({ CMSDetail: res?.data || {}, CMSDetailLoading: false });
+    return res?.data || {};
+  } catch (error) {
+    console.error("Error fetching CMS detail:", error);
+    set({ CMSDetail: {}, CMSDetailLoading: false });
+    return {};
+  }
 },
 }));

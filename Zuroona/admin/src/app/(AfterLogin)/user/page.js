@@ -5,6 +5,7 @@ import { ActiveInActiveUserApi, DeleteUserApi } from "@/api/user/apis"; // Ensur
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
+import ConfirmModal from "@/components/Modals/ConfirmModal";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -14,19 +15,36 @@ import { exportUsersToCSV, exportUsersToPDF } from "@/utils/exportUtils";
 import { useTranslation } from "react-i18next";
 
 export default function UserManagement() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState("Active");
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setPage(1); // Reset to first page when changing tabs
-  };
+  
+  // Confirm Modal States
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmModalConfig, setConfirmModalConfig] = useState({
+    title: "",
+    message: "",
+    type: "warning",
+    onConfirm: () => {},
+  });
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("1");
   const [loading, setLoading] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Handle hydration - only check RTL after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isRTL = mounted ? i18n.language === "ar" : false;
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setPage(1); // Reset to first page when changing tabs
+  };
 
   const handlePage = (value) => {
     setPage(value);
@@ -54,43 +72,66 @@ export default function UserManagement() {
     });
   }, [page, activeTab, search]);
 
+  const showConfirm = (config) => {
+    setConfirmModalConfig(config);
+    setShowConfirmModal(true);
+  };
+
   const ChangeStatus = (data) => {
-    if (!confirm(t("common.changeStatus"))) return;
-    setLoading(true);
-    ActiveInActiveUserApi(data).then((res) => {
-      if (res?.status === 1) {
-        toast.success(res?.message);
-        fetchGetAllUser(params).then(() => {
+    const actionType = data.isSuspended ? "suspend" : data.reactivate ? "success" : "warning";
+    const message = data.isSuspended 
+      ? t("common.suspendConfirm", { name: "" }) 
+      : data.reactivate 
+      ? t("common.activateConfirm", { name: "" })
+      : t("common.changeStatus");
+    
+    showConfirm({
+      title: t("common.confirm"),
+      message: message,
+      type: actionType,
+      onConfirm: () => {
+        setShowConfirmModal(false);
+        setLoading(true);
+        ActiveInActiveUserApi(data).then((res) => {
+          if (res?.status === 1) {
+            toast.success(res?.message);
+            fetchGetAllUser(params).then(() => {
+              setLoading(false);
+            });
+          } else {
+            toast.error(res?.message);
+            setLoading(false);
+          }
+        }).catch((error) => {
+          console.error("Error changing status:", error);
+          toast.error(t("users.failedToChangeStatus") || "Failed to change status");
           setLoading(false);
         });
-      } else {
-        toast.error(res?.message);
-        setLoading(false);
       }
-    }).catch((error) => {
-      console.error("Error changing status:", error);
-      toast.error(t("users.failedToChangeStatus") || "Failed to change status");
-      setLoading(false);
     });
   };
 
   const handleDelete = (id) => {
-    if (!confirm(t("users.confirmDeleteUser"))) return;
-    // Assuming DeleteUserApi exists and takes ID
-    // If not imported, check api/user/apis.
-    // Based on imports above, it is imported.
-    setLoading(true);
-    DeleteUserApi({ userId: id }).then((res) => { // Check API signature, usually object or ID
-      if (res?.status === 1 || res?.code === 200) {
-        toast.success(t("users.userDeleted"));
-        fetchGetAllUser(params);
-      } else {
-        toast.error(res?.message || t("users.failedToDeleteUser"));
+    showConfirm({
+      title: t("common.deleteUser"),
+      message: t("users.confirmDeleteUser"),
+      type: "danger",
+      onConfirm: () => {
+        setShowConfirmModal(false);
+        setLoading(true);
+        DeleteUserApi({ userId: id }).then((res) => {
+          if (res?.status === 1 || res?.code === 200) {
+            toast.success(t("users.userDeleted"));
+            fetchGetAllUser(params);
+          } else {
+            toast.error(res?.message || t("users.failedToDeleteUser"));
+          }
+          setLoading(false);
+        }).catch(err => {
+          console.error(err);
+          setLoading(false);
+        });
       }
-      setLoading(false);
-    }).catch(err => {
-      console.error(err);
-      setLoading(false);
     });
   }
 
@@ -135,7 +176,7 @@ export default function UserManagement() {
       setPage={setPage}
       searchPlaceholder={t("users.searchPlaceholder") || "Search by Guests"}
     >
-      <div>
+      <div dir={isRTL ? "rtl" : "ltr"}>
         <div className="flex flex-col sm:flex-row justify-between py-5">
           {/* Header */}
           <div className="flex lg:w-[40%] items-end mb-4 sm:mb-0">
@@ -253,7 +294,7 @@ export default function UserManagement() {
                                 ? user?.profile_image
                                 : "/assets/images/dummyImage.png"
                             }
-                            alt={user.name}
+                            alt={user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : "User profile"}
                             height={42}
                             width={42}
                             className="w-full h-full object-cover"
@@ -393,6 +434,17 @@ export default function UserManagement() {
           />
         )}
       </div>
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        show={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={confirmModalConfig.onConfirm}
+        title={confirmModalConfig.title}
+        message={confirmModalConfig.message}
+        type={confirmModalConfig.type}
+        loading={loading}
+      />
     </DefaultLayout>
   );
 }

@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 
 function LoginForm(props) {
   const { t, i18n } = useTranslation();
+  const isRTLByI18n = i18n?.language === "ar";
   const { push } = useRouter();
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -60,7 +61,7 @@ function LoginForm(props) {
               {props.page === "forgot" ? "Mobile Number *" : "Email *"}
             </label>
             <div className="relative mt-3">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <div className={`absolute inset-y-0 ${isRTLByI18n ? "right-3" : "left-3"} flex items-center pointer-events-none`}>
                 {props.page === "forgot" ? (
                   <Phone className="w-6 h-6 text-[#a797cc]" />
                 ) : (
@@ -69,7 +70,7 @@ function LoginForm(props) {
               </div>
               <input
                 type={props.page === "forgot" ? "tel" : "email"}
-                className="block w-full px-3 pl-12 py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm bg-gray-50"
+                className={`block w-full px-3 ${isRTLByI18n ? "pr-12 text-right" : "pl-12 text-left"} py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm bg-gray-50`}
                 placeholder={props.page === "forgot" ? "Enter mobile number" : "Enter email id"}
                 disabled
               />
@@ -190,7 +191,7 @@ function LoginForm(props) {
                   {mounted ? (props.page === "forgot" ? t("common.mobileNumberLabel") : t("common.emailLabel")) : (props.page === "forgot" ? "Mobile Number *" : "Email *")}
                 </label>
                 <div className="relative mt-3">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <div className={`absolute inset-y-0 ${isRTLByI18n ? "right-3" : "left-3"} flex items-center pointer-events-none`}>
                     {props.page === "forgot" ? (
                       <Phone className="w-6 h-6 text-[#a797cc]" />
                     ) : (
@@ -201,7 +202,7 @@ function LoginForm(props) {
                     type={props.page === "forgot" ? "tel" : "email"}
                     id={props.page === "forgot" ? "mobile_number" : "email"}
                     name={props.page === "forgot" ? "mobile_number" : "email"}
-                    className="block w-full px-3 pl-12 py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc]/20 focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold transition-all duration-200"
+                    className={`block w-full px-3 ${isRTLByI18n ? "pr-12 text-right" : "pl-12 text-left"} py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc]/20 focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold transition-all duration-200`}
                     placeholder={mounted ? (props.page === "forgot" ? t("common.enterMobileNumber") : t("common.enterEmailId")) : (props.page === "forgot" ? "Enter mobile number" : "Enter email id")}
                     suppressHydrationWarning
                     onChange={handleChange}
@@ -224,29 +225,29 @@ function LoginForm(props) {
                     {mounted ? t("common.passwordLabel") : "Password"}
                   </label>
                   <div className="relative mt-1">
-                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                      <Lock className="w-4 h-4 text-[#a797cc]" />
-                    </div>
-                    <input
-                      id="password-field"
-                      type={values.toggle ? "text" : "password"}
-                      name="password"
-                      className="block w-full px-3 pl-12 py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc]/20 focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold transition-all duration-200"
-                      placeholder={mounted ? t("common.enterPasswordPlaceholder") : "Enter Password"}
-                      suppressHydrationWarning
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      value={values.password}
-                    />
-                    <span className="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-500">
-                      <button
-                        type="button"
-                        className="py-1 md:py-2 px-3 md:px-4 rounded-lg text-sm text-white bg-gradient-to-r from-[#a797cc] to-[#8b7bb3] hover:from-[#8b7bb3] hover:to-[#6d5a9a] transition-all duration-200 shadow-md"
-                        onClick={() => setFieldValue("toggle", !values.toggle)}
-                      >
-                        {mounted ? (values.toggle ? t("common.hide") : t("common.show")) : (values.toggle ? "Hide" : "Show")}
-                      </button>
-                    </span>
+                    <div className={`absolute inset-y-0 ${isRTLByI18n ? "right-3" : "left-3"} flex items-center pointer-events-none`}>
+                        <Lock className="w-4 h-4 text-[#a797cc]" />
+                      </div>
+                      <input
+                        id="password-field"
+                        type={values.toggle ? "text" : "password"}
+                        name="password"
+                        className={`block w-full px-3 ${isRTLByI18n ? "pr-12 text-right" : "pl-12 text-left"} py-2 md:py-4 text-gray-900 border-2 border-gray-200 rounded-lg shadow-sm focus:border-[#a797cc] focus:ring-2 focus:ring-[#a797cc]/20 focus-visible:outline-none sm:text-base placeholder:text-gray-400 placeholder:font-semibold transition-all duration-200`}
+                        placeholder={mounted ? t("common.enterPasswordPlaceholder") : "Enter Password"}
+                        suppressHydrationWarning
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        value={values.password}
+                      />
+                      <span className={`absolute inset-y-0 ${isRTLByI18n ? "left-2" : "right-2"} flex items-center cursor-pointer text-gray-500`}>
+                        <button
+                          type="button"
+                          className="py-1 md:py-2 px-3 md:px-4 rounded-lg text-sm text-white bg-gradient-to-r from-[#a797cc] to-[#8b7bb3] hover:from-[#8b7bb3] hover:to-[#6d5a9a] transition-all duration-200 shadow-md"
+                          onClick={() => setFieldValue("toggle", !values.toggle)}
+                        >
+                          {mounted ? (values.toggle ? t("common.hide") : t("common.show")) : (values.toggle ? "Hide" : "Show")}
+                        </button>
+                      </span>
                   </div>
                   {errors.password && touched.password && (
                     <div className="text-[#a797cc] mt-1 text-sm"> {errors.password}</div>
@@ -255,7 +256,7 @@ function LoginForm(props) {
               )}
 
               {props.page !== "forgot" && (
-                <div className="text-right mb-10">
+                <div className={`${isRTLByI18n ? "text-left" : "text-right"} mb-10`}>
                   <Link href="/forgot-password">
                     <span className="text-sm text-[#a797cc] font-bold cursor-pointer hover:text-[#8b7bb3] transition-colors" suppressHydrationWarning>
                       {mounted ? t("common.forgotPassword") : "Forgot Password?"}

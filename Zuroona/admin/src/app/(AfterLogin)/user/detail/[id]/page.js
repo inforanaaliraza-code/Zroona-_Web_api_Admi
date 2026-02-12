@@ -378,7 +378,7 @@ export default function UserDetail() {
                                       return "/assets/images/dummyImage.png";
                                     })()
                                   }
-                                  alt={event.eventName}
+                                  alt={event?.event?.event_name || "Event image"}
                                   height={42}
                                   width={42}
                                   className="w-full h-full object-cover"

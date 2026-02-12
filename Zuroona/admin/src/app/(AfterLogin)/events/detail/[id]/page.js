@@ -375,7 +375,7 @@ export default function EventDetail() {
                         }
                         return allImages.length > 0 ? getEventImageUrl({ event_image: allImages[currentImageIndex || 0] }) : "/assets/images/dummyImage.png";
                       })()}
-                          alt={detail?.event_name || t("events.eventImage") || "Event Image"}
+                      alt={detail?.event_name || "Event Image"}
                       fill
                       className="object-cover"
                       priority

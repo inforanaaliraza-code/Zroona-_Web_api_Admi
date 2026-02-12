@@ -5,6 +5,7 @@ import S3 from "react-aws-s3";
 import { uid } from "uid";
 import { config } from "@/until";
 import { Icon } from "@iconify/react";
+import { useTranslation } from "react-i18next";
 
 // Dynamically import ReactQuill to reduce initial bundle
 const ReactQuill = dynamic(() => import("react-quill"), {
@@ -42,6 +43,7 @@ const initializeQuill = async () => {
 };
 
 const EnhancedTextEditor = memo(function EnhancedTextEditor(props) {
+  const { t } = useTranslation();
   const quillRef = useRef(null);
   const [quillReady, setQuillReady] = useState(false);
   const [mode, setMode] = useState("visual"); // "visual" or "code"
@@ -175,7 +177,7 @@ const EnhancedTextEditor = memo(function EnhancedTextEditor(props) {
             }`}
           >
             <Icon icon="lucide:type" className="inline mr-1" />
-            Visual
+            {t("cms.visual")}
           </button>
           <button
             type="button"
@@ -187,7 +189,7 @@ const EnhancedTextEditor = memo(function EnhancedTextEditor(props) {
             }`}
           >
             <Icon icon="lucide:code" className="inline mr-1" />
-            HTML Code
+            {t("cms.htmlCode")}
           </button>
           <button
             type="button"
@@ -199,11 +201,11 @@ const EnhancedTextEditor = memo(function EnhancedTextEditor(props) {
             }`}
           >
             <Icon icon={showPreview ? "lucide:edit" : "lucide:eye"} className="inline mr-1" />
-            {showPreview ? "Edit" : "Preview"}
+            {showPreview ? t("cms.edit") : t("cms.preview")}
           </button>
         </div>
         <div className="text-xs text-gray-500">
-          {mode === "visual" ? "Visual Editor" : "HTML Code Editor"}
+          {mode === "visual" ? t("cms.visualEditor") : t("cms.codeEditor")}
         </div>
       </div>
 

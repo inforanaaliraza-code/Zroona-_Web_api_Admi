@@ -31,11 +31,22 @@ let count = 0;
 
 // ===== SPECIAL TEST PHONES (AUTO-VERIFIED) =====
 // Match against last 9 digits of the phone number (local part without country code)
+// Also supports 8-digit test numbers (50000001-50000009)
 const SPECIAL_LOCAL_TEST_PHONES = new Set([
 	"533333332",
 	"522222221",
 	"597832272",
 	"597832271",
+	// 8-digit test numbers (will match as last 8 digits)
+	"50000001",
+	"50000002",
+	"50000003",
+	"50000004",
+	"50000005",
+	"50000006",
+	"50000007",
+	"50000008",
+	"50000009",
 ]);
 
 const getLocalPhoneFromString = (phone) => {
@@ -343,7 +354,10 @@ const UserController = {
 
 			// Auto-verify email/phone for special test numbers
 			const localPhoneForAutoVerify = getLocalPhoneFromString(phoneStr);
-			const isSpecialTestPhone = localPhoneForAutoVerify && SPECIAL_LOCAL_TEST_PHONES.has(localPhoneForAutoVerify);
+			const phoneDigits = phoneStr ? phoneStr.toString().replace(/\D/g, "") : "";
+			const last8Digits = phoneDigits.slice(-8);
+			const isSpecialTestPhone = (localPhoneForAutoVerify && SPECIAL_LOCAL_TEST_PHONES.has(localPhoneForAutoVerify)) ||
+			                           (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
 
 			if (isSpecialTestPhone) {
 				userData.is_verified = true;
@@ -3542,26 +3556,72 @@ const UserController = {
 				.digest("hex");
 
 			console.log("Calculated signature", calculatedSignature);
-			// if (receivedSignature !== calculatedSignature) {
+			
+			// ============================================================
+			// SECURITY: Webhook signature verification (optional but recommended)
+			// Note: Moyasar may not always send signatures for all webhook types
+			// ============================================================
+			// if (receivedSignature && receivedSignature !== calculatedSignature) {
 			//     console.error('Webhook signature verification failed.');
 			//     return res.status(401).send("Invalid signature.");
 			// }
 
 			console.log("Received webhook body: ", body);
 
+			// Validate webhook body structure
+			if (!body || !body.data || !body.data.status) {
+				console.error("Invalid webhook body structure");
+				return res.status(400).send("Invalid webhook body");
+			}
+
+			const payment_id = body.data.id || body.id;
+			
 			if (
 				body.data.status === "paid" ||
+				body.data.status === "captured" ||
 				body.data.status === "authorized"
 			) {
-				const book_id = body.data.metadata.order_id;
+				// ============================================================
+				// CRITICAL SECURITY FIX: Verify payment with Moyasar API
+				// Never trust webhook data alone - always verify server-side
+				// ============================================================
+				console.log("[WEBHOOK] Verifying payment with Moyasar API:", payment_id);
+				
+				const paymentVerification = await MoyasarService.getPayment(payment_id);
+				
+				if (!paymentVerification.success) {
+					console.error("[WEBHOOK] Failed to verify payment with Moyasar:", paymentVerification.message);
+					return res.status(400).send("Payment verification failed");
+				}
+
+				const moyasarPayment = paymentVerification.data;
+				console.log("[WEBHOOK] Moyasar payment verified:", {
+					id: moyasarPayment.id,
+					status: moyasarPayment.status,
+					amount: moyasarPayment.amount
+				});
+
+				// Double-check the payment status from Moyasar API (not just webhook)
+				const validPaymentStatuses = ['paid', 'captured'];
+				if (!validPaymentStatuses.includes(moyasarPayment.status) && moyasarPayment.status !== 'authorized') {
+					console.error("[WEBHOOK] Payment not successful. Moyasar status:", moyasarPayment.status);
+					return res.status(400).send(`Payment not successful. Status: ${moyasarPayment.status}`);
+				}
+
+				const book_id = body.data.metadata?.order_id || moyasarPayment.metadata?.order_id;
+				
+				if (!book_id) {
+					console.error("[WEBHOOK] Booking ID not found in webhook or payment metadata");
+					return res.status(400).send("Booking ID not found");
+				}
 
 				const existingTransaction =
 					await TransactionService.FindOneService({
-						payment_id: body.id,
+						payment_id: payment_id,
 					});
 					if (existingTransaction) {
 					console.log(
-						`Transaction for payment_id ${body.id} already exists.`
+						`Transaction for payment_id ${payment_id} already exists.`
 					);
 						return res.status(200).send(resp_messages(lang).webhook_already_processed || "Webhook already processed.");
 				}
@@ -3575,17 +3635,29 @@ const UserController = {
 						return res.status(404).send(resp_messages(lang).bookingNotFound || "Booking not found");
 					}
 
-				if (body.data.status === "authorized") {
+				// Verify payment amount matches booking amount
+				const moyasarAmountInSAR = moyasarPayment.amount / 100;
+				const bookingAmount = booking_details.total_amount || 0;
+				const amountDifference = Math.abs(moyasarAmountInSAR - bookingAmount);
+				
+				if (amountDifference > 1) { // Allow 1 SAR difference for rounding
+					console.error("[WEBHOOK] Amount mismatch! Moyasar:", moyasarAmountInSAR, "Booking:", bookingAmount);
+					return res.status(400).send("Payment amount does not match booking amount");
+				}
+
+				// Handle authorized payments - capture them
+				if (moyasarPayment.status === "authorized") {
+					console.log("[WEBHOOK] Payment is authorized, attempting capture...");
 					const captureResponse = await MoyasarService.capturePayment(
-						body.id
+						payment_id
 					);
 					if (captureResponse.success) {
 						console.log(
-							`Payment manually captured for booking: ${book_id}`
+							`[WEBHOOK] Payment manually captured for booking: ${book_id}`
 						);
 					} else {
 						console.log(
-							`Failed to capture payment for booking: ${book_id}`
+							`[WEBHOOK] Failed to capture payment for booking: ${book_id}`
 						);
 						return res
 							.status(500)
@@ -3596,20 +3668,28 @@ const UserController = {
 					}
 				}
 
+				console.log("[WEBHOOK] ✅ Payment verified successfully. Updating booking.");
+
 				booking_details.payment_status = 1;
 				booking_details.book_status = 2;
-				booking_details.payment_id = body.id;
-				booking_details.payment_data = body;
+				booking_details.payment_id = payment_id;
+				booking_details.payment_data = {
+					...body,
+					moyasar_verified: true,
+					moyasar_status: moyasarPayment.status,
+					verified_at: new Date()
+				};
 
 				await booking_details.save();
 
 				await TransactionService.CreateService({
 					user_id: booking_details.user_id,
 					organizer_id: booking_details.organizer_id,
-					amount: booking_details.total_amount,
+					amount: moyasarAmountInSAR,
 					type: 1,
-					payment_id: body.id,
+					payment_id: payment_id,
 					book_id: book_id,
+					status: 1, // Success
 				});
 
 				// const amount = body.data.amount / 100;
@@ -3673,6 +3753,8 @@ const UserController = {
 
 	updatePaymentStatus: async (req, res) => {
 		try {
+			const lang = req.lang || req.headers["lang"] || "en";
+			const messages = resp_messages(lang);
 			const { booking_id, payment_id, payment_status, amount } = req.body;
 			console.log("[PAYMENT] Payment update request:", { booking_id, payment_id, payment_status, amount });
 
@@ -3683,6 +3765,72 @@ const UserController = {
 					"Invalid or missing booking ID"
 				);
 			}
+
+			// Validate payment_id is provided
+			if (!payment_id) {
+				return Response.badRequestResponse(
+					res,
+					messages.payment_id_required || "Payment ID is required"
+				);
+			}
+
+			// ============================================================
+			// CRITICAL SECURITY FIX: Verify payment with Moyasar API
+			// Never trust client-side payment status - always verify server-side
+			// ============================================================
+			console.log("[PAYMENT] Verifying payment with Moyasar API:", payment_id);
+			
+			const paymentVerification = await MoyasarService.getPayment(payment_id);
+			
+			if (!paymentVerification.success) {
+				console.error("[PAYMENT] Failed to verify payment with Moyasar:", paymentVerification.message);
+				return Response.badRequestResponse(
+					res,
+					messages.payment_verification_failed || "Unable to verify payment. Please try again or contact support."
+				);
+			}
+
+			const moyasarPayment = paymentVerification.data;
+			console.log("[PAYMENT] Moyasar payment details:", {
+				id: moyasarPayment.id,
+				status: moyasarPayment.status,
+				amount: moyasarPayment.amount,
+				currency: moyasarPayment.currency
+			});
+
+			// Check if payment is actually paid or captured
+			const validPaymentStatuses = ['paid', 'captured'];
+			if (!validPaymentStatuses.includes(moyasarPayment.status)) {
+				console.error("[PAYMENT] Payment not successful. Status:", moyasarPayment.status);
+				
+				// If payment is authorized but not captured, try to capture it
+				if (moyasarPayment.status === 'authorized') {
+					console.log("[PAYMENT] Attempting to capture authorized payment...");
+					const captureResult = await MoyasarService.capturePayment(payment_id);
+					
+					if (!captureResult.success) {
+						console.error("[PAYMENT] Failed to capture payment:", captureResult.message);
+						return Response.badRequestResponse(
+							res,
+							messages.payment_capture_failed || "Payment authorization found but capture failed. Please contact support."
+						);
+					}
+					console.log("[PAYMENT] Payment captured successfully");
+				} else if (moyasarPayment.status === 'failed' || moyasarPayment.status === 'declined') {
+					return Response.badRequestResponse(
+						res,
+						messages.payment_declined || "Payment was declined by your bank. Please check your balance and try again."
+					);
+				} else {
+					return Response.badRequestResponse(
+						res,
+						messages.payment_not_completed || `Payment is not complete. Current status: ${moyasarPayment.status}`
+					);
+				}
+			}
+
+			// Verify the payment amount matches the booking amount
+			const moyasarAmountInSAR = moyasarPayment.amount / 100; // Moyasar uses halala (smallest unit)
 
 			// Find the booking
 			const bookingDetails = await BookEventService.FindOneService({
@@ -3695,12 +3843,32 @@ const UserController = {
 
 			console.log("[PAYMENT] Found booking:", bookingDetails._id);
 
+			// Verify payment amount matches booking amount (allow small difference for rounding)
+			const bookingAmount = bookingDetails.total_amount || 0;
+			const amountDifference = Math.abs(moyasarAmountInSAR - bookingAmount);
+			
+			if (amountDifference > 1) { // Allow 1 SAR difference for rounding
+				console.error("[PAYMENT] Amount mismatch! Moyasar:", moyasarAmountInSAR, "Booking:", bookingAmount);
+				return Response.badRequestResponse(
+					res,
+					messages.payment_amount_mismatch || "Payment amount does not match booking amount. Please contact support."
+				);
+			}
+
+			// Verify the payment metadata matches the booking (if available)
+			if (moyasarPayment.metadata && moyasarPayment.metadata.order_id) {
+				if (moyasarPayment.metadata.order_id !== booking_id) {
+					console.error("[PAYMENT] Booking ID mismatch! Moyasar:", moyasarPayment.metadata.order_id, "Request:", booking_id);
+					return Response.badRequestResponse(
+						res,
+						messages.payment_booking_mismatch || "Payment does not match this booking. Please contact support."
+					);
+				}
+			}
+
 			// CRITICAL: Check if booking is approved by host (status = 2)
 			// Payment can only be processed if host has approved the booking
 			if (bookingDetails.book_status !== 2) {
-				const lang = req.lang || req.headers["lang"] || "en";
-				const messages = resp_messages(lang);
-				
 				if (bookingDetails.book_status === 1) {
 					return Response.badRequestResponse(
 						res,
@@ -3732,6 +3900,23 @@ const UserController = {
 				);
 			}
 
+			// Check for duplicate transaction with this payment_id
+			const existingTransaction = await TransactionService.FindOneService({
+				payment_id: payment_id,
+			});
+			
+			if (existingTransaction) {
+				console.log("[PAYMENT] Transaction already exists for payment_id:", payment_id);
+				return Response.ok(
+					res,
+					{ payment_already_processed: true },
+					200,
+					"Payment was already processed"
+				);
+			}
+
+			console.log("[PAYMENT] ✅ Payment verified successfully with Moyasar. Proceeding to update booking.");
+
 			// Update the booking with payment information
 			const updateData = {
 				payment_status: 1, // Mark as paid
@@ -3739,7 +3924,9 @@ const UserController = {
 				book_status: 2, // Set to approved
 				payment_data: {
 					id: payment_id,
-					amount: amount,
+					amount: moyasarAmountInSAR,
+					moyasar_status: moyasarPayment.status,
+					verified_at: new Date(),
 					updated_at: new Date(),
 				},
 			};

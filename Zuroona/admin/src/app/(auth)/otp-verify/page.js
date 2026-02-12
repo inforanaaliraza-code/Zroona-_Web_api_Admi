@@ -46,7 +46,7 @@ function OTP() {
             <div className="mt-10 w-[80px] lg:w-[120px]">
               <Image
                 src="/assets/images/logo.png"
-                alt=""
+                alt="Zuroona Logo"
                 height={120}
                 width={120}
                 className="w-full h-auto"

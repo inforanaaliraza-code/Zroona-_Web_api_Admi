@@ -25,18 +25,30 @@ const otpStore = new Map();
 const wrongAttemptsStore = new Map();
 
 // Constants
-const OTP_EXPIRY_TIME = 30 * 1000; // 30 seconds
+const OTP_EXPIRY_TIME = 5 * 60 * 1000; // 5 minutes (increased from 30 seconds for better UX)
 const RESEND_COOLDOWN = 30 * 1000; // 30 seconds
 const MAX_WRONG_ATTEMPTS = 5;
 const BLOCK_DURATION = 60 * 60 * 1000; // 1 hour
 
 // Local test phones that should always receive fixed OTP "123456"
 // Numbers are matched against the LAST 9 digits of the phone number (without country code)
+// Saudi Arabia phone numbers are 9 digits starting with 5
 const SPECIAL_LOCAL_TEST_PHONES = new Set([
     "533333332",
     "522222221",
     "597832272",
     "597832271",
+    // 9-digit test numbers for Saudi Arabia (format: 5XXXXXXXX)
+    // Use: +966 500000001, +966 500000002, etc.
+    "500000001",
+    "500000002",
+    "500000003",
+    "500000004",
+    "500000005",
+    "500000006",
+    "500000007",
+    "500000008",
+    "500000009",
 ]);
 
 /**
@@ -64,14 +76,24 @@ const getLocalPhoneFromFullNumber = (phoneNumberWithCountry) => {
  */
 const decideOtpForPhone = async (fullPhoneNumber, purpose, role, userId) => {
     const localPhone = getLocalPhoneFromFullNumber(fullPhoneNumber);
+    
+    // Also check last 8 digits for 8-digit test numbers (50000001-50000009)
+    const digits = fullPhoneNumber ? fullPhoneNumber.toString().replace(/\D/g, "") : "";
+    const last8Digits = digits.slice(-8);
 
-    if (localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone)) {
+    // Check if it's a special test phone (9 digits or 8 digits)
+    const isSpecialTestPhone = (localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone)) ||
+                               (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
+
+    if (isSpecialTestPhone) {
+        // Use the matched phone number (prefer 9 digits, fallback to 8)
+        const matchedPhone = (localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone)) ? localPhone : last8Digits;
         // Upsert into SpecialOtpPhone collection for permanent tracking
         try {
             await SpecialOtpPhone.updateOne(
-                { localPhone },
+                { localPhone: matchedPhone },
                 {
-                    localPhone,
+                    localPhone: matchedPhone,
                     // Try to infer simple country code from prefix if available
                     countryCode: fullPhoneNumber.startsWith('+')
                         ? fullPhoneNumber.replace(/\d/g, '').startsWith('+')
@@ -278,6 +300,35 @@ const verifyOtp = async (phoneNumber, otp, role) => {
 
     const numberKey = `${role}_${phoneNumber}`;
     const otpStr = otp.toString().trim();
+
+    // SPECIAL TEST PHONES: Always accept "123456" as valid OTP
+    const localPhone = getLocalPhoneFromFullNumber(phoneNumber);
+    const digits = phoneNumber ? phoneNumber.toString().replace(/\D/g, "") : "";
+    const last8Digits = digits.slice(-8);
+    
+    const isSpecialTestPhone = (localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone)) ||
+                               (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
+    
+    if (isSpecialTestPhone && otpStr === "123456") {
+        console.log(`[OTP:VERIFY] Special test phone ${phoneNumber} - accepting fixed OTP 123456`);
+        clearWrongAttempts(phoneNumber);
+        
+        // Find user by phone
+        const service = role == 1 ? UserService : (role == 3 ? AdminService : organizerService);
+        const countryCode = phoneNumber.substring(0, 4);
+        const phone = phoneNumber.substring(4);
+        const user = await service.FindOneService({
+            phone_number: parseInt(phone),
+            country_code: countryCode
+        });
+        
+        if (user) {
+            return { userId: user._id, role };
+        }
+        // Return with null userId for test phones
+        return { userId: null, role };
+    }
+
     const storedOtp = otpStore.get(`${numberKey}_${otpStr}`);
 
     // Check in-memory store first
@@ -364,7 +415,10 @@ const sendOtpToPhone = async (phoneNumber, lang = 'en') => {
 
     // For special test numbers, SKIP calling MSEGAT completely.
     const localPhone = getLocalPhoneFromFullNumber(phoneNumber);
-    const isSpecialTestPhone = localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone);
+    const digits = phoneNumber ? phoneNumber.toString().replace(/\D/g, "") : "";
+    const last8Digits = digits.slice(-8);
+    const isSpecialTestPhone = (localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone)) ||
+                               (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
 
     if (isSpecialTestPhone) {
         console.log(`[SPECIAL-OTP] Skipping SMS for test login phone ${phoneNumber}. Using fixed OTP ${otp}.`);
@@ -398,6 +452,21 @@ const verifyLoginOtp = async (phoneNumber, otp) => {
 
     const otpStr = otp.toString().trim();
     const numberKey = `login_${phoneNumber}`;
+
+    // SPECIAL TEST PHONES: Always accept "123456" as valid OTP
+    const localPhone = getLocalPhoneFromFullNumber(phoneNumber);
+    const digits = phoneNumber ? phoneNumber.toString().replace(/\D/g, "") : "";
+    const last8Digits = digits.slice(-8);
+    
+    const isSpecialTestPhone = (localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone)) ||
+                               (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
+    
+    if (isSpecialTestPhone && otpStr === "123456") {
+        console.log(`[OTP:VERIFY] Special test phone ${phoneNumber} - accepting fixed OTP 123456 for login`);
+        clearWrongAttempts(phoneNumber);
+        return { verified: true, phoneNumber };
+    }
+
     const storedOtp = otpStore.get(`${numberKey}_${otpStr}`);
 
     // Check in-memory store first
@@ -480,7 +549,10 @@ const sendSignupOtp = async (userId, phoneNumber, role, lang = 'en') => {
 
     // For special test numbers, SKIP calling MSEGAT completely.
     const localPhone = getLocalPhoneFromFullNumber(phoneNumber);
-    const isSpecialTestPhone = localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone);
+    const digits = phoneNumber ? phoneNumber.toString().replace(/\D/g, "") : "";
+    const last8Digits = digits.slice(-8);
+    const isSpecialTestPhone = (localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone)) ||
+                               (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
 
     if (isSpecialTestPhone) {
         console.log(`[SPECIAL-OTP] Skipping SMS for test signup phone ${phoneNumber}. Using fixed OTP ${otp}.`);
@@ -527,6 +599,37 @@ const verifySignupOtp = async (userId, phoneNumber, otp, role) => {
 
     const otpStr = otp.toString().trim();
     const numberKey = `signup_${role}_${phoneNumber}`;
+
+    // SPECIAL TEST PHONES: Always accept "123456" as valid OTP
+    // Check both 9-digit and 8-digit matches
+    const localPhone = getLocalPhoneFromFullNumber(phoneNumber);
+    const digits = phoneNumber ? phoneNumber.toString().replace(/\D/g, "") : "";
+    const last8Digits = digits.slice(-8);
+    
+    const isSpecialTestPhone = (localPhone && SPECIAL_LOCAL_TEST_PHONES.has(localPhone)) ||
+                               (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
+    
+    if (isSpecialTestPhone && otpStr === "123456") {
+        console.log(`[OTP:VERIFY] Special test phone ${phoneNumber} - accepting fixed OTP 123456`);
+        clearWrongAttempts(phoneNumber);
+        
+        // Verify user exists
+        try {
+            const service = role == 1 ? UserService : organizerService;
+            const userById = await service.FindByIdService(userId);
+            if (userById) {
+                // Clear OTP from database
+                await service.FindByIdAndUpdateService(userId, { otp: '' });
+                return { verified: true, userId: userById._id.toString(), role };
+            }
+        } catch (err) {
+            console.error('[OTP:VERIFY] Special phone user check error:', err.message);
+        }
+        
+        // Return success even if user check fails for test phones
+        return { verified: true, userId: userId.toString(), role };
+    }
+
     const storedOtp = otpStore.get(`${numberKey}_${otpStr}`);
 
     // Check in-memory store

@@ -44,21 +44,21 @@ export default function ConfirmDialog({
   const defaultConfirmText = t("confirm.yes") || "Yes, Continue";
   const defaultCancelText = t("confirm.cancel") || "Cancel";
 
-  // Variant configurations
+  // Variant configurations - Web color scheme
   const variants = {
     danger: {
       icon: "lucide:alert-triangle",
-      iconBg: "bg-red-50",
-      iconColor: "text-red-500",
-      buttonBg: "bg-red-500 hover:bg-red-600",
-      borderColor: "border-red-200",
+      iconBg: "bg-orange-50",
+      iconColor: "text-[#e74c3c]",
+      buttonBg: "bg-[#e74c3c] hover:bg-[#c0392b]",
+      borderColor: "border-orange-200",
     },
     warning: {
       icon: "lucide:alert-circle",
-      iconBg: "bg-yellow-50",
-      iconColor: "text-yellow-500",
-      buttonBg: "bg-yellow-500 hover:bg-yellow-600",
-      borderColor: "border-yellow-200",
+      iconBg: "bg-orange-50",
+      iconColor: "text-[#a797cc]",
+      buttonBg: "bg-[#a797cc] hover:bg-[#9580c0]",
+      borderColor: "border-[#f2dfba]",
     },
     info: {
       icon: "lucide:info",

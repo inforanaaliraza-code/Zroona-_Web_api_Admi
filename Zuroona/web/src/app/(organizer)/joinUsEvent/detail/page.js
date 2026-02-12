@@ -13,11 +13,12 @@ import { useTranslation } from "react-i18next";
 import LocationMap from "@/components/Details/LocationMap";
 import Audience from "@/components/Details/Audience";
 import Loader from "@/components/Loader/Loader";
-import { DeleteEventsApi } from "@/app/api/events/apis";
+import { DeleteEventsApi, CancelEventApi } from "@/app/api/events/apis";
 import { toast } from "react-toastify";
 import { Icon } from "@iconify/react";
 import { useRTL } from "@/utils/rtl";
 import DeleteEventModal from "@/components/Modal/DeleteEventModal";
+import CancelEventModal from "@/components/Modal/CancelEventModal";
 import useAuthStore from "@/store/useAuthStore";
 import AddEditJoinEventModal from "@/components/Modal/AddEditJoinEventModal";
 
@@ -27,13 +28,15 @@ export default function JoinUsDetail() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
 
   // Get user info from auth store
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   const { profile } = useSelector((state) => state.profileData || {});
   
   // Determine user role - check both auth store and profile
@@ -88,6 +91,47 @@ export default function JoinUsDetail() {
     }
   };
 
+  const handleCancelEvent = async (reason = "") => {
+    if (!EventListId) {
+      toast.error(t("common.error", "Event ID not found"));
+      return;
+    }
+
+    setIsCancelling(true);
+    try {
+      const response = await CancelEventApi(
+        {
+          event_id: EventListId,
+          reason: reason || undefined,
+        },
+        token
+      );
+
+      if (response?.status === 1 || response?.status === true) {
+        toast.success(
+          response?.message || t("events.eventCancelledSuccessfully", "Event cancelled successfully")
+        );
+        setIsCancelModalOpen(false);
+        // Refresh event details
+        setTimeout(() => {
+          dispatch(getEventListDetail({ id: EventListId }));
+          toast.info(t("events.guestsNotified", "All guests have been notified about the cancellation"));
+        }, 1000);
+      } else {
+        toast.error(
+          response?.message || t("common.error", "Failed to cancel event")
+        );
+      }
+    } catch (error) {
+      console.error("[CANCEL-EVENT] Error:", error);
+      toast.error(
+        error?.response?.data?.message || t("common.error", "Failed to cancel event")
+      );
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
   const breadcrumbItems = [
     { label: t("breadcrumb.tab1"), href: "/joinUsEvent" },
     { label: t("breadcrumb.tab14"), href: "/joinUsEvent" },
@@ -108,6 +152,33 @@ export default function JoinUsDetail() {
         <>
       <section className="bg-white min-h-screen py-8 md:py-12">
         <div className="mx-auto px-4 md:px-8 xl:px-28 max-w-7xl">
+          
+          {/* Cancelled Event Banner - Show if event is cancelled */}
+          {(detailData?.is_cancelled === true || detailData?.event_status === 'cancelled') && (
+            <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-2xl p-4 md:p-6">
+              <div className={`flex items-center gap-4 ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
+                <div className="bg-red-100 p-3 rounded-xl">
+                  <Icon icon="lucide:calendar-x" className="h-8 w-8 text-red-600" />
+                </div>
+                <div className={isRTL ? "text-right" : "text-left"}>
+                  <h3 className="text-xl font-bold text-red-800">
+                    {t("events.eventCancelled", "This Event Has Been Cancelled")}
+                  </h3>
+                  {detailData?.cancelled_at && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {t("events.cancelledOn", "Cancelled on")}: {new Date(detailData.cancelled_at).toLocaleDateString()}
+                    </p>
+                  )}
+                  {detailData?.cancelled_reason && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      <span className="font-semibold">{t("events.reason", "Reason")}:</span> {detailData.cancelled_reason}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Main Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 xl:gap-8">
             {/* Left Content Section */}
@@ -125,7 +196,7 @@ export default function JoinUsDetail() {
                     <span>{t("events.viewAnalytics", "View Analytics")}</span>
                   </Link>
                   
-                  {/* Edit Event Button - Orange color (replaced Cancel Event) */}
+                  {/* Edit Event Button - Orange color - Only for Approved events */}
                   {detailData?.is_approved === 1 && (
                     <button
                       onClick={() => setIsEditModalOpen(true)}
@@ -134,6 +205,25 @@ export default function JoinUsDetail() {
                       <Icon icon="lucide:edit" className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
                       <span>{t("detail.tab15", "Edit Event")}</span>
                     </button>
+                  )}
+
+                  {/* Cancel Event Button - Red/Danger color - Only show if not already cancelled */}
+                  {!(detailData?.is_cancelled === true || detailData?.event_status === 'cancelled') && (
+                    <button
+                      onClick={() => setIsCancelModalOpen(true)}
+                      className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
+                    >
+                      <Icon icon="lucide:x-circle" className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                      <span>{t("events.cancelEvent", "Cancel Event")}</span>
+                    </button>
+                  )}
+                  
+                  {/* Cancelled Status Badge - Show if event is cancelled */}
+                  {(detailData?.is_cancelled === true || detailData?.event_status === 'cancelled') && (
+                    <div className={`flex items-center gap-2 px-6 py-3 bg-gray-500 text-white rounded-xl font-semibold shadow-lg ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
+                      <Icon icon="lucide:x-circle" className="h-5 w-5" />
+                      <span>{t("events.eventCancelled", "Event Cancelled")}</span>
+                    </div>
                   )}
                   
                   {/* Delete Event Button - Show for all events */}
@@ -169,6 +259,15 @@ export default function JoinUsDetail() {
         show={isDeleteModalOpen}
         onConfirm={handleDeleteEvent}
         onCancel={() => setIsDeleteModalOpen(false)}
+      />
+
+      {/* Cancel Event Modal */}
+      <CancelEventModal
+        show={isCancelModalOpen}
+        eventName={detailData?.event_name}
+        onConfirm={handleCancelEvent}
+        onCancel={() => setIsCancelModalOpen(false)}
+        isLoading={isCancelling}
       />
 
       {/* Edit Event Modal */}

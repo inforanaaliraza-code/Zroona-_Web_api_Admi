@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaTimes, FaCheckCircle, FaTimesCircle, FaMoneyBillWave, FaUser, FaCalendar, FaBuilding, FaCreditCard } from "react-icons/fa";
 import Image from "next/image";
 import { useTranslation } from "react-i18next";
 
 export default function WithdrawalActionModal({ show, onClose, onConfirm, request, actionType }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [mounted, setMounted] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isRTL = mounted ? i18n.language === "ar" : false;
   const [rejectionReason, setRejectionReason] = useState("");
   const [transactionRef, setTransactionRef] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,12 +52,12 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
   const isApprove = actionType === "approve";
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" dir={isRTL ? "rtl" : "ltr"}>
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
         {/* Header */}
         <div className={`p-6 border-b ${isApprove ? 'bg-gradient-to-r from-green-50 to-emerald-50' : 'bg-gradient-to-r from-red-50 to-rose-50'}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
               {isApprove ? (
                 <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
                   <FaCheckCircle className="text-white text-2xl" />
@@ -79,12 +86,12 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
         {/* Request Details */}
         <div className="p-6">
           {/* Host Info */}
-          <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-5 mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <div className={`bg-gradient-to-r ${isRTL ? 'from-gray-100 to-gray-50' : 'from-gray-50 to-gray-100'} rounded-xl p-5 mb-6`}>
+            <h3 className={`text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <FaUser className="text-[#a797cc]" />
               {t("common.hostInformation")}
             </h3>
-            <div className="flex items-center gap-4">
+            <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}
               <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
                 <Image
                   src={request.host_image || "/assets/images/dummyImage.png"}
@@ -109,7 +116,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
           {/* Amount Info */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-gradient-to-br from-[#a3cc69] to-[#9fb68b] rounded-xl p-5 text-white">
-              <div className="flex items-center gap-3 mb-2">
+              <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <FaMoneyBillWave className="text-2xl" />
                 <h4 className="font-semibold">{t("common.withdrawalAmount")}</h4>
               </div>
@@ -117,7 +124,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
             </div>
 
             <div className="bg-gradient-to-br from-[#a797cc] to-[#b0a0df] rounded-xl p-5 text-white">
-              <div className="flex items-center gap-3 mb-2">
+              <div className={`flex items-center gap-3 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <FaCalendar className="text-2xl" />
                 <h4 className="font-semibold">{t("common.requestDate")}</h4>
               </div>
@@ -134,7 +141,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
           {/* Bank Details */}
           {request.bank_details || request.organizer?.bank_details ? (
             <div className="bg-blue-50 rounded-xl p-5 mb-6 border-2 border-blue-200">
-              <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+              <h3 className={`text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <FaBuilding className="text-blue-600" />
                 {t("common.bankDetails")}
               </h3>
@@ -221,7 +228,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-gray-50 border-t flex gap-3 justify-end">
+        <div className={`p-6 bg-gray-50 border-t flex gap-3 ${isRTL ? 'justify-start flex-row-reverse' : 'justify-end'}`}
           <button
             onClick={handleClose}
             disabled={loading}

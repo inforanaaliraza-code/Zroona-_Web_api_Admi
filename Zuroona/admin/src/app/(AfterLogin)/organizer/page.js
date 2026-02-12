@@ -379,7 +379,7 @@ export default function ManageEventOrganizer() {
                               };
                               return getImageUrl(organizer?.profile_image);
                             })()}
-                            alt={organizer.first_name || t("organizers.title")}
+                            alt={organizer?.first_name ? `${organizer.first_name} ${organizer.last_name || ''}`.trim() : "Organizer profile"}
                             fill
                             className="object-cover"
                             sizes="40px"

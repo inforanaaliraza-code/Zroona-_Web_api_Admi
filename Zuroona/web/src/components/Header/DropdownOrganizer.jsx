@@ -222,7 +222,7 @@ const DropdownOrganizer = ({ profile }) => {
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
-      {/* Trigger - Only show name, no duplicate "Host" label */}
+      {/* Trigger - Show name and role "Host" */}
       <button
         onClick={(e) => {
           // Stop propagation to prevent conflicts with notification button
@@ -231,66 +231,53 @@ const DropdownOrganizer = ({ profile }) => {
         }}
         className="flex items-center gap-x-2 sm:gap-x-3 hover:opacity-80 transition-opacity"
       >
-        <span className="h-10 w-10 rounded-full overflow-hidden border-2 border-[#a797cc]/20 shadow-sm bg-gray-100">
+        <span className="h-10 w-10 rounded-full overflow-hidden border-2 border-white/30 shadow-sm bg-gray-100">
           <img
             key={`header-profile-${userData?.profile_image || 'default'}-${userData?._id || ''}`}
             src={(() => {
               const getImageUrl = (imgPath) => {
                 if (!imgPath) {
-                  console.log("[DROPDOWN-ORGANIZER] No profile_image, using default");
                   return "/assets/images/home/user-dummy.png";
                 }
                 if (imgPath.includes("http://") || imgPath.includes("https://") || imgPath.startsWith("blob:")) {
-                  console.log("[DROPDOWN-ORGANIZER] Using absolute/blob URL:", imgPath);
                   return imgPath;
                 }
                 if (imgPath.startsWith("/uploads/")) {
                   const apiBase = BASE_API_URL.replace('/api/', '');
-                  const finalUrl = `${apiBase}${imgPath}`;
-                  console.log("[DROPDOWN-ORGANIZER] Converted /uploads/ path:", finalUrl);
-                  return finalUrl;
+                  return `${apiBase}${imgPath}`;
                 }
                 if (imgPath.includes("uploads/")) {
                   const apiBase = BASE_API_URL.replace('/api/', '');
                   const uploadsIndex = imgPath.indexOf("uploads/");
-                  const finalUrl = `${apiBase}/${imgPath.substring(uploadsIndex)}`;
-                  console.log("[DROPDOWN-ORGANIZER] Converted uploads/ path:", finalUrl);
-                  return finalUrl;
+                  return `${apiBase}/${imgPath.substring(uploadsIndex)}`;
                 }
-                console.log("[DROPDOWN-ORGANIZER] Using default, original path:", imgPath);
                 return "/assets/images/home/user-dummy.png";
               };
-              const imageUrl = getImageUrl(userData?.profile_image);
-              console.log("[DROPDOWN-ORGANIZER] Final image URL:", imageUrl, "from userData.profile_image:", userData?.profile_image);
-              return imageUrl;
+              return getImageUrl(userData?.profile_image);
             })()}
             alt={userData?.first_name || "Profile"}
             className="rounded-full object-cover w-full h-full"
             style={{ minHeight: '100%', minWidth: '100%' }}
             onError={(e) => {
-              console.error("[DROPDOWN-ORGANIZER] ❌ Image load error:", {
-                attemptedUrl: e.target.src,
-                profile_image: userData?.profile_image,
-                userData: userData
-              });
               if (!e.target.src.includes("user-dummy.png")) {
                 e.target.onerror = null;
                 e.target.src = "/assets/images/home/user-dummy.png";
               }
             }}
-            onLoad={() => {
-              console.log("[DROPDOWN-ORGANIZER] ✅ Image loaded successfully");
-            }}
           />
         </span>
+        {/* Name and Role - Host */}
         <span className="text-left hidden sm:block">
-          <span className="block text-sm text-black truncate w-full max-w-[7rem] sm:max-w-full font-semibold">
-            {userData?.first_name || ""} {userData?.last_name || ""}
+          <span className="block text-sm text-white font-semibold truncate max-w-[7rem]">
+            {userData?.first_name || t("auth.host") || "Host"}
+          </span>
+          <span className="block text-xs text-white/80 font-medium">
+            {t("auth.host") || "Host"}
           </span>
         </span>
 
         {/* Dropdown Arrow */}
-        <span className="text-gray-600 text-xs sm:text-base transition-transform duration-200">
+        <span className="text-white/80 text-xs sm:text-base transition-transform duration-200">
           {dropdownOpen ? <FaChevronUp /> : <FaChevronDown />}
         </span>
       </button>

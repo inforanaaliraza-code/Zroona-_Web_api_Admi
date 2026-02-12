@@ -4,8 +4,11 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import ResetAndChangePassword from "@/components/ResetAndChangePassword/ResetAndChangePassword";
 import Image from "next/image";
 import { FaLock, FaShieldAlt } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 export default function Setting() {
+  const { t } = useTranslation();
+
   return (
     <DefaultLayout>
       <div className="min-h-screen py-6">
@@ -16,10 +19,8 @@ export default function Setting() {
               <FaShieldAlt className="text-3xl text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-black">
-                Change Password
-              </h1>
-              <p className="text-gray-600 mt-1">Secure your account with a new password</p>
+              <h1 className="text-3xl font-bold text-black">{t("common.changePassword")}</h1>
+              <p className="text-gray-600 mt-1">{t("common.secureAccount")}</p>
             </div>
           </div>
         </div>
@@ -39,7 +40,7 @@ export default function Setting() {
                     <div className="relative">
                       <Image
                         src="/assets/images/login/reset-img.png"
-                        alt="Change Password"
+                        alt={t("common.changePassword")}
                         width={100}
                         height={100}
                         quality={100}
@@ -49,12 +50,8 @@ export default function Setting() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-2xl md:text-3xl font-bold text-black">
-                      Change Password
-                    </h3>
-                    <p className="font-medium text-gray-600 mt-1">
-                      Please change your password here
-                    </p>
+                    <h3 className="text-2xl md:text-3xl font-bold text-black">{t("common.changePassword")}</h3>
+                    <p className="font-medium text-gray-600 mt-1">{t("common.pleaseChangePassword")}</p>
                   </div>
                 </div>
 
@@ -68,12 +65,12 @@ export default function Setting() {
               <div className="flex items-start gap-3">
                 <FaLock className="text-[#a3cc69] text-xl mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-2">Password Security Tips</h4>
+                  <h4 className="font-semibold text-gray-800 mb-2">{t("common.passwordSecurityTips")}</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Use at least 8 characters</li>
-                    <li>• Include uppercase and lowercase letters</li>
-                    <li>• Add numbers and special characters</li>
-                    <li>• Avoid common words or personal information</li>
+                    <li>• {t("common.passwordTip1")}</li>
+                    <li>• {t("common.passwordTip2")}</li>
+                    <li>• {t("common.passwordTip3")}</li>
+                    <li>• {t("common.passwordTip4")}</li>
                   </ul>
                 </div>
               </div>

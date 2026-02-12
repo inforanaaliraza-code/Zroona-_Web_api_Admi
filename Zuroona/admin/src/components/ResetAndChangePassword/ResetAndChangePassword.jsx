@@ -11,10 +11,12 @@ import { TOKEN_NAME } from "@/until";
 import Loader from "../Loader/Loader";
 import { changePasswordApi, resetPasswordApi } from "@/api/setting";
 import { FaEye, FaEyeSlash, FaLock, FaCheckCircle } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 function ResetAndChangePassword(props) {
   const { push } = useRouter();
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   // Separate toggle states for each password field
   const [toggleOldPassword, setToggleOldPassword] = useState(false);
@@ -34,11 +36,11 @@ function ResetAndChangePassword(props) {
         }}
         validationSchema={Yup.object({
           oldPassword:
-            props.page === "change" && Yup.string().required("Required"),
-          newPassword: Yup.string().required("Required"),
+            props.page === "change" && Yup.string().required(t("common.required")),
+          newPassword: Yup.string().required(t("common.required")),
           changePassword: Yup.string()
-            .required("Required")
-            .oneOf([Yup.ref("newPassword"), null], "Passwords must match"),
+            .required(t("common.required"))
+            .oneOf([Yup.ref("newPassword"), null], t("common.passwordsMustMatch")),
         })}
         onSubmit={(values, action) => {
           setLoading(true);
@@ -99,7 +101,7 @@ function ResetAndChangePassword(props) {
                     htmlFor="oldPassword" 
                     className="block text-sm font-semibold text-gray-700 mb-3"
                   >
-                    Current Password <span className="text-[#a797cc]">*</span>
+                    {t("common.currentPassword")} <span className="text-[#a797cc]">*</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -108,7 +110,7 @@ function ResetAndChangePassword(props) {
                     <input
                       type={toggleOldPassword ? "text" : "password"}
                       className="block w-full px-12 pr-24 py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
-                      placeholder="Enter Current Password"
+                      placeholder={t("common.enterCurrentPassword")}
                       name="oldPassword"
                       onChange={handleChange}
                       onBlur={handleBlur}
@@ -121,9 +123,9 @@ function ResetAndChangePassword(props) {
                       onClick={() => setToggleOldPassword(!toggleOldPassword)}
                     >
                       {toggleOldPassword ? (
-                        <><FaEyeSlash className="mr-1" /> Hide</>
+                        <><FaEyeSlash className="mr-1" /> {t("common.hide")}</>
                       ) : (
-                        <><FaEye className="mr-1" /> Show</>
+                        <><FaEye className="mr-1" /> {t("common.show")}</>
                       )}
                     </button>
                   </div>
@@ -136,8 +138,8 @@ function ResetAndChangePassword(props) {
                   {/* Forgot Password Link */}
                   <div className="text-right mt-3">
                     <Link href="/forgot-password">
-                      <span className="text-sm text-[#a3cc69] hover:text-[#a797cc] font-semibold cursor-pointer transition-colors duration-300 flex items-center justify-end gap-1">
-                        Forgot Password? →
+                        <span className="text-sm text-[#a3cc69] hover:text-[#a797cc] font-semibold cursor-pointer transition-colors duration-300 flex items-center justify-end gap-1">
+                          {t("common.forgotPassword")} →
                       </span>
                     </Link>
                   </div>
@@ -150,7 +152,7 @@ function ResetAndChangePassword(props) {
                   htmlFor="newPassword" 
                   className="block text-sm font-semibold text-gray-700 mb-3"
                 >
-                  New Password <span className="text-[#a797cc]">*</span>
+                  {t("common.newPassword")} <span className="text-[#a797cc]">*</span>
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -161,7 +163,7 @@ function ResetAndChangePassword(props) {
                     type={toggleNewPassword ? "text" : "password"}
                     name="newPassword"
                     className="block w-full px-12 pr-24 py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
-                    placeholder="Enter new Password"
+                    placeholder={t("common.enterNewPassword")}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     value={values.newPassword}
@@ -172,9 +174,9 @@ function ResetAndChangePassword(props) {
                     onClick={() => setToggleNewPassword(!toggleNewPassword)}
                   >
                     {toggleNewPassword ? (
-                      <><FaEyeSlash className="mr-1" /> Hide</>
+                      <><FaEyeSlash className="mr-1" /> {t("common.hide")}</>
                     ) : (
-                      <><FaEye className="mr-1" /> Show</>
+                      <><FaEye className="mr-1" /> {t("common.show")}</>
                     )}
                   </button>
                 </div>
@@ -191,7 +193,7 @@ function ResetAndChangePassword(props) {
                   htmlFor="changePassword" 
                   className="block text-sm font-semibold text-gray-700 mb-3"
                 >
-                  Confirm New Password <span className="text-[#a797cc]">*</span>
+                  {t("common.confirmNewPassword")} <span className="text-[#a797cc]">*</span>
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -206,7 +208,7 @@ function ResetAndChangePassword(props) {
                     type={toggleChangePassword ? "text" : "password"}
                     name="changePassword"
                     className="block w-full px-12 pr-24 py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
-                    placeholder="Enter confirm new Password"
+                    placeholder={t("common.enterConfirmNewPassword")}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     value={values.changePassword}
@@ -217,9 +219,9 @@ function ResetAndChangePassword(props) {
                     onClick={() => setToggleChangePassword(!toggleChangePassword)}
                   >
                     {toggleChangePassword ? (
-                      <><FaEyeSlash className="mr-1" /> Hide</>
+                      <><FaEyeSlash className="mr-1" /> {t("common.hide")}</>
                     ) : (
-                      <><FaEye className="mr-1" /> Show</>
+                      <><FaEye className="mr-1" /> {t("common.show")}</>
                     )}
                   </button>
                 </div>
@@ -229,9 +231,9 @@ function ResetAndChangePassword(props) {
                   </div>
                 )}
                 {!errors.changePassword && values.changePassword && values.changePassword === values.newPassword && (
-                  <div className="text-[#a3cc69] mt-2 text-sm font-medium flex items-center gap-1">
-                    <FaCheckCircle /> Passwords match!
-                  </div>
+                    <div className="text-[#a3cc69] mt-2 text-sm font-medium flex items-center gap-1">
+                      <FaCheckCircle /> {t("common.passwordsMatch")}
+                    </div>
                 )}
               </div>
 
@@ -246,7 +248,7 @@ function ResetAndChangePassword(props) {
                     <Loader color="#fff" />
                   ) : (
                     <>
-                      <span>Submit</span>
+                      <span>{t("common.submit")}</span>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                       </svg>

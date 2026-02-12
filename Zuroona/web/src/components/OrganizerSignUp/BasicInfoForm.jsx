@@ -37,6 +37,9 @@ const BasicInfoForm = ({ onSuccess }) => {
   const [otpTimer, setOtpTimer] = useState(60); // 1 minute timer for OTP
   const [otpExpired, setOtpExpired] = useState(false);
   const [otpSentTime, setOtpSentTime] = useState(null); // Track when OTP was sent
+  const [otpError, setOtpError] = useState(null); // For showing prominent OTP errors
+  const [phoneBlocked, setPhoneBlocked] = useState(false); // For phone blocked state
+  const [blockTimeRemaining, setBlockTimeRemaining] = useState(0); // Minutes remaining for block
 
   const formik = useFormik({
     initialValues: {
@@ -292,6 +295,7 @@ const BasicInfoForm = ({ onSuccess }) => {
     }
     try {
       setOtpVerifying(true);
+      setOtpError(null); // Clear previous errors
       const response = await axios.post(
         `${BASE_API_URL}organizer/verify-signup-otp`,
         {
@@ -309,6 +313,8 @@ const BasicInfoForm = ({ onSuccess }) => {
       );
       if (response.data?.status === 1 || response.data?.success) {
         setPhoneVerified(true);
+        setOtpError(null);
+        setPhoneBlocked(false);
         if (response.data?.data?.organizer?.is_verified) {
           // Both verified - success!
           toast.success(response.data.message || "Account verified successfully!");
@@ -318,11 +324,44 @@ const BasicInfoForm = ({ onSuccess }) => {
           toast.success(response.data.message || "Phone verified! Please verify your email to continue.");
         }
       } else {
-        toast.error(response.data.message || "Invalid OTP. Please try again.");
+        // Parse error message for blocked phone or too many attempts
+        const errorMessage = response.data.message || "";
+        const isBlocked = errorMessage.toLowerCase().includes("blocked") || 
+                          errorMessage.toLowerCase().includes("too many") ||
+                          errorMessage.toLowerCase().includes("محاولات");
+        
+        const minutesMatch = errorMessage.match(/(\d+)\s*(minutes?|دقيقة)/i);
+        if (minutesMatch) {
+          setBlockTimeRemaining(parseInt(minutesMatch[1]));
+        }
+        
+        if (isBlocked) {
+          setPhoneBlocked(true);
+          setOtpError(errorMessage);
+        } else {
+          setOtpError(errorMessage || t("auth.invalidOTP") || "Invalid OTP. Please try again.");
+        }
+        toast.error(errorMessage || "Invalid OTP. Please try again.");
       }
     } catch (error) {
       console.error("Verify OTP error:", error);
-      toast.error(error?.response?.data?.message || "Failed to verify OTP. Please try again.");
+      const errorMessage = error?.response?.data?.message || "";
+      const isBlocked = errorMessage.toLowerCase().includes("blocked") || 
+                        errorMessage.toLowerCase().includes("too many") ||
+                        errorMessage.toLowerCase().includes("محاولات");
+      
+      const minutesMatch = errorMessage.match(/(\d+)\s*(minutes?|دقيقة)/i);
+      if (minutesMatch) {
+        setBlockTimeRemaining(parseInt(minutesMatch[1]));
+      }
+      
+      if (isBlocked) {
+        setPhoneBlocked(true);
+        setOtpError(errorMessage);
+      } else {
+        setOtpError(errorMessage || "Failed to verify OTP. Please try again.");
+      }
+      toast.error(errorMessage || "Failed to verify OTP. Please try again.");
     } finally {
       setOtpVerifying(false);
     }
@@ -406,11 +445,56 @@ const BasicInfoForm = ({ onSuccess }) => {
               </div>
             </div>
 
+            {/* OTP Error Alert - Prominent Display */}
+            {otpError && !phoneVerified && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mb-4 p-4 rounded-lg border-2 ${
+                  phoneBlocked 
+                    ? 'bg-red-100 border-red-400 text-red-800' 
+                    : 'bg-orange-100 border-orange-400 text-orange-800'
+                }`}
+              >
+                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <Icon 
+                    icon={phoneBlocked ? "material-symbols:block" : "material-symbols:warning"} 
+                    className={`w-6 h-6 flex-shrink-0 mt-0.5 ${phoneBlocked ? 'text-red-600' : 'text-orange-600'}`}
+                  />
+                  <div className="flex-1">
+                    <h4 className={`font-semibold mb-1 ${phoneBlocked ? 'text-red-800' : 'text-orange-800'}`}>
+                      {phoneBlocked 
+                        ? (t("auth.phoneBlockedTitle") || "Phone Number Blocked")
+                        : (t("auth.otpErrorTitle") || "Verification Failed")
+                      }
+                    </h4>
+                    <p className="text-sm">
+                      {otpError}
+                    </p>
+                    {phoneBlocked && blockTimeRemaining > 0 && (
+                      <div className={`mt-2 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <Icon icon="material-symbols:schedule" className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          {t("auth.tryAgainIn") || "Try again in"}: {blockTimeRemaining} {t("auth.minutes") || "minutes"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => { setOtpError(null); setPhoneBlocked(false); }}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <Icon icon="material-symbols:close" className="w-5 h-5" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* OTP Input */}
             {!phoneVerified && (
               <div className="mb-6">
                 <label className={`block text-sm font-medium text-gray-700 mb-2 ${textAlign}`}>
-                  {t("Enter OTP") || "Enter OTP"}
+                  {t("auth.enterOTP") || "Enter OTP"}
                 </label>
                 <input
                   type="text"
@@ -418,13 +502,14 @@ const BasicInfoForm = ({ onSuccess }) => {
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
                     setOtp(value);
+                    if (otpError) setOtpError(null); // Clear error on input change
                   }}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-center text-2xl tracking-widest ${
-                    otpExpired ? "border-red-500 bg-red-50" : "border-gray-300"
+                    otpExpired || phoneBlocked ? "border-red-500 bg-red-50" : otpError ? "border-orange-500 bg-orange-50" : "border-gray-300"
                   }`}
                   placeholder="000000"
                   maxLength={6}
-                  disabled={otpExpired}
+                  disabled={otpExpired || phoneBlocked}
                 />
                 {otpExpired && (
                   <p className="mt-2 text-sm text-red-600 font-medium">
@@ -434,9 +519,9 @@ const BasicInfoForm = ({ onSuccess }) => {
                 <div className="mt-2 flex items-center justify-between">
                   <button
                     onClick={handleResendOtp}
-                    disabled={loading || (otpTimer > 0 && !otpExpired)}
+                    disabled={loading || phoneBlocked || (otpTimer > 0 && !otpExpired)}
                     className={`text-sm font-medium transition-colors ${
-                      loading || (otpTimer > 0 && !otpExpired)
+                      loading || phoneBlocked || (otpTimer > 0 && !otpExpired)
                         ? "text-gray-400 cursor-not-allowed"
                         : "text-[#a797cc] hover:text-[#8ba179]"
                     }`}
@@ -484,15 +569,22 @@ const BasicInfoForm = ({ onSuccess }) => {
               {!phoneVerified && (
                 <button 
                   onClick={handleVerifyOtp}
-                  disabled={otpVerifying || otp.length !== 6}
+                  disabled={otpVerifying || otp.length !== 6 || otpExpired || phoneBlocked}
                   className="w-full py-3 px-6 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {otpVerifying ? "Verifying..." : t("Verify OTP") || "Verify OTP"}
+                  {otpVerifying 
+                    ? (t("auth.verifyingOTP") || "Verifying...") 
+                    : phoneBlocked 
+                        ? (t("auth.phoneBlocked") || "Phone Blocked")
+                        : otpExpired 
+                            ? (t("auth.otpExpired") || "OTP Expired") 
+                            : (t("auth.verifyOTP") || "Verify OTP")
+                  }
                 </button>
               )}
               
-              {/* Next Button - Show if phone is verified (email verification can be done later) */}
-              {phoneVerified && (
+              {/* Next Button - ONLY show if BOTH email AND phone are verified */}
+              {(emailVerified && phoneVerified) ? (
                 <button
                   onClick={() => onSuccess?.()}
                   className="w-full py-3 px-6 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -500,12 +592,28 @@ const BasicInfoForm = ({ onSuccess }) => {
                   <span>{t("signup.tab21") || "Next"}</span>
                   <Icon icon="material-symbols:arrow-forward" className="w-5 h-5" />
                 </button>
+              ) : (
+                <button
+                  disabled
+                  className="w-full py-3 px-6 bg-gray-300 text-gray-500 font-semibold rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+                  title={!emailVerified ? (t("auth.verifyEmailFirst") || "Please verify your email first") : (t("auth.verifyPhoneFirst") || "Please verify your phone first")}
+                >
+                  <span>{t("signup.tab21") || "Next"}</span>
+                  <Icon icon="material-symbols:arrow-forward" className="w-5 h-5" />
+                </button>
+              )}
+              
+              {/* Show what's pending */}
+              {!emailVerified && phoneVerified && (
+                <div className="text-center text-sm text-orange-600 font-medium">
+                  ⚠️ {t("auth.emailVerificationRequired") || "Please verify your email to proceed"}
+                </div>
               )}
               
               {/* Show success message if both verified */}
               {(emailVerified && phoneVerified) && (
                 <div className="text-center text-sm text-green-600 font-medium">
-                  ✓ {t("auth.allVerified") || "All verifications complete!"}
+                  ✓ {t("auth.allVerified") || "All verifications complete! Click Next to continue."}
                 </div>
               )}
             </div>

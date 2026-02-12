@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: false,
   
+  // Turbopack: Next.js 16 uses Turbopack by default - add empty config to silence webpack/turbopack warning
+  turbopack: {},
+  
   // 🚀 ULTRA-FAST PERFORMANCE OPTIMIZATIONS
   
   // Reduce compilation logs - minimal output
@@ -11,37 +14,7 @@ const nextConfig = {
     },
   },
   
-  // Advanced experimental features for maximum speed
-  experimental: {
-    // Optimize package imports (reduces bundle size by 40-60%)
-    optimizePackageImports: [
-      'react-icons',
-      'react-toastify',
-      '@iconify/react',
-      'chart.js',
-      'react-chartjs-2',
-      'react-datepicker',
-      'lucide-react',
-      'react-quill',
-      'date-fns',
-    ],
-    // Enable Turbopack optimizations
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
-    // Optimize server components (removed react-quill as it has CSS that can't be externalized)
-    serverComponentsExternalPackages: [
-      'jspdf',
-      'jspdf-autotable',
-    ],
-    // Memory optimization
-    memoryBasedWorkersCount: true,
-  },
+  // Experimental features removed to maintain compatibility with current Next.js
   
   // Webpack config - only used for production builds
   webpack: (config, { isServer, dev }) => {
@@ -120,8 +93,7 @@ const nextConfig = {
   // Compress output
   compress: true,
   
-  // Optimize production build
-  swcMinify: true,
+  // Optimize production build (leave default SWC settings)
   
   // Reduce page data
   pageExtensions: ['js', 'jsx'],

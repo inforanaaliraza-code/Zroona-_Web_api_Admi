@@ -31,26 +31,26 @@ const AdminService = {
     },
     
     FindOneService: async (query) => {
-        return new Promise((res, rej) => {
-            Admin.findOne(query).then((result) => {
-                res(result);
-            }).catch((error) => { 
-                console.error(error.message);
-                rej('could not find');
-            });
-        });
+        try {
+            await ensureConnection();
+            const result = await Admin.findOne(query);
+            return result;
+        } catch (error) {
+            console.error('[ADMIN:SERVICE] FindOneService error:', error.message || error);
+            throw error;
+        }
     },
     
     FindService: async (page = 1, limit = 10, query) => {
-        return new Promise((res, rej) => {
+        try {
+            await ensureConnection();
             const skip = (page - 1) * limit;
-            Admin.find(query).skip(skip).limit(limit).then((result) => {
-                res(result);
-            }).catch((error) => {
-                console.error(error.message);
-                rej("could not find");
-            });
-        });
+            const result = await Admin.find(query).skip(skip).limit(limit);
+            return result;
+        } catch (error) {
+            console.error('[ADMIN:SERVICE] FindService error:', error.message || error);
+            throw error;
+        }
     },
     
     FindByIdAndUpdateService: async (userId, value) => {
@@ -69,25 +69,25 @@ const AdminService = {
     },
     
     FindByIdAndDeleteService: async (userId) => {
-        return new Promise((res, rej) => {
-            Admin.findByIdAndDelete(userId).then((result) => {
-                res(result);
-            }).catch((error) => { 
-                console.error(error.message);
-                rej('could not find');
-            });
-        });
+        try {
+            await ensureConnection();
+            const result = await Admin.findByIdAndDelete(userId);
+            return result;
+        } catch (error) {
+            console.error('[ADMIN:SERVICE] FindByIdAndDeleteService error:', error.message || error);
+            throw error;
+        }
     },
     
     CountDocumentService: async (query = {}) => {
-        return new Promise((res, rej) => {
-            Admin.countDocuments(query).then((result) => {
-                res(result);
-            }).catch((error) => {
-                console.error(error.message);
-                rej('could not count');
-            });
-        });
+        try {
+            await ensureConnection();
+            const result = await Admin.countDocuments(query);
+            return result;
+        } catch (error) {
+            console.error('[ADMIN:SERVICE] CountDocumentService error:', error.message || error);
+            throw error;
+        }
     },
 };
 

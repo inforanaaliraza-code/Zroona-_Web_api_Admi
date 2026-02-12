@@ -174,6 +174,15 @@ export default function EventCard({
                     />
                     {/* Gradient overlay for better text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    
+                    {/* Cancelled Badge - Show when event is cancelled */}
+                    {(event.is_cancelled === true || event.event_status === 'cancelled') && (
+                        <div className={`absolute top-3 ${isRTL ? 'left-3' : 'right-3'} flex items-center gap-1.5 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg z-10`}>
+                            <Icon icon="lucide:x-circle" className="w-4 h-4" />
+                            <span>{t('events.cancelled') || 'Cancelled'}</span>
+                        </div>
+                    )}
+                    
                     {/* Date & Time Badge - Enhanced - Fixed overflow */}
                     <div className={`absolute top-3 ${isRTL ? 'right-3' : 'left-3'} flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-lg max-w-[calc(100%-24px)]`}>
                         <Icon icon="lucide:calendar" className="w-4 h-4 text-white flex-shrink-0" />

@@ -121,6 +121,9 @@ export default function GuestSignUpForm() {
     const [emailTimer, setEmailTimer] = useState(60); // 1 minute timer for email verification
     const [otpExpired, setOtpExpired] = useState(false);
     const [emailExpired, setEmailExpired] = useState(false);
+    const [otpError, setOtpError] = useState(null); // For showing prominent OTP errors
+    const [phoneBlocked, setPhoneBlocked] = useState(false); // For phone blocked state
+    const [blockTimeRemaining, setBlockTimeRemaining] = useState(0); // Minutes remaining for block
 
     // Set max date only on client side to prevent hydration mismatch
     useEffect(() => {
@@ -211,8 +214,16 @@ export default function GuestSignUpForm() {
                         const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
                         return !isNaN(numValue) && [1, 2, 3].includes(numValue);
                     }),
-                date_of_birth: Yup.date()
-                    .required(t("auth.dobRequired") || "Date of birth is required"),
+                date_of_birth: Yup.string()
+                    .required(t("auth.dobRequired") || "Date of birth is required")
+                    .test('valid-format', t("auth.dobInvalidFormat") || "Date must be in DD/MM/YYYY format", function (value) {
+                        if (!value) return false;
+                        // Check if it's a complete DD/MM/YYYY format
+                        if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                            return false;
+                        }
+                        return true;
+                    }),
             country: Yup.string()
                 .required(t("signup.countryRequired") || "Country is required"),
             city: Yup.string()
@@ -258,13 +269,41 @@ export default function GuestSignUpForm() {
                     const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
                     return !isNaN(numValue) && [1, 2, 3].includes(numValue);
                 }),
-            date_of_birth: Yup.date()
+            date_of_birth: Yup.string()
                 .required(t("auth.dobRequired") || "Date of birth is required")
-                .max(todayDate, t("auth.dobFuture") || "Date of birth cannot be in the future")
+                .test('valid-format', t("auth.dobInvalidFormat") || "Date must be in DD/MM/YYYY format", function (value) {
+                    if (!value) return false;
+                    // Check if it's a complete DD/MM/YYYY format
+                    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                        return false;
+                    }
+                    return true;
+                })
+                .test('valid-date', t("auth.dobInvalidDate") || "Please enter a valid date", function (value) {
+                    if (!value) return false;
+                    const [day, month, year] = value.split('/');
+                    const dayNum = parseInt(day, 10);
+                    const monthNum = parseInt(month, 10);
+                    const yearNum = parseInt(year, 10);
+
+                    // Validate month and day ranges
+                    if (monthNum < 1 || monthNum > 12) return false;
+                    if (dayNum < 1 || dayNum > 31) return false;
+
+                    // Check for valid date
+                    const dateObj = new Date(`${year}-${month}-${day}`);
+                    if (isNaN(dateObj.getTime())) return false;
+
+                    // Check if date is in future
+                    if (dateObj > new Date()) return false;
+
+                    return true;
+                })
                 .test('min-age', t("auth.dobMinAge") || "You must be at least 18 years old", function (value) {
-                    if (!value) return true;
+                    if (!value) return false;
+                    const [day, month, year] = value.split('/');
+                    const birthDate = new Date(`${year}-${month}-${day}`);
                     const today = new Date();
-                    const birthDate = new Date(value);
                     const age = today.getFullYear() - birthDate.getFullYear();
                     const monthDiff = today.getMonth() - birthDate.getMonth();
                     const dayDiff = today.getDate() - birthDate.getDate();
@@ -283,10 +322,8 @@ export default function GuestSignUpForm() {
                 .required(t("signup.cityRequired") || "City is required"),
             acceptPrivacy: Yup.boolean()
                 .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
-            acceptPrivacy: Yup.boolean()
-                .oneOf([true], t("auth.privacyRequired") || "You must accept the privacy policy"),
             acceptTerms: Yup.boolean()
-                .oneOf([true], t("termsRequired") || "You must accept the terms and conditions"),
+                .oneOf([true], t("auth.termsRequired") || "You must accept the terms and conditions"),
         });
     }, [t, todayDate]);
 
@@ -457,6 +494,7 @@ export default function GuestSignUpForm() {
         }
         try {
             setOtpVerifying(true);
+            setOtpError(null); // Clear previous errors
             const response = await fetch(`${BASE_API_URL}user/verify-signup-otp`, {
                 method: 'POST',
                 headers: {
@@ -474,6 +512,8 @@ export default function GuestSignUpForm() {
             if (data?.status === 1 || data?.success) {
                 setPhoneVerified(true);
                 setOtpTimer(0); // Stop timer
+                setOtpError(null);
+                setPhoneBlocked(false);
                 if (data?.data?.user?.is_verified) {
                     // Both verified - success!
                     toast.success(data.message || t("auth.accountVerifiedLogin") || "Account verified successfully! You can now login.");
@@ -484,11 +524,31 @@ export default function GuestSignUpForm() {
                     toast.success(data.message || t("auth.phoneVerifiedEmail") || "Phone verified! Please verify your email to complete registration.");
                 }
             } else {
-                toast.error(data.message || t("auth.invalidOTP") || "Invalid OTP. Please try again.");
+                // Parse error message for blocked phone or too many attempts
+                const errorMessage = data.message || "";
+                const isBlocked = errorMessage.toLowerCase().includes("blocked") || 
+                                  errorMessage.toLowerCase().includes("too many") ||
+                                  errorMessage.toLowerCase().includes("محاولات");
+                
+                // Extract minutes from message if present
+                const minutesMatch = errorMessage.match(/(\d+)\s*(minutes?|دقيقة)/i);
+                if (minutesMatch) {
+                    setBlockTimeRemaining(parseInt(minutesMatch[1]));
+                }
+                
+                if (isBlocked) {
+                    setPhoneBlocked(true);
+                    setOtpError(errorMessage);
+                } else {
+                    setOtpError(errorMessage || t("auth.invalidOTP") || "Invalid OTP. Please try again.");
+                }
+                toast.error(errorMessage || t("auth.invalidOTP") || "Invalid OTP. Please try again.");
             }
         } catch (error) {
             console.error("Verify OTP error:", error);
-            toast.error(t("auth.otpVerifyFailed") || "Failed to verify OTP. Please try again.");
+            const errorMsg = t("auth.otpVerifyFailed") || "Failed to verify OTP. Please try again.";
+            setOtpError(errorMsg);
+            toast.error(errorMsg);
         } finally {
             setOtpVerifying(false);
         }
@@ -742,17 +802,6 @@ export default function GuestSignUpForm() {
                                         }}
                                         onBlur={(e) => {
                                             formik.setFieldTouched("date_of_birth", true);
-                                            // Convert DD/MM/YYYY to Date object for validation
-                                            const value = e.target.value;
-                                            if (value && value.length === 10) {
-                                                const [day, month, year] = value.split('/');
-                                                if (day && month && year) {
-                                                    const dateObj = new Date(`${year}-${month}-${day}`);
-                                                    if (!isNaN(dateObj.getTime())) {
-                                                        formik.setFieldValue("date_of_birth", dateObj.toISOString().split('T')[0]);
-                                                    }
-                                                }
-                                            }
                                         }}
                                         placeholder="DD/MM/YYYY"
                                         maxLength={10}
@@ -927,6 +976,51 @@ export default function GuestSignUpForm() {
                                 </div>
                             </div>
 
+                            {/* OTP Error Alert - Prominent Display */}
+                            {otpError && !phoneVerified && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`mb-4 p-4 rounded-lg border-2 ${
+                                        phoneBlocked 
+                                            ? 'bg-red-100 border-red-400 text-red-800' 
+                                            : 'bg-orange-100 border-orange-400 text-orange-800'
+                                    }`}
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <Icon 
+                                            icon={phoneBlocked ? "material-symbols:block" : "material-symbols:warning"} 
+                                            className={`w-6 h-6 flex-shrink-0 mt-0.5 ${phoneBlocked ? 'text-red-600' : 'text-orange-600'}`}
+                                        />
+                                        <div className="flex-1">
+                                            <h4 className={`font-semibold mb-1 ${phoneBlocked ? 'text-red-800' : 'text-orange-800'}`}>
+                                                {phoneBlocked 
+                                                    ? (t("auth.phoneBlockedTitle") || "Phone Number Blocked")
+                                                    : (t("auth.otpErrorTitle") || "Verification Failed")
+                                                }
+                                            </h4>
+                                            <p className="text-sm">
+                                                {otpError}
+                                            </p>
+                                            {phoneBlocked && blockTimeRemaining > 0 && (
+                                                <div className="mt-2 flex items-center gap-2">
+                                                    <Icon icon="material-symbols:schedule" className="w-4 h-4" />
+                                                    <span className="text-sm font-medium">
+                                                        {t("auth.tryAgainIn") || "Try again in"}: {blockTimeRemaining} {t("auth.minutes") || "minutes"}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <button 
+                                            onClick={() => { setOtpError(null); setPhoneBlocked(false); }}
+                                            className="text-gray-500 hover:text-gray-700"
+                                        >
+                                            <Icon icon="material-symbols:close" className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+
                             {/* OTP Input */}
                             {!phoneVerified && (
                                 <div className="mb-6">
@@ -939,13 +1033,14 @@ export default function GuestSignUpForm() {
                                         onChange={(e) => {
                                             const value = e.target.value.replace(/\D/g, '').slice(0, 6);
                                             setOtp(value);
+                                            if (otpError) setOtpError(null); // Clear error on input change
                                         }}
                                         className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-center text-2xl tracking-widest ${
-                                            otpExpired ? "border-red-500 bg-red-50" : "border-gray-300"
+                                            otpExpired || phoneBlocked ? "border-red-500 bg-red-50" : otpError ? "border-orange-500 bg-orange-50" : "border-gray-300"
                                         }`}
                                         placeholder="000000"
                                         maxLength={6}
-                                        disabled={otpExpired}
+                                        disabled={otpExpired || phoneBlocked}
                                     />
                                     {otpExpired && (
                                         <p className="mt-2 text-sm text-red-600 font-medium">
@@ -955,9 +1050,9 @@ export default function GuestSignUpForm() {
                                     <div className="mt-2 flex items-center justify-between">
                                         <button
                                             onClick={handleResendOtp}
-                                            disabled={loading || (otpTimer > 0 && !otpExpired)}
+                                            disabled={loading || phoneBlocked || (otpTimer > 0 && !otpExpired)}
                                             className={`text-sm font-medium transition-colors ${
-                                                loading || (otpTimer > 0 && !otpExpired)
+                                                loading || phoneBlocked || (otpTimer > 0 && !otpExpired)
                                                     ? "text-gray-400 cursor-not-allowed"
                                                     : "text-[#a797cc] hover:text-[#8ba179]"
                                             }`}
@@ -978,10 +1073,17 @@ export default function GuestSignUpForm() {
                                 {!phoneVerified && (
                                     <button
                                         onClick={handleVerifyOtp}
-                                        disabled={otpVerifying || otp.length !== 6 || otpExpired}
+                                        disabled={otpVerifying || otp.length !== 6 || otpExpired || phoneBlocked}
                                         className="w-full py-3 px-4 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                                     >
-                                        {otpVerifying ? t("auth.verifyingOTP") || "Verifying..." : otpExpired ? t("auth.otpExpired") || "OTP Expired" : t("auth.verifyOTP") || "Verify OTP"}
+                                        {otpVerifying 
+                                            ? (t("auth.verifyingOTP") || "Verifying...") 
+                                            : phoneBlocked 
+                                                ? (t("auth.phoneBlocked") || "Phone Blocked")
+                                                : otpExpired 
+                                                    ? (t("auth.otpExpired") || "OTP Expired") 
+                                                    : (t("auth.verifyOTP") || "Verify OTP")
+                                        }
                                     </button>
                                 )}
 

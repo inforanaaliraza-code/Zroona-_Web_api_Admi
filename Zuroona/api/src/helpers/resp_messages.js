@@ -114,12 +114,32 @@ module.exports = (lang = "en") => {
         ar: "نظام إدارة المحتوى غير موجود."
     };
     const invalid_otp = {
-        en: "Invalid OTP",
-        ar: "OTP غير صالح"
+        en: "Invalid OTP. Please check and try again.",
+        ar: "رمز OTP غير صالح. يرجى التحقق والمحاولة مرة أخرى."
     };
     const otp_verified = {
         en: "OTP verified successfully!",
         ar: "تم التحقق من OTP بنجاح!"
+    };
+    const otp_expired = {
+        en: "OTP has expired. Please request a new one.",
+        ar: "انتهت صلاحية رمز OTP. يرجى طلب رمز جديد."
+    };
+    const too_many_wrong_attempts = {
+        en: "Too many wrong attempts. Your account is temporarily blocked. Please try again after {minutes} minutes.",
+        ar: "محاولات خاطئة كثيرة جداً. تم حظر حسابك مؤقتاً. يرجى المحاولة مرة أخرى بعد {minutes} دقيقة."
+    };
+    const phone_blocked = {
+        en: "This phone number is temporarily blocked due to multiple failed attempts. Please try again after {minutes} minutes.",
+        ar: "تم حظر رقم الهاتف هذا مؤقتاً بسبب محاولات فاشلة متعددة. يرجى المحاولة مرة أخرى بعد {minutes} دقيقة."
+    };
+    const otp_sent_success = {
+        en: "OTP sent successfully! Please check your phone.",
+        ar: "تم إرسال رمز OTP بنجاح! يرجى التحقق من هاتفك."
+    };
+    const otp_resend_wait = {
+        en: "Please wait {seconds} seconds before requesting a new OTP.",
+        ar: "يرجى الانتظار {seconds} ثانية قبل طلب رمز OTP جديد."
     };
 
     const update_success = {
@@ -209,6 +229,36 @@ module.exports = (lang = "en") => {
     const payment_capture_failed = {
         en: "Failed to capture payment.",
         ar: "فشل في تحصيل الدفع."
+    };
+
+    const payment_id_required = {
+        en: "Payment ID is required.",
+        ar: "معرف الدفع مطلوب."
+    };
+
+    const payment_verification_failed = {
+        en: "Unable to verify payment. Please try again or contact support.",
+        ar: "تعذر التحقق من الدفع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم."
+    };
+
+    const payment_declined = {
+        en: "Payment was declined by your bank. Please check your balance and try again.",
+        ar: "تم رفض الدفع من قبل البنك الخاص بك. يرجى التحقق من رصيدك والمحاولة مرة أخرى."
+    };
+
+    const payment_not_completed = {
+        en: "Payment is not complete. Please try again.",
+        ar: "لم يكتمل الدفع. يرجى المحاولة مرة أخرى."
+    };
+
+    const payment_amount_mismatch = {
+        en: "Payment amount does not match booking amount. Please contact support.",
+        ar: "مبلغ الدفع لا يتطابق مع مبلغ الحجز. يرجى الاتصال بالدعم."
+    };
+
+    const payment_booking_mismatch = {
+        en: "Payment does not match this booking. Please contact support.",
+        ar: "الدفع لا يتطابق مع هذا الحجز. يرجى الاتصال بالدعم."
     };
 
     const refund_booking_not_cancelled = {
@@ -452,6 +502,12 @@ module.exports = (lang = "en") => {
         webhook_processed: webhook_processed[lang],
         webhook_processing_error: webhook_processing_error[lang],
         payment_capture_failed: payment_capture_failed[lang],
+        payment_id_required: payment_id_required[lang],
+        payment_verification_failed: payment_verification_failed[lang],
+        payment_declined: payment_declined[lang],
+        payment_not_completed: payment_not_completed[lang],
+        payment_amount_mismatch: payment_amount_mismatch[lang],
+        payment_booking_mismatch: payment_booking_mismatch[lang],
         refund_booking_not_cancelled: refund_booking_not_cancelled[lang],
         refund_booking_not_paid: refund_booking_not_paid[lang],
         refund_request_pending: refund_request_pending[lang],
@@ -474,6 +530,11 @@ module.exports = (lang = "en") => {
         update_success: update_success[lang],
         otp_verified: otp_verified[lang],
         invalid_otp: invalid_otp[lang],
+        otp_expired: otp_expired[lang],
+        too_many_wrong_attempts: too_many_wrong_attempts[lang],
+        phone_blocked: phone_blocked[lang],
+        otp_sent_success: otp_sent_success[lang],
+        otp_resend_wait: otp_resend_wait[lang],
         cmsNotFound: cmsNotFound[lang],
         cmsTypeRequired: cmsTypeRequired[lang],
         eventNotFound: eventNotFound[lang],

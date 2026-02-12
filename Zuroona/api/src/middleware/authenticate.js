@@ -90,7 +90,17 @@ const Authenticate = {
 		let token = req.headers["authorization"];
 
 		if (!token) {
-			return Response.badRequestResponse(res, "Token Not Found (:");
+			console.warn("[AUTH] Token Not Found - Missing authorization header", {
+				ip: req.ip,
+				path: req.path,
+				timestamp: new Date().toISOString(),
+			});
+			return Response.unauthorizedResponse(
+				res,
+				null,
+				401,
+				"Authentication token is missing. Please login to continue."
+			);
 		}
 
 		// Remove 'Bearer ' prefix if present
@@ -114,19 +124,41 @@ const Authenticate = {
 			const user = await service.FindOneService({ _id: req.userId });
 
 			if (!user) {
+				console.warn("[AUTH] User not found for valid token", {
+					userId: req.userId,
+					role: req.role,
+					timestamp: new Date().toISOString(),
+				});
 				return Response.unauthorizedResponse(
 					res,
 					null,
 					401,
-					"Unauthorized user!"
+					"User account not found. Please contact support if this persists."
 				);
 			}
 			req.lang = user.language || "en";
 			req.user = user;
 			next();
 		} catch (error) {
-			console.error("Token verification error:", error.message);
-			return Response.badRequestResponse(res, "Invalid Token (:");
+			console.error("[AUTH] Token verification error:", {
+				message: error.message,
+				name: error.name,
+				ip: req.ip,
+				timestamp: new Date().toISOString(),
+			});
+
+			// Provide specific error messages for different token issues
+			let errorMessage = "Authentication failed. Please login again.";
+			
+			if (error.name === "TokenExpiredError") {
+				errorMessage = "Your authentication token has expired. Please login again.";
+			} else if (error.name === "JsonWebTokenError") {
+				errorMessage = "Invalid authentication token. Please login again.";
+			} else if (error.message.includes("malformed")) {
+				errorMessage = "Malformed authentication token. Please login again.";
+			}
+
+			return Response.unauthorizedResponse(res, null, 401, errorMessage);
 		}
 	},
 

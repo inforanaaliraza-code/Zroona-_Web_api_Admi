@@ -116,6 +116,29 @@ const eventSchema = new Schema(
 		neighborhood: {
 			type: String,
 		},
+		// Cancellation fields
+		is_cancelled: {
+			type: Boolean,
+			default: false,
+		},
+		event_status: {
+			type: String,
+			enum: ['active', 'cancelled', 'completed', 'pending'],
+			default: 'active',
+		},
+		cancelled_at: {
+			type: Date,
+			default: null,
+		},
+		cancelled_reason: {
+			type: String,
+			default: null,
+		},
+		cancelled_by: {
+			type: Schema.Types.ObjectId,
+			ref: 'Organizer',
+			default: null,
+		},
 	},
 	{ timestamps: true }
 );

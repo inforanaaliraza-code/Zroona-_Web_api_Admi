@@ -18,8 +18,8 @@ const createAdmin = async () => {
         console.log('='.repeat(70) + '\n');
 
         // Admin credentials
-        const email = "admin@zuroona.com";
-        const password = "12345678";
+        const email = "admin@zuroona.sa";
+        const password = "admin@zuroona.sa@#123";
         const firstName = "Admin";
         const lastName = "Zuroona";
 

@@ -84,7 +84,16 @@ const DropdownUser = ({ profile }) => {
           size={40}
           className="flex-shrink-0"
         />
-        <span className="text-xs text-gray-600">
+        {/* Role Name - Guest */}
+        <span className="text-left hidden sm:block">
+          <span className="block text-sm text-white font-semibold truncate max-w-[6rem]">
+            {userData?.first_name || t("auth.guest") || "Guest"}
+          </span>
+          <span className="block text-xs text-white/80 font-medium">
+            {t("auth.guest") || "Guest"}
+          </span>
+        </span>
+        <span className="text-xs text-white/80">
           {dropdownOpen ? <FaChevronUp /> : <FaChevronDown />}
         </span>
       </button>
