@@ -50,14 +50,23 @@ body {
   margin-inline-start: 0 !important;
 }
 
-/* Green tick only - minimal success indicator (no message box) */
+/* Green tick only - NO body div/box, just the icon floats */
+.green-tick-toast,
+.green-tick-toast.Toastify__toast,
 .green-tick-toast.Toastify__toast--success {
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
+  margin: 0 !important;
   min-width: auto !important;
+  max-width: none !important;
+  border: none !important;
 }
-.green-tick-toast .Toastify__toast-body {
+.green-tick-toast .Toastify__toast-body,
+.green-tick-toast .Toastify__toast-body>div {
   padding: 0 !important;
   margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }

@@ -24,28 +24,36 @@ export default function ClientProviders({ children }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Use double RAF to ensure React hydration is complete before changing language
+    // CRITICAL: Use double RAF to ensure React hydration is complete
+    // This prevents hydration mismatches by delaying DOM changes until after React finishes
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        // Set mounted flag
         setMounted(true);
         
-        // Get language from localStorage after mount - FAST, NO BLOCKING
-        if (typeof window !== "undefined") {
-          const storedLanguage = localStorage.getItem("i18nextLng") || "en";
-          const currentLanguage = storedLanguage === "ar" ? "ar" : "en";
-          
-          // Update i18n language
-          if (i18n.language !== currentLanguage) {
-            i18n.changeLanguage(currentLanguage);
+        // Get language from localStorage ONLY after hydration
+        if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+          try {
+            const storedLanguage = localStorage.getItem("i18nextLng") || "en";
+            const currentLanguage = storedLanguage === "ar" ? "ar" : "en";
+            
+            // Only update if different to avoid unnecessary re-renders
+            if (language !== currentLanguage) {
+              setLanguage(currentLanguage);
+              
+              // Update i18n language
+              if (i18n.language !== currentLanguage) {
+                i18n.changeLanguage(currentLanguage);
+              }
+              
+              // Update document attributes
+              const isRTL = currentLanguage === "ar";
+              document.documentElement.setAttribute("dir", isRTL ? "rtl" : "ltr");
+              document.documentElement.setAttribute("lang", currentLanguage);
+              document.documentElement.setAttribute("data-hydrated", "true");
+            }
+          } catch (error) {
+            console.warn("[ClientProviders] Error during hydration:", error);
           }
-          
-          setLanguage(currentLanguage);
-          
-          // Set dir attribute based on language
-          const isRTL = currentLanguage === "ar";
-          document.documentElement.dir = isRTL ? "rtl" : "ltr";
-          document.documentElement.lang = currentLanguage;
         }
       });
     });
@@ -57,8 +65,8 @@ export default function ClientProviders({ children }) {
       setLanguage(lng);
       const isRTL = lng === "ar";
       if (typeof window !== "undefined") {
-        document.documentElement.dir = isRTL ? "rtl" : "ltr";
-        document.documentElement.lang = lng;
+        document.documentElement.setAttribute("dir", isRTL ? "rtl" : "ltr");
+        document.documentElement.setAttribute("lang", lng);
       }
     };
 
@@ -79,8 +87,19 @@ export default function ClientProviders({ children }) {
           rtl={false}
           style={{ direction: "ltr" }}
           toastStyle={{ direction: "ltr", textAlign: "left" }}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
         />
-        <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading...</div>}>
+        <Suspense fallback={
+          <div className="w-full h-screen flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading...</p>
+            </div>
+          </div>
+        }>
           <div className="w-full" suppressHydrationWarning>{children}</div>
         </Suspense>
       </I18nextProvider>

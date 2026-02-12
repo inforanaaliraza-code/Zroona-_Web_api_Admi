@@ -1120,7 +1120,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                         </div>
                         
                         {/* Professional Tab Navigation with Icons */}
-                        <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-2 -mb-4">
+                        <div className="flex gap-1 sm:gap-2 overflow-x-auto pb-3 relative z-10">
                             {[
                                 { id: 'basic', label: 'Basic Info', icon: 'lucide:file-text' },
                                 { id: 'details', label: 'Details', icon: 'lucide:info' },

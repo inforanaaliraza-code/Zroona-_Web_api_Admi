@@ -27,7 +27,9 @@ export function showGreenTick() {
     closeButton: false,
     hideProgressBar: true,
     autoClose: 1500,
-    bodyClassName: "!p-0 !bg-transparent !shadow-none !min-w-0",
-    className: "green-tick-toast !min-w-0 !max-w-none !p-0 !bg-transparent !shadow-lg !rounded-full !border-0",
+    theme: "light",
+    style: { background: "transparent", boxShadow: "none" },
+    bodyClassName: "!p-0 !bg-transparent !shadow-none !min-w-0 !m-0",
+    className: "green-tick-toast !min-w-0 !max-w-none !p-0 !m-0 !bg-transparent !shadow-none !border-0 !rounded-full",
   });
 }

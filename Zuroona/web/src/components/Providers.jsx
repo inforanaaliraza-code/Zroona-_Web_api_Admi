@@ -9,67 +9,79 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "@/lib/i18n";
 import RTLHandler from "@/components/RTLHandler/RTLHandler";
 
-// Dynamic ToastContainer that respects RTL/LTR (GLOBAL)
+/**
+ * DynamicToastContainer - Handles RTL/LTR without hydration mismatch
+ * CRITICAL: Uses useEffect to delay RTL detection until after hydration
+ * This ensures server and client render identical HTML initially
+ */
 function DynamicToastContainer() {
     const [isRTL, setIsRTL] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        setIsMounted(true);
+        // CRITICAL: Only update RTL AFTER hydration via useEffect
+        // This ensures server-rendered HTML matches client-rendered HTML
         
-        // Get language from localStorage or default
-        const getIsRTL = () => {
-            if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
-                try {
-                    const lang = localStorage.getItem("i18nextLng") || "en";
-                    return lang === "ar";
-                } catch (e) {
-                    return false; // Default to LTR (English)
-                }
+        const updateRTL = () => {
+            if (typeof window === "undefined" || typeof localStorage === "undefined") {
+                return;
             }
-            return false; // Default to LTR (English)
+
+            try {
+                const lang = localStorage.getItem("i18nextLng") || "en";
+                const isArabic = lang === "ar";
+                setIsRTL(isArabic);
+            } catch (error) {
+                console.warn("[DynamicToastContainer] Error reading localStorage:", error);
+                setIsRTL(false);
+            }
         };
 
-        setIsRTL(getIsRTL());
-        
-        // Listen for language changes globally (from i18n)
+        // Update immediately on mount
+        updateRTL();
+        setIsMounted(true);
+
+        // Listen for language changes
         const handleLanguageChange = (lang) => {
             setIsRTL(lang === "ar");
         };
-        
+
         i18n.on("languageChanged", handleLanguageChange);
-        
-        // Also listen for storage events (language changes in other tabs/components)
+
+        // Listen for storage changes in other tabs
         const handleStorageChange = (e) => {
             if (e.key === "i18nextLng" && e.newValue) {
                 setIsRTL(e.newValue === "ar");
             }
         };
-        
-        window.addEventListener("storage", handleStorageChange);
-        
+
+        if (typeof window !== "undefined") {
+            window.addEventListener("storage", handleStorageChange);
+        }
+
         return () => {
             i18n.off("languageChanged", handleLanguageChange);
-            window.removeEventListener("storage", handleStorageChange);
+            if (typeof window !== "undefined") {
+                window.removeEventListener("storage", handleStorageChange);
+            }
         };
     }, []);
 
-    // Prevent hydration mismatch by not rendering until mounted
-    if (!isMounted) {
-        return (
-            <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                rtl={false}
-            />
-        );
-    }
-
+    // Always render with LTR until mounted to prevent hydration mismatch
+    // The rtl prop is only set after hydration is complete
     return (
         <ToastContainer
-            position={isRTL ? "top-left" : "top-right"}
+            position="top-right"
             autoClose={3000}
-            rtl={isRTL}
+            hideProgressBar={false}
+            newestOnTop={true}
+            closeOnClick
+            rtl={isMounted && isRTL}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+            data-hydrated={isMounted}
         />
     );
 }

@@ -820,7 +820,7 @@ export default function CreateEventPage() {
                             {eventId ? t('add.tab21') || 'Edit Event' : t('add.tab18') || 'Create Event'}
                         </h1>
                         <p className="text-gray-500 text-sm md:text-base">
-                            {eventId ? 'Update your event details' : 'Fill in the details to create an amazing event experience'}
+                            {eventId ? t('add.updateEventDetails') || 'Update your event details' : t('add.fillInDetails') || 'Fill in the details to create an amazing event experience'}
                         </p>
                     </div>
 
@@ -901,7 +901,7 @@ export default function CreateEventPage() {
                                     <div className="group">
                                         <Label className="text-sm font-semibold mb-2 block text-gray-700 flex items-center gap-2">
                                             <Icon icon="lucide:type" className="w-4 h-4 text-[#a797cc]" />
-                                            Event Title <span className="text-red-500">*</span>
+                                            {t('add.eventTitle') || 'Event Title'} <span className="text-red-500">*</span>
                                         </Label>
                                         <div className="relative">
                                             <Input
@@ -927,7 +927,7 @@ export default function CreateEventPage() {
                                     <div className="group">
                                         <Label className="text-sm font-semibold mb-2 block text-gray-700 flex items-center gap-2">
                                             <Icon icon="lucide:calendar" className="w-4 h-4 text-[#a797cc]" />
-                                            Event Date <span className="text-red-500">*</span>
+                                            {t('add.eventDate') || 'Event Date'} <span className="text-red-500">*</span>
                                         </Label>
                                         <div className="bg-gray-50/50 p-1 rounded-xl border-2 border-gray-200 hover:border-purple-200 transition-all">
                                             <DatePicker
@@ -951,7 +951,7 @@ export default function CreateEventPage() {
                                                 <div className="w-6 h-6 rounded-lg bg-green-500 flex items-center justify-center">
                                                     <Icon icon="lucide:play" className="w-3 h-3 text-white" />
                                                 </div>
-                                                Start Time <span className="text-red-500">*</span>
+                                                {t('add.startTime') || 'Start Time'} <span className="text-red-500">*</span>
                                             </Label>
                                             <TimePicker
                                                 value={formik.values.event_start_time}
@@ -969,7 +969,7 @@ export default function CreateEventPage() {
                                                 <div className="w-6 h-6 rounded-lg bg-red-500 flex items-center justify-center">
                                                     <Icon icon="lucide:square" className="w-3 h-3 text-white" />
                                                 </div>
-                                                End Time <span className="text-red-500">*</span>
+                                                {t('add.endTime') || 'End Time'} <span className="text-red-500">*</span>
                                             </Label>
                                             <TimePicker
                                                 value={formik.values.event_end_time}
@@ -999,7 +999,7 @@ export default function CreateEventPage() {
                                     <div className="group">
                                         <Label className="text-sm font-semibold mb-2 block text-gray-700 flex items-center gap-2">
                                             <Icon icon="lucide:file-text" className="w-4 h-4 text-[#a797cc]" />
-                                            Event Description <span className="text-red-500">*</span>
+                                            {t('add.eventDescription') || 'Event Description'} <span className="text-red-500">*</span>
                                         </Label>
                                         <div className="relative">
                                             <textarea
@@ -1026,7 +1026,7 @@ export default function CreateEventPage() {
                                             <div className="w-6 h-6 rounded-lg bg-blue-500 flex items-center justify-center">
                                                 <Icon icon="lucide:users" className="w-3 h-3 text-white" />
                                             </div>
-                                            Number of Attendees <span className="text-red-500">*</span>
+                                            {t('add.numberOfAttendees') || 'Number of Attendees'} <span className="text-red-500">*</span>
                                         </Label>
                                         <div className="flex items-center gap-3">
                                             <Input
@@ -1038,8 +1038,8 @@ export default function CreateEventPage() {
                                                 className="h-12 text-lg font-semibold text-center rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 max-w-[120px]"
                                             />
                                             <div className="flex-1 bg-white/80 rounded-xl px-4 py-2 border border-blue-100">
-                                                <p className="text-xs text-gray-500">Maximum Capacity</p>
-                                                <p className="text-lg font-bold text-blue-600">{maxEventCapacity} guests</p>
+                                                <p className="text-xs text-gray-500">{t('add.maximumCapacity') || 'Maximum Capacity'}</p>
+                                                <p className="text-lg font-bold text-blue-600">{maxEventCapacity} {t('add.guests') || 'guests'}</p>
                                             </div>
                                         </div>
                                         {formik.touched.no_of_attendees && formik.errors.no_of_attendees && (
@@ -1061,7 +1061,7 @@ export default function CreateEventPage() {
                                             <Icon icon="lucide:image" className="w-4 h-4 text-[#a797cc]" />
                                             Event Images <span className="text-red-500">*</span>
                                             <span className="ml-auto text-xs font-normal text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-                                                {previewUrls.length}/5 uploaded
+                                                {previewUrls.length}/5 {t('add.uploaded') || 'uploaded'}
                                             </span>
                                         </Label>
                                         
@@ -1110,10 +1110,10 @@ export default function CreateEventPage() {
                                                                     {t('add.tab4') || 'Upload Event Images'}
                                                                 </p>
                                                                 <p className="text-gray-400 text-sm">
-                                                                    Drag & drop or click to browse (Max 5 images)
+                                                                    {t('add.dragDropBrowse') || 'Drag & drop or click to browse (Max 5 images)'}
                                                                 </p>
                                                                 <p className="text-xs text-gray-400 mt-2">
-                                                                    Supported: JPG, PNG, WebP
+                                                                    {t('add.supportedFormats') || 'Supported: JPG, PNG, WebP'}
                                                                 </p>
                                                             </>
                                                         )}
@@ -1362,7 +1362,7 @@ export default function CreateEventPage() {
                                         <div>
                                             <Label className="text-xs font-semibold mb-1.5 block flex items-center gap-2">
                                                 <Icon icon="lucide:thumbs-up" className="w-4 h-4 text-green-600" />
-                                                Do&apos;s Instructions (Optional)
+                                                {t('add.dosInstructions') || "Do's Instructions (Optional)"}
                                             </Label>
                                             <textarea
                                                 placeholder="Add things guests SHOULD do or follow (e.g., Wear comfortable shoes, Bring water bottle, etc.)"
@@ -1371,7 +1371,7 @@ export default function CreateEventPage() {
                                                 className="w-full h-24 px-3 py-2 bg-gray-50 rounded-md text-xs resize-none focus:outline-none focus:ring-2 focus:ring-green-500 border border-green-200"
                                             />
                                             <p className="text-xs text-gray-500 mt-1">
-                                                ({formik.values.dos_instruction?.length || 0}/500 characters)
+                                                ({formik.values.dos_instruction?.length || 0}/500 {t('add.characters') || 'characters'})
                                             </p>
                                         </div>
 
@@ -1379,7 +1379,7 @@ export default function CreateEventPage() {
                                         <div>
                                             <Label className="text-xs font-semibold mb-1.5 block flex items-center gap-2">
                                                 <Icon icon="lucide:thumbs-down" className="w-4 h-4 text-red-600" />
-                                                Don&apos;ts Instructions (Optional)
+                                                {t('add.dontInstructions') || "Don'ts Instructions (Optional)"}
                                             </Label>
                                             <textarea
                                                 placeholder="Add things guests SHOULD NOT do (e.g., Do not wear high heels, Do not bring pets, etc.)"
@@ -1388,7 +1388,7 @@ export default function CreateEventPage() {
                                                 className="w-full h-24 px-3 py-2 bg-gray-50 rounded-md text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-500 border border-red-200"
                                             />
                                             <p className="text-xs text-gray-500 mt-1">
-                                                ({formik.values.do_not_instruction?.length || 0}/500 characters)
+                                                ({formik.values.do_not_instruction?.length || 0}/500 {t('add.characters') || 'characters'})
                                             </p>
                                         </div>
 
@@ -1397,12 +1397,12 @@ export default function CreateEventPage() {
                                             <div className="flex gap-2">
                                                 <Icon icon="lucide:info" className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                                                 <div>
-                                                    <p className="text-xs font-semibold text-blue-900">💡 Tips:</p>
+                                                    <p className="text-xs font-semibold text-blue-900">{t('add.tips') || '💡 Tips:'}</p>
                                                     <p className="text-xs text-blue-800 mt-1">
-                                                        • Clear instructions help guests prepare better<br/>
-                                                        • List practical requirements and expectations<br/>
-                                                        • Keep instructions concise and easy to understand<br/>
-                                                        • Both fields are optional - fill only if needed
+                                                        • {t('add.clearInstructionsTip') || 'Clear instructions help guests prepare better'}<br/>
+                                                        • {t('add.practicalRequirementsTip') || 'List practical requirements and expectations'}<br/>
+                                                        • {t('add.conciseInstructionsTip') || 'Keep instructions concise and easy to understand'}<br/>
+                                                        • {t('add.optionalFieldsTip') || 'Both fields are optional - fill only if needed'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -1416,23 +1416,23 @@ export default function CreateEventPage() {
                                 <div className="space-y-3">
                                     <div className="bg-gray-50 p-3 rounded-md space-y-2">
                                         <div>
-                                            <span className="text-xs font-semibold text-gray-600">Event Name:</span>
+                                            <span className="text-xs font-semibold text-gray-600">{t('add.eventNameLabel') || 'Event Name:'}  </span>
                                             <p className="text-xs mt-0.5">{formik.values.event_name || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-xs font-semibold text-gray-600">Date & Time:</span>
+                                            <span className="text-xs font-semibold text-gray-600">{t('add.dateAndTimeLabel') || 'Date & Time:'}</span>
                                             <p className="text-xs mt-0.5">{formik.values.event_date} {formik.values.event_start_time} - {formik.values.event_end_time}</p>
                                         </div>
                                         <div>
-                                            <span className="text-xs font-semibold text-gray-600">Description:</span>
+                                            <span className="text-xs font-semibold text-gray-600">{t('add.descriptionLabel') || 'Description'}:</span>
                                             <p className="text-xs mt-0.5">{formik.values.event_description?.substring(0, 100)}...</p>
                                         </div>
                                         <div>
-                                            <span className="text-xs font-semibold text-gray-600">Address:</span>
+                                            <span className="text-xs font-semibold text-gray-600">{t('add.addressLabel') || 'Address:'}</span>
                                             <p className="text-xs mt-0.5">{formik.values.event_address || 'N/A'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-xs font-semibold text-gray-600">Categories:</span>
+                                            <span className="text-xs font-semibold text-gray-600">{t('add.categoriesLabel') || 'Categories:'}</span>
                                             <p className="text-xs mt-0.5">
                                                 {(() => {
                                                     if (Number(eventType) === 1) {
@@ -1449,16 +1449,16 @@ export default function CreateEventPage() {
                                             </p>
                                         </div>
                                         <div>
-                                            <span className="text-xs font-semibold text-gray-600">Attendees:</span>
+                                            <span className="text-xs font-semibold text-gray-600">{t('add.attendeesLabel') || 'Attendees:'}</span>
                                             <p className="text-xs mt-0.5">{formik.values.no_of_attendees}</p>
                                         </div>
                                         <div>
-                                            <span className="text-xs font-semibold text-gray-600">Price:</span>
-                                            <p className="text-xs mt-0.5">{formik.values.event_price} SAR</p>
+                                            <span className="text-xs font-semibold text-gray-600">{t('add.priceLabel') || 'Price:'}</span>
+                                            <p className="text-xs mt-0.5">{formik.values.event_price} {t('add.sar') || 'SAR'}</p>
                                         </div>
                                         <div>
-                                            <span className="text-xs font-semibold text-gray-600">Images:</span>
-                                            <p className="text-xs mt-0.5">{eventImages.length} image(s) uploaded</p>
+                                            <span className="text-xs font-semibold text-gray-600">{t('add.imagesLabel') || 'Images:'}</span>
+                                            <p className="text-xs mt-0.5">{eventImages.length} {t('add.imagesUploaded') || 'image(s) uploaded'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -1478,7 +1478,7 @@ export default function CreateEventPage() {
                                     }`}
                                 >
                                     <Icon icon="lucide:arrow-left" className="w-4 h-4 mr-2" />
-                                    Back
+                                    {t('add.backButton') || 'Back'}
                                 </Button>
                                 
                                 {currentStep < STEP_CONFIG.length ? (
@@ -1487,7 +1487,7 @@ export default function CreateEventPage() {
                                         onClick={handleNext}
                                         className="h-12 px-8 text-sm font-semibold bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white rounded-xl shadow-lg shadow-purple-200 hover:shadow-xl hover:shadow-purple-300 transition-all duration-300 hover:scale-105"
                                     >
-                                        Continue to Next Step
+                                        {t('add.continueToNextStep') || 'Continue to Next Step'}
                                         <Icon icon="lucide:arrow-right" className="w-4 h-4 ml-2" />
                                     </Button>
                                 ) : (
@@ -1516,7 +1516,7 @@ export default function CreateEventPage() {
                                         ) : (
                                             <div className="flex items-center gap-2">
                                                 <Icon icon="lucide:rocket" className="w-5 h-5" />
-                                                {eventId ? 'Update Event' : 'Submit Event'}
+                                                {eventId ? (t('add.updateEvent') || 'Update Event') : (t('add.submitEvent') || 'Submit Event')}
                                             </div>
                                         )}
                                     </Button>
@@ -1537,21 +1537,20 @@ export default function CreateEventPage() {
                                 <Icon icon="lucide:rocket" className="w-10 h-10 text-white" />
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-1">
-                                Ready to Launch?
+                                {t('createEvent.readyToLaunch')}
                             </h3>
                             <p className="text-white/80 text-sm">
-                                Your event is ready for review
+                                {t('createEvent.yourEventIsReadyForReview')}
                             </p>
                         </div>
                         
                         <CardContent className="p-6 space-y-5">
-                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                                <Icon icon="lucide:info" className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 flex gap-3">
+                                <Icon icon="lucide:info" className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm font-semibold text-amber-800 mb-1">Review Process</p>
-                                    <p className="text-xs text-amber-700">
-                                        Once submitted, your event will be reviewed by our team before being published. 
-                                        You'll receive an email notification once approved.
+                                    <p className="text-sm font-semibold text-purple-800 mb-1">{t('createEvent.reviewProcess')}</p>
+                                    <p className="text-xs text-purple-700">
+                                        {t('createEvent.reviewProcessDescription')}
                                     </p>
                                 </div>
                             </div>
@@ -1563,7 +1562,7 @@ export default function CreateEventPage() {
                                     className="flex-1 h-12 rounded-xl font-semibold border-2 hover:bg-gray-50"
                                 >
                                     <Icon icon="lucide:x" className="w-4 h-4 mr-2" />
-                                    Cancel
+                                    {t('common.cancel')}
                                 </Button>
                                 <Button
                                     onClick={() => {
@@ -1574,7 +1573,7 @@ export default function CreateEventPage() {
                                     className="flex-1 h-12 rounded-xl font-semibold bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
                                 >
                                     <Icon icon="lucide:send" className="w-4 h-4 mr-2" />
-                                    Submit Event
+                                    {t('createEvent.submitEvent')}
                                 </Button>
                             </div>
                         </CardContent>
