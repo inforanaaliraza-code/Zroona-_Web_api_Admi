@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
-import { GetUserBookingsApi } from "@/app/api/setting";
+import { GetUserBookingsApi, UpdatePaymentApi } from "@/app/api/setting";
+import { toast } from "react-toastify";
 
 export default function PaymentCallback() {
   const router = useRouter();
@@ -31,26 +32,24 @@ export default function PaymentCallback() {
         })
       );
 
-      // If payment is successful, update the payment status via API and fetch receipt
+      // If payment is successful, update the payment status via API (server verifies with Moyasar)
       if (status === "paid" && booking_id) {
         const updatePayment = async () => {
           try {
             setLoading(true);
-            // Update payment status
-            const response = await fetch("/api/payments/callback", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                id,
-                status,
-                booking_id,
-              }),
+            // Use UpdatePaymentApi - backend will verify with Moyasar before marking Paid
+            const response = await UpdatePaymentApi({
+              payment_id: id,
+              booking_id,
             });
 
-            const data = await response.json();
-            console.log("Payment update response:", data);
+            console.log("Payment update response:", response);
+
+            if (response?.status !== 1 && response?.status !== true) {
+              toast.error(response?.message || "Payment could not be verified. Please contact support.");
+              setLoading(false);
+              return;
+            }
 
             // Wait a bit for receipt generation, then fetch booking details
             setTimeout(async () => {
@@ -74,6 +73,7 @@ export default function PaymentCallback() {
             }, 3000); // Wait 3 seconds for receipt generation
           } catch (error) {
             console.error("Error updating payment:", error);
+            toast.error(error?.response?.data?.message || "Payment verification failed. Please contact support.");
             setLoading(false);
           }
         };

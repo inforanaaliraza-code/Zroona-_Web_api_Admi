@@ -44,11 +44,12 @@ const Breadcrumbs = ({ items }) => {
               className="text-gray-600 hover:text-gray-800 ml-2 flex items-center"
             >
               <Image
-                src="/assets/images/icons/arrow-left-bold.png"
+                src="/assets/images/icons/arrow-left.png"
                 height={14}
                 width={14}
                 alt=""
                 className="transform rotate-180"
+                unoptimized
               />
             </button>
           ) : (
@@ -57,10 +58,11 @@ const Breadcrumbs = ({ items }) => {
               className="text-gray-600 hover:text-gray-800 mr-2 flex items-center"
             >
               <Image
-                src="/assets/images/icons/arrow-left-bold.png"
+                src="/assets/images/icons/arrow-left.png"
                 height={14}
                 width={14}
                 alt=""
+                unoptimized
               />
             </button>
           )}

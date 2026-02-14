@@ -476,6 +476,7 @@ export default function EventDetailsPage() {
 	};
 
 	const handleBookEvent = async (bookingDetails) => {
+		let success = false;
 		try {
 			setIsReserving(true);
 			console.log("Booking event with details:", bookingDetails);
@@ -506,21 +507,18 @@ export default function EventDetailsPage() {
 				});
 
 			if (response.status) {
+				success = true;
 				toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully! You have been added to the event group chat."));
 				// Refresh the event details to show updated payment status
 				const updatedEvent = await GetEventDetails(params.id);
 				if (updatedEvent && updatedEvent.data) {
 					setEvent(updatedEvent.data);
 				}
-				// Close the modal after successful payment
-				setIsBookingModalOpen(false);
-				// Optionally redirect to messaging to show group chat
-				// setTimeout(() => {
-				// 	window.location.href = `/messaging?event_id=${event._id}`;
-				// }, 2000);
 			} else {
 				console.error("Payment failed:", response.message);
-				toast.error(response.message || getTranslation(t, "events.paymentFailed", "Payment failed. Please try again"));
+				const errMsg = response.message || getTranslation(t, "events.paymentFailed", "Payment failed. Please try again");
+				toast.error(errMsg);
+				throw new Error(errMsg);
 			}
 		} else {
 			// This is a new booking
@@ -534,6 +532,7 @@ export default function EventDetailsPage() {
 			});
 
 			if (response.status) {
+				success = true;
 				toast.success(getTranslation(t, "events.bookingSuccessful", "Booking successful! Waiting for approval"));
 				// Refresh the event details to show the new booking
 				const updatedEvent = await GetEventDetails(params.id);
@@ -547,11 +546,17 @@ export default function EventDetailsPage() {
 		}
 	} catch (error) {
 		console.error("Booking/Payment error:", error);
-		toast.error(getTranslation(t, "events.operationFailed", "Operation failed. Please try again"));
+		const isPaymentError = error?.message?.includes("Payment") || error?.message?.includes("declined") || error?.message?.includes("insufficient");
+		if (!isPaymentError) {
+			toast.error(error?.response?.data?.message || error?.message || getTranslation(t, "events.operationFailed", "Operation failed. Please try again"));
+		}
+		throw error;
 	} finally {
-			setIsReserving(false);
+		setIsReserving(false);
+		if (success) {
 			setIsBookingModalOpen(false);
 		}
+	}
 	};
 
 	// Helper function to get initials from a name

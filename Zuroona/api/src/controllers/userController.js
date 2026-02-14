@@ -3841,6 +3841,16 @@ const UserController = {
 				return Response.notFoundResponse(res, "Booking not found");
 			}
 
+			// CRITICAL: Verify booking belongs to the logged-in user
+			const userId = req.userId || req.user?.id;
+			if (userId && bookingDetails.user_id.toString() !== userId.toString()) {
+				console.error("[PAYMENT] User ownership mismatch! Booking user:", bookingDetails.user_id, "Logged user:", userId);
+				return Response.badRequestResponse(
+					res,
+					messages.payment_booking_mismatch || "This booking does not belong to your account. Access denied."
+				);
+			}
+
 			console.log("[PAYMENT] Found booking:", bookingDetails._id);
 
 			// Verify payment amount matches booking amount (allow small difference for rounding)
@@ -3855,15 +3865,17 @@ const UserController = {
 				);
 			}
 
-			// Verify the payment metadata matches the booking (if available)
-			if (moyasarPayment.metadata && moyasarPayment.metadata.order_id) {
-				if (moyasarPayment.metadata.order_id !== booking_id) {
-					console.error("[PAYMENT] Booking ID mismatch! Moyasar:", moyasarPayment.metadata.order_id, "Request:", booking_id);
-					return Response.badRequestResponse(
-						res,
-						messages.payment_booking_mismatch || "Payment does not match this booking. Please contact support."
-					);
-				}
+			// CRITICAL: Verify payment metadata contains correct booking_id (must match)
+			const moyasarOrderId = moyasarPayment.metadata?.order_id || moyasarPayment.metadata?.booking_id;
+			if (moyasarOrderId && moyasarOrderId.toString() !== booking_id.toString()) {
+				console.error("[PAYMENT] Booking ID mismatch! Moyasar:", moyasarOrderId, "Request:", booking_id);
+				return Response.badRequestResponse(
+					res,
+					messages.payment_booking_mismatch || "Payment does not match this booking. Please contact support."
+				);
+			}
+			if (!moyasarOrderId) {
+				console.warn("[PAYMENT] Payment has no order_id/booking_id in metadata - ensure Moyasar init includes metadata");
 			}
 
 			// CRITICAL: Check if booking is approved by host (status = 2)

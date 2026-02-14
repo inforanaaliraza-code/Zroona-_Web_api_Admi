@@ -1,28 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-// Get initial language from localStorage or default to English
-const getInitialLanguage = () => {
-  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
-    try {
-      const stored = localStorage.getItem("i18nextLng");
-      if (stored && (stored === "ar" || stored === "en")) {
-        return stored;
-      }
-      // If invalid language, set default to English and save it
-      localStorage.setItem("i18nextLng", "en");
-      return "en";
-    } catch (error) {
-      console.warn("[Language Redux] localStorage access failed, using default:", error);
-    }
-  }
-  return "en"; // Default to English
-};
-
+// IMPORTANT: Always use "en" for initial state to prevent hydration mismatch.
+// Server has no localStorage; client would get different value. We sync from
+// localStorage in ClientProviders after hydration.
 const languageSlice = createSlice({
   name: "language",
   initialState: {
-    currentLanguage: getInitialLanguage(),
-    isRTL: getInitialLanguage() === "ar",
+    currentLanguage: "en",
+    isRTL: false,
   },
   reducers: {
     setLanguage: (state, action) => {

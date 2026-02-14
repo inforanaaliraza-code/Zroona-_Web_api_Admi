@@ -6,8 +6,10 @@ import ClickOutside from "./ClickOutside";
 import Cookies from "js-cookie";
 import { TOKEN_NAME } from "@/until";
 import { GetCurrentAdminApi } from "@/api/admin/apis";
+import { useTranslation } from "react-i18next";
 
 const DropdownUser = () => {
+  const { t } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [adminData, setAdminData] = useState(null);
 
@@ -33,9 +35,9 @@ const DropdownUser = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
+    if (hour < 12) return t("common.goodMorning");
+    if (hour < 18) return t("common.goodAfternoon");
+    return t("common.goodEvening");
   };
 
   return (

@@ -1,23 +1,24 @@
 // Export and Print Functions for Admin Tables
 
-// Predefined Event Types (matching organizer side)
-const EVENT_TYPES = [
-  { value: 'conference', label: 'Conference' },
-  { value: 'workshop', label: 'Workshop' },
-  { value: 'exhibition', label: 'Exhibition' },
-  { value: 'concert', label: 'Concert' },
-  { value: 'festival', label: 'Festival' },
-  { value: 'seminar', label: 'Seminar' },
-  { value: 'webinar', label: 'Webinar' },
-  { value: 'networking', label: 'Networking Event' },
-  { value: 'corporate', label: 'Corporate Event' },
-  { value: 'privateParty', label: 'Private Party' },
+// Helper to get translated event types
+const getEventTypes = (t) => [
+  { value: 'conference', label: t ? t("eventTypes.conference") || 'Conference' : 'Conference' },
+  { value: 'workshop', label: t ? t("eventTypes.workshop") || 'Workshop' : 'Workshop' },
+  { value: 'exhibition', label: t ? t("eventTypes.exhibition") || 'Exhibition' : 'Exhibition' },
+  { value: 'concert', label: t ? t("eventTypes.concert") || 'Concert' : 'Concert' },
+  { value: 'festival', label: t ? t("eventTypes.festival") || 'Festival' : 'Festival' },
+  { value: 'seminar', label: t ? t("eventTypes.seminar") || 'Seminar' : 'Seminar' },
+  { value: 'webinar', label: t ? t("eventTypes.webinar") || 'Webinar' : 'Webinar' },
+  { value: 'networking', label: t ? t("eventTypes.networking") || 'Networking Event' : 'Networking Event' },
+  { value: 'corporate', label: t ? t("eventTypes.corporate") || 'Corporate Event' : 'Corporate Event' },
+  { value: 'privateParty', label: t ? t("eventTypes.privateParty") || 'Private Party' : 'Private Party' },
 ];
 
 // Helper function to format event types
-const formatEventTypes = (eventTypes) => {
+const formatEventTypes = (eventTypes, t) => {
+  const EVENT_TYPES = getEventTypes(t);
   if (!eventTypes || !Array.isArray(eventTypes) || eventTypes.length === 0) {
-    return "N/A";
+    return t ? t("common.notAvailable") || "N/A" : "N/A";
   }
   
   // Map event type values to labels
@@ -30,9 +31,9 @@ const formatEventTypes = (eventTypes) => {
 };
 
 // Helper function to format event categories
-const formatEventCategories = (eventCategoryDetails) => {
+const formatEventCategories = (eventCategoryDetails, t) => {
   if (!eventCategoryDetails || !Array.isArray(eventCategoryDetails) || eventCategoryDetails.length === 0) {
-    return "N/A";
+    return t ? t("common.notAvailable") || "N/A" : "N/A";
   }
   
   // Extract category names (support both en and ar)
@@ -45,27 +46,42 @@ const formatEventCategories = (eventCategoryDetails) => {
       }
       return cat.name;
     }
-    return "N/A";
+    return t ? t("common.notAvailable") || "N/A" : "N/A";
   });
   
-  return categoryNames.filter(name => name !== "N/A").join(", ") || "N/A";
+  const notAvailable = t ? t("common.notAvailable") || "N/A" : "N/A";
+  return categoryNames.filter(name => name !== notAvailable).join(", ") || notAvailable;
 };
 
-export const exportEventsToCSV = (data) => {
-    const headers = ["Event ID", "Event Name", "Organizer", "Event Category", "Attendees", "Date", "Time", "Price", "City", "Status"];
+export const exportEventsToCSV = (data, t) => {
+    const headers = [
+        t ? t("events.eventId") || "Event ID" : "Event ID",
+        t ? t("events.eventName") || "Event Name" : "Event Name",
+        t ? t("organizers.name") || "Organizer" : "Organizer",
+        t ? t("events.eventCategory") || "Event Category" : "Event Category",
+        t ? t("events.attendees") || "Attendees" : "Attendees",
+        t ? t("common.date") || "Date" : "Date",
+        t ? t("common.time") || "Time" : "Time",
+        t ? t("events.eventPrice") || "Price" : "Price",
+        t ? t("common.city") || "City" : "City",
+        t ? t("common.status") || "Status" : "Status"
+    ];
     const csvContent = [
         headers.join(","),
         ...data.map(event => [
             event.id || event._id || "N/A",
             `"${event.event_name || "N/A"}"`,
             `"${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}"`.trim() || "N/A",
-            `"${formatEventCategories(event.event_category_details)}"`,
+            `"${formatEventCategories(event.event_category_details, t)}"`,
             event.no_of_attendees || 0,
             event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
             `"${event.event_start_time && event.event_end_time ? `${event.event_start_time} - ${event.event_end_time}` : "N/A"}"`,
             event.event_price || 0,
             `"${event.event_address || ""}"`,
-            event.event_status === 1 ? "Pending" : event.event_status === 2 ? "Upcoming" : event.event_status === 3 ? "Completed" : event.event_status === 4 ? "Rejected" : "N/A"
+            event.event_status === 1 ? (t ? t("events.pending") || "Pending" : "Pending") : 
+            event.event_status === 2 ? (t ? t("events.upcoming") || "Upcoming" : "Upcoming") : 
+            event.event_status === 3 ? (t ? t("events.completed") || "Completed" : "Completed") : 
+            event.event_status === 4 ? (t ? t("events.rejected") || "Rejected" : "Rejected") : "N/A"
         ].join(","))
     ].join("\n");
 
@@ -82,20 +98,30 @@ export const exportEventsToCSV = (data) => {
     }
 };
 
-export const exportUsersToCSV = (data) => {
-    const headers = ["User ID", "Name", "Mobile No.", "Gender", "Email ID", "Date of Birth", "City", "Nationality", "Status"];
+export const exportUsersToCSV = (data, t) => {
+    const headers = [
+        t ? t("users.userId") || "User ID" : "User ID",
+        t ? t("users.name") || "Name" : "Name",
+        t ? t("users.mobileNo") || "Mobile No." : "Mobile No.",
+        t ? t("users.gender") || "Gender" : "Gender",
+        t ? t("users.emailId") || "Email ID" : "Email ID",
+        t ? t("users.dateOfBirth") || "Date of Birth" : "Date of Birth",
+        t ? t("common.city") || "City" : "City",
+        t ? t("users.nationality") || "Nationality" : "Nationality",
+        t ? t("common.status") || "Status" : "Status"
+    ];
     const csvContent = [
         headers.join(","),
         ...data.map(user => [
             user.id,
             `"${user.first_name} ${user.last_name}"`,
             `"${user.country_code} ${user.phone_number}"`,
-            user.gender === 1 ? "Male" : "Female",
+            user.gender === 1 ? (t ? t("users.male") || "Male" : "Male") : (t ? t("users.female") || "Female" : "Female"),
             user.email,
             user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : "N/A",
             `"${user.address || ""}"`,
             `"${user.nationality || "N/A"}"`,
-            user.isActive ? "Active" : "Inactive"
+            user.isActive ? (t ? t("users.active") || "Active" : "Active") : (t ? t("users.inactive") || "Inactive" : "Inactive")
         ].join(","))
     ].join("\n");
 
@@ -117,61 +143,96 @@ export const handlePrint = () => {
 };
 
 // Enhanced PDF export for events
-export const exportEventsToPDF = (data) => {
-    const headers = ["Event ID", "Event Name", "Organizer", "Event Category", "Attendees", "Date", "Time", "Price", "City", "Status"];
-    const title = "Events Export";
+export const exportEventsToPDF = (data, t) => {
+    const headers = [
+        t ? t("events.eventId") || "Event ID" : "Event ID",
+        t ? t("events.eventName") || "Event Name" : "Event Name",
+        t ? t("organizers.name") || "Organizer" : "Organizer",
+        t ? t("events.eventCategory") || "Event Category" : "Event Category",
+        t ? t("events.attendees") || "Attendees" : "Attendees",
+        t ? t("common.date") || "Date" : "Date",
+        t ? t("common.time") || "Time" : "Time",
+        t ? t("events.eventPrice") || "Price" : "Price",
+        t ? t("common.city") || "City" : "City",
+        t ? t("common.status") || "Status" : "Status"
+    ];
+    const title = t ? t("events.eventsExport") || "Events Export" : "Events Export";
     const dataMapper = (event) => [
         event.id || event._id || "N/A",
         event.event_name || "N/A",
         `${event?.organizer?.first_name || ""} ${event?.organizer?.last_name || ""}`.trim() || "N/A",
-        formatEventCategories(event.event_category_details),
+        formatEventCategories(event.event_category_details, t),
         event.no_of_attendees || 0,
         event.event_date ? new Date(event.event_date).toLocaleDateString() : "N/A",
         event.event_start_time && event.event_end_time ? `${event.event_start_time} - ${event.event_end_time}` : "N/A",
         event.event_price || 0,
         event.event_address || "N/A",
-        event.event_status === 1 ? "Pending" : event.event_status === 2 ? "Upcoming" : event.event_status === 3 ? "Completed" : event.event_status === 4 ? "Rejected" : "N/A"
+        event.event_status === 1 ? (t ? t("events.pending") || "Pending" : "Pending") : 
+        event.event_status === 2 ? (t ? t("events.upcoming") || "Upcoming" : "Upcoming") : 
+        event.event_status === 3 ? (t ? t("events.completed") || "Completed" : "Completed") : 
+        event.event_status === 4 ? (t ? t("events.rejected") || "Rejected" : "Rejected") : "N/A"
     ];
     exportToPDF(data, headers, "events_export", title, dataMapper);
 };
 
 // Enhanced PDF export for users/guests
-export const exportUsersToPDF = (data) => {
-    const headers = ["User ID", "Name", "Mobile No.", "Gender", "Email ID", "Date of Birth", "City", "Nationality", "Status"];
-    const title = "Guests Export";
+export const exportUsersToPDF = (data, t) => {
+    const headers = [
+        t ? t("users.userId") || "User ID" : "User ID",
+        t ? t("users.name") || "Name" : "Name",
+        t ? t("users.mobileNo") || "Mobile No." : "Mobile No.",
+        t ? t("users.gender") || "Gender" : "Gender",
+        t ? t("users.emailId") || "Email ID" : "Email ID",
+        t ? t("users.dateOfBirth") || "Date of Birth" : "Date of Birth",
+        t ? t("common.city") || "City" : "City",
+        t ? t("users.nationality") || "Nationality" : "Nationality",
+        t ? t("common.status") || "Status" : "Status"
+    ];
+    const title = t ? t("users.guestsExport") || "Guests Export" : "Guests Export";
     const dataMapper = (user) => [
         user.id || user._id || "N/A",
         `${user.first_name || ""} ${user.last_name || ""}`.trim() || "N/A",
         `${user.country_code || ""} ${user.phone_number || ""}`.trim() || "N/A",
-        user.gender === 1 ? "Male" : "Female",
+        user.gender === 1 ? (t ? t("users.male") || "Male" : "Male") : (t ? t("users.female") || "Female" : "Female"),
         user.email || "N/A",
         user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : "N/A",
         user.address || "N/A",
         user.nationality || "N/A",
-        user.isActive ? "Active" : "Inactive"
+        user.isActive ? (t ? t("users.active") || "Active" : "Active") : (t ? t("users.inactive") || "Inactive" : "Inactive")
     ];
     exportToPDF(data, headers, "guests_export", title, dataMapper);
 };
 
 // Enhanced PDF export for organizers
-export const exportOrganizersToPDF = (data) => {
-    const headers = ["Organizer ID", "Name", "Mobile No.", "Gender", "Email ID", "Date of Birth", "City", "Status"];
-    const title = "Organizers Export";
+export const exportOrganizersToPDF = (data, t) => {
+    const headers = [
+        t ? t("organizers.organizerId") || "Organizer ID" : "Organizer ID",
+        t ? t("organizers.name") || "Name" : "Name",
+        t ? t("organizers.mobileNo") || "Mobile No." : "Mobile No.",
+        t ? t("organizers.gender") || "Gender" : "Gender",
+        t ? t("organizers.emailId") || "Email ID" : "Email ID",
+        t ? t("organizers.dateOfBirth") || "Date of Birth" : "Date of Birth",
+        t ? t("common.city") || "City" : "City",
+        t ? t("common.status") || "Status" : "Status"
+    ];
+    const title = t ? t("organizers.organizersExport") || "Organizers Export" : "Organizers Export";
     const dataMapper = (org) => [
         org.id || org._id || "N/A",
         `${org.first_name || ""} ${org.last_name || ""}`.trim() || "N/A",
         `${org.country_code || ""} ${org.phone_number || ""}`.trim() || "N/A",
-        org.gender === 1 ? "Male" : "Female",
+        org.gender === 1 ? (t ? t("organizers.male") || "Male" : "Male") : (t ? t("organizers.female") || "Female" : "Female"),
         org.email || "N/A",
         org.date_of_birth ? new Date(org.date_of_birth).toLocaleDateString() : "N/A",
         org.address || "N/A",
-        org.is_approved === 1 ? "Pending" : org.is_approved === 2 ? "Approved" : "Rejected"
+        org.is_approved === 1 ? (t ? t("organizers.pending") || "Pending" : "Pending") : 
+        org.is_approved === 2 ? (t ? t("organizers.approved") || "Approved" : "Approved") : 
+        (t ? t("organizers.rejected") || "Rejected" : "Rejected")
     ];
     exportToPDF(data, headers, "organizers_export", title, dataMapper);
 };
 
 // Enhanced PDF export using jsPDF
-export const exportToPDF = (data, headers, filename, title) => {
+export const exportToPDF = (data, headers, filename, title, dataMapper) => {
     // Dynamic import for jsPDF
     import('jspdf').then((jsPDFModule) => {
         import('jspdf-autotable').then((autoTableModule) => {
@@ -188,27 +249,33 @@ export const exportToPDF = (data, headers, filename, title) => {
             doc.text(title || "Export Data", 14, 15);
             
             // Prepare table data
-            const tableData = data.map(item => {
-                return headers.map(header => {
-                    const key = header.toLowerCase().replace(/\s+/g, '_');
-                    return item[key] || item[header] || "N/A";
-                });
-            });
+            const tableData = data.map(item => dataMapper(item));
             
             // Add table
             autoTable(doc, {
                 head: [headers],
                 body: tableData,
                 startY: 25,
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [243, 247, 255] }
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [52, 73, 94],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                bodyStyles: {
+                    textColor: [0, 0, 0]
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245]
+                },
+                margin: { top: 30 }
             });
             
             // Save PDF
             doc.save(`${filename || 'export'}.pdf`);
         }).catch((error) => {
             console.error('Error loading jspdf-autotable:', error);
-            // Fallback to print if jsPDF not available
+            // Fallback to print if library not available
             window.print();
         });
     }).catch((error) => {

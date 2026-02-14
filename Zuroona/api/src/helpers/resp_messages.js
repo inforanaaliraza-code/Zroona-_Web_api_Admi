@@ -261,6 +261,11 @@ module.exports = (lang = "en") => {
         ar: "الدفع لا يتطابق مع هذا الحجز. يرجى الاتصال بالدعم."
     };
 
+    const payment_insufficient_funds = {
+        en: "Insufficient balance. Please ensure you have enough funds in your account for this payment.",
+        ar: "رصيد غير كافٍ. يرجى التأكد من وجود رصيد كافٍ في حسابك لهذا الدفع."
+    };
+
     const refund_booking_not_cancelled = {
         en: "Refund can only be requested for cancelled bookings",
         ar: "يمكن طلب الاسترداد فقط للحجوزات الملغاة"
@@ -508,6 +513,7 @@ module.exports = (lang = "en") => {
         payment_not_completed: payment_not_completed[lang],
         payment_amount_mismatch: payment_amount_mismatch[lang],
         payment_booking_mismatch: payment_booking_mismatch[lang],
+        payment_insufficient_funds: payment_insufficient_funds[lang],
         refund_booking_not_cancelled: refund_booking_not_cancelled[lang],
         refund_booking_not_paid: refund_booking_not_paid[lang],
         refund_request_pending: refund_request_pending[lang],

@@ -1,21 +1,22 @@
 "use client";
-import React, { useEffect, useState, useMemo, memo } from 'react';
+import React, { useEffect, useState, useMemo, memo, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 import { GetWalletStatsApi } from '@/api/admin/apis';
 import Loader from '../Loader/Loader';
 import { toast } from 'react-toastify';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import { useTranslation } from 'react-i18next';
 
 // Dynamically import Chart.js to reduce initial bundle size
 const Bar = dynamic(() => import('react-chartjs-2').then(mod => mod.Bar), {
   ssr: false,
-  loading: () => <div className="h-80 flex items-center justify-center">Loading chart...</div>
+  loading: () => <div className="h-80 flex items-center justify-center">Loading...</div>
 });
 
 const Line = dynamic(() => import('react-chartjs-2').then(mod => mod.Line), {
   ssr: false,
-  loading: () => <div className="h-80 flex items-center justify-center">Loading chart...</div>
+  loading: () => <div className="h-80 flex items-center justify-center">Loading...</div>
 });
 
 // Lazy register Chart.js components
@@ -30,16 +31,19 @@ const registerChart = () => {
 };
 
 const WalletStatsDashboard = memo(() => {
+    const { t, i18n } = useTranslation();
+    const [mounted, setMounted] = useState(false);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        registerChart();
-        fetchStats();
+      setMounted(true);
     }, []);
 
-    const fetchStats = async () => {
+    const isRTL = mounted ? i18n.language === "ar" : false;
+
+    const fetchStats = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -47,17 +51,22 @@ const WalletStatsDashboard = memo(() => {
             if (res?.status === 1 || res?.code === 200) {
                 setStats(res.data);
             } else {
-                setError(res?.message || 'Failed to fetch wallet statistics');
-                toast.error(res?.message || 'Failed to fetch wallet statistics');
+                setError(res?.message || t("wallet.failedToFetch"));
+                toast.error(res?.message || t("wallet.failedToFetch"));
             }
         } catch (err) {
             console.error("Error fetching wallet stats:", err);
-            setError('Failed to fetch wallet statistics');
-            toast.error('Failed to fetch wallet statistics');
+            setError(t("wallet.failedToFetch"));
+            toast.error(t("wallet.failedToFetch"));
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
+
+    useEffect(() => {
+        registerChart();
+        fetchStats();
+    }, [fetchStats]);
 
     // Memoize chart data to prevent unnecessary recalculations
     // IMPORTANT: All hooks must be called before any conditional returns
@@ -92,14 +101,14 @@ const WalletStatsDashboard = memo(() => {
             labels: monthlyLabels,
             datasets: [
                 {
-                    label: 'Earnings',
+                    label: t("wallet.earnings"),
                     data: earningsData,
                     backgroundColor: 'rgba(163, 204, 105, 0.8)',
                     borderColor: 'rgba(163, 204, 105, 1)',
                     borderWidth: 1,
                 },
                 {
-                    label: 'Withdrawals',
+                    label: t("withdrawal.title"),
                     data: withdrawalsData,
                     backgroundColor: 'rgba(244, 124, 12, 0.8)',
                     borderColor: 'rgba(244, 124, 12, 1)',
@@ -120,7 +129,7 @@ const WalletStatsDashboard = memo(() => {
             },
             title: {
                 display: true,
-                text: 'Monthly Earnings vs Withdrawals',
+                text: t("wallet.monthlyEarningsVsWithdrawals"),
                 color: '#2d3748',
                 font: {
                     size: 16,
@@ -176,14 +185,14 @@ const WalletStatsDashboard = memo(() => {
         return (
             <div className="text-center py-10 text-gray-500">
                 <Icon icon="mdi:information-outline" className="w-10 h-10 mx-auto mb-3" />
-                No wallet data available
+                {t("wallet.failedToFetch")}
             </div>
         );
     }
 
     const StatCard = ({ title, value, icon, color, subValue }) => (
-        <div className={`bg-white rounded-xl shadow-md p-5 flex items-center justify-between border border-gray-100 animate-fade-in hover:shadow-lg transition-shadow duration-300`} style={{ animationDelay: '0.1s' }}>
-            <div>
+        <div className={`bg-white rounded-xl shadow-md p-5 flex items-center justify-between border border-gray-100 animate-fade-in hover:shadow-lg transition-shadow duration-300 ${isRTL ? 'flex-row-reverse' : ''}`} style={{ animationDelay: '0.1s' }}>
+            <div className={isRTL ? 'text-right' : 'text-left'}>
                 <h3 className="text-sm font-medium text-gray-500">{title}</h3>
                 <p className={`text-2xl font-bold ${color} mt-1`}>{value}</p>
                 {subValue && <p className="text-xs text-gray-400 mt-1">{subValue}</p>}
@@ -193,9 +202,9 @@ const WalletStatsDashboard = memo(() => {
     );
 
     const SecondaryStatCard = ({ title, value, icon, color }) => (
-        <div className="bg-white rounded-xl shadow-sm p-4 flex items-center gap-3 border border-gray-100 animate-fade-in hover:shadow-md transition-shadow duration-300" style={{ animationDelay: '0.2s' }}>
+        <div className={`bg-white rounded-xl shadow-sm p-4 flex items-center gap-3 border border-gray-100 animate-fade-in hover:shadow-md transition-shadow duration-300 ${isRTL ? 'flex-row-reverse' : ''}`} style={{ animationDelay: '0.2s' }}>
             <Icon icon={icon} className={`w-7 h-7 ${color}`} />
-            <div>
+            <div className={isRTL ? 'text-right' : 'text-left'}>
                 <h4 className="text-xs font-medium text-gray-500">{title}</h4>
                 <p className={`text-lg font-semibold ${color}`}>{value}</p>
             </div>
@@ -203,31 +212,31 @@ const WalletStatsDashboard = memo(() => {
     );
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
             {/* Main Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="Total Balance"
+                    title={t("wallet.totalBalance")}
                     value={`${stats.total_balance.toFixed(2)} SAR`}
                     icon="mdi:wallet-outline"
                     color="text-[#a797cc]"
-                    subValue={`${stats.total_wallets} hosts`}
+                    subValue={`${stats.total_wallets} ${t("common.name")}s`}
                 />
                 <StatCard
-                    title="Available Balance"
+                    title={t("wallet.availableBalance")}
                     value={`${stats.available_balance.toFixed(2)} SAR`}
                     icon="mdi:cash-check"
                     color="text-green-500"
                 />
                 <StatCard
-                    title="Pending Withdrawals"
+                    title={t("withdrawal.title")}
                     value={`${stats.pending_withdrawals_amount.toFixed(2)} SAR`}
                     icon="mdi:clock-time-four-outline"
                     color="text-yellow-500"
-                    subValue={`${stats.pending_withdrawals} requests`}
+                    subValue={`${stats.pending_withdrawals} ${t("withdrawalStats.requests")}`}
                 />
                 <StatCard
-                    title="Total Earnings"
+                    title={t("wallet.totalEarnings")}
                     value={`${stats.total_earnings.toFixed(2)} SAR`}
                     icon="mdi:trending-up"
                     color="text-blue-500"
@@ -237,25 +246,25 @@ const WalletStatsDashboard = memo(() => {
             {/* Secondary Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <SecondaryStatCard
-                    title="Total Withdrawals"
+                    title={t("withdrawal.title")}
                     value={`${stats.total_withdrawals.toFixed(2)} SAR`}
                     icon="mdi:cash-minus"
                     color="text-orange-500"
                 />
                 <SecondaryStatCard
-                    title="Average Balance"
+                    title={t("wallet.averageBalance")}
                     value={`${stats.avg_balance.toFixed(2)} SAR`}
                     icon="mdi:calculator"
                     color="text-blue-500"
                 />
                 <SecondaryStatCard
-                    title="Recent Activity (7d)"
+                    title={t("wallet.recentActivity")}
                     value={stats.recent_activity}
                     icon="mdi:chart-line"
                     color="text-purple-500"
                 />
                 <SecondaryStatCard
-                    title="Approved Withdrawals"
+                    title={t("withdrawal.approved")}
                     value={stats.approved_withdrawals}
                     icon="mdi:check-circle-outline"
                     color="text-green-600"
@@ -266,7 +275,7 @@ const WalletStatsDashboard = memo(() => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Chart */}
                 <div className="lg:col-span-2 bg-white rounded-xl shadow-md p-6 border border-gray-100 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Monthly Trends</h3>
+                    <h3 className={`text-lg font-semibold text-gray-800 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t("wallet.monthlyTrends")}</h3>
                     <div className="h-80">
                         <Bar data={chartData} options={chartOptions} />
                     </div>
@@ -274,12 +283,12 @@ const WalletStatsDashboard = memo(() => {
 
                 {/* Top Hosts by Balance */}
                 <div className="lg:col-span-1 bg-white rounded-xl shadow-md p-6 border border-gray-100 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Top Hosts by Balance</h3>
+                    <h3 className={`text-lg font-semibold text-gray-800 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t("wallet.topHostsByBalance")}</h3>
                     {stats.top_hosts.length > 0 ? (
                         <ul className="space-y-3">
                             {stats.top_hosts.slice(0, 5).map((host, index) => (
-                                <li key={host._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                                    <div className="flex items-center gap-3">
+                                <li key={host._id} className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                                    <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                         <span className="font-bold text-lg text-[#a797cc]">{index + 1}.</span>
                                         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
                                             <Image
@@ -301,14 +310,14 @@ const WalletStatsDashboard = memo(() => {
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-gray-500 text-sm">No hosts found</p>
+                        <p className="text-gray-500 text-sm">{t("wallet.noHostsFound")}</p>
                     )}
                 </div>
             </div>
 
             {/* Top Earners */}
             <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Top Earners (Total Earnings)</h3>
+                <h3 className={`text-lg font-semibold text-gray-800 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>{t("wallet.topEarners")}</h3>
                 {stats.top_earners.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         {stats.top_earners.map((earner, index) => (
@@ -331,12 +340,12 @@ const WalletStatsDashboard = memo(() => {
                                     {earner.organizer?.group_name || `${earner.organizer?.first_name} ${earner.organizer?.last_name}`}
                                 </p>
                                 <p className="text-lg font-bold text-[#a797cc]">{earner.total_earnings.toFixed(0)} SAR</p>
-                                <p className="text-xs text-gray-500">{earner.transaction_count} transactions</p>
+                                <p className="text-xs text-gray-500">{earner.transaction_count} {t("wallet.transactions")}</p>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <p className="text-gray-500 text-sm">No earners found</p>
+                    <p className="text-gray-500 text-sm">{t("wallet.noEarnersFound")}</p>
                 )}
             </div>
         </div>

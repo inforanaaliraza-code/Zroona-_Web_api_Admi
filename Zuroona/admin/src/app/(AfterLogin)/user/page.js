@@ -186,10 +186,10 @@ export default function UserManagement() {
           {/* Actions & Tabs */}
           <div className="lg:w-full flex lg:justify-end gap-3 items-center">
             {/* Export Buttons */}
-            <button onClick={() => exportUsersToCSV(GetAllUser?.data || [])} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition">
+            <button onClick={() => exportUsersToCSV(GetAllUser?.data || [], t)} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition">
               <FaFileExcel /> {t("users.exportCSV")}
             </button>
-            <button onClick={() => exportUsersToPDF(GetAllUser?.data || [])} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition">
+            <button onClick={() => exportUsersToPDF(GetAllUser?.data || [], t)} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition">
               <FaPrint /> {t("users.exportPDF")}
             </button>
 

@@ -192,11 +192,11 @@ export default function WithdrawalRequests() {
       <div className="p-6" dir={isRTL ? "rtl" : "ltr"}>
         {/* Header */}
         <div className={`flex flex-wrap justify-between items-center mb-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <div className={isRTL ? 'text-right' : ''}>
-            <h1 className="text-3xl font-bold text-black">
+          <div className={isRTL ? 'text-right w-full' : 'text-left w-full'}>
+            <h1 className={`text-3xl font-bold text-black ${isRTL ? 'text-right' : 'text-left'}`}>
               {t("withdrawal.hostWithdrawalRequests")}
             </h1>
-            <p className="text-gray-600 mt-1">{t("withdrawal.manageAndProcess")}</p>
+            <p className={`text-gray-600 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>{t("withdrawal.manageAndProcess")}</p>
           </div>
 
           <div className={`flex gap-3 mt-4 lg:mt-0 ${isRTL ? 'flex-row-reverse' : ''}`}>

@@ -236,10 +236,10 @@ export default function ManageEvents() {
 
           {/* Export Buttons */}
           <div className="w-full flex lg:justify-end gap-3 items-center mt-5 lg:mt-0">
-            <button onClick={() => exportEventsToCSV(GetAllEvents?.data || [])} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition">
+            <button onClick={() => exportEventsToCSV(GetAllEvents?.data || [], t)} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition">
               <FaFileExcel /> {t("events.exportCSV")}
             </button>
-            <button onClick={() => exportEventsToPDF(GetAllEvents?.data || [])} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition">
+            <button onClick={() => exportEventsToPDF(GetAllEvents?.data || [], t)} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition">
               <FaPrint /> {t("events.exportPDF")}
             </button>
           </div>
@@ -276,7 +276,7 @@ export default function ManageEvents() {
                 : "border-2 border-transparent text-[#c8b68b]"
                 }`}
             >
-              {t("completed")}
+              {t("events.completed")}
             </button>
             <button
               onClick={() => handleTabChange("Rejected")}

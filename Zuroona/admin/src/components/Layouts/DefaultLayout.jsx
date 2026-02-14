@@ -17,9 +17,12 @@ export default function DefaultLayout({ children, title, breadcrumbs, search, se
         {/* <!-- ===== Sidebar End ===== --> */}
 
         {/* <!-- ===== Content Area Start ===== --> */}
-        <div className={`overflow-auto relative flex flex-1 flex-col px-4 sm:px-6 transition-all duration-300 ${
-          isRTL ? 'lg:mr-[320px]' : 'lg:ml-[320px]'
-        }`}>
+        <div 
+          className={`overflow-auto relative flex flex-1 flex-col px-4 sm:px-6 transition-all duration-300 ${
+            isRTL ? 'lg:mr-[320px]' : 'lg:ml-[320px]'
+          }`}
+          dir={isRTL ? "rtl" : "ltr"}
+        >
           {/* <!-- ===== Header Start ===== --> */}
           <Header 
             sidebarOpen={sidebarOpen} 

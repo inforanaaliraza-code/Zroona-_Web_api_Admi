@@ -90,7 +90,9 @@ export default function BookingModal({
 					toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully!"));
 				} catch (error) {
 					console.error("Error in payment completion:", error);
-					toast.error(getTranslation(t, "eventsMain.paymentProcessingError", "Error processing payment. Please contact support."));
+					const errMsg = error?.response?.data?.message || error?.message || getTranslation(t, "eventsMain.paymentProcessingError", "Error processing payment. Please contact support.");
+					toast.error(errMsg);
+					throw error;
 				}
 			} else {
 				toast.error(getTranslation(t, "events.paymentFailed", "Payment was not successful. Please try again."));

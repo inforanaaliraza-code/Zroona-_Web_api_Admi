@@ -110,6 +110,7 @@ export default function PaymentModal({
         paymentMethods = ['applepay', 'creditcard'];
       }
 
+      const bookingId = event?.booked_event?._id;
       const moyasarConfig = {
         element: formDiv, // Pass our manually created div
         amount: amountInHalala,
@@ -119,6 +120,7 @@ export default function PaymentModal({
         publishable_api_key: apiKey,
         methods: paymentMethods,
         language: currentLang,
+        metadata: bookingId ? { order_id: bookingId.toString() } : {},
         three_d_secure: {
           enabled: true,
           timeout: 30000,
@@ -152,14 +154,14 @@ export default function PaymentModal({
           try {
             if (payment && payment.status === "paid") {
               await onPaymentComplete?.(payment);
-              toast.success(getTranslation(t, "events.paymentSuccess", "Payment completed successfully!"));
               onClose();
             } else {
               toast.error(getTranslation(t, "events.paymentFailed", "Payment was not successful."));
             }
           } catch (error) {
             console.error("[PAYMENT-MODAL] Error handling payment:", error);
-            toast.error(getTranslation(t, "events.paymentProcessingError", "Error processing payment."));
+            const errMsg = error?.response?.data?.message || error?.message;
+            toast.error(errMsg || getTranslation(t, "events.paymentProcessingError", "Error processing payment. Please check your balance and try again."));
           } finally {
             dispatch(setProcessing(false));
           }

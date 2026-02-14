@@ -34,21 +34,8 @@ i18n
 		// Language will be set manually after mount
 	});
 
-// Update language on client-side AFTER React hydration is complete
-// Use double requestAnimationFrame to ensure it happens after all hydration
-if (typeof window !== "undefined") {
-	// Wait for React to fully hydrate before changing language
-	requestAnimationFrame(() => {
-		requestAnimationFrame(() => {
-			const storedLanguage = localStorage.getItem("i18nextLng");
-			if (storedLanguage && (storedLanguage === "en" || storedLanguage === "ar")) {
-				if (i18n.language !== storedLanguage) {
-					i18n.changeLanguage(storedLanguage);
-				}
-			}
-		});
-	});
-}
+// Language is synced from localStorage in ClientProviders AFTER hydration.
+// Do NOT change language here - it causes server/client mismatch.
 
 export default i18n;
 

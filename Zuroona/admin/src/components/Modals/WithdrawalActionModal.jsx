@@ -91,7 +91,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
               <FaUser className="text-[#a797cc]" />
               {t("common.hostInformation")}
             </h3>
-            <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}
+            <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-lg">
                 <Image
                   src={request.host_image || "/assets/images/dummyImage.png"}
@@ -228,7 +228,7 @@ export default function WithdrawalActionModal({ show, onClose, onConfirm, reques
         </div>
 
         {/* Footer */}
-        <div className={`p-6 bg-gray-50 border-t flex gap-3 ${isRTL ? 'justify-start flex-row-reverse' : 'justify-end'}`}
+        <div className={`p-6 bg-gray-50 border-t flex gap-3 ${isRTL ? 'justify-start flex-row-reverse' : 'justify-end'}`}>
           <button
             onClick={handleClose}
             disabled={loading}
