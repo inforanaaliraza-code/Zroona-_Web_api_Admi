@@ -1,0 +1,50 @@
+# ============================================================
+# MSEGAT SMS CONFIGURATION - UPDATE THESE VALUES
+# ============================================================
+
+# CRITICAL: You MUST update these with YOUR ACTUAL credentials!
+
+# Option 1: Use Email as Username (Most Common)
+MSEGAT_USERNAME=alkahtaninaif17@gmail.com
+MSEGAT_API_KEY=3808F5D4D89B1B23E61632C0B475A342
+
+# Option 2: Use User ID as Username (Alternative)
+# MSEGAT_USERNAME=140091
+# MSEGAT_API_KEY=3808F5D4D89B1B23E61632C0B475A342
+
+# Option 3: Use Phone as Username (Less Common)
+# MSEGAT_USERNAME=966509683587
+# MSEGAT_API_KEY=3808F5D4D89B1B23E61632C0B475A342
+
+# Sender Name (must be activated in MSEGAT dashboard)
+MSEGAT_SENDER_NAME=Zuroona
+
+# ============================================================
+# INSTRUCTIONS TO FIX M0002 ERROR:
+# ============================================================
+# 
+# The M0002 "Invalid login info" error means the USERNAME is wrong!
+#
+# TO FIX:
+# 1. Open your WORKING Postman request
+# 2. Look at the EXACT value in the "userName" field
+# 3. Copy that value and paste it above as MSEGAT_USERNAME
+# 4. Save this file (Ctrl+S)
+# 5. Restart your server: npm run dev
+# 6. Test OTP registration
+#
+# COMMON USERNAME FORMATS:
+# - Email: alkahtaninaif17@gmail.com
+# - User ID: 140091  
+# - Phone: 966509683587
+# - Phone without country code: 509683587
+#
+# If STILL not working after trying all above:
+# - Contact MSEGAT support: support@msegat.com
+# - Tell them: "I need my API username for authentication"
+# - They will provide the correct username format for your account
+#
+# ============================================================
+
+
+

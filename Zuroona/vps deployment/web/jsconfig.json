@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    ".next",
+    "**/*.old",
+    "**/.old",
+    "**/*.old/**"
+  ],
+  "typeAcquisition": {
+    "enable": true,
+    "exclude": ["cookie"]
+  }
+}
