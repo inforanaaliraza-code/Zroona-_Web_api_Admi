@@ -54,6 +54,10 @@ const STEP_CONFIG = [
     { id: 5, key: 'event.step5Title', fallback: 'Review & Submit', icon: 'lucide:check-circle' },
 ];
 
+// Shared field box style for inputs and date picker (same look across form)
+const FIELD_BOX_CLASS = "h-12 text-base rounded-xl border-2 border-gray-200 bg-gray-50/50 focus:border-[#a797cc] focus:ring-4 focus:ring-purple-100 transition-all hover:border-purple-200";
+const PLACEHOLDER_OPACITY_CLASS = "placeholder:opacity-60 placeholder:text-gray-400";
+
 // Professional Time Picker Component with Buttons - With Time Restrictions
 const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDate }) => {
     const { t } = useTranslation();
@@ -287,6 +291,7 @@ const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDat
 
 // Date Picker Component - ShadCN Style with Date Restrictions
 const DatePicker = ({ value, onChange, label, error, errorMessage, minDate, className = "" }) => {
+    const { t } = useTranslation();
     const dateValue = value ? new Date(value) : undefined;
     
     const handleDateSelect = (selectedDate) => {
@@ -331,9 +336,9 @@ const DatePicker = ({ value, onChange, label, error, errorMessage, minDate, clas
                         type="button"
                         variant="outline"
                         data-empty={!dateValue}
-                        className="w-full justify-between text-left font-normal data-[empty=true]:text-gray-400"
+                        className={`w-full justify-between text-left font-normal px-4 ${FIELD_BOX_CLASS} data-[empty=true]:text-gray-400 data-[empty=true]:opacity-80`}
                     >
-                        {dateValue ? format(dateValue, "PPP") : <span>{typeof t === 'function' ? t('add.pickDate') : 'Pick a date'}</span>}
+                        {dateValue ? format(dateValue, "PPP") : <span>{t('add.pickDate') || 'Pick a date'}</span>}
                         <ChevronDownIcon className="h-4 w-4 opacity-50" />
                     </Button>
                 </PopoverTrigger>
@@ -910,7 +915,7 @@ export default function CreateEventPage() {
                                                 placeholder={t("add.enterEventTitle") || "Enter a captivating event title..."}
                                                 {...formik.getFieldProps('event_name')}
                                                 maxLength={200}
-                                                className="h-12 text-base pl-4 pr-20 rounded-xl border-2 border-gray-200 focus:border-[#a797cc] focus:ring-4 focus:ring-purple-100 transition-all bg-gray-50/50 group-hover:border-purple-200"
+                                                className={`pl-4 pr-20 ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS}`}
                                             />
                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 bg-white px-2 py-1 rounded-full">
                                                 {formik.values.event_name?.length || 0}/200
@@ -930,7 +935,7 @@ export default function CreateEventPage() {
                                             <Icon icon="lucide:calendar" className="w-4 h-4 text-[#a797cc]" />
                                             {t('add.eventDate') || 'Event Date'} <span className="text-red-500">*</span>
                                         </Label>
-                                        <div className="bg-gray-50/50 p-1 rounded-xl border-2 border-gray-200 hover:border-purple-200 transition-all">
+                                        <div>
                                             <DatePicker
                                                 value={formik.values.event_date}
                                                 onChange={(date) => {
@@ -1007,7 +1012,7 @@ export default function CreateEventPage() {
                                                 placeholder={t("add.describeEventDetail") || "Describe your event in detail. What makes it special? What will attendees experience?"}
                                                 {...formik.getFieldProps('event_description')}
                                                 maxLength={1000}
-                                                className="w-full h-32 px-4 py-3 bg-gray-50/50 rounded-xl text-base resize-none border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-[#a797cc] transition-all hover:border-purple-200"
+                                                className={`w-full h-32 px-4 py-3 resize-none text-base ${FIELD_BOX_CLASS} focus:outline-none ${PLACEHOLDER_OPACITY_CLASS}`}
                                             />
                                             <span className="absolute right-3 bottom-3 text-xs text-gray-400 bg-white px-2 py-1 rounded-full shadow-sm">
                                                 {formik.values.event_description?.length || 0}/1000
@@ -1036,7 +1041,7 @@ export default function CreateEventPage() {
                                                 max={maxEventCapacity}
                                                 placeholder="1"
                                                 {...formik.getFieldProps('no_of_attendees')}
-                                                className="h-12 text-lg font-semibold text-center rounded-xl border-2 border-blue-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 max-w-[120px]"
+                                                className={`h-12 text-lg font-semibold text-center max-w-[120px] ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS}`}
                                             />
                                             <div className="flex-1 bg-white/80 rounded-xl px-4 py-2 border border-blue-100">
                                                 <p className="text-xs text-gray-500">{t('add.maximumCapacity') || 'Maximum Capacity'}</p>
@@ -1141,7 +1146,7 @@ export default function CreateEventPage() {
                                                 type="text"
                                                 placeholder={t("add.enterAddressManually") || "Enter address manually or select from map"}
                                                 {...formik.getFieldProps('event_address')}
-                                                className="h-8 text-xs"
+                                                className={`${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS}`}
                                                 onChange={(e) => {
                                                     formik.setFieldValue('event_address', e.target.value);
                                                     // Geocode address when manually entered
@@ -1190,7 +1195,7 @@ export default function CreateEventPage() {
                                                     <Input
                                                         type="text"
                                                         placeholder={t("add.orSearchOnMap") || "Or search on map..."}
-                                                        className="h-8 text-xs"
+                                                        className={`${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS}`}
                                                     />
                                                 </Autocomplete>
                                             )}
@@ -1320,7 +1325,7 @@ export default function CreateEventPage() {
                                             type="number"
                                             placeholder={t("add.enterAmount") || "Enter Amount"}
                                             {...formik.getFieldProps('event_price')}
-                                            className="h-8 text-xs"
+                                            className={`${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS}`}
                                         />
                                         {formik.touched.event_price && formik.errors.event_price && (
                                             <p className="text-red-500 text-xs mt-0.5">{formik.errors.event_price}</p>
@@ -1369,7 +1374,7 @@ export default function CreateEventPage() {
                                                 placeholder={t('add.dosPlaceholder') || "Add things guests SHOULD do or follow (e.g., Wear comfortable shoes, Bring water bottle, etc.)"}
                                                 {...formik.getFieldProps('dos_instruction')}
                                                 maxLength={500}
-                                                className="w-full h-24 px-3 py-2 bg-gray-50 rounded-md text-xs resize-none focus:outline-none focus:ring-2 focus:ring-green-500 border border-green-200"
+                                                className={`w-full h-24 px-4 py-3 resize-none text-base ${FIELD_BOX_CLASS} focus:outline-none ${PLACEHOLDER_OPACITY_CLASS}`}
                                             />
                                             <p className="text-xs text-gray-500 mt-1">
                                                 ({formik.values.dos_instruction?.length || 0}/500 {t('add.characters') || 'characters'})
@@ -1386,7 +1391,7 @@ export default function CreateEventPage() {
                                                 placeholder={t('add.dontsPlaceholder') || "Add things guests SHOULD NOT do (e.g., Do not wear high heels, Do not bring pets, etc.)"}
                                                 {...formik.getFieldProps('do_not_instruction')}
                                                 maxLength={500}
-                                                className="w-full h-24 px-3 py-2 bg-gray-50 rounded-md text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-500 border border-red-200"
+                                                className={`w-full h-24 px-4 py-3 resize-none text-base ${FIELD_BOX_CLASS} focus:outline-none ${PLACEHOLDER_OPACITY_CLASS}`}
                                             />
                                             <p className="text-xs text-gray-500 mt-1">
                                                 ({formik.values.do_not_instruction?.length || 0}/500 {t('add.characters') || 'characters'})

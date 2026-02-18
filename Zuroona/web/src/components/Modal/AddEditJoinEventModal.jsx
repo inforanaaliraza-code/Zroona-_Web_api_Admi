@@ -326,11 +326,7 @@ const DatePicker = ({
                     <Button
                         type="button"
                         variant="outline"
-                        className={`w-full justify-between text-left font-normal h-[44px] ${
-                            error 
-                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
-                                : 'border-gray-300 hover:border-[#a797cc] focus:border-[#a797cc] focus:ring-[#a797cc]'
-                        } ${!dateValue ? 'text-gray-400' : 'text-gray-900'}`}
+                        className={`w-full justify-between text-left font-normal px-4 ${FIELD_BOX_CLASS} ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''} ${!dateValue ? 'text-gray-400 opacity-80' : 'text-gray-900'}`}
                     >
                         <div className="flex items-center gap-2">
                             <Icon icon="lucide:calendar" className="w-4 h-4 text-gray-400" />
@@ -375,6 +371,10 @@ const DatePicker = ({
 
 // Keep libraries constant to avoid Google Maps reload warnings
 const GOOGLE_MAP_LIBRARIES = ['places'];
+
+// Shared field box style (same look as create-event page)
+const FIELD_BOX_CLASS = "h-12 text-base rounded-xl border-2 border-gray-200 bg-gray-50/50 focus:border-[#a797cc] focus:ring-4 focus:ring-purple-100 transition-all hover:border-purple-200";
+const PLACEHOLDER_OPACITY_CLASS = "placeholder:opacity-60 placeholder:text-gray-400";
 
 // Permanent Event Categories List (key used for translation)
 const PERMANENT_CATEGORIES = [
@@ -1202,10 +1202,10 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                     </span>
                                     <input
                                         type="text"
-                                        placeholder={t('add.tab2') || 'Enter event title'}
+                                        placeholder={t('add.enterEventTitle') || t('add.tab2') || 'Enter event title'}
                                         {...formik.getFieldProps('event_name')}
                                         maxLength={200}
-                                        className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all min-h-[44px]"
+                                        className={`w-full pl-10 pr-4 ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS} focus:outline-none text-gray-900`}
                                     />
                                 </div>
                                 <div className="min-h-[20px] mt-2">
@@ -1389,7 +1389,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                         placeholder={t('add.tab3') || 'Describe your event...'}
                                         {...formik.getFieldProps('event_description')}
                                         maxLength={1000}
-                                        className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y min-h-[120px]"
+                                        className={`w-full pl-10 pr-4 py-3 min-h-[120px] resize-y ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS} focus:outline-none text-gray-900`}
                                         rows="6"
                                     />
                                 </div>
@@ -1420,7 +1420,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                         min="1"
                                         max="10000"
                                         step="0.01"
-                                        className="w-full pl-12 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all min-h-[44px]"
+                                        className={`w-full pl-12 pr-4 ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS} focus:outline-none text-gray-900`}
                                     />
                                 </div>
                                 <div className="min-h-[20px] mt-2">
@@ -1453,7 +1453,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                         min="1"
                                         max={maxEventCapacity}
                                         step="1"
-                                        className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all min-h-[44px]"
+                                        className={`w-full pl-10 pr-4 ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS} focus:outline-none text-gray-900`}
                                     />
                                 </div>
                                 <div className="min-h-[20px] mt-2">
@@ -1865,7 +1865,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                         placeholder="Enter guidelines for attendees..."
                                         {...formik.getFieldProps('dos_instruction')}
                                         maxLength={1000}
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y min-h-[200px]"
+                                        className={`w-full pl-10 pr-4 py-3 min-h-[200px] resize-y ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS} focus:outline-none text-gray-900`}
                                         rows="8"
                                     />
                                 </div>
@@ -1895,7 +1895,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                         placeholder="Enter restrictions or prohibited items..."
                                         {...formik.getFieldProps('do_not_instruction')}
                                         maxLength={1000}
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-[#a797cc] text-gray-900 placeholder:text-gray-400 text-sm transition-all resize-y min-h-[200px]"
+                                        className={`w-full pl-10 pr-4 py-3 min-h-[200px] resize-y ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS} focus:outline-none text-gray-900`}
                                         rows="8"
                                     />
                                 </div>

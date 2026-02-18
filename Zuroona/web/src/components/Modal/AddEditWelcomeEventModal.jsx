@@ -18,6 +18,10 @@ import { getEventList } from '@/redux/slices/EventList';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react';
 
+// Shared field box style (same look as create-event page)
+const FIELD_BOX_CLASS = "h-12 text-base rounded-xl border-2 border-gray-200 bg-gray-50/50 focus:border-[#a797cc] focus:ring-4 focus:ring-purple-100 transition-all hover:border-purple-200";
+const PLACEHOLDER_OPACITY_CLASS = "placeholder:opacity-60 placeholder:text-gray-400";
+
 const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit }) => {
     const { t } = useTranslation();
     const [previewUrls, setPreviewUrls] = useState([]);
@@ -426,10 +430,10 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                             </span>
                             <input
                                 type="text"
-                                placeholder={t('add.tab3')}
+                                placeholder={t('add.enterEventTitle') || t('add.tab3')}
                                 {...formik.getFieldProps('event_name')}
                                 maxLength={200}
-                                className="w-full pl-10 py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm"
+                                className={`w-full pl-10 py-4 ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS} focus:outline-none text-gray-900`}
                             />
                             <p className="text-xs text-gray-500 mt-1">
                                 ({formik.values.event_name?.length || 0}/200 characters)
@@ -526,7 +530,7 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
                                 placeholder={t('add.tab6')}
                                 {...formik.getFieldProps('event_description')}
                                 maxLength={1000}
-                                className="w-full pl-10 py-4 border bg-[#fdfdfd] border-[#f2dfba] rounded-xl focus:outline-none text-black placeholder:text-sm"
+                                className={`w-full pl-10 py-4 min-h-[120px] resize-y ${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS} focus:outline-none text-gray-900`}
                                 rows="5"
                             />
                             <p className="text-xs text-gray-500 mt-1">
