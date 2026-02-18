@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useRTL } from "@/utils/rtl";
 
-const GOOGLE_PLAY_URL = process.env.NEXT_PUBLIC_GOOGLE_PLAY_APP_URL || "#";
-const APP_STORE_URL = process.env.NEXT_PUBLIC_APP_STORE_APP_URL || "#";
+const GOOGLE_PLAY_URL = (process.env.NEXT_PUBLIC_GOOGLE_PLAY_APP_URL || "").trim() || "#";
+const APP_STORE_URL = (process.env.NEXT_PUBLIC_APP_STORE_APP_URL || "").trim() || "#";
+const hasStoreLinks = GOOGLE_PLAY_URL !== "#" || APP_STORE_URL !== "#";
 
 export default function DownloadAppPage() {
   const { t } = useTranslation();
@@ -26,9 +27,9 @@ export default function DownloadAppPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
             <a
               href={GOOGLE_PLAY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block transition-all duration-300 hover:opacity-90 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-2 rounded-lg"
+              target={GOOGLE_PLAY_URL === "#" ? undefined : "_blank"}
+              rel={GOOGLE_PLAY_URL === "#" ? undefined : "noopener noreferrer"}
+              className={`inline-block transition-all duration-300 hover:opacity-90 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-2 rounded-lg ${GOOGLE_PLAY_URL === "#" ? "pointer-events-none opacity-70" : ""}`}
               aria-label={t("downloadApp.getOnGooglePlay") || "Get it on Google Play"}
             >
               <Image
@@ -41,9 +42,9 @@ export default function DownloadAppPage() {
             </a>
             <a
               href={APP_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block transition-all duration-300 hover:opacity-90 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-2 rounded-lg"
+              target={APP_STORE_URL === "#" ? undefined : "_blank"}
+              rel={APP_STORE_URL === "#" ? undefined : "noopener noreferrer"}
+              className={`inline-block transition-all duration-300 hover:opacity-90 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-2 rounded-lg ${APP_STORE_URL === "#" ? "pointer-events-none opacity-70" : ""}`}
               aria-label={t("downloadApp.downloadOnAppStore") || "Download on the App Store"}
             >
               <Image
@@ -59,6 +60,11 @@ export default function DownloadAppPage() {
           <p className={`mt-8 text-sm text-gray-500 max-w-md mx-auto ${textAlign}`}>
             {t("downloadApp.availableOn") || "Available on Android and iOS."}
           </p>
+          {!hasStoreLinks && (
+            <p className={`mt-4 text-xs text-gray-400 max-w-md mx-auto ${textAlign}`}>
+              {t("downloadApp.comingSoon") || "Store links will be added when the app is published."}
+            </p>
+          )}
 
           <div className="mt-12">
             <Link

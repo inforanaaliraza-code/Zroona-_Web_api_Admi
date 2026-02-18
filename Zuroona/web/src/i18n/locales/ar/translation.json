@@ -263,7 +263,8 @@
     "getOnGooglePlay": "احصل عليه من Google Play",
     "downloadOnAppStore": "حمّل من App Store",
     "availableOn": "متاح على أندرويد و iOS.",
-    "backToHome": "العودة للرئيسية"
+    "backToHome": "العودة للرئيسية",
+    "comingSoon": "سيتم إضافة روابط المتجر عند نشر التطبيق."
   },
   "about": {
     "overview": "قصتنا ورسالتنا ورؤيتنا",
