@@ -1,0 +1,165 @@
+/**
+ * ERROR HANDLING ANIMATIONS & STYLES
+ */
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(400px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(400px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-slideOutRight {
+  animation: slideOutRight 0.3s ease-in;
+}
+
+.animate-pulse-subtle {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Error notification styles */
+.error-notification {
+  @apply fixed top-4 right-4 z-50 bg-red-500 text-white p-4 rounded-lg shadow-lg border-2 border-red-600 flex items-start gap-3;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.error-notification.closing {
+  animation: slideOutRight 0.3s ease-in;
+}
+
+.error-notification.warning {
+  @apply bg-yellow-500 border-yellow-600;
+}
+
+.error-notification.info {
+  @apply bg-blue-500 border-blue-600;
+}
+
+.error-notification-close {
+  @apply text-white hover:bg-white/20 rounded-lg p-1 transition-colors flex-shrink-0 cursor-pointer;
+}
+
+/* Loading states */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error boundary styles */
+.error-boundary-container {
+  @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 p-4;
+}
+
+.error-boundary-card {
+  @apply max-w-md w-full bg-white rounded-lg shadow-lg p-6 border-2 border-red-200;
+}
+
+/* Form error states */
+.form-field-error {
+  @apply border-red-500 focus:border-red-600 focus:ring-2 focus:ring-red-500/20;
+}
+
+.form-error-message {
+  @apply text-red-600 text-sm mt-1 block;
+}
+
+.form-success-state {
+  @apply border-green-500 bg-green-50;
+}
+
+/* Retry button */
+.btn-retry {
+  @apply inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors;
+}
+
+.btn-retry:disabled {
+  @apply opacity-50 cursor-not-allowed hover:bg-blue-600;
+}
+
+/* Network status indicator */
+.network-status-badge {
+  @apply fixed bottom-4 left-4 px-3 py-2 rounded-lg text-sm font-medium shadow-lg;
+}
+
+.network-status-badge.online {
+  @apply bg-green-500 text-white;
+}
+
+.network-status-badge.offline {
+  @apply bg-red-500 text-white animate-pulse-subtle;
+}
+
+/* Error details */
+.error-details-section {
+  @apply bg-gray-50 rounded-lg p-4 border border-gray-200 max-h-64 overflow-auto;
+}
+
+.error-details-section code {
+  @apply font-mono text-sm text-gray-700 break-all;
+}
+
+/* Validation error list */
+.validation-errors {
+  @apply space-y-2 p-3 bg-red-50 border border-red-200 rounded-lg;
+}
+
+.validation-error-item {
+  @apply text-red-700 text-sm flex items-start gap-2;
+}
+
+.validation-error-item::before {
+  content: '✓';
+  @apply text-red-500 font-bold mt-0.5;
+}

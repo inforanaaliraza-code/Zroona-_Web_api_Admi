@@ -82,12 +82,12 @@ const AddEditWelcomeEventModal = ({ isOpen, onClose, eventId, eventpage, eventli
             event_end_time: Yup.string().required(t('signup.tab16')),
             event_name: Yup.string()
                 .required(t('signup.tab16'))
-                .min(3, 'Event title must be at least 3 characters')
+                .min(3, typeof t === 'function' ? t('add.eventTitleMinChars') : 'Event title must be at least 3 characters')
                 .max(200, 'Event title cannot exceed 200 characters'),
             event_description: Yup.string()
                 .required(t('signup.tab16'))
-                .min(20, 'Event description must be at least 20 characters')
-                .max(1000, 'Event description cannot exceed 1000 characters'),
+                .min(20, t('add.eventDescriptionMinChars') || 'Event description must be at least 20 characters')
+                .max(1000, t('add.eventDescriptionMaxChars') || 'Event description cannot exceed 1000 characters'),
             event_address: Yup.string().required(t('signup.tab16')),
             no_of_attendees: Yup.number()
                 .min(1, "Event capacity must be at least 1")

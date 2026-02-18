@@ -195,7 +195,7 @@ export default function UpComingEvents() {
                   className="text-sm text-[#a797cc] font-semibold hover:text-[#8ba179] flex items-center gap-1"
                 >
                   <Icon icon="lucide:x-circle" className="w-4 h-4" />
-                  Clear Filter
+                  {t("events.clearFilter", "Clear Filter")}
                 </button>
               )}
             </div>
@@ -225,9 +225,9 @@ export default function UpComingEvents() {
           <div>
             <div className="mb-6">
               <p className="text-gray-600">
-                <span className="font-semibold text-[#a797cc]">{UserEventList?.total_count || 0}</span> events found
+                <span className="font-semibold text-[#a797cc]">{UserEventList?.total_count || 0}</span> {t("events.eventsFound", "events found")}
                 {selectedCategoryId && (
-                  <span> in {ALL_CATEGORIES.find(c => c._id === selectedCategoryId)?.name}</span>
+                  <span> {t("events.in", "in")} {t(`events.${ALL_CATEGORIES.find(c => c._id === selectedCategoryId)?.key}`, ALL_CATEGORIES.find(c => c._id === selectedCategoryId)?.name)}</span>
                 )}
               </p>
             </div>

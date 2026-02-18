@@ -3,6 +3,9 @@ import { ibmPlexSansArabic, poppins, tajawal } from "@/lib/fonts";
 import Script from "next/script";
 import Providers from "@/components/Providers";
 import MoyasarScript from "@/components/MoyasarScript";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import ErrorNotificationContainer from "@/components/ErrorNotificationContainer";
+import ClientInitializer from "@/components/ClientInitializer";
 
 export const metadata = {
   title: "Zuroona - Your Event Platform",
@@ -47,9 +50,13 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="font-ibm-arabic overflow-x-hidden" suppressHydrationWarning>
-        <Providers>
-          {children}
-        </Providers>
+        <ErrorBoundary>
+          <ErrorNotificationContainer />
+          <Providers>
+            {children}
+          </Providers>
+          <ClientInitializer />
+        </ErrorBoundary>
       </body>
     </html>
   );

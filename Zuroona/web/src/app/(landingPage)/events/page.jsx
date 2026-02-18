@@ -628,7 +628,7 @@ const EventsPage = () => {
 							className="w-16 h-16 mb-4 text-gray-300"
 						/>
 						<h3 className="mb-2 text-xl font-semibold text-gray-700">
-							{getTranslation(t, "events.noEventsFound", "No events found matching your criteria")}
+							{getTranslation(t, "events.noEventsFoundFilter", "No events found matching your criteria")}
 						</h3>
 						<p className="max-w-md mb-6 text-gray-500">
 							{getTranslation(t, "events.tryAdjustingFilters", "Try adjusting your filters or search terms")}

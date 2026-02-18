@@ -41,7 +41,7 @@ export default function VerifyEmailPage() {
 
             if (!token) {
                 setStatus("error");
-                setMessage(t("auth.tokenMissing") || "Verification token is missing");
+                setMessage(t("auth.verificationTokenMissing") || "Verification token is missing");
                 return;
             }
 

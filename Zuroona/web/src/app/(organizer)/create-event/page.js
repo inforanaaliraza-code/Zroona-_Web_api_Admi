@@ -56,6 +56,7 @@ const STEP_CONFIG = [
 
 // Professional Time Picker Component with Buttons - With Time Restrictions
 const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDate }) => {
+    const { t } = useTranslation();
     const [hours, setHours] = useState(9);
     const [minutes, setMinutes] = useState(0);
     const [isAM, setIsAM] = useState(true);
@@ -332,7 +333,7 @@ const DatePicker = ({ value, onChange, label, error, errorMessage, minDate, clas
                         data-empty={!dateValue}
                         className="w-full justify-between text-left font-normal data-[empty=true]:text-gray-400"
                     >
-                        {dateValue ? format(dateValue, "PPP") : <span>Pick a date</span>}
+                        {dateValue ? format(dateValue, "PPP") : <span>{typeof t === 'function' ? t('add.pickDate') : 'Pick a date'}</span>}
                         <ChevronDownIcon className="h-4 w-4 opacity-50" />
                     </Button>
                 </PopoverTrigger>
@@ -481,12 +482,12 @@ export default function CreateEventPage() {
             event_end_time: Yup.string(),
             event_name: Yup.string()
                 .required(t('signup.tab16'))
-                .min(3, 'Event title must be at least 3 characters')
-                .max(200, 'Event title cannot exceed 200 characters'),
+                .min(3, typeof t === 'function' ? t('add.eventTitleMinChars') : 'Event title must be at least 3 characters')
+                .max(200, typeof t === 'function' ? t('add.eventTitleMaxChars') : 'Event title cannot exceed 200 characters'),
             event_description: Yup.string()
                 .required(t('signup.tab16'))
-                .min(20, 'Event description must be at least 20 characters')
-                .max(1000, 'Event description cannot exceed 1000 characters'),
+                .min(20, t('add.eventDescriptionMinChars') || 'Event description must be at least 20 characters')
+                .max(1000, t('add.eventDescriptionMaxChars') || 'Event description cannot exceed 1000 characters'),
             event_address: Yup.string().required(t('signup.tab16')),
             no_of_attendees: Yup.number()
                 .min(1, t("add.eventCapacityAtLeast1") || "Event capacity must be at least 1")
@@ -802,7 +803,7 @@ export default function CreateEventPage() {
     const breadcrumbItems = [
         { label: t('breadcrumb.tab1'), href: "/" },
         { label: eventType === "2" ? t('breadcrumb.tab15') : t('myEventOnly'), href: eventType === "2" ? "/welcomeUsEvent" : "/joinUsEvent" },
-        { label: eventId ? 'Edit Event' : 'Create Event', href: "#" },
+        { label: eventId ? t('add.tab21') || 'Edit Event' : t('add.tab19') || 'Create Event', href: "#" },
     ];
 
     return (
@@ -882,13 +883,13 @@ export default function CreateEventPage() {
                                         <CardTitle className="text-xl font-bold text-gray-800">
                                             {t(STEP_CONFIG[currentStep - 1]?.key) || STEP_CONFIG[currentStep - 1]?.fallback}
                                         </CardTitle>
-                                        <p className="text-sm text-gray-500">Step {currentStep} of {STEP_CONFIG.length}</p>
+                                        <p className="text-sm text-gray-500">{t('add.stepXofY', { current: currentStep, total: STEP_CONFIG.length })}</p>
                                     </div>
                                 </div>
                                 <div className="hidden md:flex items-center gap-2 bg-gradient-to-r from-[#a797cc]/10 to-[#8ba179]/10 px-4 py-2 rounded-full">
                                     <div className="w-2 h-2 rounded-full bg-[#8ba179] animate-pulse"></div>
                                     <span className="text-sm font-medium text-[#8ba179]">
-                                        {Math.round((currentStep / STEP_CONFIG.length) * 100)}% Complete
+                                        {Math.round((currentStep / STEP_CONFIG.length) * 100)}{t('add.percentComplete') || '% Complete'}
                                     </span>
                                 </div>
                             </div>
@@ -1059,7 +1060,7 @@ export default function CreateEventPage() {
                                     <div className="group">
                                         <Label className="text-sm font-semibold mb-3 block text-gray-700 flex items-center gap-2">
                                             <Icon icon="lucide:image" className="w-4 h-4 text-[#a797cc]" />
-                                            Event Images <span className="text-red-500">*</span>
+                                            {t('add.eventImages') || 'Event Images'} <span className="text-red-500">*</span>
                                             <span className="ml-auto text-xs font-normal text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
                                                 {previewUrls.length}/5 {t('add.uploaded') || 'uploaded'}
                                             </span>
@@ -1365,7 +1366,7 @@ export default function CreateEventPage() {
                                                 {t('add.dosInstructions') || "Do's Instructions (Optional)"}
                                             </Label>
                                             <textarea
-                                                placeholder="Add things guests SHOULD do or follow (e.g., Wear comfortable shoes, Bring water bottle, etc.)"
+                                                placeholder={t('add.dosPlaceholder') || "Add things guests SHOULD do or follow (e.g., Wear comfortable shoes, Bring water bottle, etc.)"}
                                                 {...formik.getFieldProps('dos_instruction')}
                                                 maxLength={500}
                                                 className="w-full h-24 px-3 py-2 bg-gray-50 rounded-md text-xs resize-none focus:outline-none focus:ring-2 focus:ring-green-500 border border-green-200"
@@ -1382,7 +1383,7 @@ export default function CreateEventPage() {
                                                 {t('add.dontInstructions') || "Don'ts Instructions (Optional)"}
                                             </Label>
                                             <textarea
-                                                placeholder="Add things guests SHOULD NOT do (e.g., Do not wear high heels, Do not bring pets, etc.)"
+                                                placeholder={t('add.dontsPlaceholder') || "Add things guests SHOULD NOT do (e.g., Do not wear high heels, Do not bring pets, etc.)"}
                                                 {...formik.getFieldProps('do_not_instruction')}
                                                 maxLength={500}
                                                 className="w-full h-24 px-3 py-2 bg-gray-50 rounded-md text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-500 border border-red-200"

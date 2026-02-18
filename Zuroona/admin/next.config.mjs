@@ -89,6 +89,12 @@ const nextConfig = {
       },
     ],
   },
+
+  // Suppress Next.js Image alt text warning in development (already handled with SafeImage wrapper)
+  onDemandEntries: {
+    maxInactiveAge: 30 * 1000,
+    pagesBufferLength: 5,
+  },
   
   // Compress output
   compress: true,

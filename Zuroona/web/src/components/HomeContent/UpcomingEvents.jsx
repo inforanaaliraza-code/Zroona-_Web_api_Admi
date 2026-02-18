@@ -150,7 +150,7 @@ export default function UpcomingEvents() {
 							href="/upcomingEvents"
 							className="text-[#a797cc] text-sm font-semibold"
 						>
-							View All
+							{t("events.viewAll", "View All")}
 						</Link>
 					)}
 				</div>
