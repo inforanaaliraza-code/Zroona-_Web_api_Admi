@@ -199,35 +199,31 @@ export default function BookingModal({
 
 		setIsLoading(true);
 		try {
-			// Call the onBookEvent callback with the selected number of attendees
-			const bookingResult = await onBookEvent?.({
-				attendees: attendees,
-				eventId: event._id,
-			});
-
-			// If onBookEvent returns a promise or result, wait for it
-			if (bookingResult && typeof bookingResult.then === 'function') {
-				const result = await bookingResult;
-				if (result && result.status) {
-					setStep("reservation");
-				} else {
-					throw new Error(result?.message || "Booking failed");
-				}
-			} else if (bookingResult && bookingResult.status) {
-				setStep("reservation");
-			} else {
-				// If no callback or callback doesn't handle it, make API call directly
+			if (!onBookEvent) {
+				// No parent handler: make single API call here
 				const response = await AddBookNowApi({
 					event_id: event._id,
 					no_of_attendees: attendees,
 				});
-
 				if (response && (response.status === 1 || response.status === true)) {
 					setStep("reservation");
 					toast.success(getTranslation(t, "events.reservationRequested", "Reservation requested successfully"));
 				} else {
 					throw new Error(response?.message || "Booking failed");
 				}
+				return;
+			}
+
+			// Single call: use parent handler only (do not call AddBookNowApi again)
+			const bookingResult = await onBookEvent({
+				attendees: attendees,
+				eventId: event._id,
+			});
+
+			if (bookingResult && (bookingResult.status === true || bookingResult.status === 1)) {
+				setStep("reservation");
+			} else {
+				throw new Error(bookingResult?.message || "Booking failed");
 			}
 		} catch (error) {
 			console.error("Reservation error:", error);

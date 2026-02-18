@@ -475,6 +475,7 @@ export default function EventDetailsPage() {
 
 	const handleBookEvent = async (bookingDetails) => {
 		let success = false;
+		let result = { status: false, message: "" };
 		try {
 			setIsReserving(true);
 			console.log("Booking event with details:", bookingDetails);
@@ -494,7 +495,7 @@ export default function EventDetailsPage() {
 						"Your booking must be approved by the host before you can make payment.")
 				);
 				setIsReserving(false);
-				return;
+				return result;
 			}
 
 			// Update payment status
@@ -503,6 +504,7 @@ export default function EventDetailsPage() {
 					payment_id: bookingDetails.paymentId,
 					amount: bookingDetails.amount,
 				});
+				result = { status: !!response.status, message: response.message };
 
 			if (response.status) {
 				success = true;
@@ -519,7 +521,7 @@ export default function EventDetailsPage() {
 				throw new Error(errMsg);
 			}
 		} else {
-			// This is a new booking
+			// This is a new booking (single API call only)
 			console.log(
 				"Creating new booking for event:",
 				bookingDetails.eventId
@@ -528,6 +530,7 @@ export default function EventDetailsPage() {
 				event_id: bookingDetails.eventId,
 				no_of_attendees: bookingDetails.attendees,
 			});
+			result = { status: !!response.status, message: response?.message || "" };
 
 			if (response.status) {
 				success = true;
@@ -536,14 +539,30 @@ export default function EventDetailsPage() {
 				const updatedEvent = await GetEventDetails(params.id);
 				setEvent(updatedEvent.data);
 			} else {
-				console.error("Reservation failed:", response.message);
-				toast.error(
-					response.message || getTranslation(t, "events.reservationFailed", "Failed to book event. Please try again")
+				const msg = response?.message || "";
+				const isDuplicateOrPending = msg && (
+					msg.toLowerCase().includes("already") ||
+					msg.toLowerCase().includes("pending") ||
+					msg.toLowerCase().includes("duplicate") ||
+					msg.toLowerCase().includes("wait for the host")
 				);
+				if (isDuplicateOrPending) {
+					// Don't show "already have pending booking" error - just refresh and close (booking already exists)
+					const updatedEvent = await GetEventDetails(params.id);
+					setEvent(updatedEvent.data);
+					success = true;
+					result = { status: true, message: msg };
+				} else {
+					console.error("Reservation failed:", msg);
+					toast.error(
+						msg || getTranslation(t, "events.reservationFailed", "Failed to book event. Please try again")
+					);
+				}
 			}
 		}
 	} catch (error) {
 		console.error("Booking/Payment error:", error);
+		result = { status: false, message: error?.message || "" };
 		const isPaymentError = error?.message?.includes("Payment") || error?.message?.includes("declined") || error?.message?.includes("insufficient");
 		if (!isPaymentError) {
 			toast.error(error?.response?.data?.message || error?.message || getTranslation(t, "events.operationFailed", "Operation failed. Please try again"));
@@ -555,6 +574,7 @@ export default function EventDetailsPage() {
 			setIsBookingModalOpen(false);
 		}
 	}
+		return result;
 	};
 
 	// Helper function to get initials from a name
