@@ -164,6 +164,30 @@
 :root {
   --background: #ffffff;
   --foreground: #171717; /* Dark text for good contrast on white background */
+  --viewport-height: 100vh;
+  --viewport-height-dynamic: 100dvh;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --viewport-height: 100dvh;
+  }
+}
+
+/* Tablet/foldable: fill visible viewport (iPad, Surface, Zenbook Fold) - no top/bottom white */
+.min-h-viewport {
+  min-height: 100vh;
+  min-height: -webkit-fill-available; /* Safari iOS/iPad */
+  min-height: 100dvh;
+}
+.min-h-viewport-main {
+  min-height: calc(100vh - 72px);
+  min-height: calc(100dvh - 72px);
+}
+/* Full viewport height for fixed layers (removes black bar on tablet) */
+.h-viewport {
+  height: 100vh;
+  height: 100dvh;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -173,10 +197,25 @@
   }
 }
 
+/* Remove ALL top/bottom gap - in-depth fix for iPad/tablet/foldable */
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  min-height: 100%;
+  min-height: var(--viewport-height);
+  overflow-x: hidden;
+}
+
 body {
+  margin: 0;
+  padding: 0;
   font-family: var(--font-poppins);
   background-color: #ffffff;
-  color: #171717; /* Default dark text on white background */
+  color: #171717;
+  min-height: 100%;
+  min-height: var(--viewport-height);
+  overflow-x: hidden;
 }
 
 [dir="rtl"] body {

@@ -395,7 +395,7 @@ const PERMANENT_CATEGORIES = [
 ];
 
 const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { isRTL } = useRTL();
     const [previewUrls, setPreviewUrls] = useState([]);
     const [eventImages, setEventImages] = useState([]);
@@ -410,31 +410,48 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
     const [autocomplete, setAutocomplete] = useState(null);
     const [activeSection, setActiveSection] = useState('basic');
     const [mapError, setMapError] = useState(null);
+    const [mapLoadedSuccessfully, setMapLoadedSuccessfully] = useState(false);
+    const [mapRetryCount, setMapRetryCount] = useState(0);
+    const mapLoadedRef = useRef(false);
     const [showCreateConfirm, setShowCreateConfirm] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [pendingPayload, setPendingPayload] = useState(null);
     // Get API key from environment variable (must be set in .env.local)
     const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     
+    const mapLanguage = (typeof i18n !== 'undefined' && i18n.language === 'ar') ? 'ar' : 'en';
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
         libraries: GOOGLE_MAP_LIBRARIES,
+        language: mapLanguage,
     });
     const { profile } = useSelector((state) => state.profileData || {});
 
-    // Surface missing key or load errors clearly
+    // Surface missing key or load errors clearly (translated)
     useEffect(() => {
         if (!GOOGLE_MAPS_API_KEY) {
-            setMapError('Google Maps API key missing. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in web/.env.local and restart the dev server.');
+            setMapError(t('maps.apiKeyMissing'));
         }
-    }, [GOOGLE_MAPS_API_KEY]);
+    }, [GOOGLE_MAPS_API_KEY, t]);
 
     useEffect(() => {
         if (loadError) {
-            setMapError(loadError.message || 'Google Maps failed to load. Check console for details.');
+            setMapError(loadError.message || t('maps.loadFailed'));
         }
-    }, [loadError]);
+    }, [loadError, t]);
+
+    // Overlay until onLoad; 12s timeout then show "Map unavailable" + Retry
+    useEffect(() => {
+        if (!isLoaded || mapError) return;
+        mapLoadedRef.current = false;
+        setMapLoadedSuccessfully(false);
+        const timer = setTimeout(() => {
+            if (!mapLoadedRef.current) setMapError(t('maps.loadFailed'));
+        }, 12000);
+        return () => clearTimeout(timer);
+    }, [isLoaded, mapError, t]);
+
     const EventListId = searchParams.get("id");
     const { EventListdetails = {}, loadingDetail } = useSelector(
         (state) => state.EventDetailData || {}
@@ -1682,28 +1699,51 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                             <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
                                                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#a797cc] border-t-transparent mb-4"></div>
                                                 <p className="text-sm font-medium text-gray-600">
-                                                    {t('add.mapLoading') || 'Loading map...'}
+                                                    {t('maps.loadingMap')}
                                                 </p>
                                                 <p className="text-xs text-gray-500 mt-1">
-                                                    Please wait while we initialize the map
+                                                    {t('maps.loadingMapHint')}
                                                 </p>
                                             </div>
                                         </div>
-                                    ) : loadError ? (
+                                    ) : mapError ? (
                                         <div 
-                                            className="w-full border-x-2 border-b-2 border-gray-200 rounded-b-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
+                                            className="w-full border-x-2 border-b-2 border-gray-200 rounded-b-xl overflow-hidden bg-gradient-to-br from-gray-50 to-white shadow-xl relative"
                                             style={{ minHeight: '400px', height: '400px' }}
                                         >
-                                            <div className="w-full h-full flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm">
-                                                <svg className="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                <p className="text-sm font-medium text-red-600 mb-1">Google Maps Error</p>
-                                                <p className="text-xs text-gray-500 px-4 text-center">{mapError || loadError.message}</p>
+                                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-5 py-6 text-center">
+                                                <div className="w-14 h-14 rounded-full bg-[#a797cc]/10 flex items-center justify-center mb-4">
+                                                    <Icon icon="lucide:map-pin-off" className="w-7 h-7 text-[#a797cc]" />
+                                                </div>
+                                                <p className="text-sm font-semibold text-gray-800 mb-1">{t('maps.loadError')}</p>
+                                                <p className="text-xs text-gray-500 max-w-sm mb-5 leading-relaxed">{t('maps.loadErrorHint')}</p>
+                                                <div className="flex flex-wrap items-center justify-center gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => { mapLoadedRef.current = false; setMapLoadedSuccessfully(false); setMapError(null); setMapRetryCount((c) => c + 1); }}
+                                                        className="px-4 py-2 rounded-xl border-2 border-[#a797cc] text-[#a797cc] text-sm font-medium hover:bg-[#a797cc]/10 transition-colors"
+                                                    >
+                                                        {t('maps.retry')}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setMapError(null)}
+                                                        className="px-5 py-2.5 rounded-xl bg-[#a797cc] text-white text-sm font-medium hover:bg-[#9d8bc0] transition-colors shadow-sm"
+                                                    >
+                                                        {t('maps.ok')}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ) : (
-                                        <>
+                                        <div key={mapRetryCount} className="relative isolate" style={{ minHeight: '400px', height: '400px' }}>
+                                            {!mapLoadedSuccessfully && (
+                                                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white rounded-b-xl shadow-inner">
+                                                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#a797cc] border-t-transparent mb-3" />
+                                                    <p className="text-sm font-medium text-gray-700">{t('maps.loadingMap')}</p>
+                                                    <p className="text-xs text-gray-500 mt-1">{t('maps.loadingMapHint')}</p>
+                                                </div>
+                                            )}
                                             <GoogleMap
                                                 mapContainerStyle={{ 
                                                     width: '100%', 
@@ -1713,7 +1753,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                                 center={defaultCenter}
                                                 zoom={formik.values.latitude && formik.values.longitude ? 15 : 13}
                                                 onClick={handleMapClick}
-                                                onLoad={(mapInstance) => setMap(mapInstance)}
+                                                onLoad={(mapInstance) => { mapLoadedRef.current = true; setMap(mapInstance); setMapLoadedSuccessfully(true); }}
                                                 options={{
                                                     mapTypeControl: true,
                                                     fullscreenControl: true,
@@ -1730,8 +1770,8 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                                     />
                                                 )}
                                             </GoogleMap>
-                                            {/* Map Overlay Instructions */}
-                                            {(() => {
+                                            {/* Map Overlay Instructions - only when map loaded */}
+                                            {mapLoadedSuccessfully && (() => {
                                                 const pos = isRTL ? 'left-4' : 'right-4';
                                                 return (
                                                     <div className={`absolute top-4 ${pos} bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 z-10 border border-gray-200`}>
@@ -1744,8 +1784,7 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                                                     </div>
                                                 );
                                             })()}
-                                            
-                                        </>
+                                        </div>
                                     )}
                                 </div>
                                 {/* Additional Help Text */}

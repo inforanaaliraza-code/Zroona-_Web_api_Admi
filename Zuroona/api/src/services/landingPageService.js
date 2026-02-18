@@ -144,8 +144,15 @@ const LandingPageService = {
 		try {
 			const events = await Event.find({
 				is_delete: 0,
-				is_approved: 1, // Only show approved events
+				is_approved: 1,
 				event_date: { $gt: new Date() },
+				// Exclude cancelled events from Events of the Week (All Events tab)
+				is_cancelled: { $nin: [true, 1] },
+				$or: [
+					{ event_status: { $exists: false } },
+					{ event_status: null },
+					{ event_status: { $ne: "cancelled" } },
+				],
 			})
 				.populate({
 					path: "organizer_id",
@@ -153,7 +160,7 @@ const LandingPageService = {
 					model: "organizer",
 				})
 				.select(
-					"event_name event_description event_image event_images event_date event_start_time event_end_time event_address event_price organizer_id event_for"
+					"event_name event_description event_image event_images event_date event_start_time event_end_time event_address event_price organizer_id event_for is_cancelled event_status"
 				)
 				.sort({ event_date: 1 })
 				.limit(limit)
@@ -175,12 +182,12 @@ const LandingPageService = {
 						if (userId) {
 							try {
 								const BookEventService = require("./bookEventService");
+								// Include all user bookings (including cancelled) so Cancelled tab can show them
 								const userBooking = await BookEventService.AggregateService([
 									{
 										$match: {
 											event_id: event._id,
 											user_id: userId,
-											book_status: { $ne: 3 }, // Not canceled bookings
 										},
 									},
 									{

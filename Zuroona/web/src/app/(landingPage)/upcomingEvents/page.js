@@ -275,15 +275,15 @@ export default function UpComingEvents() {
                 </h3>
                 <p className="text-gray-500 max-w-md mb-6">
                   {selectedCategoryId
-                    ? "No events available in this category. Try selecting a different category."
-                    : "No events available at the moment. Please check back later."}
+                    ? t("events.noEventsAvailableInCategory", "No events available in this category. Try selecting a different category.")
+                    : t("events.noEventsAvailableAtMoment", "No events available at the moment. Please check back later.")}
                 </p>
                 {selectedCategoryId && (
                   <button
                     onClick={handleClearFilters}
                     className="px-6 py-2.5 bg-[#a797cc] hover:bg-[#8ba179] text-white font-semibold rounded-lg transition-all duration-200"
                   >
-                    Clear Filters
+                    {t("events.clearFilters", "Clear Filters")}
                   </button>
                 )}
               </div>

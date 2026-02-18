@@ -100,6 +100,9 @@ const EventsPage = () => {
 	// Sorting options
 	const [sortBy, setSortBy] = useState("none"); // none, date-asc, date-desc
 
+	// Booking status tabs: all | approved | waiting | rejected | cancelled
+	const [bookingTab, setBookingTab] = useState("all");
+
 	// Prevent hydration errors by ensuring component is mounted AND translations loaded
 	const [isMounted, setIsMounted] = useState(false);
 	const [i18nReady, setI18nReady] = useState(false);
@@ -173,23 +176,30 @@ const EventsPage = () => {
 					event_start_time: event.event_start_time,
 					event_end_time: event.event_end_time,
 					event_type: event.event_type,
-					event_for: event.event_for || 3, // Default to everyone
+					event_for: event.event_for || 3,
 					event_image: event.event_image || event.event_images?.[0],
 					event_images: event.event_images || (event.event_image ? [event.event_image] : []),
 					no_of_attendees: event.no_of_attendees,
 					organizer: event.organizer_id || event.organizer,
 					organizer_rating: event.organizer_rating,
 					category_name: event.category_name || event.event_category,
-					// Include booking status if available
+					is_cancelled: event.is_cancelled,
+					event_status: event.event_status,
 					book_status: event.book_status || event.user_booking?.book_status,
 					payment_status: event.payment_status || event.user_booking?.payment_status,
 					user_booking: event.user_booking,
-					booked_event: event.user_booking, // For compatibility
+					booked_event: event.user_booking,
 				}));
 
-				// Use API events as-is (no dummy events)
-				setAllEvents(mappedEvents);
-				setEvents(mappedEvents);
+				// Exclude cancelled events from Events of the Week / All Events (defense in depth)
+				const nonCancelled = mappedEvents.filter((e) => {
+					const cancelled = e.is_cancelled === true || e.is_cancelled === 1;
+					const statusCancelled = String(e.event_status || "").toLowerCase() === "cancelled";
+					return !cancelled && !statusCancelled;
+				});
+
+				setAllEvents(nonCancelled);
+				setEvents(nonCancelled);
 				console.log("[EVENTS] Using API events:", mappedEvents.length);
 				setLoading(false);
 			} catch (error) {
@@ -213,11 +223,24 @@ const EventsPage = () => {
 		fetchData();
 	}, [isMounted, isAuthenticated]);
 
-	// Filter and sort events based on search term, filters, sort option
+	// Filter and sort events based on booking tab, search term, filters, sort option
 	useEffect(() => {
 		if (!allEvents.length) return;
 
 		let filteredEvents = [...allEvents];
+
+		// Apply booking status tab filter (when authenticated)
+		if (isAuthenticated && bookingTab !== "all") {
+			if (bookingTab === "approved") {
+				filteredEvents = filteredEvents.filter((e) => e.book_status === 2);
+			} else if (bookingTab === "waiting") {
+				filteredEvents = filteredEvents.filter((e) => e.book_status === 0 || e.book_status === 1);
+			} else if (bookingTab === "rejected") {
+				filteredEvents = filteredEvents.filter((e) => e.book_status === 4);
+			} else if (bookingTab === "cancelled") {
+				filteredEvents = filteredEvents.filter((e) => e.book_status === 3);
+			}
+		}
 
 		// Apply search filter
 		if (searchTerm.trim()) {
@@ -258,7 +281,7 @@ const EventsPage = () => {
 		}
 
 		setEvents(filteredEvents);
-	}, [searchTerm, filters, sortBy, allEvents]);
+	}, [searchTerm, filters, sortBy, allEvents, bookingTab, isAuthenticated]);
 
 
 	const handleSortChange = (value) => {
@@ -351,6 +374,30 @@ const EventsPage = () => {
 				<p className="mb-6 text-gray-600">
 					{getTranslation(t, "events.discoverEvents", "Discover and book amazing events happening in your city")}
 				</p>
+
+				{/* Booking status tabs */}
+				<div className={`mb-6 flex flex-wrap gap-2 ${flexDirection}`}>
+					{[
+						{ key: "all", labelKey: "events.bookingTabAll", labelFallback: "All Events" },
+						{ key: "approved", labelKey: "events.bookingTabApproved", labelFallback: "Approved" },
+						{ key: "waiting", labelKey: "events.bookingTabWaitingByHost", labelFallback: "Waiting by Host" },
+						{ key: "rejected", labelKey: "events.bookingTabRejected", labelFallback: "Rejected" },
+						{ key: "cancelled", labelKey: "events.bookingTabCancelled", labelFallback: "Cancelled" },
+					].map((tab) => (
+						<button
+							key={tab.key}
+							type="button"
+							onClick={() => setBookingTab(tab.key)}
+							className={`px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+								bookingTab === tab.key
+									? "bg-[#a797cc] text-white shadow-md"
+									: "bg-white border-2 border-gray-200 text-gray-700 hover:border-[#a797cc] hover:bg-[#a797cc]/5"
+							}`}
+						>
+							{getTranslation(t, tab.labelKey, tab.labelFallback)}
+						</button>
+					))}
+				</div>
 
 				{/* Booking Flow Guide - Show for authenticated users */}
 				{isAuthenticated && (
@@ -628,36 +675,37 @@ const EventsPage = () => {
 							className="w-16 h-16 mb-4 text-gray-300"
 						/>
 						<h3 className="mb-2 text-xl font-semibold text-gray-700">
-							{getTranslation(t, "events.noEventsFoundFilter", "No events found matching your criteria")}
+							{bookingTab !== "all" && !isAuthenticated
+								? getTranslation(t, "events.loginToSeeBookingsByStatus", "Log in to see your bookings by status")
+								: bookingTab !== "all" && isAuthenticated
+									? getTranslation(t, "events.noBookingsForThisStatus", "No bookings in this category")
+									: getTranslation(t, "events.noEventsFoundFilter", "No events found matching your criteria")}
 						</h3>
 						<p className="max-w-md mb-6 text-gray-500">
-							{getTranslation(t, "events.tryAdjustingFilters", "Try adjusting your filters or search terms")}
+							{bookingTab !== "all" && !isAuthenticated
+								? getTranslation(t, "events.loginToSeeBookingsByStatusDesc", "Sign in to view your approved, pending, rejected and cancelled bookings.")
+								: bookingTab !== "all" && isAuthenticated
+									? getTranslation(t, "events.noBookingsForThisStatusDesc", "You have no events in this category yet.")
+									: getTranslation(t, "events.tryAdjustingFilters", "Try adjusting your filters or search terms")}
 						</p>
-						<Button
-							onClick={clearFilters}
-							className="bg-[#a797cc] hover:bg-[#e06b0b] text-white font-semibold px-6 py-2.5 shadow-md"
-						>
-							{getTranslation(t, "events.showAllEvents", "Show All Events")}
-						</Button>
+						{bookingTab !== "all" && !isAuthenticated ? (
+							<Link href="/login">
+								<Button className="bg-[#a797cc] hover:bg-[#8b7bb8] text-white font-semibold px-6 py-2.5 shadow-md">
+									{getTranslation(t, "events.login", "Log in")}
+								</Button>
+							</Link>
+						) : (
+							<Button
+								onClick={() => { setBookingTab("all"); clearFilters(); }}
+								className="bg-[#a797cc] hover:bg-[#e06b0b] text-white font-semibold px-6 py-2.5 shadow-md"
+							>
+								{getTranslation(t, "events.showAllEvents", "Show All Events")}
+							</Button>
+						)}
 					</div>
 				) : (
 					<div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
 						{events.map((event, index) => {
-							// Get event for label - safe version that always returns proper translation
-							let eventForIcon = "👥";
-							let eventForLabel = "All Welcome";
-
-							if (event.event_for === 1) {
-								eventForIcon = "👨";
-								eventForLabel = getTranslation(t, "events.menOnly", "Men Only");
-							} else if (event.event_for === 2) {
-								eventForIcon = "👩";
-								eventForLabel = getTranslation(t, "events.womenOnly", "Women Only");
-							} else {
-								eventForIcon = "👥";
-								eventForLabel = getTranslation(t, "events.allWelcome", "All Welcome");
-							}
-
 							return (
 								<MotionDiv
 									key={event._id}
@@ -696,22 +744,8 @@ const EventsPage = () => {
 													);
 												})()}
 
-												{/* Badges */}
+												{/* Badges - Only booking status (Everyone Welcome badge removed) */}
 												<div className="absolute flex flex-wrap gap-2 top-4 left-4">
-													<Badge
-														className={`bg-white/95 font-medium px-3 py-1 rounded-full text-sm shadow-lg backdrop-blur-sm border border-white/20 ${event.event_for ===
-															1
-															? "text-blue-600"
-															: event.event_for ===
-																2
-																? "text-pink-600"
-																: "text-purple-600"
-															}`}
-													>
-														{eventForIcon}{" "}
-														{eventForLabel}
-													</Badge>
-
 													{/* Booking Status Badge - Show if user has booked this event */}
 													{isAuthenticated && event.book_status !== undefined && (
 														<Badge

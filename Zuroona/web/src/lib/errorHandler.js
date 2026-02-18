@@ -3,6 +3,8 @@
  * @description Handles error normalization, logging, severity detection, and recovery checks
  */
 
+import axios from 'axios';
+
 class ErrorHandler {
   constructor() {
     this.errors = [];
@@ -43,9 +45,11 @@ class ErrorHandler {
       // String error
       normalized.message = error;
     } else if (typeof error === 'object') {
-      // Object error
-      normalized.message = error.message || JSON.stringify(error);
-      normalized.code = error.code || error.type || 'ERROR';
+      // Object error (e.g. fetch-style { status, message } or API response shape)
+      normalized.message = error.message || error.userMessage || (error.data?.message) || JSON.stringify(error);
+      normalized.code = error.code || error.type || (error.status ? `HTTP_${error.status}` : 'ERROR');
+      if (error.status) normalized.statusCode = error.status;
+      if (error.data) normalized.data = error.data;
     }
 
     return normalized;
@@ -191,10 +195,21 @@ class ErrorHandler {
 // Singleton instance
 const errorHandler = new ErrorHandler();
 
+/**
+ * Log an error and return user-friendly message. Use in catch blocks for consistent handling.
+ * @param {Error|object} error - Caught error
+ * @param {object} context - Optional context (e.g. { component: 'LoginForm', action: 'submit' })
+ * @returns {string} User-friendly message (for toast or display)
+ */
+function handleApiError(error, context = {}) {
+  errorHandler.log(error, context);
+  return errorHandler.getUserMessage(error);
+}
+
 // Expose to window for debugging
 if (typeof window !== 'undefined') {
   window.__errorHandler = errorHandler;
 }
 
 export default errorHandler;
-export { errorHandler };
+export { errorHandler, handleApiError };

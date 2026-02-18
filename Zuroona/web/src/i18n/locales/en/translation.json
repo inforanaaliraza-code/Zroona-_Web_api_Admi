@@ -253,7 +253,17 @@
     "tab23": "Address",
     "tab24": "Riyadh, Saudi Arabia",
     "tab25": "Follow Us",
-    "tab26": "© 2023 Zuroona. All rights reserved."
+    "tab26": "© 2023 Zuroona. All rights reserved.",
+    "getOnGooglePlay": "Get it on Google Play",
+    "downloadOnAppStore": "Download on the App Store"
+  },
+  "downloadApp": {
+    "title": "Download the Zuroona App",
+    "subtitle": "Discover and book authentic experiences across Saudi Arabia. Get the app on your phone.",
+    "getOnGooglePlay": "Get it on Google Play",
+    "downloadOnAppStore": "Download on the App Store",
+    "availableOn": "Available on Android and iOS.",
+    "backToHome": "Back to Home"
   },
   "about": {
     "tab1": "About Zuroona",
@@ -856,7 +866,8 @@
     "tab51": "Book Now",
     "tab52": "Approved",
     "tab53": "Rejected",
-    "tab54": "per person"
+    "tab54": "per person",
+    "whoCanAttend": "Who can attend"
   },
   "add": {
     "tab1": "Add Event",
@@ -984,6 +995,16 @@
       "tourism": "Tourism"
     }
   },
+  "maps": {
+    "loadError": "Map unavailable",
+    "loadErrorHint": "You can enter your event address in the field above to continue.",
+    "ok": "OK",
+    "apiKeyMissing": "Google Maps API key is missing. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in web/.env.local.",
+    "loadFailed": "Failed to load Google Maps. Please check your API key and internet connection.",
+    "loadingMap": "Loading map...",
+    "loadingMapHint": "Please wait while we initialize the map",
+    "retry": "Retry"
+  },
   "card": {
     "tab1": "Price",
     "tab2": "SAR",
@@ -1099,6 +1120,7 @@
     "date": "Date & Time",
     "location": "Location",
     "attendees": "Attendees",
+    "amount": "Amount",
     "status": "Status",
     "payment": "Payment",
     "actions": "Actions",
@@ -1138,6 +1160,16 @@
     "showAllEvents": "Show All Events",
     "clearFilters": "Clear Filters",
     "noEventsFoundFilter": "No events found matching your criteria",
+    "bookingTabAll": "All Events",
+    "bookingTabApproved": "Approved",
+    "bookingTabWaitingByHost": "Waiting by Host",
+    "bookingTabRejected": "Rejected",
+    "bookingTabCancelled": "Cancelled",
+    "loginToSeeBookingsByStatus": "Log in to see your bookings by status",
+    "loginToSeeBookingsByStatusDesc": "Sign in to view your approved, pending, rejected and cancelled bookings.",
+    "noBookingsForThisStatus": "No bookings in this category",
+    "noBookingsForThisStatusDesc": "You have no events in this category yet.",
+    "login": "Log in",
     "categoryCulturalTraditional": "Cultural & Traditional Events",
     "categoryOutdoorAdventure": "Outdoor & Adventure",
     "categoryEducationalWorkshops": "Educational & Workshops",
@@ -1151,7 +1183,12 @@
     "categoryEcoSustainable": "Eco & Sustainable Tourism",
     "categoryBusinessNetworking": "Business & Networking",
     "categoryVolunteering": "Volunteering",
-    "categoryPhotographySightseeing": "Photography & Sightseeing"
+    "categoryPhotographySightseeing": "Photography & Sightseeing",
+    "in": "in",
+    "clearFilter": "Clear Filter",
+    "noEventsAvailableInCategory": "No events available in this category. Try selecting a different category.",
+    "noEventsAvailableAtMoment": "No events available at the moment. Please check back later.",
+    "viewAll": "View All"
   },
   "tab": {
     "tab4": "Join Us Events",
@@ -1301,6 +1338,7 @@
     "tab2": "We have sent a verification code to your registered phone number",
     "tab4": "Didn't receive the code?",
     "tab5": "Resend Code",
+    "resendCodeIn": "Resend code in {{time}}",
     "tab6": "Verify",
     "tab7": "OTP is required",
     "tab8": "OTP must be 6 digits",

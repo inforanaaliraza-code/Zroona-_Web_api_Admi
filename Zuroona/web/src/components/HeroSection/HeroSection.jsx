@@ -25,7 +25,12 @@ const HeroSection = () => {
     };
 
     return (
-        <div className="relative min-h-screen bg-white overflow-hidden max-w-[100%] mx-auto w-full">
+        <div
+            className="relative min-h-screen min-h-viewport bg-white overflow-hidden max-w-[100%] w-full flex flex-col m-0"
+            style={{ minHeight: '100vh', margin: 0 }}
+        >
+            {/* Full-viewport white layer - removes black space at top/bottom on tablet */}
+            <div className="fixed inset-0 w-full min-h-viewport h-viewport bg-white -z-20" aria-hidden="true" />
             {/* Background Pattern */}
             <div className="fixed inset-0 bg-[url('/assets/images/home/bg-img.png')] bg-cover bg-center opacity-5 -z-10"></div>
 
@@ -61,8 +66,10 @@ const HeroSection = () => {
 
             <Header />
 
-            <main className="container relative flex items-center justify-center min-h-[calc(100vh-80px)] px-4 mx-auto overflow-visible pt-2 md:pt-1 lg:pt-2">
-                <div className="relative w-full max-w-6xl overflow-visible">
+            <main
+                className="container relative flex flex-1 items-center justify-center min-h-viewport-main min-h-[calc(100vh-72px)] px-4 mx-auto overflow-visible pt-2 md:pt-1 lg:pt-2"
+            >
+                <div className="relative w-full max-w-6xl overflow-visible flex flex-col md:min-h-full md:justify-between">
                     {/* Dotted Arrow Line Image - Positioned to the right of heading */}
                     <div className="absolute right-0 top-[5%] translate-x-[60%] md:translate-x-[55%] lg:translate-x-[45%] hidden lg:block z-1 overflow-visible">
                         <Image
@@ -75,45 +82,27 @@ const HeroSection = () => {
                         />
                     </div>
 
-                    <div className="mx-auto max-w-4xl text-center">
-                        {/* Welcome Tag */}
-                        <span className="text-4xl md:text-5xl font-semibold text-[#a797cc] mb-6">
-                            {t('home.welcome')}
-                        </span>
+                    <div className="mx-auto max-w-4xl text-center flex flex-col md:flex-grow md:justify-between md:gap-8">
+                        {/* Top block: welcome + headline + description */}
+                        <div>
+                            <span className="text-4xl md:text-5xl font-semibold text-[#a797cc] mb-6 block">
+                                {t('home.welcome')}
+                            </span>
+                            <h1 className="mb-6 text-4xl md:text-7xl lg:text-8xl font-bold leading-tight text-gray-900">
+                                {t('home.slogan')}
+                            </h1>
+                            <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-gray-600 md:mb-0">
+                                {t('home.tab4')}
+                            </p>
+                        </div>
 
-                        {/* Main Heading */}
-                        <h1 className="mb-6 text-4xl md:text-7xl lg:text-8xl font-bold leading-tight text-gray-900">
-                            {t('home.slogan')}
-                        </h1>
-
-                        {/* Description */}
-                        <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-gray-600">
-                            {t('home.tab4')}
-                        </p>
-
-                        {/* CTA Button */}
-                        {/* <div className="flex justify-center mb-16">
-                            <Link 
-                                href="/events"
-                                className="group bg-primary px-8 py-4 rounded-xl text-white font-medium hover:shadow-lg hover:shadow-primary/50 hover:-translate-y-0.5 transition-all"
-                            >
-                                <span className="flex gap-3 items-center text-lg">
-                                    <Icon 
-                                        icon={isRTL ? "material-symbols:arrow-forward" : "material-symbols:arrow-back"} 
-                                        className="w-6 h-6 transition-transform group-hover:translate-x-1" 
-                                    />
-                                    <span>{t('home.discoverEvents')}</span>
-                                </span>
-                            </Link>
-                        </div> */}
-
-                        {/* Stats */}
+                        {/* Stats - localized (eventsMain.* and home.events) - sits at bottom on tablet */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mx-auto max-w-3xl">
                             {[
-                                { value: '100+', label: t('users') || 'Users', icon: 'clarity:users-line' },
-                                { value: '100+', label: t('home.events') || 'Events', icon: 'material-symbols:event' },
-                                { value: '100+', label: t('hosts') || 'Hosts', icon: 'material-symbols:groups' },
-                                { value: '10+', label: t('cities') || 'Cities', icon: 'material-symbols:location-city' },
+                                { value: '100+', label: t('eventsMain.users') || t('home.saudi') || 'Users', icon: 'clarity:users-line' },
+                                { value: '100+', label: t('home.events') || 'Active Events', icon: 'material-symbols:event' },
+                                { value: '100+', label: t('eventsMain.hosts') || 'Hosts', icon: 'material-symbols:groups' },
+                                { value: '10+', label: t('eventsMain.cities') || 'Cities', icon: 'material-symbols:location-city' },
                             ].map((stat, index) => (
                                 <div key={index} className="p-6 rounded-2xl backdrop-blur-sm transition-all bg-white/70 hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5 group">
                                     {renderStatIcon(stat)}

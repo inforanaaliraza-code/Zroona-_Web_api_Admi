@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { IoLocationOutline, IoMailOutline, IoCallOutline, IoCloseOutline } from "react-icons/io5";
 import { FaTiktok, FaInstagram, FaSnapchatGhost, FaFacebook } from "react-icons/fa";
@@ -138,38 +139,34 @@ export default function Footer() {
                                 <span className="text-gray-400">infozuroona@gmail.com</span>
                             </li>
                         </ul>
-                        {/* App Store Buttons */}
+                        {/* App Store Buttons - link to app download page */}
                         <div className="mt-6 flex flex-col gap-3">
-                            {/* Google Play Store */}
-                            <a
-                                href="#"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-block transition-opacity duration-300 transform hover:opacity-80"
+                            <Link
+                                href="/download-app"
+                                className="inline-block transition-opacity duration-300 transform hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2 focus:ring-offset-gray-900 rounded-lg"
+                                aria-label={t("footer.getOnGooglePlay") || "Get it on Google Play"}
                             >
                                 <Image
                                     src="/assets/images/play_Final_ali.png"
-                                    alt="Get it on Google Play"
+                                    alt={t("footer.getOnGooglePlay") || "Get it on Google Play"}
                                     width={200}
                                     height={60}
                                     className="h-auto"
                                 />
-                            </a>
-                            {/* Apple App Store */}
-                            <a
-                                href="#"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-block transition-opacity duration-300 transform hover:opacity-80"
+                            </Link>
+                            <Link
+                                href="/download-app"
+                                className="inline-block transition-opacity duration-300 transform hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2 focus:ring-offset-gray-900 rounded-lg"
+                                aria-label={t("footer.downloadOnAppStore") || "Download on the App Store"}
                             >
                                 <Image
                                     src="/assets/images/iphone_final_ali.png"
-                                    alt="Download on the App Store"
+                                    alt={t("footer.downloadOnAppStore") || "Download on the App Store"}
                                     width={200}
                                     height={60}
                                     className="h-auto"
                                 />
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>

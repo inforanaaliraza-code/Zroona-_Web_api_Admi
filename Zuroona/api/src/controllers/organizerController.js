@@ -3123,33 +3123,19 @@ const organizerController = {
 				);
 			}
 			
-			// Check if amount is greater than available balance
+			// Check if amount is greater than available balance (host can withdraw full wallet amount)
 			if (amount > organizerWallet.total_amount) {
 				return Response.badRequestResponse(
 					res,
 					resp_messages(req.lang).insufficient_funds
 				);
 			}
-			
-			// Validate minimum withdrawal limit
-			const minimum_withdrawal = organizerWallet.minimum_withdrawal || 100;
-			if (amount < minimum_withdrawal) {
+
+			// Minimum 0.01 SAR to avoid zero/negative
+			if (amount < 0.01) {
 				return Response.badRequestResponse(
 					res,
-					req.lang === "ar" 
-						? `الحد الأدنى للسحب هو ${minimum_withdrawal} ريال سعودي`
-						: `Minimum withdrawal amount is ${minimum_withdrawal} SAR`
-				);
-			}
-			
-			// Validate maximum withdrawal limit
-			const maximum_withdrawal = organizerWallet.maximum_withdrawal || 50000;
-			if (amount > maximum_withdrawal) {
-				return Response.badRequestResponse(
-					res,
-					req.lang === "ar"
-						? `الحد الأقصى للسحب هو ${maximum_withdrawal} ريال سعودي`
-						: `Maximum withdrawal amount is ${maximum_withdrawal} SAR`
+					req.lang === "ar" ? "الحد الأدنى للسحب 0.01 ريال" : "Minimum withdrawal amount is 0.01 SAR"
 				);
 			}
 			

@@ -253,7 +253,17 @@
     "tab23": "العنوان",
     "tab24": "الرياض، المملكة العربية السعودية",
     "tab25": "تابعنا",
-    "tab26": "© 2023 زرونا. جميع الحقوق محفوظة."
+    "tab26": "© 2023 زرونا. جميع الحقوق محفوظة.",
+    "getOnGooglePlay": "احصل عليه من Google Play",
+    "downloadOnAppStore": "حمّل من App Store"
+  },
+  "downloadApp": {
+    "title": "حمّل تطبيق زرونا",
+    "subtitle": "اكتشف واحجز تجارب أصيلة في المملكة العربية السعودية. حمّل التطبيق على هاتفك.",
+    "getOnGooglePlay": "احصل عليه من Google Play",
+    "downloadOnAppStore": "حمّل من App Store",
+    "availableOn": "متاح على أندرويد و iOS.",
+    "backToHome": "العودة للرئيسية"
   },
   "about": {
     "overview": "قصتنا ورسالتنا ورؤيتنا",
@@ -854,6 +864,7 @@
     "tab52": "موافق عليه",
     "tab53": "مرفوض",
     "tab54": "للشخص الواحد",
+    "whoCanAttend": "من يمكنه الحضور",
     "tab55": "أنواع الفعاليات",
     "tab56": "فئات الفعاليات",
     "eventTypes": {
@@ -1006,6 +1017,16 @@
       "tourism": "السياحة"
     }
   },
+  "maps": {
+    "loadError": "الخريطة غير متاحة",
+    "loadErrorHint": "يمكنك إدخال عنوان الفعالية في الحقل أعلاه للمتابعة.",
+    "ok": "موافق",
+    "apiKeyMissing": "مفتاح Google Maps API مفقود. يرجى تعيين NEXT_PUBLIC_GOOGLE_MAPS_API_KEY في web/.env.local.",
+    "loadFailed": "فشل تحميل خرائط Google. يرجى التحقق من مفتاح API واتصال الإنترنت.",
+    "loadingMap": "جاري تحميل الخريطة...",
+    "loadingMapHint": "يرجى الانتظار أثناء تهيئة الخريطة",
+    "retry": "إعادة المحاولة"
+  },
   "card": {
     "tab1": "السعر",
     "tab2": "ريال",
@@ -1121,6 +1142,7 @@
     "date": "التاريخ والوقت",
     "location": "الموقع",
     "attendees": "الحضور",
+    "amount": "المبلغ",
     "status": "الحالة",
     "payment": "الدفع",
     "actions": "الإجراءات",
@@ -1160,6 +1182,16 @@
     "tryAdjustingFilters": "حاول تعديل التصفيات أو مصطلحات البحث",
     "showAllEvents": "عرض جميع الفعاليات",
     "clearFilters": "مسح التصفيات",
+    "bookingTabAll": "جميع الفعاليات",
+    "bookingTabApproved": "معتمد",
+    "bookingTabWaitingByHost": "في انتظار المضيف",
+    "bookingTabRejected": "مرفوض",
+    "bookingTabCancelled": "ملغى",
+    "loginToSeeBookingsByStatus": "سجّل الدخول لمعرفة حجوزاتك حسب الحالة",
+    "loginToSeeBookingsByStatusDesc": "سجّل الدخول لعرض حجوزاتك المعتمدة والقيد الانتظار والمرفوضة والملغاة.",
+    "noBookingsForThisStatus": "لا توجد حجوزات في هذه الفئة",
+    "noBookingsForThisStatusDesc": "ليس لديك فعاليات في هذه الفئة بعد.",
+    "login": "تسجيل الدخول",
     "categoryCulturalTraditional": "المناسبات الثقافية والتقليدية",
     "categoryOutdoorAdventure": "الأنشطة الخارجية والمغامرات",
     "categoryEducationalWorkshops": "التعليم وورش العمل",
@@ -1173,7 +1205,12 @@
     "categoryEcoSustainable": "السياحة البيئية والمستدامة",
     "categoryBusinessNetworking": "الأعمال والتواصل",
     "categoryVolunteering": "التطوع",
-    "categoryPhotographySightseeing": "التصوير الفوتوغرافي ومشاهدة المعالم"
+    "categoryPhotographySightseeing": "التصوير الفوتوغرافي ومشاهدة المعالم",
+    "in": "في",
+    "clearFilter": "مسح الفلتر",
+    "noEventsAvailableInCategory": "لا توجد فعاليات متاحة في هذه الفئة. جرّب اختيار فئة أخرى.",
+    "noEventsAvailableAtMoment": "لا توجد فعاليات متاحة حاليًا. يرجى المراجعة لاحقًا.",
+    "viewAll": "عرض الكل"
   },
   "tab": {
     "tab4": "فعاليات انضم إلينا",
@@ -1323,6 +1360,7 @@
     "tab2": "لقد أرسلنا رمز التحقق إلى رقم هاتفك المسجل",
     "tab4": "لم تستلم الرمز؟",
     "tab5": "إعادة إرسال الرمز",
+    "resendCodeIn": "إعادة إرسال الرمز خلال {{time}}",
     "tab6": "تحقق",
     "tab7": "الرمز مطلوب",
     "tab8": "يجب أن يكون الرمز 6 أرقام",

@@ -5,9 +5,29 @@ var querystring = require("querystring");
 import i18n from "../../lib/i18n";
 import useAuthStore from "@/store/useAuthStore";
 import Cookies from "universal-cookie";
+import errorHandler from "@/lib/errorHandler";
 
 // Create a cookies instance
 const cookies = new Cookies();
+
+// Don't show toast for expected auth errors (guest users / public pages)
+const isAuthMissingError = (error) => {
+	const status = error?.response?.status;
+	const msg = (error?.response?.data?.message || error?.message || "").toLowerCase();
+	if (status === 401) return true;
+	if (msg.includes("token") && (msg.includes("missing") || msg.includes("invalid"))) return true;
+	if (msg.includes("authentication") && msg.includes("login")) return true;
+	return false;
+};
+
+// Global API error handling: log every failed response to errorHandler (notifications filtered in ErrorNotificationContainer)
+axios.interceptors.response.use(
+	(response) => response,
+	(error) => {
+		errorHandler.log(error, { source: "api", url: error?.config?.url, method: error?.config?.method });
+		return Promise.reject(error);
+	}
+);
 
 // Helper function to get authentication token
 const getToken = () => {
@@ -484,7 +504,9 @@ export const putData = async (url, id, body) => {
 			return response.data;
 		});
 	} catch (error) {
-		toast.error(error?.response?.data?.message || error?.message);
+		if (!isAuthMissingError(error)) {
+			toast.error(error?.response?.data?.message || error?.message);
+		}
 	}
 };
 
@@ -622,8 +644,11 @@ export const putURLIncodedWithToken = async (url = "", data = {}) => {
 		//console.log(response);
 		return response.data;
 	} catch (error) {
-		toast.error(error.response.data);
-		return error.response.data;
+		if (!isAuthMissingError(error)) {
+			const msg = error?.response?.data?.message ?? (typeof error?.response?.data === "string" ? error.response.data : error?.message);
+			toast.error(msg);
+		}
+		return error.response?.data;
 	}
 };
 

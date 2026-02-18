@@ -60,7 +60,7 @@ const PLACEHOLDER_OPACITY_CLASS = "placeholder:opacity-60 placeholder:text-gray-
 
 // Professional Time Picker Component with Buttons - With Time Restrictions
 const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDate }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [hours, setHours] = useState(9);
     const [minutes, setMinutes] = useState(0);
     const [isAM, setIsAM] = useState(true);
@@ -291,7 +291,7 @@ const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDat
 
 // Date Picker Component - ShadCN Style with Date Restrictions
 const DatePicker = ({ value, onChange, label, error, errorMessage, minDate, className = "" }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const dateValue = value ? new Date(value) : undefined;
     
     const handleDateSelect = (selectedDate) => {
@@ -386,7 +386,7 @@ const DatePicker = ({ value, onChange, label, error, errorMessage, minDate, clas
 };
 
 export default function CreateEventPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const router = useRouter();
     const searchParams = useSearchParams();
     const dispatch = useDispatch();
@@ -402,13 +402,17 @@ export default function CreateEventPage() {
     const [markerPosition, setMarkerPosition] = useState(null);
     const [autocomplete, setAutocomplete] = useState(null);
     const [mapError, setMapError] = useState(null);
+    const [mapLoadedSuccessfully, setMapLoadedSuccessfully] = useState(false);
+    const [mapRetryCount, setMapRetryCount] = useState(0);
+    const mapLoadedRef = useRef(false);
     
     const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const mapLanguage = (typeof i18n !== 'undefined' && i18n.language === 'ar') ? 'ar' : 'en';
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        // If key is missing we still let loader run, but we'll hide the map and show a friendly message
         googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
         libraries: ['places'],
+        language: mapLanguage,
     });
 
     const eventId = searchParams.get("id");
@@ -743,18 +747,29 @@ export default function CreateEventPage() {
         }
     }, [formik.values.latitude, formik.values.longitude, map, isLoaded]);
 
-    // Surface missing key or load errors clearly
+    // Surface missing key or load errors clearly (messages translated)
     useEffect(() => {
         if (!GOOGLE_MAPS_API_KEY) {
-            setMapError('Google Maps API key missing. Please set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in web/.env.local.');
+            setMapError(t('maps.apiKeyMissing'));
         }
-    }, [GOOGLE_MAPS_API_KEY]);
+    }, [GOOGLE_MAPS_API_KEY, t]);
 
     useEffect(() => {
         if (loadError) {
-            setMapError(loadError.message || 'Failed to load Google Maps. Please check your API key configuration.');
+            setMapError(loadError.message || t('maps.loadFailed'));
         }
-    }, [loadError]);
+    }, [loadError, t]);
+
+    // Overlay stays until onLoad. Give map 12s to load (slow networks) before showing "Map unavailable".
+    useEffect(() => {
+        if (!isLoaded || mapError) return;
+        mapLoadedRef.current = false;
+        setMapLoadedSuccessfully(false);
+        const timer = setTimeout(() => {
+            if (!mapLoadedRef.current) setMapError(t('maps.loadFailed'));
+        }, 12000);
+        return () => clearTimeout(timer);
+    }, [isLoaded, mapError, t]);
 
     const validateStep = (step) => {
         const errors = {};
@@ -1200,20 +1215,52 @@ export default function CreateEventPage() {
                                                 </Autocomplete>
                                             )}
                                             
-                                            {/* Google Map */}
+                                            {/* Google Map - professional fallback when map unavailable */}
                                             {mapError ? (
-                                                <div className="h-48 w-full rounded-md border flex items-center justify-center bg-red-50">
-                                                    <p className="text-xs text-red-600 text-center px-4">
-                                                        {mapError}
-                                                    </p>
+                                                <div className="relative h-48 w-full rounded-xl border border-gray-200 overflow-hidden bg-gradient-to-br from-gray-50 to-white">
+                                                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-5 py-6 text-center">
+                                                        <div className="w-12 h-12 rounded-full bg-[#a797cc]/10 flex items-center justify-center mb-3">
+                                                            <Icon icon="lucide:map-pin-off" className="w-6 h-6 text-[#a797cc]" />
+                                                        </div>
+                                                        <p className="text-sm font-semibold text-gray-800 mb-1">
+                                                            {t('maps.loadError')}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 max-w-xs mb-4 leading-relaxed">
+                                                            {t('maps.loadErrorHint')}
+                                                        </p>
+                                                        <div className="flex flex-wrap items-center justify-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => { mapLoadedRef.current = false; setMapLoadedSuccessfully(false); setMapError(null); setMapRetryCount((c) => c + 1); }}
+                                                                className="px-4 py-2 rounded-xl border-2 border-[#a797cc] text-[#a797cc] text-sm font-medium hover:bg-[#a797cc]/10 transition-colors"
+                                                            >
+                                                                {t('maps.retry')}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setMapError(null)}
+                                                                className="px-5 py-2.5 rounded-xl bg-[#a797cc] text-white text-sm font-medium hover:bg-[#9d8bc0] transition-colors shadow-sm"
+                                                            >
+                                                                {t('maps.ok')}
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ) : isLoaded ? (
-                                                <div className="h-48 w-full rounded-md overflow-hidden border">
+                                                <div key={mapRetryCount} className="relative h-48 w-full rounded-md overflow-hidden border isolate">
+                                                    {/* Overlay until map onLoad; 12s timeout then "Map unavailable" + Retry */}
+                                                    {!mapLoadedSuccessfully && (
+                                                        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white rounded-md shadow-inner">
+                                                            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#a797cc] border-t-transparent mb-3" />
+                                                            <p className="text-sm font-medium text-gray-700">{t('maps.loadingMap')}</p>
+                                                            <p className="text-xs text-gray-500 mt-1">{t('maps.loadingMapHint')}</p>
+                                                        </div>
+                                                    )}
                                                     <GoogleMap
                                                         mapContainerStyle={{ width: '100%', height: '100%' }}
                                                         center={markerPosition || { lat: 24.7136, lng: 46.6753 }}
                                                         zoom={markerPosition ? 15 : 10}
-                                                        onLoad={(mapInstance) => setMap(mapInstance)}
+                                                        onLoad={(mapInstance) => { mapLoadedRef.current = true; setMap(mapInstance); setMapLoadedSuccessfully(true); }}
                                                         onClick={(e) => {
                                                             const lat = e.latLng.lat();
                                                             const lng = e.latLng.lng();
@@ -1258,7 +1305,7 @@ export default function CreateEventPage() {
                                                 </div>
                                             ) : (
                                                 <div className="h-48 w-full rounded-md border flex items-center justify-center bg-gray-100">
-                                                    <p className="text-xs text-gray-500">Loading map...</p>
+                                                    <p className="text-xs text-gray-500">{t('maps.loadingMap')}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -1563,9 +1610,9 @@ export default function CreateEventPage() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowCreateConfirm(false)}
-                                    className="flex-1 h-12 rounded-xl font-semibold border-2 hover:bg-gray-50"
+                                    className="flex-1 h-12 rounded-xl font-semibold border-2 hover:bg-gray-50 flex items-center justify-center gap-2"
                                 >
-                                    <Icon icon="lucide:x" className="w-4 h-4 mr-2" />
+                                    <Icon icon="lucide:x" className="w-4 h-4" />
                                     {t('common.cancel')}
                                 </Button>
                                 <Button
@@ -1574,9 +1621,9 @@ export default function CreateEventPage() {
                                             submitEvent(pendingPayload.values, pendingPayload.resetForm);
                                         }
                                     }}
-                                    className="flex-1 h-12 rounded-xl font-semibold bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                                    className="flex-1 h-12 rounded-xl font-semibold bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center justify-center gap-2"
                                 >
-                                    <Icon icon="lucide:send" className="w-4 h-4 mr-2" />
+                                    <Icon icon="lucide:send" className="w-4 h-4" />
                                     {t('createEvent.submitEvent')}
                                 </Button>
                             </div>

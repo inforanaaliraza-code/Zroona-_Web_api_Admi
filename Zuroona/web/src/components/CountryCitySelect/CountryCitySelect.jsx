@@ -108,7 +108,7 @@ const CountryCitySelect = ({
 
   const labelClasses = "block text-sm font-medium text-gray-700 mb-1";
   const iconContainerClasses =
-    "absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400";
+    "absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-gray-400";
   const errorClasses = "mt-1 text-sm text-red-500";
 
   if (loading) {
@@ -144,7 +144,7 @@ const CountryCitySelect = ({
             name={countryFieldName}
             value={selectedCountryId}
             onChange={handleCountryChange}
-            className={`pl-10 ${inputClasses}`}
+            className={`ps-10 ${inputClasses}`}
             required={required}
           >
             <option value="">
@@ -186,7 +186,7 @@ const CountryCitySelect = ({
               name={cityFieldName}
               value={formik?.values?.[cityFieldName] || ""}
               onChange={handleCityChange}
-              className={`pl-10 ${cityInputClasses}`}
+              className={`ps-10 ${cityInputClasses}`}
               required={required}
               disabled={!selectedCountryId || cities.length === 0}
             >

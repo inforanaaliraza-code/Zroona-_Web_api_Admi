@@ -69,6 +69,14 @@ function ErrorNotificationContainer() {
 
   useEffect(() => {
     const unsubscribe = errorHandler.onError((error) => {
+      // Skip showing notification for auth/token errors (handled elsewhere or expected for guests)
+      const msg = (error.message || '').toLowerCase();
+      const isAuthError =
+        error.code === 'HTTP_401' ||
+        (msg.includes('token') && (msg.includes('missing') || msg.includes('invalid') || msg.includes('expired'))) ||
+        (msg.includes('authentication') && (msg.includes('login') || msg.includes('required')));
+      if (isAuthError) return;
+
       const parsed = parseError(error.code);
 
       const notification = {

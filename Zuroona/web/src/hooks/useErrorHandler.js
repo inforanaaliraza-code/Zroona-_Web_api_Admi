@@ -7,6 +7,12 @@ import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 
+function isAuthTokenError(error, message) {
+	const msg = (message || error?.response?.data?.message || error?.message || '').toLowerCase();
+	if (error?.response?.status === 401) return true;
+	return (msg.includes('token') && (msg.includes('missing') || msg.includes('invalid') || msg.includes('expired'))) || (msg.includes('authentication') && (msg.includes('login') || msg.includes('required')));
+}
+
 export const useErrorHandler = () => {
 	const { t } = useTranslation();
 	const [error, setError] = useState(null);
@@ -25,6 +31,8 @@ export const useErrorHandler = () => {
 				errorMessage = t('common.error') || 'An error occurred';
 			}
 		}
+
+		if (isAuthTokenError(error, errorMessage)) return errorMessage;
 
 		setError(errorMessage);
 		toast.error(errorMessage);

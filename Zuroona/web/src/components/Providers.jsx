@@ -2,7 +2,7 @@
 
 import { Provider } from "react-redux";
 import { store } from "@/redux/store";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Suspense, useState, useEffect } from "react";
 import { I18nextProvider } from "react-i18next";
@@ -10,6 +10,17 @@ import i18n from "@/lib/i18n";
 import RTLHandler from "@/components/RTLHandler/RTLHandler";
 import ChunkLoadErrorHandler from "@/components/ChunkLoadErrorHandler";
 import { HydrationSafeWrapper } from "@/components/HydrationSafeWrapper";
+
+/** Don't show toast for auth/token-missing messages (guest users on public pages) */
+function isAuthTokenMessage(msg) {
+  if (typeof msg !== "string") return false;
+  const m = msg.toLowerCase();
+  return (
+    m.includes("authentication token is missing") ||
+    (m.includes("token") && (m.includes("missing") || m.includes("invalid") || m.includes("expired"))) ||
+    (m.includes("authentication") && (m.includes("login") || m.includes("required")))
+  );
+}
 
 /**
  * DynamicToastContainer - Handles RTL/LTR without hydration mismatch
@@ -19,6 +30,16 @@ import { HydrationSafeWrapper } from "@/components/HydrationSafeWrapper";
 function DynamicToastContainer() {
     const [isRTL, setIsRTL] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        // Suppress "Authentication token is missing" (and similar) toasts site-wide
+        const originalError = toast.error;
+        toast.error = (msg, opts) => {
+            if (isAuthTokenMessage(String(msg ?? ""))) return;
+            originalError(msg, opts);
+        };
+        return () => { toast.error = originalError; };
+    }, []);
 
     useEffect(() => {
         // CRITICAL: Only update RTL AFTER hydration via useEffect

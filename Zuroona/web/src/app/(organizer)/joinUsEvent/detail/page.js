@@ -194,17 +194,6 @@ export default function JoinUsDetail() {
                     <Icon icon="lucide:bar-chart-3" className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
                     <span>{t("events.viewAnalytics", "View Analytics")}</span>
                   </Link>
-                  
-                  {/* Edit Event Button - Orange color - Only for Approved events */}
-                  {detailData?.is_approved === 1 && (
-                    <button
-                      onClick={() => setIsEditModalOpen(true)}
-                      className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
-                    >
-                      <Icon icon="lucide:edit" className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-                      <span>{t("detail.tab15", "Edit Event")}</span>
-                    </button>
-                  )}
 
                   {/* Cancel Event Button - Red/Danger color - Only show if not already cancelled */}
                   {!(detailData?.is_cancelled === true || detailData?.event_status === 'cancelled') && (

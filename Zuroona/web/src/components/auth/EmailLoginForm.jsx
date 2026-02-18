@@ -49,7 +49,7 @@ export default function EmailLoginForm() {
     const phoneValidationSchema = Yup.object({
         phone_number: Yup.string()
             .required(t("auth.phoneRequired") || "Phone number is required")
-            .min(9, t("phone Min Length") || "Phone number must be at least 9 digits"),
+            .min(9, t("auth.phoneMinLength") || "Phone number must be at least 9 digits"),
         country_code: Yup.string()
             .required(t("auth.countryCodeRequired") || "Country code is required"),
     });
@@ -371,7 +371,7 @@ export default function EmailLoginForm() {
                                             ) : (
                                                 <>
                                                     <Icon icon="material-symbols:sms" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                                    <span className="ml-2">Send OTP</span>
+                                                    <span className="ml-2">{t("OTP.sendOTP") || "Send OTP"}</span>
                                                     <Icon icon="material-symbols:arrow-forward" className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                                                 </>
                                             )}
@@ -464,7 +464,7 @@ export default function EmailLoginForm() {
                                 {/* Timer */}
                                 <div className="flex justify-center items-center my-4">
                                     <span className="text-[#a797cc] text-sm font-medium">
-                                        Resend code in 00:{seconds > 9 ? seconds : `0${seconds}`}
+                                        {t("OTP.resendCodeIn", { time: `00:${seconds > 9 ? seconds : `0${seconds}`}` }) || `Resend code in 00:${seconds > 9 ? seconds : `0${seconds}`}`}
                                     </span>
                                 </div>
 
@@ -487,7 +487,7 @@ export default function EmailLoginForm() {
                                         {/* Button content */}
                                         <span className="relative z-10 flex items-center gap-2">
                                             {loading ? (
-                                                <span className="w-full flex justify-center items-center text-center font-semibold mx-auto">Verifying</span>
+                                                <span className="w-full flex justify-center items-center text-center font-semibold mx-auto">{t("OTP.verifying") || "Verifying..."}</span>
                                             ) : (
                                                 <>
                                                     <Icon icon="material-symbols:verified" className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

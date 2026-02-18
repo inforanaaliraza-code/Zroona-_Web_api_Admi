@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
@@ -29,34 +29,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { BASE_API_URL } from "@/until";
-
-const getEventForLabel = (eventFor, t) => {
-	// Helper to safely get translation
-	const safeTranslate = (key, fallback) => {
-		if (!t) return fallback;
-		try {
-			const translation = t(key);
-			// Check if translation exists and is not the key itself
-			if (translation && translation !== key && typeof translation === 'string') {
-				return translation;
-			}
-			return fallback;
-		} catch (error) {
-			return fallback;
-		}
-	};
-	
-	switch (eventFor) {
-		case 1:
-			return { label: safeTranslate("events.menOnly", "Men Only"), icon: "👨" };
-		case 2:
-			return { label: safeTranslate("events.womenOnly", "Women Only"), icon: "👩" };
-		case 3:
-			return { label: safeTranslate("events.allWelcome", "Everyone Welcome"), icon: "👥" };
-		default:
-			return { label: safeTranslate("events.allWelcome", "Everyone Welcome"), icon: "👥" };
-	}
-};
 
 // Helper function to get translation with fallback
 const getTranslation = (t, key, fallback) => {
@@ -231,12 +203,6 @@ export default function EventDetailsPage() {
 
 		fetchEvent();
 	}, [params.id]);
-
-	// Get event for label with proper translation - must be before conditional return
-	const eventFor = useMemo(() => {
-		if (!event) return { label: getTranslation(t, "events.allWelcome", "Everyone Welcome"), icon: "👥" };
-		return getEventForLabel(event.event_for, t);
-	}, [event?.event_for, t, i18n.language]);
 
 	if (loading || !event) {
 		return (
@@ -644,13 +610,8 @@ export default function EventDetailsPage() {
 		<div className="min-h-screen bg-white">
 			<div className="container px-4 py-8 mx-auto">
 				<div className="mx-auto max-w-7xl">
-					{/* Header Section - Professional Design */}
+					{/* Header Section - Professional Design (Everyone Welcome badge removed) */}
 					<div className="mb-10 text-center">
-						<div className="inline-block mb-4">
-							<span className="px-4 py-2 text-sm font-semibold text-[#a797cc] bg-[#a797cc]/10 rounded-full border border-[#a797cc]/20">
-								{eventFor.label}
-							</span>
-						</div>
 						<h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 leading-tight">
 							{event.event_name}
 						</h1>

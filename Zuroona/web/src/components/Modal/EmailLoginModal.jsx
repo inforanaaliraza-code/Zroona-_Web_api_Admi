@@ -378,7 +378,7 @@ export default function EmailLoginModal({ isOpen, onClose, returnUrl = "/" }) {
                             {/* Timer */}
                             <div className="flex justify-center items-center my-2">
                                 <span className="text-primary text-xs">
-                                    Resend code in 00:{seconds > 9 ? seconds : `0${seconds}`}
+                                    {t("OTP.resendCodeIn", { time: `00:${seconds > 9 ? seconds : `0${seconds}`}` }) || `Resend code in 00:${seconds > 9 ? seconds : `0${seconds}`}`}
                                 </span>
                             </div>
 

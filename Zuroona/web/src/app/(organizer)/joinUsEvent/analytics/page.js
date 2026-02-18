@@ -371,7 +371,7 @@ export default function EventAnalytics() {
                       {t("events.amount", "Amount")}
                     </th>
                     <th className={`px-6 py-4 ${textAlign} text-xs font-semibold text-gray-700 uppercase tracking-wider`}>
-                      {t("events.paymentStatus", "Payment")}
+                      {t("events.payment", "Payment")}
                     </th>
                     <th className={`px-6 py-4 ${textAlign} text-xs font-semibold text-gray-700 uppercase tracking-wider`}>
                       {t("status") || "Status"}

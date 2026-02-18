@@ -19,58 +19,17 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
-    const [withdrawalLimits, setWithdrawalLimits] = useState({ minimum: 100, maximum: 50000 });
-    const [limitsLoading, setLimitsLoading] = useState(true);
 
-    const availableBalance = data?.total_earnings || 0;
-    const minWithdrawal = withdrawalLimits.minimum || 100;
-    const maxWithdrawal = Math.min(withdrawalLimits.maximum || 50000, availableBalance);
-
-    // Fetch withdrawal limits when modal opens
-    useEffect(() => {
-        if (isOpen) {
-            fetchWithdrawalLimits();
-        }
-    }, [isOpen]);
-
-    const fetchWithdrawalLimits = async () => {
-        try {
-            setLimitsLoading(true);
-            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-            const response = await fetch(`${baseUrl}/api/organizer/wallet-info`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-                }
-            });
-            
-            const responseData = await response.json();
-            
-            if (responseData?.status === 1 && responseData?.data) {
-                setWithdrawalLimits({
-                    minimum: responseData.data.minimum_withdrawal || 100,
-                    maximum: responseData.data.maximum_withdrawal || 50000
-                });
-            } else {
-                // Keep default values if API fails
-                setWithdrawalLimits({ minimum: 100, maximum: 50000 });
-            }
-        } catch (error) {
-            console.error("Error fetching withdrawal limits:", error);
-            // Keep default values on error
-            setWithdrawalLimits({ minimum: 100, maximum: 50000 });
-        } finally {
-            setLimitsLoading(false);
-        }
-    };
+    const availableBalance = Number(data?.total_earnings) || 0;
+    const minAmount = 0.01;
+    const maxAmount = availableBalance;
 
     const validationSchema = Yup.object({
         amount: Yup.number()
             .required(t("earning.tab9") || "Amount is required")
             .typeError(t("earning.tab9") || "Amount is required")
-            .min(minWithdrawal, `Minimum withdrawal amount is ${minWithdrawal} SAR`)
-            .max(maxWithdrawal, `Maximum withdrawal amount is ${maxWithdrawal} SAR`),
+            .min(minAmount, t("withdrawal.minAtLeast") || "Amount must be at least 0.01 SAR")
+            .max(maxAmount, t("withdrawal.maxAvailable") || "Amount cannot exceed your available balance"),
     });
 
     const formik = useFormik({
@@ -139,10 +98,6 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                             <h2 className="text-5xl font-bold text-white mb-2">{availableBalance}</h2>
                             <p className="text-lg font-medium opacity-90">{t('card.tab2') || 'SAR'}</p>
 
-                            {/* Info Badge */}
-                            <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-                                <p className="text-sm font-medium">{t('withdrawal.minimumAmount')}: {minWithdrawal} SAR</p>
-                            </div>
                         </div>
                     </div>
 
@@ -182,16 +137,25 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                             </div>
                         )}
 
-                        {/* Quick Amount Buttons */}
+                        {/* Withdraw full balance + Quick Amount Buttons */}
+                        {availableBalance >= minAmount && (
+                            <button
+                                type="button"
+                                onClick={() => formik.setFieldValue('amount', availableBalance)}
+                                className="mb-3 w-full py-2.5 px-4 rounded-lg font-semibold text-sm bg-gradient-to-r from-[#a3cc69]/20 to-[#a797cc]/20 text-gray-800 border-2 border-[#a3cc69] hover:from-[#a3cc69]/30 hover:to-[#a797cc]/30 transition-all"
+                            >
+                                {t('withdrawal.withdrawFullBalance') || 'Withdraw full balance'} ({availableBalance} SAR)
+                            </button>
+                        )}
                         <div className="mt-4 grid grid-cols-4 gap-2">
                             {[100, 250, 500, 1000].map((amount) => (
                                 <button
                                     key={amount}
                                     type="button"
                                     onClick={() => formik.setFieldValue('amount', amount)}
-                                    disabled={amount > maxWithdrawal || amount < minWithdrawal}
+                                    disabled={amount > maxAmount || amount < minAmount}
                                     className={`py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
-                                        amount > maxWithdrawal || amount < minWithdrawal
+                                        amount > maxAmount || amount < minAmount
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             : 'bg-gradient-to-r from-[#a3cc69]/10 to-[#a797cc]/10 text-gray-700 hover:from-[#a3cc69]/20 hover:to-[#a797cc]/20 border-2 border-transparent hover:border-[#a3cc69]'
                                     }`}
@@ -201,15 +165,13 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                             ))}
                         </div>
 
-                        {/* Info Box */}
+                        {/* Info Box - no min/max limits shown */}
                         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
                             <div className="flex items-start gap-3">
                                 <FaInfoCircle className="text-blue-500 text-xl mt-0.5 flex-shrink-0" />
                                 <div className="text-sm text-blue-900">
                                     <p className="font-semibold mb-1">{t('withdrawal.important')}:</p>
                                     <ul className="space-y-1 text-blue-800">
-                                        <li>• {t('withdrawal.minimumAmount')}: {minWithdrawal} SAR</li>
-                                        <li>• {t('withdrawal.maximumLimitError') ? 'Maximum Amount' : 'Maximum'}: {maxWithdrawal} SAR</li>
                                         <li>• {t('withdrawal.processingTime')}</li>
                                         <li>• {t('withdrawal.transferBank')}</li>
                                         <li>• {t('withdrawal.notification')}</li>

@@ -120,7 +120,7 @@ export default function JoinUsEvent() {
   return (
     <>
       <Breadcrumbs items={breadcrumbItems} />
-      <section className="bg-white min-h-screen py-8 sm:py-12" style={{ overscrollBehavior: 'contain' }}>
+      <section className="bg-white py-8 sm:py-12 pb-12 sm:pb-16 md:pb-20" style={{ overscrollBehavior: 'contain' }}>
         <div className="mx-auto px-4 md:px-8 xl:px-28 max-w-[95%] sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%] xl:max-w-7xl">
           {/* Enhanced Header Section */}
           <div className="mb-8">
@@ -149,11 +149,11 @@ export default function JoinUsEvent() {
               </button>
             </div>
 
-            {/* Enhanced Status Filters */}
-            <div className="mb-6 flex flex-wrap gap-2.5">
+            {/* Enhanced Status Filters - horizontal scroll on tablet so all tabs stay in one row */}
+            <div className="mb-6 flex flex-nowrap overflow-x-auto gap-2.5 pb-2 -mx-1 px-1 md:flex-wrap md:overflow-visible md:pb-0 md:mx-0 md:px-0">
               <button
                 onClick={() => setStatusFilter("all")}
-                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                className={`group relative flex-shrink-0 px-4 py-2.5 md:px-5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   statusFilter === "all"
                     ? "bg-gradient-to-r from-[#a797cc] to-[#8ba179] text-white shadow-lg shadow-[#a797cc]/30 scale-105"
                     : "bg-white text-gray-700 border-2 border-gray-200 hover:border-[#a797cc] hover:bg-[#a797cc]/5 hover:shadow-md"
@@ -166,7 +166,7 @@ export default function JoinUsEvent() {
               </button>
               <button
                 onClick={() => setStatusFilter("accepted")}
-                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                className={`group relative flex-shrink-0 px-4 py-2.5 md:px-5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   statusFilter === "accepted"
                     ? "bg-gradient-to-r from-[#10b981] to-[#34d399] text-white shadow-lg shadow-green-500/30 scale-105"
                     : "bg-white text-gray-700 border-2 border-gray-200 hover:border-green-500 hover:bg-green-50 hover:shadow-md"
@@ -179,7 +179,7 @@ export default function JoinUsEvent() {
               </button>
               <button
                 onClick={() => setStatusFilter("pending")}
-                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                className={`group relative flex-shrink-0 px-4 py-2.5 md:px-5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   statusFilter === "pending"
                     ? "bg-gradient-to-r from-[#f59e0b] to-[#fbbf24] text-white shadow-lg shadow-yellow-500/30 scale-105"
                     : "bg-white text-gray-700 border-2 border-gray-200 hover:border-yellow-500 hover:bg-yellow-50 hover:shadow-md"
@@ -192,7 +192,7 @@ export default function JoinUsEvent() {
               </button>
               <button
                 onClick={() => setStatusFilter("rejected")}
-                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                className={`group relative flex-shrink-0 px-4 py-2.5 md:px-5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   statusFilter === "rejected"
                     ? "bg-gradient-to-r from-[#ef4444] to-[#f87171] text-white shadow-lg shadow-red-500/30 scale-105"
                     : "bg-white text-gray-700 border-2 border-gray-200 hover:border-red-500 hover:bg-red-50 hover:shadow-md"
@@ -205,7 +205,7 @@ export default function JoinUsEvent() {
               </button>
               <button
                 onClick={() => setStatusFilter("completed")}
-                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                className={`group relative flex-shrink-0 px-4 py-2.5 md:px-5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   statusFilter === "completed"
                     ? "bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] text-white shadow-lg shadow-indigo-500/30 scale-105"
                     : "bg-white text-gray-700 border-2 border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 hover:shadow-md"
@@ -218,7 +218,7 @@ export default function JoinUsEvent() {
               </button>
               <button
                 onClick={() => setStatusFilter("cancelled")}
-                className={`group relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                className={`group relative flex-shrink-0 px-4 py-2.5 md:px-5 rounded-xl text-sm font-semibold transition-all duration-300 ${
                   statusFilter === "cancelled"
                     ? "bg-gradient-to-r from-[#6b7280] to-[#9ca3af] text-white shadow-lg shadow-gray-500/30 scale-105"
                     : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-500 hover:bg-gray-50 hover:shadow-md"
@@ -272,11 +272,11 @@ export default function JoinUsEvent() {
             <>
               {displayEvents?.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6 mb-10">
                     {displayEvents?.map((event, i) => (
                       <div 
                         key={event._id || i}
-                        className="transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl h-full"
+                        className="min-w-0 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl h-full"
                       >
                         <Link
                           href={{
@@ -304,24 +304,24 @@ export default function JoinUsEvent() {
                   )}
                 </>
               ) : (
-                <div className="col-span-full flex flex-col items-center justify-center py-20 px-4">
-                  <div className="relative mb-6">
-                    <div className="w-32 h-32 bg-gradient-to-br from-[#a797cc]/10 to-[#8ba179]/10 rounded-full flex items-center justify-center mb-4 shadow-lg">
-                      <div className="w-24 h-24 bg-gradient-to-br from-[#a797cc]/20 to-[#8ba179]/20 rounded-full flex items-center justify-center">
+                <div className="col-span-full flex flex-col items-center justify-center py-10 sm:py-16 md:py-20 px-4">
+                  <div className="relative mb-4 sm:mb-6">
+                    <div className="w-28 h-28 sm:w-32 sm:h-32 bg-gradient-to-br from-[#a797cc]/10 to-[#8ba179]/10 rounded-full flex items-center justify-center mb-3 sm:mb-4 shadow-lg">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-[#a797cc]/20 to-[#8ba179]/20 rounded-full flex items-center justify-center">
                         <Image
                           src="/assets/images/icons/bx-calendar-plus.png"
                           height={56}
                           width={56}
                           alt={t('events.noEventsFound') || "No events"}
-                          className="opacity-60"
+                          className="opacity-60 w-12 h-12 sm:w-14 sm:h-14 md:w-[56px] md:h-[56px]"
                         />
                       </div>
                     </div>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 text-center">
                     {t('events.noEventsFound', 'No events found')}
                   </h3>
-                  <p className="text-gray-600 text-base mb-8 max-w-md text-center">
+                  <p className="text-gray-600 text-sm sm:text-base mb-6 sm:mb-8 max-w-md text-center">
                     {statusFilter === "all" 
                       ? t('events.createFirstEvent', 'Create your first event to get started and share amazing experiences with others')
                       : t('events.noEventsForFilter', `No ${statusFilter} events found for this filter`)
