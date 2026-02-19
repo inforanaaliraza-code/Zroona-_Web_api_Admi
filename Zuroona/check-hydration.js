@@ -18,10 +18,10 @@ const CHECKS = {
 
 function log(level, message) {
   const icons = {
-    ✅: "✅",
-    ❌: "❌",
-    ⚠️: "⚠️",
-    ℹ️: "ℹ️",
+    pass: "[OK]",
+    fail: "[X]",
+    warn: "[!]",
+    info: "[i]",
   };
 
   const colors = {
@@ -34,19 +34,19 @@ function log(level, message) {
 
   switch (level) {
     case "pass":
-      console.log(`${colors.green}${icons["✅"]} PASS:${colors.reset} ${message}`);
+      console.log(`${colors.green}${icons.pass} PASS:${colors.reset} ${message}`);
       CHECKS.passed++;
       break;
     case "fail":
-      console.log(`${colors.red}${icons["❌"]} FAIL:${colors.reset} ${message}`);
+      console.log(`${colors.red}${icons.fail} FAIL:${colors.reset} ${message}`);
       CHECKS.failed++;
       break;
     case "warn":
-      console.log(`${colors.yellow}${icons["⚠️"]} WARN:${colors.reset} ${message}`);
+      console.log(`${colors.yellow}${icons.warn} WARN:${colors.reset} ${message}`);
       CHECKS.warnings++;
       break;
     case "info":
-      console.log(`${colors.blue}${icons["ℹ️"]} INFO:${colors.reset} ${message}`);
+      console.log(`${colors.blue}${icons.info} INFO:${colors.reset} ${message}`);
       break;
   }
 }
@@ -165,9 +165,9 @@ function printSummary() {
   console.log("\n" + "=".repeat(60));
   console.log("HYDRATION CHECK SUMMARY");
   console.log("=".repeat(60));
-  console.log(`✅ Passed: ${CHECKS.passed}`);
-  console.log(`❌ Failed: ${CHECKS.failed}`);
-  console.log(`⚠️  Warnings: ${CHECKS.warnings}`);
+  console.log(`[OK] Passed: ${CHECKS.passed}`);
+  console.log(`[X] Failed: ${CHECKS.failed}`);
+  console.log(`[!] Warnings: ${CHECKS.warnings}`);
 
   const totalChecks = CHECKS.passed + CHECKS.failed + CHECKS.warnings;
   const passRate = Math.round((CHECKS.passed / totalChecks) * 100);
@@ -175,9 +175,9 @@ function printSummary() {
   console.log(`\nPass Rate: ${passRate}%`);
 
   if (CHECKS.failed === 0) {
-    console.log("\n✅ All critical hydration checks passed!");
+    console.log("\n[OK] All critical hydration checks passed!");
   } else {
-    console.log("\n❌ Some critical checks failed. Please fix them.");
+    console.log("\n[X] Some critical checks failed. Please fix them.");
     process.exit(1);
   }
 }
