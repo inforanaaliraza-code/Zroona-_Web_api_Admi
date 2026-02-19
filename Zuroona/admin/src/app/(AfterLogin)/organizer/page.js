@@ -363,34 +363,36 @@ export default function ManageEventOrganizer() {
                       <td className="px-2 py-2 whitespace-nowrap">
                         {organizer.id}
                       </td>
-                      <td className="px-2 py-2 flex items-center space-x-3 w-max">
-                        <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200 flex-shrink-0">
-                          <Image
-                            src={(() => {
-                              const getImageUrl = (imgPath) => {
-                                if (!imgPath) return "/assets/images/dummyImage.png";
-                                if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
-                                if (imgPath.startsWith("/uploads/")) {
-                                  const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3434";
-                                  const baseUrl = apiBase.replace(/\/api\/admin\/?$/, "").replace(/\/api\/?$/, "");
-                                  return `${baseUrl}${imgPath}`;
-                                }
-                                return "/assets/images/dummyImage.png";
-                              };
-                              return getImageUrl(organizer?.profile_image);
-                            })()}
-                            alt={organizer?.first_name ? `${organizer.first_name} ${organizer.last_name || ''}`.trim() : "Organizer profile"}
-                            fill
-                            className="object-cover"
-                            sizes="40px"
-                            onError={(e) => {
-                              e.target.src = "/assets/images/dummyImage.png";
-                            }}
-                          />
+                      <td className="px-2 py-2">
+                        <div className="flex items-center gap-4 w-max">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-200 shrink-0">
+                            <Image
+                              src={(() => {
+                                const getImageUrl = (imgPath) => {
+                                  if (!imgPath) return "/assets/images/dummyImage.png";
+                                  if (imgPath.includes("http://") || imgPath.includes("https://")) return imgPath;
+                                  if (imgPath.startsWith("/uploads/")) {
+                                    const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:3434";
+                                    const baseUrl = apiBase.replace(/\/api\/admin\/?$/, "").replace(/\/api\/?$/, "");
+                                    return `${baseUrl}${imgPath}`;
+                                  }
+                                  return "/assets/images/dummyImage.png";
+                                };
+                                return getImageUrl(organizer?.profile_image);
+                              })()}
+                              alt={organizer?.first_name ? `${organizer.first_name} ${organizer.last_name || ''}`.trim() : "Organizer profile"}
+                              fill
+                              className="object-cover"
+                              sizes="40px"
+                              onError={(e) => {
+                                e.target.src = "/assets/images/dummyImage.png";
+                              }}
+                            />
+                          </div>
+                          <span className="font-medium">
+                            {organizer.first_name} {organizer.last_name}
+                          </span>
                         </div>
-                        <span className="font-medium">
-                          {organizer.first_name} {organizer.last_name}
-                        </span>
                       </td>
                       <td className="px-2 py-2">
                         {organizer.country_code} {organizer.phone_number}

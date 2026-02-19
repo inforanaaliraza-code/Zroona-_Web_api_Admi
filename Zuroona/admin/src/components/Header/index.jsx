@@ -23,9 +23,9 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage, searc
 
   return (
     <>
-      <header className="sticky top-0 z-[999] flex w-full mt-4 animate-fade-in">
-        <div className="flex flex-grow items-center justify-between px-4 py-4 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg shadow-brand-pastel-gray-purple-1/20 border border-white/50 hover:shadow-xl hover:shadow-brand-pastel-gray-purple-1/30 transition-all duration-300">
-          <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
+      <header className="sticky top-0 z-[999] flex w-full min-w-0 mt-4 animate-fade-in">
+        <div className="flex flex-grow items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-3 sm:py-4 bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg shadow-brand-pastel-gray-purple-1/20 border border-white/50 hover:shadow-xl hover:shadow-brand-pastel-gray-purple-1/30 transition-all duration-300 min-w-0 w-full">
+          <div className="flex items-center gap-2 sm:gap-4 lg:hidden shrink-0">
             {/* <!-- Hamburger Toggle BTN --> */}
             <button
               aria-controls="sidebar"
@@ -59,12 +59,12 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage, searc
             </button>
           </div>
 
-          {/* Seach bar */}
-          <div className="hidden lg:block animate-fade-in">
+          {/* Search bar - flex-1 min-w-0 so it can shrink on small lg screens */}
+          <div className="hidden lg:block animate-fade-in flex-1 min-w-0 max-w-md">
             <SearchBar search={search} setSearch={setSearch} setPage={setPage} placeholder={searchPlaceholder} />
           </div>
 
-          <div className="flex items-center gap-x-2 sm:gap-x-4 lg:gap-x-3 xl:gap-x-6">
+          <div className="flex items-center gap-x-2 sm:gap-x-4 lg:gap-x-3 xl:gap-x-6 shrink-0 min-w-0">
 
             {/* Language Switcher */}
             <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
@@ -97,7 +97,7 @@ const Header = ({ sidebarOpen, setSidebarOpen, search, setSearch, setPage, searc
         </div>
       </header>
 
-      <div className="mt-5 block lg:hidden animate-fade-in">
+      <div className="mt-4 sm:mt-5 block lg:hidden w-full min-w-0 animate-fade-in">
         <SearchBar search={search} setSearch={setSearch} setPage={setPage} placeholder={searchPlaceholder} />
       </div>
     </>

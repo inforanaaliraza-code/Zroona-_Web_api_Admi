@@ -18,7 +18,7 @@ export default function DefaultLayout({ children, title, breadcrumbs, search, se
 
         {/* <!-- ===== Content Area Start ===== --> */}
         <div 
-          className={`overflow-auto relative flex flex-1 flex-col px-4 sm:px-6 transition-all duration-300 ${
+          className={`min-w-0 w-full overflow-auto relative flex flex-1 flex-col px-3 sm:px-6 transition-all duration-300 ${
             isRTL ? 'lg:mr-[320px]' : 'lg:ml-[320px]'
           }`}
           dir={isRTL ? "rtl" : "ltr"}
@@ -37,9 +37,9 @@ export default function DefaultLayout({ children, title, breadcrumbs, search, se
           {/* <!-- ===== Header End ===== --> */}
 
           {/* <!-- ===== Main Content Start ===== --> */}
-          <main className="flex-1 py-6 animate-fade-in">
-            <div className="mx-auto max-w-screen-2xl">
-              <div className="transition-all duration-300">
+          <main className="flex-1 py-4 sm:py-6 w-full min-w-0 animate-fade-in">
+            <div className="w-full min-w-0 max-w-screen-2xl mx-auto px-0 sm:px-0">
+              <div className="w-full min-w-0 transition-all duration-300">
                 {children}
               </div>
             </div>

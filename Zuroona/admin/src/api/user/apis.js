@@ -1,4 +1,4 @@
-import { DeleteParams, getData, patchRawData } from "../index";
+import { DeleteParams, getData, patchRawData, putRawData } from "../index";
 
   
   export const GetAllUserApi = async (payload) => {

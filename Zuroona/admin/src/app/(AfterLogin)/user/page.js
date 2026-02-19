@@ -1,15 +1,16 @@
 "use client";
 
 import { useDataStore } from "@/api/store/store";
-import { ActiveInActiveUserApi, DeleteUserApi } from "@/api/user/apis"; // Ensure DeleteUserApi is imported
+import { ActiveInActiveUserApi, DeleteUserApi } from "@/api/user/apis";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
 import ConfirmModal from "@/components/Modals/ConfirmModal";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { FaFileExcel, FaPrint, FaTrash, FaBan, FaCheckCircle, FaStar, FaEye } from "react-icons/fa"; 
+import { FaFileExcel, FaPrint, FaTrash, FaBan, FaCheckCircle, FaStar, FaEye } from "react-icons/fa";
 import { exportUsersToCSV, exportUsersToPDF } from "@/utils/exportUtils";
 import { useTranslation } from "react-i18next";
 
@@ -176,7 +177,7 @@ export default function UserManagement() {
       setPage={setPage}
       searchPlaceholder={t("users.searchPlaceholder") || "Search by Guests"}
     >
-      <div dir={isRTL ? "rtl" : "ltr"} className="min-w-0 max-w-full">
+      <div dir={isRTL ? "rtl" : "ltr"} className="w-full min-w-0 max-w-full overflow-hidden">
         {/* Header - stacks on mobile */}
         <div className="flex flex-col gap-4 py-4 sm:py-5">
           <div className="flex items-center justify-between gap-2 min-w-0">
@@ -234,10 +235,10 @@ export default function UserManagement() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-3 sm:p-5 min-w-0">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-5 w-full min-w-0 overflow-hidden">
           {/* Table - horizontal scroll on small screens */}
-          <div className="overflow-x-auto -mx-1 sm:mx-0">
-            <table className="min-w-full bg-white rounded-lg min-w-[800px]">
+          <div className="overflow-x-auto w-full -mx-1 sm:mx-0">
+            <table className="w-full bg-white rounded-lg min-w-[800px]">
               <thead className="bg-[#f3f7ff]">
                 <tr className="text-sm">
                   <th className="px-2 py-4 text-left font-base text-gray-600">
@@ -286,8 +287,9 @@ export default function UserManagement() {
                       className="border-b last:border-0 text-sm font-medium text-black whitespace-nowrap"
                     >
                       <td className="px-2 py-2 whitespace-nowrap">{user.id}</td>
-                      <td className="px-2 py-2 flex items-center gap-4 w-max">
-                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                      <td className="px-2 py-2">
+                        <div className="flex items-center gap-2 sm:gap-4 w-max min-w-0">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0">
                           <Image
                             src={
                               user?.profile_image?.includes("http")
@@ -299,10 +301,9 @@ export default function UserManagement() {
                             width={42}
                             className="w-full h-full object-cover"
                           />
+                          </div>
+                          <span className="truncate min-w-0">{user.first_name} {user.last_name}</span>
                         </div>
-                        <span>
-                          {user.first_name} {user.last_name}
-                        </span>
                       </td>
                       <td className="px-2 py-2">
                         {user.country_code} {user.phone_number}

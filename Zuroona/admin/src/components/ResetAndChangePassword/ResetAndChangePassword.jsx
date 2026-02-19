@@ -109,7 +109,7 @@ function ResetAndChangePassword(props) {
                     </div>
                     <input
                       type={toggleOldPassword ? "text" : "password"}
-                      className="block w-full px-12 pr-24 py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
+                      className="block w-full px-12 pr-[7.5rem] py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
                       placeholder={t("common.enterCurrentPassword")}
                       name="oldPassword"
                       onChange={handleChange}
@@ -119,7 +119,7 @@ function ResetAndChangePassword(props) {
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-3 flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#a797cc] hover:bg-[#a08ec8] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                      className="absolute inset-y-0 right-4 flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#a797cc] hover:bg-[#a08ec8] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
                       onClick={() => setToggleOldPassword(!toggleOldPassword)}
                     >
                       {toggleOldPassword ? (
@@ -162,7 +162,7 @@ function ResetAndChangePassword(props) {
                     id="newPassword"
                     type={toggleNewPassword ? "text" : "password"}
                     name="newPassword"
-                    className="block w-full px-12 pr-24 py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
+                    className="block w-full px-12 pr-[7.5rem] py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
                     placeholder={t("common.enterNewPassword")}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -170,7 +170,7 @@ function ResetAndChangePassword(props) {
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-3 flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#a797cc] hover:bg-[#a08ec8] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                    className="absolute inset-y-0 right-4 flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#a797cc] hover:bg-[#a08ec8] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
                     onClick={() => setToggleNewPassword(!toggleNewPassword)}
                   >
                     {toggleNewPassword ? (
@@ -207,7 +207,7 @@ function ResetAndChangePassword(props) {
                     id="changePassword"
                     type={toggleChangePassword ? "text" : "password"}
                     name="changePassword"
-                    className="block w-full px-12 pr-24 py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
+                    className="block w-full px-12 pr-[7.5rem] py-4 text-gray-900 border-2 border-gray-200 rounded-xl focus:border-[#a3cc69] focus:ring-4 focus:ring-[#a3cc69]/20 transition-all duration-300 sm:text-base placeholder:text-gray-400 placeholder:font-medium"
                     placeholder={t("common.enterConfirmNewPassword")}
                     onChange={handleChange}
                     onBlur={handleBlur}
@@ -215,7 +215,7 @@ function ResetAndChangePassword(props) {
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-3 flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#a797cc] hover:bg-[#a08ec8] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
+                    className="absolute inset-y-0 right-4 flex items-center px-4 py-2 rounded-lg text-sm font-semibold text-white bg-[#a797cc] hover:bg-[#a08ec8] transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
                     onClick={() => setToggleChangePassword(!toggleChangePassword)}
                   >
                     {toggleChangePassword ? (

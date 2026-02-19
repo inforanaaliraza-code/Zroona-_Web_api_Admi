@@ -19,14 +19,16 @@ const Line = dynamic(() => import('react-chartjs-2').then(mod => mod.Line), {
   loading: () => <div className="h-80 flex items-center justify-center">Loading...</div>
 });
 
-// Lazy register Chart.js components
+// Lazy register Chart.js components. Load Image polyfill first so Chart.js can use Image().
 let chartRegistered = false;
 const registerChart = () => {
   if (typeof window !== 'undefined' && !chartRegistered) {
-    import('chart.js').then(({ Chart: ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend }) => {
-      ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
-      chartRegistered = true;
-    });
+    import('@/lib/imageConstructorPolyfill')
+      .then(() => import('chart.js'))
+      .then(({ Chart: ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend }) => {
+        ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
+        chartRegistered = true;
+      });
   }
 };
 

@@ -1541,7 +1541,11 @@
     "failedToLoadMessages": "فشل تحميل الرسائل",
     "failedToSend": "فشل إرسال الرسالة",
     "attachFile": "إرفاق ملف",
-    "groupChatClosed": "الدردشة الجماعية مغلقة"
+    "groupChatClosed": "الدردشة الجماعية مغلقة",
+    "groupChatClosedMessage": "تم إغلاق هذه الدردشة الجماعية. لم يعد بإمكانك إرسال رسائل.",
+    "participant": "مشارك",
+    "participants": "مشاركين",
+    "groupChat": "دردشة جماعية"
   },
   "common": {
     "loading": "جاري التحميل...",

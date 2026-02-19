@@ -22,6 +22,7 @@ import {
   GetGroupChatOrganizerApi
 } from "@/app/api/messaging/apis";
 import { formatDistanceToNow } from "date-fns";
+import { enUS, ar } from "date-fns/locale";
 import Header from "@/components/Header/Header";
 import HostNavbar from "@/components/Header/HostNavbar";
 import GuestNavbar from "@/components/Header/GuestNavbar";
@@ -558,10 +559,11 @@ export default function MessagingPage() {
     return eventName.includes(searchLower) || otherUserName.includes(searchLower);
   });
 
-  // Format time
+  // Format time (locale-aware: Arabic/English for "X days ago", "about X hours ago", etc.)
   const formatMessageTime = (date) => {
     try {
-      return formatDistanceToNow(new Date(date), { addSuffix: true });
+      const locale = i18n.language === "ar" ? ar : enUS;
+      return formatDistanceToNow(new Date(date), { addSuffix: true, locale });
     } catch {
       return "";
     }
@@ -707,7 +709,7 @@ export default function MessagingPage() {
                             <div className="flex items-start justify-between mb-1">
                               <h3 className="font-semibold text-gray-900 truncate text-sm">
                                 {isGroupChat 
-                                  ? (conv.group_name || `${conv.event_id?.event_name} - Group Chat`)
+                                  ? (conv.group_name || `${conv.event_id?.event_name} - ${t("messaging.groupChat")}`)
                                   : `${otherUser?.first_name} ${otherUser?.last_name}`
                                 }
                               </h3>
@@ -787,14 +789,14 @@ export default function MessagingPage() {
                             <div>
                               <div className="flex items-center gap-2">
                                 <h2 className="font-semibold text-gray-900">
-                                  {selectedConversation.group_name || `${selectedConversation.event_id?.event_name} - Group Chat`}
+                                  {selectedConversation.group_name || `${selectedConversation.event_id?.event_name} - ${t("messaging.groupChat")}`}
                                 </h2>
                                 {selectedConversation.status === 'closed' && (
                                   <Icon icon="lucide:lock" className="h-4 w-4 text-gray-400" title={t("messaging.groupChatClosed") || "Group chat closed"} />
                                 )}
                               </div>
                               <p className="text-xs text-gray-500">
-                                {selectedConversation.participants?.length || 0} {selectedConversation.participants?.length === 1 ? 'participant' : 'participants'}
+                                {selectedConversation.participants?.length || 0} {selectedConversation.participants?.length === 1 ? t("messaging.participant") : t("messaging.participants")}
                               </p>
                             </div>
                           </>
@@ -1132,7 +1134,7 @@ export default function MessagingPage() {
                       <div className="bg-gray-100 rounded-lg p-3 text-center">
                         <Icon icon="lucide:lock" className="h-5 w-5 text-gray-400 mx-auto mb-2" />
                         <p className="text-sm text-gray-600">
-                          This group chat has been closed. Messages can no longer be sent.
+                          {t("messaging.groupChatClosedMessage")}
                         </p>
                       </div>
                     ) : (

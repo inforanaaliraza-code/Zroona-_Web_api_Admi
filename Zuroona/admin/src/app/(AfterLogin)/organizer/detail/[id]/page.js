@@ -184,7 +184,7 @@ export default function EventOrganizerDetail() {
                             ? 'bg-orange-100 text-orange-700 border border-orange-300' 
                             : 'bg-blue-100 text-blue-700 border border-blue-300'
                         }`}>
-                          {detail?.registration_type || 'New'}
+                          {detail?.registration_type === 'Re-apply' ? t("organizers.reApply") : t("organizers.new")}
                         </span>
                       </td>
                     </tr>

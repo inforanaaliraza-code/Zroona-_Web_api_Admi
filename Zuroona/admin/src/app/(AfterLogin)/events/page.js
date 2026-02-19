@@ -5,6 +5,7 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { FaFileExcel, FaPrint, FaEye } from "react-icons/fa";
 import { exportEventsToCSV, exportEventsToPDF } from "@/utils/exportUtils";
@@ -225,74 +226,71 @@ export default function ManageEvents() {
   };
 
   return (
-    <DefaultLayout search={search} setSearch={setSearch} setPage={setPage}>
-      <div>
-        <div className="flex sm:items-end flex-col sm:flex-row gap-x-10 py-6">
-          {/* Header */}
-          <div className="flex lg:w-[40%] items-end mb-4 sm:mb-0">
-            <h1 className="text-xl font-bold text-black">{t("events.manageEvents")}</h1>
+    <DefaultLayout
+      search={search}
+      setSearch={setSearch}
+      setPage={setPage}
+      searchPlaceholder={t("events.searchPlaceholder") || "Search by Event Name / Guest ID"}
+    >
+      <div className="w-full min-w-0 max-w-full overflow-hidden">
+        {/* Header row: title + export buttons */}
+        <div className="flex flex-col gap-4 py-4 sm:py-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-black truncate shrink-0">{t("events.manageEvents")}</h1>
+            <div className="flex flex-wrap gap-2 sm:gap-3 shrink-0">
+              <button onClick={() => exportEventsToCSV(GetAllEvents?.data || [], t)} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700 transition shrink-0">
+                <FaFileExcel className="shrink-0" /> <span>{t("events.exportCSV")}</span>
+              </button>
+              <button onClick={() => exportEventsToPDF(GetAllEvents?.data || [], t)} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700 transition shrink-0">
+                <FaPrint className="shrink-0" /> <span>{t("events.exportPDF")}</span>
+              </button>
+            </div>
           </div>
 
-          {/* Export Buttons */}
-          <div className="w-full flex lg:justify-end gap-3 items-center mt-5 lg:mt-0">
-            <button onClick={() => exportEventsToCSV(GetAllEvents?.data || [], t)} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition">
-              <FaFileExcel /> {t("events.exportCSV")}
-            </button>
-            <button onClick={() => exportEventsToPDF(GetAllEvents?.data || [], t)} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition">
-              <FaPrint /> {t("events.exportPDF")}
-            </button>
-          </div>
-
-          {/* Header (old) */}
-          <div className="mb-4 sm:mb-0">
-            <h1 className="text-xl font-bold text-black">{t("events.manageEvents")}</h1>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex items-end space-x-4">
+          {/* Tabs - equal width and alignment */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
             <button
               onClick={() => handleTabChange("Pending")}
-              className={`px-3 py-3 sm:px-6 sm:py-4 border-2 rounded-xl text-sm font-semibold bg-white ${activeTab === "Pending"
-                ? "border-2 border-[#a797cc] text-[#a797cc]"
-                : "border-2 border-transparent text-[#c8b68b]"
+              className={`min-h-[44px] sm:min-h-[48px] flex items-center justify-center px-3 py-2.5 sm:py-3 border-2 rounded-xl text-sm font-semibold bg-white text-center ${activeTab === "Pending"
+                ? "border-[#a797cc] text-[#a797cc]"
+                : "border-transparent text-[#c8b68b]"
                 }`}
             >
-              {t("events.pending")}
+              <span className="leading-tight">{t("events.pending")}</span>
             </button>
             <button
               onClick={() => handleTabChange("Upcoming")}
-              className={`px-3 py-3 sm:px-6 sm:py-4 border-2 rounded-xl text-sm font-semibold bg-white ${activeTab === "Upcoming"
-                ? "border-2 border-[#a797cc] text-[#a797cc]"
-                : "border-2 border-transparent text-[#c8b68b]"
+              className={`min-h-[44px] sm:min-h-[48px] flex items-center justify-center px-3 py-2.5 sm:py-3 border-2 rounded-xl text-sm font-semibold bg-white text-center ${activeTab === "Upcoming"
+                ? "border-[#a797cc] text-[#a797cc]"
+                : "border-transparent text-[#c8b68b]"
                 }`}
             >
-              {t("events.upcoming")}
+              <span className="leading-tight">{t("events.upcoming")}</span>
             </button>
             <button
               onClick={() => handleTabChange("Completed")}
-              className={`px-3 py-3 sm:px-6 sm:py-4 border-2 rounded-xl text-sm font-semibold bg-white ${activeTab === "Completed"
-                ? "border-2 border-[#a797cc] text-[#a797cc]"
-                : "border-2 border-transparent text-[#c8b68b]"
+              className={`min-h-[44px] sm:min-h-[48px] flex items-center justify-center px-3 py-2.5 sm:py-3 border-2 rounded-xl text-sm font-semibold bg-white text-center ${activeTab === "Completed"
+                ? "border-[#a797cc] text-[#a797cc]"
+                : "border-transparent text-[#c8b68b]"
                 }`}
             >
-              {t("events.completed")}
+              <span className="leading-tight">{t("events.completed")}</span>
             </button>
             <button
               onClick={() => handleTabChange("Rejected")}
-              className={`px-3 py-3 sm:px-6 sm:py-4 border-2 rounded-xl text-sm font-semibold bg-white ${activeTab === "Rejected"
-                ? "border-2 border-[#a797cc] text-[#a797cc]"
-                : "border-2 border-transparent text-[#c8b68b]"
+              className={`min-h-[44px] sm:min-h-[48px] flex items-center justify-center px-3 py-2.5 sm:py-3 border-2 rounded-xl text-sm font-semibold bg-white text-center ${activeTab === "Rejected"
+                ? "border-[#a797cc] text-[#a797cc]"
+                : "border-transparent text-[#c8b68b]"
                 }`}
             >
-              {t("events.rejected")}
+              <span className="leading-tight">{t("events.rejected")}</span>
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-5">
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-lg">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-5 w-full min-w-0 overflow-hidden">
+          <div className="overflow-x-auto w-full -mx-1 sm:mx-0">
+            <table className="w-full min-w-[900px] bg-white rounded-lg">
               <thead className="bg-[#f3f7ff]">
                 <tr className="text-sm">
                   <th className="px-2 py-4 text-left font-base text-gray-600">
@@ -342,8 +340,8 @@ export default function ManageEvents() {
                     >
                       <td className="px-2 py-3 whitespace-nowrap">{event.id}</td>
                       <td className="px-2 py-3">
-                        <div className="flex items-center space-x-3 w-max">
-                          <div className="relative w-14 h-9 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                        <div className="flex items-center gap-3 w-max min-w-0">
+                          <div className="relative w-12 h-8 sm:w-14 sm:h-9 rounded-lg overflow-hidden border border-gray-200 shrink-0">
                             <Image
                               src={getEventImageUrl(event)}
                               alt={event.event_name || "Event"}
@@ -355,23 +353,25 @@ export default function ManageEvents() {
                               }}
                             />
                           </div>
-                          <span className="font-medium">{event.event_name}</span>
+                          <span className="font-medium truncate min-w-0">{event.event_name}</span>
                         </div>
                       </td>
-                      <td className="px-2 py-3 whitespace-nowrap">
-                        <div className="flex items-center space-x-3 w-max">
-                          <Image
-                            src={
-                              event?.organizer?.profile_image?.includes("http")
-                                ? event?.organizer?.profile_image
-                                : "/assets/images/dummyImage.png"
-                            }
-                            alt={event.name}
-                            height={42}
-                            width={42}
-                            className="w-10 h-10 rounded-full"
-                          />
-                          <span>
+                      <td className="px-2 py-3">
+                        <div className="flex items-center gap-4 w-max min-w-0">
+                          <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden shrink-0">
+                            <Image
+                              src={
+                                event?.organizer?.profile_image?.includes("http")
+                                  ? event?.organizer?.profile_image
+                                  : "/assets/images/dummyImage.png"
+                              }
+                              alt={event?.organizer?.first_name ? `${event.organizer.first_name} ${event?.organizer?.last_name || ""}`.trim() || "Organizer" : "Organizer"}
+                              height={42}
+                              width={42}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="truncate min-w-0">
                             {event?.organizer?.first_name}{" "}
                             {event?.organizer?.last_name}
                           </span>

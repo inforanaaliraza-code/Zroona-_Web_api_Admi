@@ -1,21 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 const ToggleSwitch = ({ isOn, handleToggle }) => {
   return (
-    <div className="flex items-center">
-      <div
-        onClick={handleToggle}
-        className={`relative inline-flex items-center cursor-pointer ${
-          isOn ? 'bg-green-500' : 'bg-gray-300'
-        } p-1 rounded-full transition-colors duration-300 ease-in-out w-6 h-3`}
-      >
-        <div
-          className={`w-2 h-2 bg-white rounded-full shadow-md transform ${
-            isOn ? 'translate-x-[10px]' : 'translate-x-[-1px]'
-          } transition-transform duration-300 ease-in-out`}
-        />
-      </div>
-    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={isOn}
+      onClick={handleToggle}
+      className={`relative inline-flex items-center cursor-pointer rounded-full transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-500 ${
+        isOn ? 'bg-green-500' : 'bg-gray-300'
+      } w-11 h-6 p-0.5`}
+    >
+      <span
+        className={`block w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-out ${
+          isOn ? 'translate-x-5' : 'translate-x-0'
+        }`}
+      />
+    </button>
   );
 };
 

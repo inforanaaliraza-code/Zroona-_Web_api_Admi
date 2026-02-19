@@ -1,16 +1,22 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { setLanguage } from "@/redux/slices/language";
 import { FaGlobe } from "react-icons/fa";
+
+const DROPDOWN_WIDTH = 192; // w-48 = 12rem
+const VIEWPORT_PADDING = 12;
 
 const LanguageSwitcher = () => {
 	const { i18n, t } = useTranslation();
 	const dispatch = useDispatch();
 	const { currentLanguage, isRTL } = useSelector((state) => state.language);
 	const [isOpen, setIsOpen] = useState(false);
+	const [dropdownStyle, setDropdownStyle] = useState({});
+	const buttonRef = useRef(null);
 	const dropdownRef = useRef(null);
 
 	const languages = [
@@ -79,75 +85,108 @@ const LanguageSwitcher = () => {
 	// Close dropdown when clicking outside
 	useEffect(() => {
 		const handleClickOutside = (event) => {
-			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-				setIsOpen(false);
-			}
+			const inButton = buttonRef.current && buttonRef.current.contains(event.target);
+			const inDropdown = dropdownRef.current && dropdownRef.current.contains(event.target);
+			if (!inButton && !inDropdown) setIsOpen(false);
 		};
 
 		document.addEventListener("mousedown", handleClickOutside);
 		return () => document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
 
-	return (
-		<div className="relative" ref={dropdownRef}>
-			<button
-				onClick={() => setIsOpen(!isOpen)}
-				className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-2 transition-colors"
-				aria-label="Change language"
-			>
-				<FaGlobe className="w-4 h-4" />
-				<span className="hidden sm:inline">{currentLang.flag}</span>
-				<span className="hidden md:inline">{currentLang.nativeName}</span>
-				<svg
-					className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						strokeLinecap="round"
-						strokeLinejoin="round"
-						strokeWidth={2}
-						d="M19 9l-7 7-7-7"
-					/>
-				</svg>
-			</button>
+	// Position dropdown inside viewport when open (portal) - align right with button so it doesn't go off screen
+	useEffect(() => {
+		if (!isOpen || typeof document === "undefined" || !buttonRef.current) return;
 
-			{isOpen && (
-				<div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-					{languages.map((lang) => (
-						<button
-							key={lang.code}
-							onClick={() => changeLanguage(lang.code)}
-							className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${
-								currentLanguage === lang.code
-									? "bg-[#a797cc]/10 text-[#a797cc] font-medium"
-									: "text-gray-700"
-							}`}
+		const btn = buttonRef.current.getBoundingClientRect();
+		const vw = document.documentElement.clientWidth || window.innerWidth;
+		const pad = VIEWPORT_PADDING;
+
+		// Align dropdown's right edge with button's right edge so it opens to the left (stays in view)
+		let left = btn.right - DROPDOWN_WIDTH;
+		if (left < pad) left = pad;
+		if (left + DROPDOWN_WIDTH > vw - pad) left = vw - DROPDOWN_WIDTH - pad;
+
+		const top = btn.bottom + 8;
+
+		setDropdownStyle({
+			position: "fixed",
+			left: `${Math.round(left)}px`,
+			top: `${Math.round(top)}px`,
+			width: `${DROPDOWN_WIDTH}px`,
+			maxWidth: `calc(100vw - ${pad * 2}px)`,
+		});
+	}, [isOpen]);
+
+	const dropdownContent = isOpen && (
+		<div
+			ref={dropdownRef}
+			className="bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[1001]"
+			style={dropdownStyle}
+		>
+			{languages.map((lang) => (
+				<button
+					key={lang.code}
+					onClick={() => changeLanguage(lang.code)}
+					className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${
+						currentLanguage === lang.code
+							? "bg-[#a797cc]/10 text-[#a797cc] font-medium"
+							: "text-gray-700"
+					}`}
+				>
+					<span className="text-xl shrink-0">{lang.flag}</span>
+					<div className="flex flex-col min-w-0 flex-1">
+						<span className="truncate">{lang.nativeName}</span>
+						<span className="text-xs text-gray-500 truncate">{lang.name}</span>
+					</div>
+					{currentLanguage === lang.code && (
+						<svg
+							className="w-4 h-4 shrink-0 text-[#a797cc]"
+							fill="currentColor"
+							viewBox="0 0 20 20"
 						>
-							<span className="text-xl">{lang.flag}</span>
-							<div className="flex flex-col">
-								<span>{lang.nativeName}</span>
-								<span className="text-xs text-gray-500">{lang.name}</span>
-							</div>
-							{currentLanguage === lang.code && (
-								<svg
-									className="w-4 h-4 ml-auto text-[#a797cc]"
-									fill="currentColor"
-									viewBox="0 0 20 20"
-								>
-									<path
-										fillRule="evenodd"
-										d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-										clipRule="evenodd"
-									/>
-								</svg>
-							)}
-						</button>
-					))}
-				</div>
-			)}
+							<path
+								fillRule="evenodd"
+								d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+								clipRule="evenodd"
+							/>
+						</svg>
+					)}
+				</button>
+			))}
 		</div>
+	);
+
+	return (
+		<>
+			<div className="relative">
+				<button
+					ref={buttonRef}
+					onClick={() => setIsOpen(!isOpen)}
+					className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:ring-offset-2 transition-colors"
+					aria-label="Change language"
+					aria-expanded={isOpen}
+				>
+					<FaGlobe className="w-4 h-4" />
+					<span className="hidden sm:inline">{currentLang.flag}</span>
+					<span className="hidden md:inline truncate max-w-[100px]">{currentLang.nativeName}</span>
+					<svg
+						className={`w-4 h-4 transition-transform shrink-0 ${isOpen ? "rotate-180" : ""}`}
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M19 9l-7 7-7-7"
+						/>
+					</svg>
+				</button>
+			</div>
+			{typeof document !== "undefined" && dropdownContent && createPortal(dropdownContent, document.body)}
+		</>
 	);
 };
 

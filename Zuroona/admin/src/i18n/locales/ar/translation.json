@@ -82,6 +82,7 @@
     "enterAdminName": "أدخل اسم المسؤول",
     "enterUsername": "أدخل اسم المستخدم",
     "enterEmailOptional": "أدخل البريد الإلكتروني (اختياري)",
+    "password": "كلمة المرور",
     "enterPassword": "أدخل كلمة المرور",
     "profilePhoto": "صورة الملف الشخصي",
     "imageSizeLimit": "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
@@ -362,7 +363,8 @@
     "eventsFound": "فعاليات تم العثور عليها",
     "eventsFoundIn": "فعاليات تم العثور عليها في",
     "in": "في",
-    "clearFilter": "مسح الفلتر"
+    "clearFilter": "مسح الفلتر",
+    "searchPlaceholder": "البحث باسم الفعالية / معرف الضيف"
   },
   "organizers": {
     "title": "المنظمين",
@@ -422,6 +424,8 @@
     "failedToChangeStatus": "فشل تغيير الحالة",
     "confirmApproveOrganizer": "هل أنت متأكد أنك تريد الموافقة على هذا المنظم؟",
     "confirmRejectOrganizer": "هل أنت متأكد أنك تريد رفض هذا المنظم؟",
+    "confirmStatus": "تأكيد الحالة",
+    "confirmStatusMessage": "هل أنت متأكد أنك تريد {{action}} {{name}}؟",
     "male": "ذكر",
     "female": "أنثى",
     "new": "جديد",
@@ -1021,7 +1025,13 @@
     "eventRejectedSuccess": "تم رفض الفعالية بنجاح",
     "failedToUpdateStatus": "فشل تحديث حالة الفعالية",
     "eventIdNotFound": "لم يتم العثور على معرف الفعالية",
-    "instructionsLabel": "التعليمات"
+    "instructionsLabel": "التعليمات",
+    "eventImages": "صور الفعالية",
+    "clickToView": "انقر للعرض",
+    "new": "جديد",
+    "eventApprovedLabel": "تمت الموافقة على الفعالية",
+    "eventRejectedLabel": "تم رفض الفعالية",
+    "eventCompletedLabel": "اكتملت الفعالية"
   },
   "eventsMain": {
     "dontsLabel": "ما لا يجب فعله",

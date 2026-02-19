@@ -137,7 +137,7 @@ export default function UserDetail() {
                     ? detail?.user?.profile_image
                     : "/assets/images/dummyImage.png"
                 }
-                alt="Organizer Photo"
+                alt={detail?.user?.first_name ? `${detail.user.first_name} ${detail?.user?.last_name || ""}`.trim() || "User profile" : "User profile"}
                 width={290}
                 height={290}
                 className="rounded-lg w-full sm:w-[290px] h-auto"
@@ -363,8 +363,8 @@ export default function UserDetail() {
                           className="border-b last:border-0 text-xs font-semibold text-gray-600 whitespace-nowrap"
                         >
                           <td className="px-2 py-3">
-                            <div className="flex items-center space-x-1 w-max">
-                              <div className="w-16 h-9 rounded-lg overflow-hidden">
+                            <div className="flex items-center gap-4 w-max">
+                              <div className="w-16 h-9 rounded-lg overflow-hidden shrink-0">
                                 <Image
                                   src={
                                     (() => {
@@ -388,8 +388,8 @@ export default function UserDetail() {
                             </div>
                           </td>
                           <td className="px-2 py-3">
-                            <div className="flex items-center space-x-3 w-max">
-                              <div className="w-10 h-10 rounded-full overflow-hidden">
+                            <div className="flex items-center gap-5 w-max">
+                              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                                 <Image
                                   src={
                                     event?.organizer?.profile_image?.includes(
@@ -398,7 +398,7 @@ export default function UserDetail() {
                                       ? event?.organizer?.profile_image
                                       : "/assets/images/dummyImage.png"
                                   }
-                                  alt={event.name}
+                                  alt={event?.organizer?.first_name ? `${event.organizer.first_name} ${event?.organizer?.last_name || ""}`.trim() || "Organizer" : "Organizer"}
                                   height={42}
                                   width={42}
                                   className="w-full h-full object-cover"

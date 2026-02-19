@@ -1,7 +1,8 @@
 "use client";
 
-// Import polyfills FIRST so they run before any component or dependency
-import "@/lib/imageConstructorPolyfill"; // Fix "Failed to construct 'Image': Please use the 'new' operator"
+// Do NOT import imageConstructorPolyfill here - it allows Image() to return HTMLImageElement
+// which can end up in React tree and cause "Objects are not valid as a React child".
+// Chart-using pages load the polyfill locally before registering Chart.
 import "@/lib/reactDomPolyfill"; // Fix React 19 findDOMNode issue with react-quill
 
 import { Suspense } from "react";

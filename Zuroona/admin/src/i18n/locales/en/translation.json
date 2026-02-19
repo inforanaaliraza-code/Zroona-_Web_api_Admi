@@ -82,6 +82,7 @@
     "enterAdminName": "Enter admin name",
     "enterUsername": "Enter username",
     "enterEmailOptional": "Enter email (optional)",
+    "password": "Password",
     "enterPassword": "Enter password",
     "profilePhoto": "Profile Photo",
     "imageSizeLimit": "Image size should be less than 5MB",
@@ -358,7 +359,8 @@
     "eventsFound": "events found",
     "eventsFoundIn": "events found in",
     "in": "in",
-    "clearFilter": "Clear Filter"
+    "clearFilter": "Clear Filter",
+    "searchPlaceholder": "Search by Event Name / Guest ID"
   },
   "organizers": {
     "title": "Organizers",
@@ -418,6 +420,8 @@
     "failedToChangeStatus": "Failed to change status",
     "confirmApproveOrganizer": "Are you sure you want to approve this organizer?",
     "confirmRejectOrganizer": "Are you sure you want to reject this organizer?",
+    "confirmStatus": "Confirm Status",
+    "confirmStatusMessage": "Are you sure you want to {{action}} {{name}}?",
     "male": "Male",
     "female": "Female",
     "new": "New",
@@ -1015,7 +1019,13 @@
     "eventRejectedSuccess": "Event rejected successfully",
     "failedToUpdateStatus": "Failed to update event status",
     "eventIdNotFound": "Event ID not found",
-    "instructionsLabel": "Instructions"
+    "instructionsLabel": "Instructions",
+    "eventImages": "Event Images",
+    "clickToView": "Click to view",
+    "new": "New",
+    "eventApprovedLabel": "Event Approved",
+    "eventRejectedLabel": "Event Rejected",
+    "eventCompletedLabel": "Event Completed"
   },
   "eventsMain": {
     "dontsLabel": "What Not to Do",

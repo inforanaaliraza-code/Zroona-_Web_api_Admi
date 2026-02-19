@@ -1519,7 +1519,11 @@
     "failedToLoadMessages": "Failed to load messages",
     "failedToSend": "Failed to send message",
     "attachFile": "Attach file",
-    "groupChatClosed": "Group chat closed"
+    "groupChatClosed": "Group chat closed",
+    "groupChatClosedMessage": "This group chat has been closed. Messages can no longer be sent.",
+    "participant": "participant",
+    "participants": "participants",
+    "groupChat": "Group Chat"
   },
   "common": {
     "loading": "Loading...",
