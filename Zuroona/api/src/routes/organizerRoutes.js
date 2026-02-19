@@ -6,7 +6,7 @@ const messageController = require('../controllers/messageController.js');
 const { AuthenticateUser, AuthenticateOrganizer } = require('../middleware/authenticate.js');
 const Validator = require('../middleware/validateMiddleware.js');
 const { eventValidation } = require('../validations/eventValidation.js');
-const { organizerRegistrationValidation, paymentSchema } = require('../validations/organizerValidation.js');
+const { organizerRegistrationValidation: _organizerRegistrationValidation, paymentSchema: _paymentSchema } = require('../validations/organizerValidation.js');
 
 
 

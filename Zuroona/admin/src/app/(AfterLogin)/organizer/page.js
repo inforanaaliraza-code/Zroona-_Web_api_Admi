@@ -15,7 +15,7 @@ import Paginations from "@/components/Paginations/Pagination";
 import ToggleSwitch from "@/components/ui/ToggleSwitch";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { toast } from "react-toastify";
 import { FaFileExcel, FaPrint, FaEye } from "react-icons/fa";
 import { exportOrganizersToPDF } from "@/utils/exportUtils";
@@ -47,14 +47,14 @@ export default function ManageEventOrganizer() {
     setPage(value);
   };
 
-  const params = {
+  const params = useMemo(() => ({
     page: page,
     limit: 10,
     is_approved:
       approvedTab === "Pending" ? 1 : approvedTab === "Approved" ? 2 : 3,
     is_active: approvedTab === "Approved" ? status : null,
     search: search,
-  };
+  }), [page, approvedTab, status, search]);
 
   const GetAllOrganizer = useDataStore((store) => store.GetAllOrganizer);
   const { fetchGetAllOrganizer } = useDataStore();
@@ -64,7 +64,7 @@ export default function ManageEventOrganizer() {
     fetchGetAllOrganizer(params).then(() => {
       setLoading(false);
     });
-  }, [page, search, approvedTab, status]); // Add activeTab to dependencies
+  }, [page, search, approvedTab, status, fetchGetAllOrganizer, params]);
 
   const handleToggleClick = (organizer) => {
     setSelectedOrganierEvent(organizer);

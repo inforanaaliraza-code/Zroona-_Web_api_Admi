@@ -11,7 +11,7 @@
  */
 
 require('dotenv').config();
-const axios = require('axios');
+const _axios = require('axios');
 const daftraService = require('./src/services/daftraService.js');
 
 async function testDaftraIntegration() {

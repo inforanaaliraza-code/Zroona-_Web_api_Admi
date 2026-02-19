@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
@@ -21,11 +21,7 @@ export default function AdminManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState(null);
 
-  useEffect(() => {
-    fetchAdmins();
-  }, [page, search]);
-
-  const fetchAdmins = async () => {
+  const fetchAdmins = useCallback(async () => {
     setLoading(true);
     try {
       const res = await GetAllAdminsApi({ page, limit: itemsPerPage, search });
@@ -38,7 +34,11 @@ export default function AdminManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, itemsPerPage, t]);
+
+  useEffect(() => {
+    fetchAdmins();
+  }, [fetchAdmins]);
 
   const handleDelete = async (id) => {
     if (!confirm(t("common.confirmDeleteAdmin"))) return;

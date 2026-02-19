@@ -2,7 +2,7 @@ const Response = require("../helpers/response");
 const LandingPageService = require("../services/landingPageService");
 const resp_messages = require("../helpers/resp_messages");
 const mongoose = require("mongoose");
-const { verifyToken } = require("../helpers/generateToken");
+const { verifyToken: _verifyToken } = require("../helpers/generateToken");
 
 const LandingPageController = {
 	getEvents: async (req, res) => {

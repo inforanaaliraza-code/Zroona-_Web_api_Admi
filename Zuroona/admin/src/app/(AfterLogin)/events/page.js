@@ -6,7 +6,7 @@ import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { FaFileExcel, FaPrint, FaEye } from "react-icons/fa";
 import { exportEventsToCSV, exportEventsToPDF } from "@/utils/exportUtils";
 import { ChangeEventStatusApi } from "@/api/events/apis";
@@ -145,27 +145,27 @@ export default function ManageEvents() {
     setPage(value);
   };
 
-  const params = {
+  const params = useMemo(() => ({
     page: page,
     limit: 10,
     status: activeTab === "Pending" ? 1 : activeTab === "Upcoming" ? 2 : activeTab === "Completed" ? 3 : activeTab === "Rejected" ? 4 : 1,
     search: search,
-  };
+  }), [page, activeTab, search]);
 
   const GetAllEvents = useDataStore((store) => store.GetAllEvents);
   const { fetchGetAllEvents } = useDataStore();
 
   // Refresh events list
-  const refreshEvents = () => {
+  const refreshEvents = useCallback(() => {
     setLoading(true);
     fetchGetAllEvents(params).then(() => {
       setLoading(false);
     });
-  };
+  }, [fetchGetAllEvents, params]);
 
   useEffect(() => {
     refreshEvents();
-  }, [page, activeTab, search]);
+  }, [refreshEvents]);
 
   // Handle Accept Event
   const handleAcceptEvent = async (eventId) => {

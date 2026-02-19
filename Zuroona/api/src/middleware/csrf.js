@@ -4,7 +4,7 @@
  */
 
 const csrf = require('express-csurf');
-const cookieParser = require('cookie-parser');
+const _cookieParser = require('cookie-parser');
 
 // CSRF protection configuration
 // Note: For API-only applications, CSRF might not be needed if using JWT tokens

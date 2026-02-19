@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
@@ -26,11 +26,7 @@ export default function CareerApplications() {
   const [statusFilter, setStatusFilter] = useState("all"); // all, pending, approved, rejected
   const [positionFilter, setPositionFilter] = useState("");
 
-  useEffect(() => {
-    fetchApplications();
-  }, [page, search, statusFilter, positionFilter]);
-
-  const fetchApplications = async () => {
+  const fetchApplications = useCallback(async () => {
     setLoading(true);
     try {
       const queryParams = {
@@ -51,7 +47,11 @@ export default function CareerApplications() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, statusFilter, positionFilter, itemsPerPage, t]);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
   const handleApprove = (application) => {
     setSelectedApplication(application);

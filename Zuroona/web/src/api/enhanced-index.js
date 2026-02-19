@@ -144,7 +144,7 @@ export {
   axiosInstance,
 };
 
-export default {
+const apiExport = {
   safeApiCall,
   getData,
   postRawData,
@@ -154,3 +154,4 @@ export default {
   deleteData,
   handleAndDisplayError,
 };
+export default apiExport;

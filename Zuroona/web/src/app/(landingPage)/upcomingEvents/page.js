@@ -143,7 +143,7 @@ export default function UpComingEvents() {
         event_date: "",
       })
     );
-  }, [page, categoryFilter, dispatch]);
+  }, [page, categoryFilter, dispatch, activePage]);
 
   const handleCategoryClick = (categoryId) => {
     setPage(1); // Reset to first page when category changes

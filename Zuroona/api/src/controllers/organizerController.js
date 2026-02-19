@@ -3,7 +3,7 @@ const Response = require("../helpers/response");
 const { cleanEmail } = require("../helpers/emailCleaner");
 const { getLocalPhoneFromString } = require("../controllers/userController");
 // OTP functionality removed - using email-based authentication only
-const GroupCategories = require("../models/groupCategoryModel");
+const _GroupCategories = require("../models/groupCategoryModel");
 const BankService = require("../services/bankService");
 const mongoose = require("mongoose");
 const organizerService = require("../services/organizerService");
@@ -24,18 +24,18 @@ const PrettyConsole = require("../helpers/prettyConsole");
 const WalletService = require("../services/walletService");
 const moment = require("moment");
 const TransactionService = require("../services/recentTransaction");
-const ConversationService = require("../services/conversationService.js");
+const _ConversationService = require("../services/conversationService.js");
 const notificationHelper = require("../helpers/notificationService");
 const {
-	getGraphData,
-	getCurrentMonthAttendees,
-	getPreviousMonthAttendees,
-	calculateAttendanceChange,
-	generateDailyEarningsData,
-	generateWeeklyEarningsData,
-	generateMonthlyEarningsData,
-	calculateTotalAttendees,
-	calculateMonthlyAttendeeComparison,
+	getGraphData: _getGraphData,
+	getCurrentMonthAttendees: _getCurrentMonthAttendees,
+	getPreviousMonthAttendees: _getPreviousMonthAttendees,
+	calculateAttendanceChange: _calculateAttendanceChange,
+	generateDailyEarningsData: _generateDailyEarningsData,
+	generateWeeklyEarningsData: _generateWeeklyEarningsData,
+	generateMonthlyEarningsData: _generateMonthlyEarningsData,
+	calculateTotalAttendees: _calculateTotalAttendees,
+	calculateMonthlyAttendeeComparison: _calculateMonthlyAttendeeComparison,
 } = require("../helpers/earningHelperFun");
 
 const custom_log = new PrettyConsole();
@@ -388,7 +388,7 @@ const organizerController = {
 			const phoneDigits = phoneStr ? phoneStr.toString().replace(/\D/g, "") : "";
 			const last8Digits = phoneDigits.slice(-8);
 			const isSpecialTestPhone = (localPhoneForAutoVerify && SPECIAL_LOCAL_TEST_PHONES.has(localPhoneForAutoVerify)) ||
-			                           (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
+				(last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
 
 			if (isSpecialTestPhone) {
 				organizerData.is_verified = true;
@@ -1460,7 +1460,7 @@ const organizerController = {
 			// Get all admin users to create notifications for them
 			const AdminService = require("../services/adminService.js");
 			const admins = await AdminService.FindService({ is_delete: { $ne: 1 } });
-			const lang = req.headers.lang || req.lang || organizer.language || "en";
+			const _lang = req.headers.lang || req.lang || organizer.language || "en";
 			
 			// Create notification for each admin (store both EN and AR for admin UI locale)
 			for (const admin of admins) {
@@ -1822,9 +1822,9 @@ const organizerController = {
 				page = 1,
 				limit = 10,
 				event_type = 1,
-				search = "",
-				event_date,
+				_search = "",
 				status,
+				event_date,
 			} = req.query;
 			const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -2097,7 +2097,7 @@ const organizerController = {
 				return true;
 			});
 
-			const totalDocuments =
+			const _totalDocuments =
 				total_count.length > 0 ? total_count[0].total_count : 0;
 
 			return Response.ok(
@@ -3051,7 +3051,7 @@ const organizerController = {
 
 			if (!wallet) {
 				// Create default wallet if it doesn't exist
-				const newWallet = await WalletService.CreateService({
+				const _newWallet = await WalletService.CreateService({
 					organizer_id: userId,
 					total_amount: 0,
 					minimum_withdrawal: 100,
@@ -3141,8 +3141,7 @@ const organizerController = {
 			await organizerWallet.save();
 			
 			// Create withdrawal transaction with pending status (status = 0)
-			const transaction = await TransactionService.CreateService({
-				type: 2,
+		const _transaction = await TransactionService.CreateService({
 				amount: amount,
 				organizer_id: userId,
 				status: 0, // Pending
@@ -3151,7 +3150,7 @@ const organizerController = {
 			// Create notification for admin when withdrawal is requested
 			try {
 				const AdminService = require("../services/adminService.js");
-				const lang = req.headers.lang || req.lang || "en";
+				const _lang = req.headers.lang || req.lang || "en";
 				const organizer = await organizerService.FindOneService({ _id: userId });
 				
 				if (organizer) {

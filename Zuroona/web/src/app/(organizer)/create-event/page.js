@@ -132,7 +132,7 @@ const TimePicker = ({ value, onChange, minTime, error, errorMessage, selectedDat
             isInternalUpdateRef.current = true;
             onChange(next);
         }
-    }, [hours, minutes, isAM]);
+    }, [hours, minutes, isAM, onChange, value]);
 
     const incrementHours = () => {
         const newHours = hours === 12 ? 1 : hours + 1;
@@ -1091,10 +1091,12 @@ export default function CreateEventPage() {
                                             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
                                                 {previewUrls.map((url, index) => (
                                                     <div key={index} className="relative group aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
-                                                        <img
+                                                        <Image
                                                             src={url}
                                                             alt={`Event image ${index + 1}`}
                                                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                                            width={200}
+                                                            height={200}
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                                         <button

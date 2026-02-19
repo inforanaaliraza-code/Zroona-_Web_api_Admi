@@ -75,7 +75,7 @@ const LandingPageService = {
 			}
 
 			// Get total count for pagination
-			const total = await Event.countDocuments(query);
+			const _total = await Event.countDocuments(query);
 
 			// Fetch events with pagination
 			const events = await Event.find(query)

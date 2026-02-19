@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
@@ -42,29 +42,7 @@ export default function WithdrawalRequests() {
   const [toDate, setToDate] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    fetchRequests();
-  }, [page, search, statusFilter, fromDate, toDate]);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    setStatsLoading(true);
-    try {
-      const res = await GetWithdrawalStatsApi();
-      if (res?.status === 1 || res?.code === 200) {
-        setStats(res.data);
-      }
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    } finally {
-      setStatsLoading(false);
-    }
-  };
-
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     try {
       const params = { 
@@ -96,6 +74,28 @@ export default function WithdrawalRequests() {
       toast.error(t("withdrawal.failedToFetchRequests"));
     } finally {
       setLoading(false);
+    }
+  }, [page, itemsPerPage, search, statusFilter, fromDate, toDate, t]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    setStatsLoading(true);
+    try {
+      const res = await GetWithdrawalStatsApi();
+      if (res?.status === 1 || res?.code === 200) {
+        setStats(res.data);
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setStatsLoading(false);
     }
   };
 

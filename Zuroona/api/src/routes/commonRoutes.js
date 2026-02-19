@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const commonController = require("../controllers/commonController.js");
-const fileUpload = require("express-fileupload");
-const UserController = require("../controllers/userController.js");
+const _fileUpload = require("express-fileupload");
+const _UserController = require("../controllers/userController.js");
 const { ExtractUserIdFromToken } = require("../middleware/authenticate.js");
 
 // Health check endpoint

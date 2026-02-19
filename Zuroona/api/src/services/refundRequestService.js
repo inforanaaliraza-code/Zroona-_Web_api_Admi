@@ -2,7 +2,7 @@ const RefundRequest = require('../models/refundRequestModel');
 
 const RefundRequestService = {
     CreateService: async (value) => {
-        return new Promise((res, rej) => {
+        return new Promise((res, _rej) => {
             console.log("[REFUND:SERVICE] Creating refund request:", value);
             RefundRequest.create(value).then((result) => {
                 console.log("[REFUND:SERVICE] Refund request created:", result?._id);
@@ -10,13 +10,13 @@ const RefundRequestService = {
             }).catch((error) => {
                 console.error("[REFUND:SERVICE] CreateService error:", error);
                 console.error("[REFUND:SERVICE] Error details:", error.message, error.stack);
-                rej(error.message || 'could not create refund request');
+                _rej(error.message || 'could not create refund request');
             });
         });
     },
 
     FindOneService: async (query, options = {}) => {
-        return new Promise((res, rej) => {
+        return new Promise((res, _rej) => {
             try {
                 console.log("[REFUND:SERVICE] FindOneService query:", query, "options:", options);
                 let queryBuilder = RefundRequest.findOne(query);
@@ -69,7 +69,7 @@ const RefundRequestService = {
     },
 
     FindService: async (query = {}, page = 1, limit = 10) => {
-        return new Promise((res, rej) => {
+        return new Promise((res, _rej) => {
             try {
                 const skip = (page - 1) * limit;
                 RefundRequest.find(query)

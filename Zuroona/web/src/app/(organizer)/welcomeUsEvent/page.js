@@ -45,7 +45,7 @@ export default function WelcomeEvent() {
         })
       );
     }
-  }, [dispatch, page, event_type, isMounted]);
+  }, [dispatch, page, event_type, isMounted, activePage]);
 
   //handle pagination
   const handlePage = (value) => {

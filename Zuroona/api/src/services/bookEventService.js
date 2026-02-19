@@ -5,7 +5,7 @@ const BookEventService = {
         return new Promise((res, rej) => {
             BookEvent.create(value).then((result) => {
                 res(result);
-            }).catch((error) => { 
+            }).catch((_error) => { 
                 // console.error(error.message,'yhan hai error');
                 rej('could not create');
             });

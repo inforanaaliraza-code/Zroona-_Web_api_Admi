@@ -8,8 +8,8 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const BookEventService = require('../services/bookEventService');
-const EventService = require('../services/eventService');
-const UserService = require('../services/userService');
+const _EventService = require('../services/eventService');
+const _UserService = require('../services/userService');
 const notificationHelper = require('../helpers/notificationService');
 
 const sendHoldExpiredNotifications = async () => {

@@ -64,7 +64,7 @@ const createFolder = async (folderName, bucketName) => {
 const adminController = {
     adminRegister: async (req, res) => {
         try {
-            const { lang } = req.headers;
+            const { lang: _lang } = req.headers;
             const { email } = req.body;
 
             const existingUser = await AdminService.FindOneService({ email });
@@ -622,7 +622,7 @@ const adminController = {
         }
     },
     organizerList: async (req, res) => {
-        const { lang } = req || 'en'
+        const { lang: _lang } = req || 'en'
         try {
             const { page = 1, limit = 10, search = '', is_approved, is_active } = req.query;
             const pageInt = parseInt(page);
@@ -1164,7 +1164,7 @@ const adminController = {
         }
     },
     eventList: async (req, res) => {
-        const { lang } = req || 'en'
+        const { lang: _lang } = req || 'en'
         try {
             const { page = 1, limit = 10, search = '', status } = req.query;
             const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -1681,7 +1681,7 @@ const adminController = {
 
             await NotificationUsers.insertMany(allUsers);
 
-            const deviceTokens = users
+            const _deviceTokens = users
                 .filter(user => user.isNotification && user.deviceToken)
                 .map(user => user.deviceToken);
 
@@ -1695,7 +1695,7 @@ const adminController = {
     },
     notificationList: async (req, res) => {
         try {
-            const { search, page = 1, limit = 10 } = req.query;
+            const { search: _search, page = 1, limit = 10 } = req.query;
 
             const pageNumber = parseInt(page);
             const pageSize = parseInt(limit);
@@ -2610,7 +2610,7 @@ const adminController = {
             const RefundRequestService = require("../services/refundRequestService");
             const BookEventService = require("../services/bookEventService");
             const TransactionService = require("../services/recentTransaction");
-            const WalletService = require("../services/walletService");
+            const _WalletService = require("../services/walletService");
             const NotificationService = require("../services/notificationService");
 
             // Convert refund_id to ObjectId
@@ -2691,7 +2691,7 @@ const adminController = {
 
             // Get user details for notification
             const UserService = require("../services/userService");
-            const user = await UserService.FindOneService({
+            const _user = await UserService.FindOneService({
                 _id: refundRequest.user_id,
             });
 
@@ -3034,7 +3034,7 @@ const adminController = {
         const { lang } = req || 'en';
         try {
             const { page = 1, limit = 10, search = '' } = req.query;
-            const skip = (parseInt(page) - 1) * parseInt(limit);
+            const _skip = (parseInt(page) - 1) * parseInt(limit);
             
             let query = { is_delete: { $ne: 1 } };
             if (search) {
@@ -3486,7 +3486,7 @@ const adminController = {
             });
 
             // Pending Withdrawals
-            const pendingWithdrawals = await TransactionService.AggregateService([
+            const _pendingWithdrawals = await TransactionService.AggregateService([
                 {
                     $match: { type: 2, status: 0 }
                 },
@@ -4209,7 +4209,7 @@ const adminController = {
      */
     cleanupDuplicateBookings: async (req, res) => {
         try {
-            const lang = req.lang || req.headers["lang"] || "en";
+            const _lang = req.lang || req.headers["lang"] || "en";
             const BookEvent = require("../models/eventBookModel");
 
             console.log("[ADMIN:CLEANUP] Starting duplicate booking cleanup...");
@@ -4259,7 +4259,7 @@ const adminController = {
                         new Date(a.createdAt) - new Date(b.createdAt)
                     );
 
-                    const keepBooking = sortedBookings[0]; // Keep the oldest
+                    const _keepBooking = sortedBookings[0]; // Keep the oldest
                     const duplicatesToDelete = sortedBookings.slice(1); // Delete the rest
 
                     // Delete duplicate bookings

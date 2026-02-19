@@ -10,7 +10,7 @@
 
 const emailService = require('./emailService');
 const { pushNotification } = require('./pushNotification');
-const NotificationService = require('../services/notificationService');
+const _NotificationService = require('../services/notificationService');
 
 class NotificationHelper {
     /**

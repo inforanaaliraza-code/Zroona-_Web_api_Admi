@@ -1,6 +1,6 @@
 const resp_messages = require('../helpers/resp_messages');
 const Response = require('../helpers/response');
-const Cms = require('../models/cmsModel');
+const _Cms = require('../models/cmsModel');
 const CmsService = require('../services/cmsService');
 const EventCategoryService = require('../services/EventCategoriesService');
 const organizerService = require('../services/organizerService');
@@ -10,8 +10,8 @@ const UserService = require('../services/userService');
 // const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 // ==================================================
 const fs = require('fs');
-const path = require('path');
-const { uploadToS3, extractKey } = require('../utils/awsS3');
+const _path = require('path');
+const { uploadToS3, extractKey: _extractKey } = require('../utils/awsS3');
 
 require('dotenv').config();
 

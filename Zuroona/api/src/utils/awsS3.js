@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand: _GetObjectCommand } = require('@aws-sdk/client-s3');
 require('dotenv').config();
 
 // Configure AWS S3 - This runs when module is loaded

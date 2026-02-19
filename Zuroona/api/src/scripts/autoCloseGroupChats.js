@@ -13,7 +13,7 @@ require('../models/organizerModel.js');
 
 const ConversationService = require('../services/conversationService.js');
 const EventService = require('../services/eventService.js');
-const mongoose = require('mongoose');
+const _mongoose = require('mongoose');
 
 const autoCloseGroupChats = async () => {
     try {

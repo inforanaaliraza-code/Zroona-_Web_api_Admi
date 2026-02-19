@@ -66,7 +66,7 @@ export default function GuestInvoices() {
     } finally {
       setLoading(false);
     }
-  }, [page, itemsPerPage, searchQuery, paymentStatusFilter, bookStatusFilter, startDate, endDate]);
+  }, [page, itemsPerPage, searchQuery, paymentStatusFilter, bookStatusFilter, startDate, endDate, t]);
 
   useEffect(() => {
     fetchInvoices();

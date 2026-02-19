@@ -8,7 +8,7 @@ import Paginations from "@/components/Paginations/Pagination";
 import ConfirmModal from "@/components/Modals/ConfirmModal";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { toast } from "react-toastify";
 import { FaFileExcel, FaPrint, FaTrash, FaBan, FaCheckCircle, FaStar, FaEye } from "react-icons/fa";
 import { exportUsersToCSV, exportUsersToPDF } from "@/utils/exportUtils";
@@ -51,7 +51,7 @@ export default function UserManagement() {
   };
 
   // Build params based on active tab
-  const params = {
+  const params = useMemo(() => ({
     page: page,
     limit: 10,
     search: search,
@@ -60,7 +60,7 @@ export default function UserManagement() {
         activeTab === "Suspended" ? { status: "Suspended" } : 
         activeTab === "Deleted" ? { status: "Deleted" } :
         { isActive: status === "1" ? true : false }) // Legacy fallback
-  };
+  }), [page, activeTab, search, status]);
 
   const GetAllUser = useDataStore((store) => store.GetAllUser);
   const { fetchGetAllUser } = useDataStore();
@@ -70,7 +70,7 @@ export default function UserManagement() {
     fetchGetAllUser(params).then(() => {
       setLoading(false);
     });
-  }, [page, activeTab, search]);
+  }, [page, activeTab, search, fetchGetAllUser, params]);
 
   const showConfirm = (config) => {
     setConfirmModalConfig(config);

@@ -10,7 +10,7 @@
   },
   "rules": {
     "no-console": "off",
-    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
     "no-extra-semi": "error",
     "no-mixed-spaces-and-tabs": "warn",
     "no-useless-escape": "warn",

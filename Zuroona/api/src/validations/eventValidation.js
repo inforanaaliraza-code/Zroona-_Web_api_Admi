@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const mongoose = require("mongoose");
+const _mongoose = require("mongoose");
 
 const groupCategoryValidation = Joi.object({
 	name: Joi.string().required(),

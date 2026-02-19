@@ -30,7 +30,7 @@ const asyncHandler = (fn) => {
 /**
  * Handle validation errors
  */
-const handleValidationError = (error, res, lang = 'en') => {
+const handleValidationError = (error, res, _lang = 'en') => {
 	const errors = Object.values(error.errors || {}).map(err => err.message);
 	const message = errors.length > 0 
 		? errors.join(', ') 
@@ -70,7 +70,7 @@ const handleDatabaseError = (error, res, lang = 'en') => {
 /**
  * Handle JWT errors
  */
-const handleJWTError = (error, res, lang = 'en') => {
+const handleJWTError = (error, res, _lang = 'en') => {
 	let message = 'Authentication failed';
 	let statusCode = 401;
 
@@ -89,7 +89,7 @@ const handleJWTError = (error, res, lang = 'en') => {
 /**
  * Handle external API errors
  */
-const handleExternalAPIError = (error, res, serviceName = 'External Service', lang = 'en') => {
+const handleExternalAPIError = (error, res, serviceName = 'External Service', _lang = 'en') => {
 	let message = `${serviceName} error`;
 	let statusCode = 502;
 
@@ -117,7 +117,7 @@ const handleExternalAPIError = (error, res, serviceName = 'External Service', la
 /**
  * Handle file upload errors
  */
-const handleFileUploadError = (error, res, lang = 'en') => {
+const handleFileUploadError = (error, res, _lang = 'en') => {
 	let message = 'File upload failed';
 	let statusCode = 400;
 
@@ -142,7 +142,7 @@ const handleFileUploadError = (error, res, lang = 'en') => {
 /**
  * Global error handler middleware
  */
-const globalErrorHandler = (err, req, res, next) => {
+const globalErrorHandler = (err, req, res, _next) => {
 	const lang = req.headers['lang'] || 'en';
 	
 	// Set default error
@@ -201,7 +201,6 @@ const globalErrorHandler = (err, req, res, next) => {
  * Handle 404 errors
  */
 const handleNotFound = (req, res) => {
-	const lang = req.headers['lang'] || 'en';
 	return Response.notFoundResponse(
 		res,
 		`Route ${req.originalUrl} not found`

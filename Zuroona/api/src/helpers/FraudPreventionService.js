@@ -8,12 +8,12 @@ const FraudPreventionService = {
         return suspiciousIps.includes(userIp);
     },
 
-    checkFailedAttempts(userId) {
-        const failedAttempts = this.getFailedAttempts(userId);
+    checkFailedAttempts(_userId) {
+        const failedAttempts = this.getFailedAttempts(_userId);
         return failedAttempts > 3;
     },
 
-    getFailedAttempts(userId) {
+    getFailedAttempts(_userId) {
         return Math.floor(Math.random() * 5);
     },
 

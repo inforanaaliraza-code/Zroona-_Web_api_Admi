@@ -4,7 +4,7 @@ const UserService = require("../services/userService.js");
 const verifyPhoneOtp = (userId, otp, role) => {
 	const service =
 		role == 1 ? UserService : role == 2 ? organizerService : AdminService;
-	return new Promise(async (resolve, reject) => {
+	return new Promise((resolve, reject) => {
 		service
 			.FindOneService({ _id: userId })
 			.then(async (user) => {

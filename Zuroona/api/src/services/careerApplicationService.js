@@ -7,64 +7,36 @@ const CareerApplication = require('../models/careerApplicationModel');
 
 const CareerApplicationService = {
     CreateService: async (data) => {
-        try {
-            const application = new CareerApplication(data);
-            return await application.save();
-        } catch (error) {
-            throw error;
-        }
+        const application = new CareerApplication(data);
+        return await application.save();
     },
 
     FindOneService: async (query) => {
-        try {
-            return await CareerApplication.findOne(query);
-        } catch (error) {
-            throw error;
-        }
+        return await CareerApplication.findOne(query);
     },
 
     FindService: async (query = {}) => {
-        try {
-            return await CareerApplication.find(query).sort({ createdAt: -1 });
-        } catch (error) {
-            throw error;
-        }
+        return await CareerApplication.find(query).sort({ createdAt: -1 });
     },
 
     FindByIdService: async (id) => {
-        try {
-            return await CareerApplication.findById(id);
-        } catch (error) {
-            throw error;
-        }
+        return await CareerApplication.findById(id);
     },
 
     FindByIdAndUpdateService: async (id, updateData) => {
-        try {
-            return await CareerApplication.findByIdAndUpdate(
-                id,
-                updateData,
-                { new: true, runValidators: true }
-            );
-        } catch (error) {
-            throw error;
-        }
+        return await CareerApplication.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true, runValidators: true }
+        );
     },
 
     CountDocumentService: async (query = {}) => {
-        try {
-            return await CareerApplication.countDocuments(query);
-        } catch (error) {
-            throw error;
-        }
+        return await CareerApplication.countDocuments(query);
     },
 
     AggregateService: async (pipeline) => {
-        try {
-            return await CareerApplication.aggregate(pipeline);
-        } catch (error) {
-            throw error;
-        }
+        return await CareerApplication.aggregate(pipeline);
     },
 };
 

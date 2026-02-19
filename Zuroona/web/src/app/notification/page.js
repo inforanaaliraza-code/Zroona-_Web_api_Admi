@@ -217,7 +217,7 @@ const NotificationList = () => {
                   <div className={`flex ${flexDirection} items-start gap-4 w-full border-b border-gray-200 pb-6 hover:bg-gray-50 transition-colors rounded-md ${isRTL ? 'px-2 -mx-2' : 'px-2 -mx-2'}`}>
                     {/* Profile Image - Always on start side (right for RTL, left for LTR) */}
                     <div className="w-[40px] h-[40px] rounded-full overflow-hidden border-2 border-gray-200 shadow-sm bg-gray-100 flex-shrink-0">
-                      <img
+                      <Image
                         key={`notification-profile-${notification._id}-${notification.profile_image || 'default'}`}
                         src={getImageUrl(notification.profile_image)}
                         alt={t("notifications.profileImage")}

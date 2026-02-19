@@ -713,7 +713,7 @@ class EmailService {
     renderCareerApplicationConfirmation(name, position, language = "en") {
         const isArabic = language === "ar";
         const baseUrl = process.env.WEB_URL || process.env.FRONTEND_URL || "http://localhost:3000";
-        const loginUrl = this._validateFrontendUrl(baseUrl);
+        const _loginUrl = this._validateFrontendUrl(baseUrl);
 
         if (isArabic) {
             return `

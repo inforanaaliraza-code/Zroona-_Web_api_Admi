@@ -271,7 +271,7 @@ export default function SignUp() {
                       ) : (
                         <>
                           {(previewUrl || formik.values.profile_image) ? (
-                            <img
+                            <Image
                               key={`profile-img-${previewUrl || formik.values.profile_image}`}
                               src={(() => {
                                 // Prefer previewUrl (already converted to full URL) over formik value
@@ -307,6 +307,8 @@ export default function SignUp() {
                                 return finalUrl;
                               })()}
                               alt="Profile"
+                              width={200}
+                              height={200}
                               className="object-cover w-full h-full rounded-full"
                               style={{ minHeight: '100%', minWidth: '100%' }}
                               onLoad={() => {

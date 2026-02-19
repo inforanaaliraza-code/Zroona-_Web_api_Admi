@@ -22,7 +22,7 @@ const pushNotification = async (res, role, userId, message) => {
             return null;
         }
 
-        const data = {
+        const _data = {
             profile_image: message.profile_image || '',
             username: `${message.first_name} ${message.last_name}`,
             userId: message.userId,
@@ -33,7 +33,7 @@ const pushNotification = async (res, role, userId, message) => {
         };
 
         // Create notification in database (store both EN and AR for admin/UI locale)
-        const notification = await NotificationService.CreateService({
+        const _notification = await NotificationService.CreateService({
             user_id: userId,
             role,
             title: message.title,
@@ -49,7 +49,7 @@ const pushNotification = async (res, role, userId, message) => {
         });
 
         // Get user language preference for bilingual support
-        const userLanguage = user.language || 'en';
+        const _userLanguage = user.language || 'en';
         
         // Support bilingual messages - if title_en/title_ar provided, use them; otherwise use single title
         const titleEn = message.title_en || message.title || 'Notification';

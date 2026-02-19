@@ -90,7 +90,7 @@ export default function EventDetail() {
           toast.error(t("eventDetail.failedToFetch"));
         });
     }
-  }, [id, fetchEventsDetail]);
+  }, [id, fetchEventsDetail, t]);
 
   // Function to change event status (Accept/Reject)
   const ChangeEventStatus = (newStatus, rejectionReason = "") => {

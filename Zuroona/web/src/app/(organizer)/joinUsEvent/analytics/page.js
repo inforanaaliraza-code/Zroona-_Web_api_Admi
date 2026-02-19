@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs/Breadcrumbs";
 import Loader from "@/components/Loader/Loader";
@@ -36,9 +36,9 @@ export default function EventAnalytics() {
     if (eventId) {
       fetchAnalytics();
     }
-  }, [eventId]);
+  }, [eventId, fetchAnalytics]);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       setLoading(true);
       const token = Cookies.get(TOKEN_NAME);
@@ -64,7 +64,7 @@ export default function EventAnalytics() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId, i18n.language]);
 
   const getFilteredBookings = () => {
     if (!analyticsData?.bookings) return [];

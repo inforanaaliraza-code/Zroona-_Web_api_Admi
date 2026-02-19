@@ -40,7 +40,7 @@ const FatoraService = {
 	/**
 	 * Create invoice in Fatora
 	 */
-	async createInvoice(booking, event, user, organizer, options = {}) {
+	async createInvoice(booking, event, user, organizer, _options = {}) {
 		try {
 			logger.info(`Creating Fatora invoice for booking: ${booking._id || booking._id?.toString() || 'unknown'}`);
 
@@ -148,7 +148,7 @@ const FatoraService = {
 	/**
 	 * Get invoice details from Fatora
 	 */
-	async getInvoice(invoiceId, options = {}) {
+	async getInvoice(invoiceId, _options = {}) {
 		try {
 			const { apiKey, apiSecret } = this.getCredentials();
 			const baseUrl = this.getBaseUrl();

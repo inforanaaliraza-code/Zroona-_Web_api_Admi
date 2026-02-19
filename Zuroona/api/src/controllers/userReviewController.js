@@ -293,7 +293,7 @@ const UserReviewController = {
 	getMyReviews: async (req, res) => {
 		const lang = req.headers["lang"] || "en";
 		try {
-			const { requesterId, requesterRole } = getRequesterContext(req);
+			const { requesterId, _requesterRole } = getRequesterContext(req);
 
 			if (!requesterId) {
 				return Response.unauthorizedResponse(
@@ -306,7 +306,7 @@ const UserReviewController = {
 
 			const page = parseInt(req.query.page) || 1;
 			const limit = parseInt(req.query.limit) || 10;
-			const skip = (page - 1) * limit;
+			const _skip = (page - 1) * limit;
 
 			// Get user reviews (reviews for organizers/hosts)
 			const userReviews = await UserReviewService.FindService(

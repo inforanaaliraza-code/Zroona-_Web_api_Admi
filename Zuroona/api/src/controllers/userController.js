@@ -27,7 +27,7 @@ const custom_log = new PrettyConsole();
 custom_log.clear();
 custom_log.closeByNewLine = true;
 custom_log.useIcons = true;
-let count = 0;
+let _count = 0;
 
 // ===== SPECIAL TEST PHONES (AUTO-VERIFIED) =====
 // Match against last 9 digits of the phone number (local part without country code)
@@ -215,7 +215,7 @@ const UserController = {
 
 				// IMPORTANT: Also send OTP to phone number for existing unverified user
 				let otpSent = false;
-				let otpValue = null;
+				let _otpValue = null;
 				
 				if (phoneValidation.isValid && phoneValidation.cleanPhone) {
 					try {
@@ -251,7 +251,7 @@ const UserController = {
 						console.log(`[USER:REGISTRATION] Existing user - Formatted phone for OTP: ${fullPhoneNumber}`);
 						
 						const { sendSignupOtp } = require("../helpers/otpSend");
-						otpValue = await sendSignupOtp(existingAccount._id.toString(), fullPhoneNumber, 1, lang);
+						_otpValue = await sendSignupOtp(existingAccount._id.toString(), fullPhoneNumber, 1, lang);
 						otpSent = true;
 						console.log("[USER:REGISTRATION] OTP sent to existing user's phone number via MSGATE");
 					} catch (otpError) {
@@ -357,7 +357,7 @@ const UserController = {
 			const phoneDigits = phoneStr ? phoneStr.toString().replace(/\D/g, "") : "";
 			const last8Digits = phoneDigits.slice(-8);
 			const isSpecialTestPhone = (localPhoneForAutoVerify && SPECIAL_LOCAL_TEST_PHONES.has(localPhoneForAutoVerify)) ||
-			                           (last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
+				(last8Digits && SPECIAL_LOCAL_TEST_PHONES.has(last8Digits));
 
 			if (isSpecialTestPhone) {
 				userData.is_verified = true;
@@ -1388,7 +1388,7 @@ const UserController = {
 		try {
 			const { userId, role, lang } = req;
 			const service = role == 1 ? UserService : organizerService;
-			const users = await service.FindOneService({ _id: userId });
+			const _users = await service.FindOneService({ _id: userId });
 			const user = await service.AggregateService([
 				{ $match: { _id: new mongoose.Types.ObjectId(userId) } },
 				{
@@ -1794,7 +1794,7 @@ const UserController = {
 		}
 	},
 	checkEmailFormat: async (req, res) => {
-		const lang = req.headers["lang"] || "en";
+		const _lang = req.headers["lang"] || "en";
 		try {
 			const { email } = req.body;
 
@@ -1857,7 +1857,7 @@ const UserController = {
 				page = 1,
 				limit = 10,
 				event_type = 1,
-				search = "",
+				_search = "",
 				event_category,
 			} = req.query;
 			let gender;
@@ -2554,7 +2554,7 @@ const UserController = {
 			let {
 				book_status,
 				event_date,
-				search,
+				_search,
 				page = 1,
 				limit = 10,
 			} = req.query;
@@ -2642,7 +2642,7 @@ const UserController = {
 				book_status == "1"
 					? {
 							"event.event_date": { $gte: startOfTodayUTC },
-					  }
+					}
 					: {};
 
 			const countPipeline = [
@@ -2696,7 +2696,7 @@ const UserController = {
 									},
 								},
 							},
-					  ]
+					]
 					: []),
 
 				{
@@ -2764,7 +2764,7 @@ const UserController = {
 	bookingDetail: async (req, res) => {
 		try {
 			const { book_id } = req.query;
-			const { userId } = req;
+			const { _userId } = req;
 
 			const exist_event = await BookEventService.FindOneService({
 				_id: book_id,
@@ -3549,10 +3549,10 @@ const UserController = {
 			console.log(receivedSignature, "receivedSignature");
 
 			// Use environment variable for webhook secret (preferably the Moyasar secret key)
-			const sharedSecret = process.env.MOYASAR_SIGNATURE_SECRET || 
-			                     process.env.MOYASAR_SECRET_KEY || 
-			                     process.env.MOYASAR_SECRET ||
-			                     "$2b$12$qx37f2bgws.TD1piwHj6Kuf"; // Fallback for compatibility
+			const sharedSecret = process.env.MOYASAR_SIGNATURE_SECRET ||
+				process.env.MOYASAR_SECRET_KEY ||
+				process.env.MOYASAR_SECRET ||
+				"$2b$12$qx37f2bgws.TD1piwHj6Kuf"; // Fallback for compatibility
 
 			const calculatedSignature = crypto
 				.createHmac("sha256", sharedSecret)
@@ -4287,9 +4287,7 @@ const UserController = {
 						
 						// Get user and organizer details for welcome message
 						const guestName = user ? `${user.first_name} ${user.last_name}` : "Guest";
-						const organizerName = organizer ? `${organizer.first_name} ${organizer.last_name}` : "Host";
-						
-						// Send welcome message to group chat (only if organizer exists)
+					const _organizerName = organizer ? `${organizer.first_name} ${organizer.last_name}` : "Host";
 						if (organizer && organizer._id) {
 							try {
 								const MessageService = require("../services/messageService");

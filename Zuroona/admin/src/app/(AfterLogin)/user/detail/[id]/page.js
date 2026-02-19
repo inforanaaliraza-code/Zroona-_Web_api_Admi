@@ -32,7 +32,7 @@ export default function UserDetail() {
           toast.error(t("userDetail.failedToFetch"));
         });
     }
-  }, [id, fetchUserDetail]);
+  }, [id, fetchUserDetail, t]);
 
   const handleSuspend = () => {
     setSuspendModalOpen(true);

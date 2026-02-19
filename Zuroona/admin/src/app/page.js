@@ -9,7 +9,7 @@ export default function Home() {
   useEffect(() => {
     // Fast redirect - no delay
     router.replace("/adminsa111xyz");
-  }, []);
+  }, [router]);
 
   // Minimal loader - instant redirect
   return null;

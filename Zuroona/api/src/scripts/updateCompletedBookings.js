@@ -8,7 +8,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const BookEventService = require('../services/bookEventService');
-const EventService = require('../services/eventService');
+const _EventService = require('../services/eventService');
 const NotificationService = require('../services/notificationService');
 
 const updateCompletedBookings = async () => {

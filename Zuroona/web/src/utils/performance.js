@@ -10,7 +10,7 @@ import React, { useMemo, useCallback, memo } from 'react';
  * Usage: const expensiveValue = useMemoized(() => computeExpensiveValue(a, b), [a, b]);
  */
 export const useMemoized = (computeFn, deps) => {
-	return useMemo(computeFn, deps);
+	return useMemo(computeFn, [...(deps || []), computeFn]);
 };
 
 /**
@@ -18,7 +18,7 @@ export const useMemoized = (computeFn, deps) => {
  * Usage: const handleClick = useMemoizedCallback(() => doSomething(id), [id]);
  */
 export const useMemoizedCallback = (callback, deps) => {
-	return useCallback(callback, deps);
+	return useCallback(callback, [...(deps || []), callback]);
 };
 
 /**

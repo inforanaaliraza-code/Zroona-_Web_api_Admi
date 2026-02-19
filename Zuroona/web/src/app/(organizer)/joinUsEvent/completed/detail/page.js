@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Breadcrumbs from "@/components/Breadcrumbs/Breadcrumbs";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
@@ -40,9 +40,9 @@ export default function CompletedEventDetail() {
       dispatch(getEventListDetail({ id: EventListId }));
       fetchBookings();
     }
-  }, [EventListId, dispatch]);
+  }, [EventListId, dispatch, fetchBookings]);
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     if (!EventListId) return;
     
     setLoadingBookings(true);
@@ -71,7 +71,7 @@ export default function CompletedEventDetail() {
     } finally {
       setLoadingBookings(false);
     }
-  };
+  }, [EventListId, i18n.language]);
 
   const detailData = useMemo(() => {
     return EventListdetails || {};

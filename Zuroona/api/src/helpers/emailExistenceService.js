@@ -8,7 +8,7 @@
  */
 
 const dns = require('dns').promises;
-const net = require('net');
+const _net = require('net');
 
 /**
  * Verify if Gmail account exists using SMTP verification

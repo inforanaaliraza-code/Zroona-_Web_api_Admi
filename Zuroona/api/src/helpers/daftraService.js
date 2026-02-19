@@ -84,7 +84,7 @@ const DaftraService = {
 	/**
 	 * Make authenticated API request to Daftra using OAuth2 Bearer token
 	 */
-	async makeRequestWithOAuth(method, url, data = null, subdomain, apiKey, clientSecret) {
+	async makeRequestWithOAuth(method, url, data = null, subdomain, apiKey, _clientSecret) {
 		try {
 			const token = await this.getOAuthToken(subdomain, apiKey);
 
@@ -127,7 +127,7 @@ const DaftraService = {
 	/**
 	 * Get OAuth2 access token using password grant type
 	 */
-	async getOAuthToken(subdomain, apiKey) {
+	async getOAuthToken(subdomain, _apiKey) {
 		try {
 			subdomain = cleanSubdomain(subdomain);
 

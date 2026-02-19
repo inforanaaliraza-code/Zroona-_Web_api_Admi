@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Breadcrumbs from "@/components/Breadcrumbs/Breadcrumbs";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
@@ -81,7 +81,7 @@ export default function MyBookings() {
 
   // Get book_status based on active tab
   // book_status: 0/1 = Pending, 2 = Approved/Confirmed, 3 = Cancelled (by guest), 4 = Rejected (by host)
-  const getBookStatus = () => {
+  const getBookStatus = useCallback(() => {
     switch (activeTab) {
       case "pending":
         return "0"; // Pending bookings (status 0 or 1)
@@ -94,7 +94,7 @@ export default function MyBookings() {
       default:
         return ""; // All bookings
     }
-  };
+  }, [activeTab]);
 
   useEffect(() => {
     dispatch(
@@ -106,7 +106,7 @@ export default function MyBookings() {
         event_date: selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
       })
     );
-  }, [page, search, selectedDate, activeTab, dispatch]);
+  }, [page, search, selectedDate, activeTab, dispatch, activePage, getBookStatus]);
 
   // Group bookings by event and remove duplicates
   const groupBookingsByEvent = () => {

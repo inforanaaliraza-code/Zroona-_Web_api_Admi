@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
@@ -32,12 +32,7 @@ export default function Wallet() {
 
   const isRTL = mounted ? i18n.language === "ar" : false;
 
-  useEffect(() => {
-    fetchWalletData();
-    fetchWithdrawalRequests();
-  }, [page]);
-
-  const fetchWalletData = async () => {
+  const fetchWalletData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await GetWalletDetailsApi();
@@ -50,9 +45,9 @@ export default function Wallet() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  const fetchWithdrawalRequests = async () => {
+  const fetchWithdrawalRequests = useCallback(async () => {
     try {
       const res = await GetWithdrawalRequestsApi({ page, limit: itemsPerPage });
       if (res?.status === 1 || res?.code === 200) {
@@ -61,7 +56,12 @@ export default function Wallet() {
     } catch (error) {
       console.error("Error fetching withdrawal requests:", error);
     }
-  };
+  }, [page, itemsPerPage]);
+
+  useEffect(() => {
+    fetchWalletData();
+    fetchWithdrawalRequests();
+  }, [fetchWalletData, fetchWithdrawalRequests]);
 
   const exportToCSV = () => {
     const headers = [

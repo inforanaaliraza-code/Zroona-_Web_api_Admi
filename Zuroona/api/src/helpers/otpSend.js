@@ -74,7 +74,7 @@ const getLocalPhoneFromFullNumber = (phoneNumberWithCountry) => {
  * @param {string} [userId]
  * @returns {Promise<string>}
  */
-const decideOtpForPhone = async (fullPhoneNumber, purpose, role, userId) => {
+const decideOtpForPhone = async (fullPhoneNumber, purpose, _role, _userId) => {
     const localPhone = getLocalPhoneFromFullNumber(fullPhoneNumber);
     
     // Also check last 8 digits for 8-digit test numbers (50000001-50000009)

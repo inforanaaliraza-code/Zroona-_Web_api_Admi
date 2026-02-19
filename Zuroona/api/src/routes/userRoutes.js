@@ -1,7 +1,7 @@
 const router = require("express").Router();
-const fileUpload = require("express-fileupload");
+const _fileUpload = require("express-fileupload");
 const commonController = require("../controllers/commonController.js");
-const organizerController = require("../controllers/organizerController.js");
+const _organizerController = require("../controllers/organizerController.js");
 const UserController = require("../controllers/userController.js");
 const userController = require("../controllers/userController.js");
 const messageController = require("../controllers/messageController.js");
@@ -9,7 +9,7 @@ const {
 	AuthenticateUser,
 	ExtractUserIdFromToken,
 } = require("../middleware/authenticate.js");
-const Validator = require("../middleware/validateMiddleware.js");
+const _Validator = require("../middleware/validateMiddleware.js");
 // OTP validation removed - using email-based authentication only
 
 // Note: fileUpload middleware is applied globally in app.js

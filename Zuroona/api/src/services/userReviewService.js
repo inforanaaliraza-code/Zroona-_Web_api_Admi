@@ -3,27 +3,27 @@ const mongoose = require("mongoose");
 
 const UserReviewService = {
 	CreateService: async (value) => {
-		return new Promise((res, rej) => {
+		return new Promise((res, _rej) => {
 			UserReview.create(value)
 				.then((result) => {
 					res(result);
 				})
 				.catch((error) => {
 					console.error(error.message);
-					rej("could not create");
+					_rej("could not create");
 				});
 		});
 	},
 
 	FindOneService: async (query) => {
-		return new Promise((res, rej) => {
+		return new Promise((res, _rej) => {
 			UserReview.findOne(query)
 				.then((result) => {
 					res(result);
 				})
 				.catch((error) => {
 					console.error(error.message);
-					rej("could not find");
+					_rej("could not find");
 				});
 		});
 	},
@@ -47,7 +47,7 @@ const UserReviewService = {
 	},
 
 	GetEntityReviews: async (entityId, entityType, page = 1, limit = 10) => {
-		return new Promise(async (res, rej) => {
+		return (async () => {
 			try {
 				const skip = (page - 1) * limit;
 				const reviews = await UserReview.find({
@@ -68,15 +68,15 @@ const UserReviewService = {
 					entityType
 				);
 
-				res({
+				return {
 					reviews,
 					stats,
-				});
+				};
 			} catch (error) {
 				console.error(error.message);
-				rej("could not find reviews");
+				throw new Error("could not find reviews");
 			}
-		});
+		})();
 	},
 
 	FindByIdAndUpdateService: async (reviewId, value) => {
@@ -136,7 +136,7 @@ const UserReviewService = {
 	},
 
 	GetUserOverallRating: async (userId, userType) => {
-		return new Promise(async (res, rej) => {
+		return (async () => {
 			try {
 				// Get reviews received by the user
 				const receivedReviews = await UserReview.aggregate([
@@ -189,10 +189,10 @@ const UserReviewService = {
 					totalReviews > 0
 						? (received.averageRating * received.totalReviews +
 								given.averageRating * given.totalReviews) /
-						  totalReviews
+						totalReviews
 						: 0;
 
-				res({
+				return {
 					overall: {
 						rating: Number(overallRating.toFixed(1)),
 						totalReviews: totalReviews,
@@ -205,12 +205,12 @@ const UserReviewService = {
 						rating: Number(given.averageRating.toFixed(1)),
 						totalReviews: given.totalReviews,
 					},
-				});
+				};
 			} catch (error) {
 				console.error(error.message);
-				rej("could not calculate rating");
+				throw new Error("could not calculate rating");
 			}
-		});
+		})();
 	},
 };
 
