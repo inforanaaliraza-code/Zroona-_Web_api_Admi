@@ -136,9 +136,13 @@ export const parseError = (error, defaultMessage = null) => {
 
   const mapped = ERROR_MESSAGES[errorCode] || ERROR_MESSAGES['UNKNOWN_ERROR'];
 
+  // Ensure message/userMessage are always strings (never DOM nodes or objects)
+  const rawMessage = error?.message ?? defaultMessage ?? mapped.message;
+  const safeMessage = typeof rawMessage === 'string' ? rawMessage : (mapped?.message ?? 'An unexpected error occurred');
+
   return {
     code: errorCode,
-    message: error?.message || defaultMessage || mapped.message,
+    message: safeMessage,
     userMessage: mapped.message,
     action: mapped.action,
     icon: mapped.icon,

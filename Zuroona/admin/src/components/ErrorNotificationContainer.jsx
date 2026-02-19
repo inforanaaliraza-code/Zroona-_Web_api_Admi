@@ -88,7 +88,9 @@ function ErrorNotification({ error, onClose }) {
 
       <div className="flex-1 min-w-0">
         <h3 className="font-bold text-sm mb-1">{severity}</h3>
-        <p className="text-sm break-words">{error.message || error.userMessage}</p>
+        <p className="text-sm break-words">
+          {typeof error.message === 'string' ? error.message : (typeof error.userMessage === 'string' ? error.userMessage : 'An error occurred')}
+        </p>
       </div>
 
       <button

@@ -6,11 +6,10 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
 import ConfirmModal from "@/components/Modals/ConfirmModal";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { FaFileExcel, FaPrint, FaTrash, FaBan, FaCheckCircle, FaStar } from "react-icons/fa"; 
+import { FaFileExcel, FaPrint, FaTrash, FaBan, FaCheckCircle, FaStar, FaEye } from "react-icons/fa"; 
 import { exportUsersToCSV, exportUsersToPDF } from "@/utils/exportUtils";
 import { useTranslation } from "react-i18next";
 
@@ -79,15 +78,16 @@ export default function UserManagement() {
 
   const ChangeStatus = (data) => {
     const actionType = data.isSuspended ? "suspend" : data.reactivate ? "success" : "warning";
-    const message = data.isSuspended 
-      ? t("common.suspendConfirm", { name: "" }) 
+    const messageKey = data.isSuspended 
+      ? "common.suspendConfirm" 
       : data.reactivate 
-      ? t("common.activateConfirm", { name: "" })
-      : t("common.changeStatus");
+      ? "common.activateConfirm"
+      : "common.changeStatus";
     
     showConfirm({
-      title: t("common.confirm"),
-      message: message,
+      titleKey: "common.confirm",
+      messageKey,
+      messageParams: { name: "" },
       type: actionType,
       onConfirm: () => {
         setShowConfirmModal(false);
@@ -113,8 +113,8 @@ export default function UserManagement() {
 
   const handleDelete = (id) => {
     showConfirm({
-      title: t("common.deleteUser"),
-      message: t("users.confirmDeleteUser"),
+      titleKey: "common.deleteUser",
+      messageKey: "users.confirmDeleteUser",
       type: "danger",
       onConfirm: () => {
         setShowConfirmModal(false);
@@ -344,12 +344,7 @@ export default function UserManagement() {
                             className="text-[#a797cc] hover:text-[#a08ec8]"
                             title={t("users.viewDetails")}
                           >
-                            <Image
-                              src="/assets/images/home/eye-outline.png"
-                              alt={t("users.viewDetails")}
-                              height={20}
-                              width={20}
-                            />
+                            <FaEye size={18} />
                           </Link>
                           {/*
                           <button className="text-yellow-500 hover:text-yellow-600" title="View Rating">
@@ -442,6 +437,9 @@ export default function UserManagement() {
         onConfirm={confirmModalConfig.onConfirm}
         title={confirmModalConfig.title}
         message={confirmModalConfig.message}
+        titleKey={confirmModalConfig.titleKey}
+        messageKey={confirmModalConfig.messageKey}
+        messageParams={confirmModalConfig.messageParams}
         type={confirmModalConfig.type}
         loading={loading}
       />

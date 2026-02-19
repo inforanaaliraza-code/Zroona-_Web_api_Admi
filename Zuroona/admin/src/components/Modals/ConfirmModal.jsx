@@ -10,6 +10,9 @@ export default function ConfirmModal({
   onConfirm, 
   title, 
   message, 
+  titleKey,
+  messageKey,
+  messageParams,
   confirmText, 
   cancelText,
   type = "warning", // warning, danger, success, info
@@ -23,6 +26,10 @@ export default function ConfirmModal({
   }, []);
 
   const isRTL = mounted ? i18n.language === "ar" : false;
+
+  // Use keys for real-time localization when language changes without closing modal
+  const displayTitle = titleKey ? t(titleKey) : (title || t("common.confirm"));
+  const displayMessage = messageKey ? t(messageKey, messageParams || {}) : (message || t("messages.confirmDelete"));
 
   if (!show) return null;
 
@@ -78,7 +85,7 @@ export default function ConfirmModal({
             </div>
             <div className={`flex items-center min-h-[3.5rem] flex-1 min-w-0 ${isRTL ? 'text-right justify-end' : ''}`}>
               <h2 className="text-xl font-bold text-gray-800 m-0 leading-tight">
-                {title || t("common.confirm")}
+                {displayTitle}
               </h2>
             </div>
             <button
@@ -95,7 +102,7 @@ export default function ConfirmModal({
         {/* Body */}
         <div className="p-6">
           <p className={`text-gray-600 text-base leading-relaxed ${isRTL ? 'text-right' : ''}`}>
-            {message || t("messages.confirmDelete")}
+            {displayMessage}
           </p>
         </div>
 

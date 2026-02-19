@@ -1,4 +1,4 @@
-import { DeleteParams, getData, postRawData, putRawData, putFormData } from "../index";
+import { DeleteParams, deleteforUrl, getData, postRawData, putRawData, putFormData } from "../index";
 
 // Admin Management CRUD
 export const GetAllAdminsApi = async (payload) => {
@@ -73,9 +73,11 @@ export const UpdateAdminApi = async (payload) => {
 };
 
 export const DeleteAdminApi = async (payload) => {
-  return DeleteParams("admin/delete", payload).then((data) => {
-    return data;
-  });
+  const id = payload?.id || payload?.adminId;
+  if (id) {
+    return deleteforUrl("admin/delete", { id }).then((data) => data);
+  }
+  return DeleteParams("admin/delete", payload).then((data) => data);
 };
 
 // Get current admin profile

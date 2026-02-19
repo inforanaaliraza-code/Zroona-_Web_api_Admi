@@ -3308,11 +3308,16 @@ const adminController = {
     },
     
     adminDelete: async (req, res) => {
-        const { lang } = req || 'en';
+        const lang = req?.lang || req?.headers?.["lang"] || "en";
         try {
-            const { id } = req.body;
+            let id = req.params?.id || req.query?.id || req.body?.id;
+            if (!id && req.url && req.url.includes("?")) {
+                const qs = req.url.split("?")[1] || "";
+                const params = new URLSearchParams(qs);
+                id = params.get("id");
+            }
             
-            if (!mongoose.Types.ObjectId.isValid(id)) {
+            if (!id || !mongoose.Types.ObjectId.isValid(id)) {
                 return Response.badRequestResponse(res, resp_messages(lang).id_required);
             }
             

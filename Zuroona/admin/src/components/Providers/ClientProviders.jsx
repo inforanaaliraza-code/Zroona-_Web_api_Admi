@@ -1,7 +1,8 @@
 "use client";
 
-// Import polyfill FIRST to fix React 19 findDOMNode issue with react-quill
-import "@/lib/reactDomPolyfill";
+// Import polyfills FIRST so they run before any component or dependency
+import "@/lib/imageConstructorPolyfill"; // Fix "Failed to construct 'Image': Please use the 'new' operator"
+import "@/lib/reactDomPolyfill"; // Fix React 19 findDOMNode issue with react-quill
 
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
@@ -22,6 +23,8 @@ const ToastContainer = dynamic(
 
 function ClientProvidersInner({ children }) {
   const dispatch = useDispatch();
+  const [currentLang, setCurrentLang] = useState(typeof window !== "undefined" ? (i18n.language || "en") : "en");
+  const isRTL = currentLang === "ar";
 
   useEffect(() => {
     // CRITICAL: Use double RAF - delay until after React hydration to prevent mismatch
@@ -52,11 +55,16 @@ function ClientProvidersInner({ children }) {
   }, [dispatch]);
 
   useEffect(() => {
+    setCurrentLang(i18n.language || "en");
+  }, []);
+
+  useEffect(() => {
     const handleLanguageChange = (lng) => {
+      setCurrentLang(lng || "en");
       dispatch(setLanguage(lng));
       if (typeof window !== "undefined") {
-        const isRTL = lng === "ar";
-        document.documentElement.setAttribute("dir", isRTL ? "rtl" : "ltr");
+        const rtl = lng === "ar";
+        document.documentElement.setAttribute("dir", rtl ? "rtl" : "ltr");
         document.documentElement.setAttribute("lang", lng);
       }
     };
@@ -69,10 +77,10 @@ function ClientProvidersInner({ children }) {
     <I18nextProvider i18n={i18n}>
         <ToastContainer 
           autoClose={3000} 
-          position="top-right"
-          rtl={false}
-          style={{ direction: "ltr" }}
-          toastStyle={{ direction: "ltr", textAlign: "left" }}
+          position={isRTL ? "top-left" : "top-right"}
+          rtl={isRTL}
+          style={{ direction: isRTL ? "rtl" : "ltr" }}
+          toastStyle={{ direction: isRTL ? "rtl" : "ltr", textAlign: isRTL ? "right" : "left" }}
           pauseOnFocusLoss
           draggable
           pauseOnHover

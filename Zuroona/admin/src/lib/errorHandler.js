@@ -48,10 +48,8 @@ class ErrorHandler {
     // Axios/HTTP Response Error
     if (error?.response) {
       normalized.statusCode = error.response.status;
-      normalized.message = 
-        error.response.data?.message || 
-        error.response.statusText || 
-        'Server error occurred';
+      const rawMsg = error.response.data?.message || error.response.statusText || 'Server error occurred';
+      normalized.message = typeof rawMsg === 'string' ? rawMsg : 'Server error occurred';
       normalized.status = error.response.data?.status || 0;
       normalized.code = error.response.data?.code || `HTTP_${error.response.status}`;
       normalized.data = error.response.data;
@@ -65,8 +63,9 @@ class ErrorHandler {
       normalized.type = 'NETWORK_ERROR';
     }
     // Request Setup Error
-    else if (error?.message) {
-      normalized.message = error.message;
+    else if (error?.message !== undefined && error?.message !== null) {
+      // Coerce to string so DOM nodes (e.g. HTMLImageElement) are never stored or rendered
+      normalized.message = typeof error.message === 'string' ? error.message : String(error.message);
       normalized.code = error.code || 'REQUEST_ERROR';
       normalized.type = 'REQUEST_ERROR';
       normalized.originalError = error;
@@ -78,6 +77,12 @@ class ErrorHandler {
       normalized.type = 'GENERIC_ERROR';
     }
 
+    // Final guard: ensure message is always a string (never a DOM node or object)
+    if (typeof normalized.message !== 'string') {
+      normalized.message = normalized.message != null && typeof normalized.message.toString === 'function'
+        ? normalized.message.toString()
+        : 'An unexpected error occurred';
+    }
     return normalized;
   }
 

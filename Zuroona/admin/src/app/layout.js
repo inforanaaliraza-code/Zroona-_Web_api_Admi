@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import "../../public/css/admin.css";
 import ClientProviders from "@/components/Providers/ClientProviders";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import SafeChildren from "@/components/SafeChildren";
 import "@/lib/imageErrorHandler"; // Image alt error handler
 import ClientInitializer from "@/components/ClientInitializer";
 
@@ -22,7 +23,9 @@ export default function RootLayout({ children }) {
       <body className={inter.className} suppressHydrationWarning>
         <ErrorBoundary>
           <ClientInitializer>
-            <ClientProviders>{children}</ClientProviders>
+            <ClientProviders>
+              <SafeChildren>{children}</SafeChildren>
+            </ClientProviders>
           </ClientInitializer>
         </ErrorBoundary>
       </body>

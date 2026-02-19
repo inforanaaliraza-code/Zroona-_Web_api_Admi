@@ -72,13 +72,21 @@ class ErrorBoundary extends React.Component {
                   {this.state.error && (
                     <div className="error-boundary-error-message">
                       <strong>Error:</strong>
-                      <pre>{this.state.error.toString()}</pre>
+                      <pre>
+                        {typeof this.state.error.toString === 'function'
+                          ? this.state.error.toString()
+                          : String(this.state.error)}
+                      </pre>
                     </div>
                   )}
                   {this.state.errorInfo && (
                     <div className="error-boundary-stack">
                       <strong>Stack Trace:</strong>
-                      <pre>{this.state.errorInfo.componentStack}</pre>
+                      <pre>
+                        {typeof this.state.errorInfo.componentStack === 'string'
+                          ? this.state.errorInfo.componentStack
+                          : ''}
+                      </pre>
                     </div>
                   )}
                 </details>

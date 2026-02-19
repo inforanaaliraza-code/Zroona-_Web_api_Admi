@@ -4,10 +4,9 @@ import { useDataStore } from "@/api/store/store";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import Loader from "@/components/Loader/Loader";
 import Paginations from "@/components/Paginations/Pagination";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FaFileExcel, FaPrint } from "react-icons/fa";
+import { FaFileExcel, FaPrint, FaEye } from "react-icons/fa";
 import { exportEventsToCSV, exportEventsToPDF } from "@/utils/exportUtils";
 import { ChangeEventStatusApi } from "@/api/events/apis";
 import { toast } from "react-toastify";
@@ -429,12 +428,7 @@ export default function ManageEvents() {
                             className="text-orange-500 hover:text-orange-600"
                             title={t("events.viewDetails")}
                           >
-                            <Image
-                              src="/assets/images/home/eye-outline.png"
-                              alt={t("events.view")}
-                              height={20}
-                              width={20}
-                            />
+                            <FaEye size={18} />
                           </Link>
                           
                           {/* Accept/Reject buttons for Pending events */}

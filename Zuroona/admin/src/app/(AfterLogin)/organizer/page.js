@@ -17,7 +17,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { FaFileExcel, FaPrint } from "react-icons/fa";
+import { FaFileExcel, FaPrint, FaEye } from "react-icons/fa";
 import { exportOrganizersToPDF } from "@/utils/exportUtils";
 import { useTranslation } from "react-i18next";
 
@@ -482,13 +482,7 @@ export default function ManageEventOrganizer() {
                             href={`/organizer/detail/${organizer._id}`}
                             className="text-brand-pastel-gray-purple-1 hover:text-brand-gray-purple-2 transition-colors duration-300 p-2 rounded-lg hover:bg-brand-pastel-gray-purple-1/10"
                           >
-                            <Image
-                              src="/assets/images/home/eye-outline.png"
-                              alt={t("organizers.view")}
-                              height={20}
-                              width={20}
-                              className="transition-transform duration-300 hover:scale-110"
-                            />
+                            <FaEye size={18} className="transition-transform duration-300 hover:scale-110" />
                           </Link>
                           {/* Check button for approval */}
                           {/* For Pending tab, only show view button - accept/reject moved to detail page */}

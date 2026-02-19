@@ -64,10 +64,14 @@ class ErrorBoundary extends Component {
               <h1 className="text-2xl font-bold text-gray-900">Oops! Something went wrong</h1>
             </div>
 
-            {/* Error Details */}
+            {/* Error Details - always coerce to string to avoid "Objects are not valid as a React child" */}
             <div className="bg-red-50 rounded-lg p-4 mb-4 border border-red-200">
               <p className="text-sm text-gray-700 font-mono break-words">
-                {this.state.error?.message || 'Unknown error'}
+                {typeof this.state.error?.message === 'string'
+                  ? this.state.error.message
+                  : (this.state.error && typeof this.state.error.toString === 'function'
+                    ? this.state.error.toString()
+                    : 'Unknown error')}
               </p>
               {process.env.NODE_ENV === 'development' && (
                 <details className="mt-3 text-xs text-gray-600">
@@ -75,7 +79,9 @@ class ErrorBoundary extends Component {
                     Developer Details
                   </summary>
                   <pre className="mt-2 overflow-auto bg-white p-2 rounded border border-red-200">
-                    {this.state.errorInfo?.componentStack}
+                    {typeof this.state.errorInfo?.componentStack === 'string'
+                      ? this.state.errorInfo.componentStack
+                      : ''}
                   </pre>
                 </details>
               )}

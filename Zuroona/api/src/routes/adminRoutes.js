@@ -102,6 +102,7 @@ router.get("/admin/detail", adminController.adminDetail);
 router.post("/admin/create", adminController.adminCreate);
 router.put("/admin/update", adminController.adminUpdate);
 router.delete("/admin/delete", adminController.adminDelete);
+router.delete("/admin/delete/:id", adminController.adminDelete);
 
 // Wallet details
 router.get("/wallet/stats", adminController.getWalletStats);
