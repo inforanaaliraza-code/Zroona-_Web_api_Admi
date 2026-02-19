@@ -497,12 +497,10 @@ const organizerController = {
 					await NotificationService.CreateService({
 						user_id: admin._id,
 						role: 3, // Admin role
-						title: lang === "ar" 
-							? "طلب مضيف جديد" 
-							: "New Host Application",
-						description: lang === "ar"
-							? `مضيف جديد "${organizer.first_name} ${organizer.last_name}" قدم طلب وينتظر الموافقة`
-							: `A new host "${organizer.first_name} ${organizer.last_name}" has applied and is pending approval`,
+						title: "New Host Application",
+						title_ar: "طلب مضيف جديد",
+						description: `A new host "${organizer.first_name} ${organizer.last_name}" has applied and is pending approval`,
+						description_ar: `مضيف جديد "${organizer.first_name} ${organizer.last_name}" قدم طلب وينتظر الموافقة`,
 						isRead: false,
 						notification_type: 1, // Organizer type
 					});
@@ -1464,17 +1462,15 @@ const organizerController = {
 			const admins = await AdminService.FindService({ is_delete: { $ne: 1 } });
 			const lang = req.headers.lang || req.lang || organizer.language || "en";
 			
-			// Create notification for each admin
+			// Create notification for each admin (store both EN and AR for admin UI locale)
 			for (const admin of admins) {
 				await NotificationService.CreateService({
 					user_id: admin._id,
 					role: 3, // Admin role
-					title: lang === "ar" 
-						? "حدث جديد تم إرساله" 
-						: "New Event Submitted",
-					description: lang === "ar"
-						? `تم إرسال حدث جديد "${req.body.event_name}" من قبل ${organizer.first_name} ${organizer.last_name}`
-						: `A new event "${req.body.event_name}" has been submitted by ${organizer.first_name} ${organizer.last_name}`,
+					title: "New Event Submitted",
+					title_ar: "حدث جديد تم إرساله",
+					description: `A new event "${req.body.event_name}" has been submitted by ${organizer.first_name} ${organizer.last_name}`,
+					description_ar: `تم إرسال حدث جديد "${req.body.event_name}" من قبل ${organizer.first_name} ${organizer.last_name}`,
 					isRead: false,
 					notification_type: 2, // Event type
 					event_id: event._id,
@@ -3165,12 +3161,10 @@ const organizerController = {
 						await NotificationService.CreateService({
 							user_id: admin._id,
 							role: 3, // Admin role
-							title: lang === "ar" 
-								? "طلب سحب أموال جديد" 
-								: "New Withdrawal Request",
-							description: lang === "ar"
-								? `طلب سحب مبلغ ${amount} ر.س من قبل ${organizer.first_name} ${organizer.last_name}`
-								: `A withdrawal request of ${amount} SAR has been made by ${organizer.first_name} ${organizer.last_name}`,
+							title: "New Withdrawal Request",
+							title_ar: "طلب سحب أموال جديد",
+							description: `A withdrawal request of ${amount} SAR has been made by ${organizer.first_name} ${organizer.last_name}`,
+							description_ar: `طلب سحب مبلغ ${amount} ر.س من قبل ${organizer.first_name} ${organizer.last_name}`,
 							isRead: false,
 							notification_type: 4, // Withdrawal type
 							profile_image: organizer.profile_image || "",
@@ -4084,15 +4078,19 @@ const organizerController = {
 				}
 			}
 
-			// Notify admin (in-app only, no push needed)
+			// Notify admin (in-app only; store both EN and AR for admin UI locale)
 			const AdminService = require("../services/adminService");
 			const admins = await AdminService.FindService({ is_delete: { $ne: 1 } });
+			const msgEn = notificationMessages.en;
+			const msgAr = notificationMessages.ar;
 			for (const admin of admins) {
 				await NotificationService.CreateService({
 					user_id: admin._id,
 					role: 3, // Admin role
-					title: messages.adminTitle,
-					description: messages.adminDesc,
+					title: msgEn.adminTitle,
+					title_ar: msgAr.adminTitle,
+					description: msgEn.adminDesc,
+					description_ar: msgAr.adminDesc,
 					event_id: event._id,
 					notification_type: 3, // Cancellation type
 					isRead: false,

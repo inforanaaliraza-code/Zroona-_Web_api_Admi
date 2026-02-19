@@ -32,12 +32,14 @@ const pushNotification = async (res, role, userId, message) => {
             status: message.status
         };
 
-        // Create notification in database
+        // Create notification in database (store both EN and AR for admin/UI locale)
         const notification = await NotificationService.CreateService({
             user_id: userId,
             role,
             title: message.title,
+            title_ar: message.title_ar || null,
             description: message.description,
+            description_ar: message.description_ar || null,
             profile_image: message.profile_image,
             senderId: message.userId,
             event_id: message.event_id,

@@ -2495,22 +2495,18 @@ const UserController = {
 					}
 				}
 				
-				// Notify admin about new booking (in-app only)
+				// Notify admin about new booking (in-app only; store both EN and AR for admin UI locale)
 				try {
 					const AdminService = require("../services/adminService");
 					const admins = await AdminService.FindService({ is_delete: { $ne: 1 } });
-					const lang = req.lang || req.headers["lang"] || "en";
-					const adminTitle = lang === "ar" ? "حجز جديد" : "New Booking";
-					const adminDesc = lang === "ar"
-						? `قام "${user.first_name} ${user.last_name}" بحجز "${exist_event.event_name}".`
-						: `"${user.first_name} ${user.last_name}" has booked "${exist_event.event_name}".`;
-					
 					for (const admin of admins) {
 						await NotificationService.CreateService({
 							user_id: admin._id,
 							role: 3, // Admin role
-							title: adminTitle,
-							description: adminDesc,
+							title: "New Booking",
+							title_ar: "حجز جديد",
+							description: `"${user.first_name} ${user.last_name}" has booked "${exist_event.event_name}".`,
+							description_ar: `قام "${user.first_name} ${user.last_name}" بحجز "${exist_event.event_name}".`,
 							event_id: book_event.event_id,
 							book_id: book_event._id,
 							notification_type: 1, // Booking type
@@ -3122,15 +3118,19 @@ const UserController = {
 				});
 			}
 
-			// Notify admin (in-app only, no push needed)
+			// Notify admin (in-app only; store both EN and AR for admin UI locale)
 			const AdminService = require("../services/adminService");
 			const admins = await AdminService.FindService({ is_delete: { $ne: 1 } });
+			const msgEn = notificationMessages.en;
+			const msgAr = notificationMessages.ar;
 			for (const admin of admins) {
 				await NotificationService.CreateService({
 					user_id: admin._id,
 					role: 3, // Admin role
-					title: messages.adminTitle,
-					description: messages.adminDesc,
+					title: msgEn.adminTitle,
+					title_ar: msgAr.adminTitle,
+					description: msgEn.adminDesc,
+					description_ar: msgAr.adminDesc,
 					event_id: event._id,
 					book_id: book_id,
 					notification_type: 3, // Cancellation type
@@ -3164,15 +3164,15 @@ const UserController = {
 						const refundRequest = await RefundRequestService.CreateService(refundRequestData);
 						console.log(`[GUEST:CANCEL] Auto-created refund request: ${refundRequest._id} for booking: ${book_id}`);
 
-						// Notify admin about new refund request
+						// Notify admin about new refund request (store both EN and AR for admin UI locale)
 						for (const admin of admins) {
 							await NotificationService.CreateService({
 								user_id: admin._id,
 								role: 3, // Admin role
-								title: lang === "ar" ? "طلب استرداد جديد" : "New Refund Request",
-								description: lang === "ar"
-									? `طلب استرداد جديد من "${user.first_name} ${user.last_name}" لحدث "${event.event_name}". المبلغ: ${amountToDeduct} ريال.`
-									: `New refund request from "${user.first_name} ${user.last_name}" for event "${event.event_name}". Amount: ${amountToDeduct} SAR.`,
+								title: "New Refund Request",
+								title_ar: "طلب استرداد جديد",
+								description: `New refund request from "${user.first_name} ${user.last_name}" for event "${event.event_name}". Amount: ${amountToDeduct} SAR.`,
+								description_ar: `طلب استرداد جديد من "${user.first_name} ${user.last_name}" لحدث "${event.event_name}". المبلغ: ${amountToDeduct} ريال.`,
 								event_id: event._id,
 								book_id: book_id,
 								notification_type: 4, // Refund type
@@ -5204,10 +5204,10 @@ const UserController = {
 				await NotificationService.CreateService({
 					user_id: admin._id,
 					role: 3, // Admin role
-					title: lang === "ar" ? "طلب استرداد جديد" : "New Refund Request",
-					description: lang === "ar"
-						? `طلب مستخدم استرداد مبلغ ${booking.total_amount} SAR لحجز ملغي`
-						: `User requested refund of ${booking.total_amount} SAR for cancelled booking`,
+					title: "New Refund Request",
+					title_ar: "طلب استرداد جديد",
+					description: `User requested refund of ${booking.total_amount} SAR for cancelled booking`,
+					description_ar: `طلب مستخدم استرداد مبلغ ${booking.total_amount} SAR لحجز ملغي`,
 					isRead: false,
 					notification_type: 4, // Refund type
 					event_id: booking.event_id,

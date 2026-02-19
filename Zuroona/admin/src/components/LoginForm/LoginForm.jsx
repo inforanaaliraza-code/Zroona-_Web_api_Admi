@@ -154,7 +154,7 @@ function LoginForm(props) {
               password: values.password,
             }).then((res) => {
               if (res?.status === 1) {
-                toast.success(res?.message);
+                toast.success(t("auth.loginSuccess") || res?.message);
                 Cookies.set(TOKEN_NAME, res?.data?.token);
                 push("/organizer");
               } else {

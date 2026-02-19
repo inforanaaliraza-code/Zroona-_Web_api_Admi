@@ -59,7 +59,7 @@ class ErrorBoundary extends React.Component {
             <div className="error-boundary-icon">⚠️</div>
             <h2 className="error-boundary-title">Oops! Something went wrong</h2>
             <p className="error-boundary-message">
-              An unexpected error occurred. We're sorry for the inconvenience.
+              An unexpected error occurred. We&apos;re sorry for the inconvenience.
             </p>
 
             {isDev && (

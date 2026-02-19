@@ -286,8 +286,8 @@ export default function UserManagement() {
                       className="border-b last:border-0 text-sm font-medium text-black whitespace-nowrap"
                     >
                       <td className="px-2 py-2 whitespace-nowrap">{user.id}</td>
-                      <td className="px-2 py-2 flex items-center space-x-3 w-max">
-                        <div className="w-10 h-10 rounded-full overflow-hidden">
+                      <td className="px-2 py-2 flex items-center gap-4 w-max">
+                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                           <Image
                             src={
                               user?.profile_image?.includes("http")

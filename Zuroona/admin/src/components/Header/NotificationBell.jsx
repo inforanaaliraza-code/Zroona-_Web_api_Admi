@@ -3,11 +3,14 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import ClickOutside from "./ClickOutside";
 import { GetAdminNotificationsApi } from "@/api/admin/apis";
+import { useTranslation } from "react-i18next";
 
 const NotificationBell = () => {
+  const { t, i18n } = useTranslation();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
+  const isArabic = i18n.language === "ar";
 
   useEffect(() => {
     fetchNotifications();
@@ -20,27 +23,35 @@ const NotificationBell = () => {
     try {
       const res = await GetAdminNotificationsApi({ page: 1, limit: 20 });
       if (res?.status === 1 || res?.code === 200) {
-        const notifications = res?.data || [];
-        setNotifications(notifications.map(n => {
-          // Map notification_type to type string
+        const rawList = res?.data || [];
+        setNotifications(rawList.map((n) => {
           let typeStr = "other";
           if (n.notification_type === 1) typeStr = "organizer";
           else if (n.notification_type === 2) typeStr = "event";
           else if (n.notification_type === 4) typeStr = "withdrawal";
-          
           return {
             _id: n._id,
-            message: n.description || n.text || n.title || "Notification",
+            description: n.description,
+            description_ar: n.description_ar,
+            text: n.text,
+            title: n.title,
+            title_ar: n.title_ar,
             type: typeStr,
             is_read: n.isRead || n.is_read || false,
-            created_at: n.createdAt || n.created_at || new Date()
+            created_at: n.createdAt || n.created_at || new Date(),
           };
         }));
-        setUnreadCount(notifications.filter(n => !(n.isRead || n.is_read)).length);
+        setUnreadCount(rawList.filter((n) => !(n.isRead || n.is_read)).length);
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
+  };
+
+  // Resolve message by current UI language (updates when language changes)
+  const getMessage = (n) => {
+    if (isArabic && n.description_ar) return n.description_ar;
+    return n.description || n.text || n.title || t("notifications.title");
   };
 
   const markAsRead = async (id) => {
@@ -92,7 +103,7 @@ const NotificationBell = () => {
         >
           <Image
             src="/assets/images/home/notification.png"
-            alt="Notification"
+            alt={t("notifications.title")}
             height={23}
             width={23}
             className="w-[18px] sm:w-[23px] transition-transform duration-300 group-hover:brightness-110"
@@ -107,13 +118,13 @@ const NotificationBell = () => {
         {showDropdown && (
           <div className="absolute right-0 top-14 w-80 bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl z-[10000] max-h-96 overflow-hidden border border-brand-pastel-gray-purple-1/20 animate-scale-in">
             <div className="p-4 border-b border-brand-pastel-gray-purple-1/20 flex justify-between items-center bg-gradient-to-r from-brand-pastel-gray-purple-1/5 to-transparent">
-              <h3 className="font-semibold text-gray-900 text-lg">Notifications</h3>
+              <h3 className="font-semibold text-gray-900 text-lg">{t("notifications.title")}</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   className="text-sm text-brand-pastel-gray-purple-1 hover:text-brand-gray-purple-2 font-medium hover:underline transition-colors duration-300"
                 >
-                  Mark all as read
+                  {t("notifications.markAllAsRead")}
                 </button>
               )}
             </div>
@@ -146,7 +157,7 @@ const NotificationBell = () => {
                       </div>
                       <div className="flex-1">
                         <p className={`text-sm ${!notification.is_read ? "font-semibold text-gray-900" : "text-gray-700"}`}>
-                          {notification.message}
+                          {getMessage(notification)}
                         </p>
                         <p className="text-xs text-gray-500 mt-1.5">
                           {new Date(notification.created_at).toLocaleString()}
@@ -161,7 +172,7 @@ const NotificationBell = () => {
               ) : (
                 <div className="p-8 text-center text-gray-500 text-sm">
                   <div className="text-4xl mb-2">🔔</div>
-                  <p>No notifications</p>
+                  <p>{t("notifications.noNotifications")}</p>
                 </div>
               )}
             </div>

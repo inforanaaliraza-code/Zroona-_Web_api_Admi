@@ -3654,7 +3654,9 @@ const adminController = {
                     $project: {
                         _id: 1,
                         title: 1,
+                        title_ar: 1,
                         description: 1,
+                        description_ar: 1,
                         text: '$description', // For backward compatibility
                         type: '$notification_type',
                         notification_type: 1,

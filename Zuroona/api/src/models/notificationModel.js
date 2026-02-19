@@ -12,9 +12,14 @@ const notificationSchema = new mongoose.Schema({
     title: {
         type: String,
     },
+    title_ar: {
+        type: String,
+    },
     description: {
         type: String,
-
+    },
+    description_ar: {
+        type: String,
     },
     isRead: {
         type: Boolean,
