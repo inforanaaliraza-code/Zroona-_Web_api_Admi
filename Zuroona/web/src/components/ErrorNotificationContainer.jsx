@@ -2,21 +2,30 @@
 
 /**
  * Error Notification Container
- * Global component that displays error notifications
+ * Global component that displays error notifications (localized)
  */
 
 import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import errorHandler from '@/lib/errorHandler';
 import { parseError } from '@/lib/errorParser';
 import '@/styles/error-handling.css';
+
+/** Map error codes to i18n keys for title and message so notifications are localized */
+const ERROR_I18N_KEYS = {
+  NETWORK_ERROR: { title: 'errors.networkErrorTitle', message: 'errors.networkUserMessage' },
+  OFFLINE: { title: 'errors.offlineTitle', message: 'errors.offlineUserMessage' },
+  TIMEOUT: { title: 'errors.timeoutTitle', message: 'errors.timeoutUserMessage' },
+};
 
 // Create context for error notifications
 const ErrorNotificationContext = createContext(null);
 
 /**
- * Error Notification Component
+ * Error Notification Component (displays localized title and message)
  */
 function ErrorNotification({ notification, onClose }) {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -29,6 +38,8 @@ function ErrorNotification({ notification, onClose }) {
   }, [onClose]);
 
   const severityClass = notification.severity?.toLowerCase() || 'error';
+  const title = notification.titleKey ? t(notification.titleKey) : (notification.title || t('errors.errorTitle'));
+  const message = notification.messageKey ? t(notification.messageKey) : notification.message;
 
   return (
     <div
@@ -44,8 +55,8 @@ function ErrorNotification({ notification, onClose }) {
           {notification.severity === 'INFO' && 'ℹ️'}
         </div>
         <div className="error-notification-text">
-          <div className="error-notification-title">{notification.title || 'Error'}</div>
-          <div className="error-notification-message">{notification.message}</div>
+          <div className="error-notification-title">{title}</div>
+          <div className="error-notification-message">{message}</div>
         </div>
       </div>
       <button
@@ -78,11 +89,14 @@ function ErrorNotificationContainer() {
       if (isAuthError) return;
 
       const parsed = parseError(error.code);
+      const i18nKeys = ERROR_I18N_KEYS[error.code];
 
       const notification = {
         id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         title: error.message,
         message: parsed.userMessage || error.message,
+        titleKey: i18nKeys?.title,
+        messageKey: i18nKeys?.message,
         severity: error.severity || 'ERROR',
         code: error.code,
       };

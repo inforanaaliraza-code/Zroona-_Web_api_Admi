@@ -1,7 +1,7 @@
 "use client";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
@@ -37,7 +37,7 @@ function LoginForm(props) {
     });
   }, [i18n]);
 
-  // Create validation schema with proper fallbacks to prevent hydration mismatch
+  // Recreate validation schema when language changes so messages are in current language (real-time localization)
   const validationSchema = useMemo(() => {
     return Yup.object({
       email: props.page !== "forgot" 
@@ -49,7 +49,15 @@ function LoginForm(props) {
       password:
         props.page !== "forgot" && Yup.string().required(mounted ? t("validation.required") : "Required"),
     });
-  }, [mounted, props.page, t]);
+  }, [mounted, props.page, t, i18n.language]);
+
+  const formikRef = useRef(null);
+
+  // Re-validate when language changes so existing error messages update to the new language (real-time)
+  useEffect(() => {
+    if (!mounted || !formikRef.current) return;
+    formikRef.current.validateForm().then(() => {});
+  }, [mounted, i18n.language]);
 
   // Don't render form until mounted to prevent hydration mismatch
   if (!mounted) {
@@ -115,6 +123,7 @@ function LoginForm(props) {
   return (
     <>
       <Formik
+        innerRef={formikRef}
         initialValues={{
           email: "",
           mobile_number: "",

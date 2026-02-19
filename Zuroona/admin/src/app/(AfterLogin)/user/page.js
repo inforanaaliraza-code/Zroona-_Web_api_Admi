@@ -176,68 +176,68 @@ export default function UserManagement() {
       setPage={setPage}
       searchPlaceholder={t("users.searchPlaceholder") || "Search by Guests"}
     >
-      <div dir={isRTL ? "rtl" : "ltr"}>
-        <div className="flex flex-col sm:flex-row justify-between py-5">
-          {/* Header */}
-          <div className="flex lg:w-[40%] items-end mb-4 sm:mb-0">
-            <h1 className="text-xl font-bold text-black">{t("users.guestsManagement")}</h1>
+      <div dir={isRTL ? "rtl" : "ltr"} className="min-w-0 max-w-full">
+        {/* Header - stacks on mobile */}
+        <div className="flex flex-col gap-4 py-4 sm:py-5">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-black truncate">{t("users.guestsManagement")}</h1>
           </div>
 
-          {/* Actions & Tabs */}
-          <div className="lg:w-full flex lg:justify-end gap-3 items-center">
-            {/* Export Buttons */}
-            <button onClick={() => exportUsersToCSV(GetAllUser?.data || [], t)} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition">
-              <FaFileExcel /> {t("users.exportCSV")}
+          {/* Export buttons - wrap on small screens */}
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <button onClick={() => exportUsersToCSV(GetAllUser?.data || [], t)} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 transition shrink-0">
+              <FaFileExcel className="shrink-0" /> <span>{t("users.exportCSV")}</span>
             </button>
-            <button onClick={() => exportUsersToPDF(GetAllUser?.data || [], t)} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition">
-              <FaPrint /> {t("users.exportPDF")}
+            <button onClick={() => exportUsersToPDF(GetAllUser?.data || [], t)} className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition shrink-0">
+              <FaPrint className="shrink-0" /> <span>{t("users.exportPDF")}</span>
             </button>
+          </div>
 
-            <div className="flex ml-4">
-              <button
-                onClick={() => handleTabChange("Active")}
-                className={`px-4 py-3 text-sm w-28 font-medium rounded-s-lg ${activeTab === "Active"
-                    ? "bg-green-600 text-white"
-                    : "bg-white text-green-600 border-2 border-green-600"
-                  }`}
-              >
-                {t("users.active")}
-              </button>
-              <button
-                onClick={() => handleTabChange("Inactive")}
-                className={`px-4 py-3 text-sm w-28 font-medium rounded-none border-l-0 ${activeTab === "Inactive"
-                    ? "bg-red-600 text-white"
-                    : "bg-white border-2 text-red-600 border-red-600"
-                  }`}
-              >
-                {t("users.inactive")}
-              </button>
-              <button
-                onClick={() => handleTabChange("Suspended")}
-                className={`px-4 py-3 text-sm w-28 font-medium rounded-none border-l-0 ${activeTab === "Suspended"
-                    ? "bg-yellow-600 text-white"
-                    : "bg-white border-2 text-yellow-600 border-yellow-600"
-                  }`}
-              >
-                {t("users.suspended") || "Suspended"}
-              </button>
-              <button
-                onClick={() => handleTabChange("Deleted")}
-                className={`px-4 py-3 text-sm w-28 font-medium rounded-e-lg ${activeTab === "Deleted"
-                    ? "bg-gray-600 text-white"
-                    : "bg-white border-2 text-gray-600 border-gray-600"
-                  }`}
-              >
-                {t("users.deleted") || "Deleted"}
-              </button>
-            </div>
+          {/* Status tabs - wrap into 2x2 grid on mobile, single row on sm+ */}
+          <div className="flex flex-wrap gap-2 sm:gap-0 sm:flex-nowrap">
+            <button
+              onClick={() => handleTabChange("Active")}
+              className={`flex-1 min-w-[calc(50%-4px)] sm:min-w-0 sm:w-28 px-3 py-2.5 sm:py-3 text-sm font-medium rounded-lg sm:rounded-s-lg sm:rounded-e-none border-2 ${activeTab === "Active"
+                  ? "bg-green-600 text-white border-green-600"
+                  : "bg-white text-green-600 border-green-600"
+                }`}
+            >
+              {t("users.active")}
+            </button>
+            <button
+              onClick={() => handleTabChange("Inactive")}
+              className={`flex-1 min-w-[calc(50%-4px)] sm:min-w-0 sm:w-28 px-3 py-2.5 sm:py-3 text-sm font-medium rounded-lg sm:rounded-none border-2 border-l-0 sm:border-l-0 ${activeTab === "Inactive"
+                  ? "bg-red-600 text-white border-red-600"
+                  : "bg-white text-red-600 border-red-600"
+                }`}
+            >
+              {t("users.inactive")}
+            </button>
+            <button
+              onClick={() => handleTabChange("Suspended")}
+              className={`flex-1 min-w-[calc(50%-4px)] sm:min-w-0 sm:w-28 px-3 py-2.5 sm:py-3 text-sm font-medium rounded-lg sm:rounded-none border-2 border-l-0 sm:border-l-0 ${activeTab === "Suspended"
+                  ? "bg-yellow-600 text-white border-yellow-600"
+                  : "bg-white text-yellow-600 border-yellow-600"
+                }`}
+            >
+              {t("users.suspended") || "Suspended"}
+            </button>
+            <button
+              onClick={() => handleTabChange("Deleted")}
+              className={`flex-1 min-w-[calc(50%-4px)] sm:min-w-0 sm:w-28 px-3 py-2.5 sm:py-3 text-sm font-medium rounded-lg sm:rounded-e-lg sm:rounded-s-none border-2 border-l-0 sm:border-l-0 ${activeTab === "Deleted"
+                  ? "bg-gray-600 text-white border-gray-600"
+                  : "bg-white text-gray-600 border-gray-600"
+                }`}
+            >
+              {t("users.deleted") || "Deleted"}
+            </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-5">
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white rounded-lg">
+        <div className="bg-white rounded-lg shadow p-3 sm:p-5 min-w-0">
+          {/* Table - horizontal scroll on small screens */}
+          <div className="overflow-x-auto -mx-1 sm:mx-0">
+            <table className="min-w-full bg-white rounded-lg min-w-[800px]">
               <thead className="bg-[#f3f7ff]">
                 <tr className="text-sm">
                   <th className="px-2 py-4 text-left font-base text-gray-600">

@@ -70,20 +70,22 @@ export default function ConfirmModal({
         className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header - icon and title aligned on same baseline */}
         <div className={`p-6 bg-gradient-to-r ${style.headerBg}`}>
           <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <div className={`w-14 h-14 ${style.iconBg} rounded-full flex items-center justify-center`}>
-              <Icon className={`text-2xl ${style.iconColor}`} />
+            <div className={`w-14 h-14 shrink-0 ${style.iconBg} rounded-full flex items-center justify-center`}>
+              <Icon className={`text-2xl ${style.iconColor} block`} aria-hidden />
             </div>
-            <div className={isRTL ? 'text-right' : ''}>
-              <h2 className="text-xl font-bold text-gray-800">
+            <div className={`flex items-center min-h-[3.5rem] flex-1 min-w-0 ${isRTL ? 'text-right justify-end' : ''}`}>
+              <h2 className="text-xl font-bold text-gray-800 m-0 leading-tight">
                 {title || t("common.confirm")}
               </h2>
             </div>
             <button
               onClick={onClose}
-              className={`${isRTL ? 'mr-auto' : 'ml-auto'} text-gray-400 hover:text-gray-600 transition`}
+              type="button"
+              aria-label={t("common.close") || "Close"}
+              className={`shrink-0 p-1 text-gray-400 hover:text-gray-600 transition flex items-center justify-center ${isRTL ? 'mr-auto' : 'ml-auto'}`}
             >
               <FaTimes className="text-xl" />
             </button>

@@ -1606,6 +1606,12 @@
   "errors": {
     "generic": "An error occurred. Please try again.",
     "network": "Network error. Please check your connection.",
+    "networkErrorTitle": "Network Error",
+    "networkUserMessage": "Unable to connect to the server. Please check your internet connection.",
+    "offlineTitle": "Offline",
+    "offlineUserMessage": "You are offline. Please connect to the internet.",
+    "timeoutTitle": "Request Timeout",
+    "timeoutUserMessage": "The request took too long. Please try again.",
     "server": "Server error. Please try again later.",
     "unauthorized": "You are not authorized to perform this action.",
     "forbidden": "Access forbidden.",
@@ -1615,7 +1621,8 @@
     "fileSize": "File size exceeds maximum limit.",
     "fileType": "Invalid file type. Please select a valid file.",
     "timeout": "Request timeout. Please try again.",
-    "unknown": "An unknown error occurred."
+    "unknown": "An unknown error occurred.",
+    "errorTitle": "Error"
   },
   "terms": {
     "subtitle": "Please read these terms carefully",
