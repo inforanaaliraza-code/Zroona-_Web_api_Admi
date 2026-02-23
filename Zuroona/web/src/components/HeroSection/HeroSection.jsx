@@ -1,6 +1,5 @@
 "use client";
 
-import Image from 'next/image';
 import Header from '../Header/Header';
 import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
@@ -26,11 +25,11 @@ const HeroSection = () => {
 
     return (
         <div
-            className="relative min-h-screen min-h-viewport bg-white overflow-hidden max-w-[100%] w-full flex flex-col m-0"
-            style={{ minHeight: '100vh', margin: 0 }}
+            className="relative min-h-screen md:min-h-0 lg:min-h-0 xl:min-h-screen min-h-viewport bg-white overflow-hidden w-full min-w-0 flex flex-col m-0"
+            style={{ margin: 0, width: '100%' }}
         >
-            {/* Full-viewport white layer - removes black space at top/bottom on tablet */}
-            <div className="fixed inset-0 w-full min-h-viewport h-viewport bg-white -z-20" aria-hidden="true" />
+            {/* Full-viewport white layer - fills entire width on iPad Pro / tablet */}
+            <div className="fixed inset-0 w-full min-w-full min-h-viewport h-viewport bg-white -z-20" aria-hidden="true" style={{ width: '100%' }} />
             {/* Background Pattern */}
             <div className="fixed inset-0 bg-[url('/assets/images/home/bg-img.png')] bg-cover bg-center opacity-5 -z-10"></div>
 
@@ -67,44 +66,48 @@ const HeroSection = () => {
             <Header />
 
             <main
-                className="container relative flex flex-1 items-center justify-center min-h-viewport-main min-h-[calc(100vh-72px)] px-4 mx-auto overflow-visible pt-2 md:pt-1 lg:pt-2"
+                className="relative flex flex-1 flex-col min-h-0 w-full max-w-[100vw] px-4 sm:px-6 md:px-8 overflow-visible
+                    pt-2 pb-4
+                    md:pt-3 md:pb-2 md:justify-start md:items-stretch
+                    lg:pt-4 lg:pb-3
+                    xl:min-h-viewport-main xl:min-h-[calc(100vh-72px)] xl:items-center xl:justify-center xl:pb-6"
             >
-                <div className="relative w-full max-w-6xl overflow-visible flex flex-col md:min-h-full md:justify-between">
-                    {/* Dotted Arrow Line Image - Positioned to the right of heading */}
-                    <div className="absolute right-0 top-[5%] translate-x-[60%] md:translate-x-[55%] lg:translate-x-[45%] hidden lg:block z-1 overflow-visible">
-                        <Image
-                            src="/assets/images/dotedArrow line.jpeg"
-                            alt="Decorative arrow"
-                            width={190}
-                            height={420}
-                            className="w-auto h-[380px] md:h-[480px] lg:h-[560px] object-contain opacity-30 transform scale-x-[-1]"
-                            priority
+                <div className="relative w-full max-w-[100%] md:max-w-6xl lg:max-w-6xl xl:max-w-7xl overflow-visible flex flex-col xl:justify-center">
+                    {/* Dashed curved arrow - desktop only (2xl: 1400px+), hidden on mobile & tablet */}
+                    <div className="absolute right-0 top-[5%] translate-x-[40%] hidden 2xl:block z-10 overflow-visible pointer-events-none">
+                        <img
+                            src="/assets/images/Untitled%20design.svg"
+                            alt="Decorative dashed curved arrow"
+                            width={307}
+                            height={810}
+                            className="w-auto h-[560px] object-contain opacity-30"
+                            fetchPriority="high"
                         />
                     </div>
 
-                    <div className="mx-auto max-w-4xl text-center flex flex-col md:flex-grow md:justify-between md:gap-8">
+                    <div className="mx-auto max-w-4xl text-center flex flex-col gap-4 md:gap-5 lg:gap-6 xl:gap-8">
                         {/* Top block: welcome + headline + description */}
                         <div>
-                            <span className="text-4xl md:text-5xl font-semibold text-[#a797cc] mb-6 block">
+                            <span className="text-4xl md:text-5xl font-semibold text-[#a797cc] mb-3 md:mb-4 block">
                                 {t('home.welcome')}
                             </span>
-                            <h1 className="mb-6 text-4xl md:text-7xl lg:text-8xl font-bold leading-tight text-gray-900">
+                            <h1 className="mb-4 md:mb-5 text-4xl md:text-7xl lg:text-8xl font-bold leading-tight text-gray-900">
                                 {t('home.slogan')}
                             </h1>
-                            <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-gray-600 md:mb-0">
+                            <p className="mx-auto mb-6 md:mb-4 max-w-2xl text-lg leading-relaxed text-gray-600">
                                 {t('home.tab4')}
                             </p>
                         </div>
 
-                        {/* Stats - localized (eventsMain.* and home.events) - sits at bottom on tablet */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mx-auto max-w-3xl">
+                        {/* Stats - localized (eventsMain.* and home.events) */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 lg:gap-6 mx-auto max-w-3xl">
                             {[
                                 { value: '100+', label: t('eventsMain.users') || t('home.saudi') || 'Users', icon: 'clarity:users-line' },
                                 { value: '100+', label: t('home.events') || 'Active Events', icon: 'material-symbols:event' },
                                 { value: '100+', label: t('eventsMain.hosts') || 'Hosts', icon: 'material-symbols:groups' },
                                 { value: '10+', label: t('eventsMain.cities') || 'Cities', icon: 'material-symbols:location-city' },
                             ].map((stat, index) => (
-                                <div key={index} className="p-6 rounded-2xl backdrop-blur-sm transition-all bg-white/70 hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5 group">
+                                <div key={index} className="p-4 md:p-5 lg:p-6 rounded-2xl backdrop-blur-sm transition-all bg-white/70 hover:bg-white/90 hover:shadow-lg hover:-translate-y-0.5 group">
                                     {renderStatIcon(stat)}
                                     <div className="text-3xl md:text-4xl lg:text-5xl font-bold text-brand-orange mb-2">{stat.value}</div>
                                     <div className="text-base font-medium text-gray-600 md:text-lg">{stat.label}</div>

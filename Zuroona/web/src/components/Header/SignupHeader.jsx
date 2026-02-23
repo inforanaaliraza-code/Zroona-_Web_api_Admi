@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,16 +25,16 @@ const SignupHeader = ({ bgColor = "#fff" }) => {
                     href="/"
                     className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105"
                   >
-                    <Image
+                    <img
                       src="/assets/images/x_F_logo.png"
-                      width={300}
-                      height={90}
                       alt="Logo"
                       className="object-contain w-auto h-auto 
                         max-h-[60px] sm:max-h-[65px] md:max-h-[75px] lg:max-h-[85px] xl:max-h-[90px]
                         max-w-[220px] sm:max-w-[250px] md:max-w-[280px] lg:max-w-[300px] xl:max-w-[320px]
                         brightness-0 invert"
-                      priority
+                      width={300}
+                      height={90}
+                      fetchPriority="high"
                     />
                   </Link>
                 </div>
@@ -45,15 +44,15 @@ const SignupHeader = ({ bgColor = "#fff" }) => {
                     href="/"
                     className="flex items-center justify-center h-full transition-transform duration-300 hover:scale-105"
                   >
-                    <Image
+                    <img
                       src="/assets/images/x_F_logo.png"
-                      width={200}
-                      height={60}
                       alt="Logo"
                       className="object-contain w-auto h-auto 
                         max-h-[50px] max-w-[50px]
                         brightness-0 invert"
-                      priority
+                      width={200}
+                      height={60}
+                      fetchPriority="high"
                     />
                   </Link>
                 </div>

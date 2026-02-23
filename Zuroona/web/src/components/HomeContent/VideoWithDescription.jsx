@@ -92,7 +92,7 @@ export default function VideoWithDescription({
     return (
         <section 
             ref={sectionRef}
-            className="relative py-8 md:py-12 lg:py-16 bg-gradient-to-br from-white via-purple-50/30 to-white overflow-hidden"
+            className="relative pt-4 pb-8 md:pt-6 md:pb-10 lg:pt-8 lg:pb-12 xl:py-16 bg-gradient-to-br from-white via-purple-50/30 to-white overflow-hidden"
         >
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
