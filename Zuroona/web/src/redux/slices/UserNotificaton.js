@@ -15,6 +15,7 @@ export const getUserNotificationList = createAsyncThunk(
         Accept: "/",
         "Content-Type": "application/json",
         Authorization: token,
+        ...(obj.lang && { lang: obj.lang }),
       },
       url: `${BASE_API_URL}user/notification/list?page=1&limit=${obj.limit}`,
     }).then((res) => res.data);

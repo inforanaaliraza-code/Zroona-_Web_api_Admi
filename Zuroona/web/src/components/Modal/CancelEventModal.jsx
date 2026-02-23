@@ -52,10 +52,10 @@ export default function CancelEventModal({
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">
-                  {t("events.cancelEvent", "Cancel Event")}
+                  {t("eventsMain.cancelEvent", "Cancel Event")}
                 </h2>
                 <p className="text-white/80 text-sm mt-1">
-                  {t("events.thisActionWillCancelEvent", "This action will cancel the event")}
+                  {t("eventsMain.thisActionWillCancelEvent", "This action will cancel the event")}
                 </p>
               </div>
             </div>
@@ -67,7 +67,7 @@ export default function CancelEventModal({
             <div className="bg-gradient-to-r from-purple-50 to-green-50 border border-[#a797cc]/30 rounded-xl p-4">
               <p className="text-sm text-gray-600 flex items-center gap-2">
                 <Icon icon="lucide:calendar" className="w-4 h-4 text-[#a797cc]" />
-                {t("events.eventName", "Event Name")}:
+                {t("eventsMain.eventName", "Event Name")}:
               </p>
               <p className="text-lg font-bold text-gray-900 mt-1">
                 {eventName}
@@ -82,20 +82,20 @@ export default function CancelEventModal({
                 </div>
                 <div className="text-sm text-amber-900">
                   <p className="font-bold mb-2">
-                    {t("events.warningCancellation", "Important Notice")}:
+                    {t("eventsMain.warningCancellation", "Important Notice")}:
                   </p>
                   <ul className="space-y-1.5">
                     <li className="flex items-start gap-2">
                       <Icon icon="lucide:undo-2" className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <span>{t("events.refundWillBeIssued", "Refunds will be issued to all guests")}</span>
+                      <span>{t("eventsMain.refundWillBeIssued", "Refunds will be issued to all guests")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Icon icon="lucide:wallet" className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <span>{t("events.amountWillBeDeducted", "Amount will be deducted from your wallet")}</span>
+                      <span>{t("eventsMain.amountWillBeDeducted", "Amount will be deducted from your wallet")}</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <Icon icon="lucide:bell" className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <span>{t("events.guestsWillBeNotified", "All guests will be notified")}</span>
+                      <span>{t("eventsMain.guestsWillBeNotified", "All guests will be notified")}</span>
                     </li>
                   </ul>
                 </div>
@@ -106,7 +106,7 @@ export default function CancelEventModal({
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
                 <Icon icon="lucide:message-square" className="w-4 h-4 text-[#a797cc]" />
-                {t("events.cancellationReason", "Cancellation Reason")}
+                {t("eventsMain.cancellationReason", "Cancellation Reason")}
                 <span className="text-gray-400 font-normal text-xs bg-gray-100 px-2 py-0.5 rounded-full">
                   {t("common.optional", "Optional")}
                 </span>
@@ -115,7 +115,7 @@ export default function CancelEventModal({
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={t(
-                  "events.reasonPlaceholder",
+                  "eventsMain.reasonPlaceholder",
                   "Tell us why you're cancelling this event..."
                 )}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#a797cc]/20 focus:border-[#a797cc] resize-vertical min-h-24 transition-all hover:border-[#a797cc]/50"
@@ -123,7 +123,7 @@ export default function CancelEventModal({
                 disabled={isLoading}
               />
               <p className="text-xs text-gray-400 mt-1.5 flex items-center justify-between">
-                <span>{reason.length}/500 characters</span>
+                <span>{reason.length}/500 {t("eventsMain.characters", "characters")}</span>
               </p>
             </div>
           </div>
@@ -151,7 +151,7 @@ export default function CancelEventModal({
               ) : (
                 <>
                   <Icon icon="lucide:calendar-x" className="h-4 w-4" />
-                  <span>{t("events.confirmCancel2", "Cancel Event")}</span>
+                  <span>{t("eventsMain.confirmCancel2", "Cancel Event")}</span>
                 </>
               )}
             </button>

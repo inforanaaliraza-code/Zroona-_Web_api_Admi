@@ -51,11 +51,11 @@ const NotificationList = () => {
   useEffect(() => {
     setLoading(true); // Set loading to true before fetching data
     dispatch(
-      getUserNotificationList({ page: page, limit: activePage })
+      getUserNotificationList({ page: page, limit: activePage, lang: i18n.language })
     ).finally(() => {
       setLoading(false); // Set loading to false after data is fetched
     });
-  }, [dispatch, page, activePage]);
+  }, [dispatch, page, activePage, i18n.language]);
 
   // Redirect logic based on notification type and available ids
   const handleRedirect = (notification) => {
@@ -156,6 +156,16 @@ const NotificationList = () => {
     return imageUrl;
   };
 
+  // Use localized title/description when API provides title_ar, description_ar
+  const getNotificationTitle = (notification) => {
+    if (i18n.language === "ar" && notification.title_ar) return notification.title_ar;
+    return notification.title || "";
+  };
+  const getNotificationDescription = (notification) => {
+    if (i18n.language === "ar" && notification.description_ar) return notification.description_ar;
+    return notification.description || "";
+  };
+
   // Format date based on locale with proper Arabic numerals
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -240,10 +250,10 @@ const NotificationList = () => {
                     {/* Notification Content - Middle section, takes available space */}
                     <div className="flex-1 min-w-0">
                       <h3 className={`font-semibold text-gray-800 ${textAlign} mb-1 break-words`}>
-                        {notification.title}
+                        {getNotificationTitle(notification)}
                       </h3>
                       <p className={`text-sm text-gray-600 ${textAlign} leading-relaxed break-words`}>
-                        {notification.description}
+                        {getNotificationDescription(notification)}
                       </p>
                     </div>
                     

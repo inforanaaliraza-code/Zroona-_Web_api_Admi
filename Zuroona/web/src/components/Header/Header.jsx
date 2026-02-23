@@ -173,6 +173,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                       <Link 
                         href="/notification" 
                         className="relative block"
+                        aria-label={t("notifications.title", "Notifications")}
                         onClick={(e) => {
                           // Stop any event propagation to prevent dropdown from opening
                           e.stopPropagation();
@@ -299,7 +300,7 @@ const Header = ({ bgColor, hideLogo = false }) => {
                           )}
                         </div>
                         <span className="text-sm text-white">
-                          Notifications
+                          {t("notifications.title", "Notifications")}
                         </span>
                       </Link>
                     </div>

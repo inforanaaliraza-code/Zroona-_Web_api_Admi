@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { Bars, Audio, Circles, CirclesWithBar, ThreeCircles  } from "react-loader-spinner";
 
 function Loader(props) {

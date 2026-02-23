@@ -2409,25 +2409,23 @@ const UserController = {
 						user_id: userId
 					}, organizer);
 					
-					// Create in-app notification for host (always create for consistency)
+					// Create in-app notification for host (store both EN and AR for UI locale switch)
 					try {
-						const lang = req.lang || req.headers["lang"] || "en";
-						const event_type =
-							exist_event.event_type == 1
-								? (lang === "ar" ? "انضم معنا" : "Join Us")
-								: (lang === "ar" ? "مرحباً" : "Welcome");
-						const hostTitle = lang === "ar" 
-							? `طلب حجز جديد - ${event_type}`
-							: `New Booking Request - ${event_type}`;
-						const hostDesc = lang === "ar"
-							? `طلب "${user.first_name} ${user.last_name}" حجز "${exist_event.event_name}" (${no_of_attendees} تذكرة)`
-							: `"${user.first_name} ${user.last_name}" requested to book "${exist_event.event_name}" (${no_of_attendees} ticket${no_of_attendees > 1 ? 's' : ''})`;
-						
+						const eventTypeEn = exist_event.event_type == 1 ? "Join Us" : "Welcome";
+						const eventTypeAr = exist_event.event_type == 1 ? "انضم معنا" : "مرحباً";
+						const ticketWordEn = no_of_attendees > 1 ? "tickets" : "ticket";
+						const hostTitleEn = `New Booking Request - ${eventTypeEn}`;
+						const hostTitleAr = `طلب حجز جديد - ${eventTypeAr}`;
+						const hostDescEn = `"${user.first_name} ${user.last_name}" requested to book "${exist_event.event_name}" (${no_of_attendees} ${ticketWordEn})`;
+						const hostDescAr = `طلب "${user.first_name} ${user.last_name}" حجز "${exist_event.event_name}" (${no_of_attendees} تذكرة)`;
+
 						await NotificationService.CreateService({
 							user_id: exist_event.organizer_id,
 							role: 2, // Host/Organizer role
-							title: hostTitle,
-							description: hostDesc,
+							title: hostTitleEn,
+							title_ar: hostTitleAr,
+							description: hostDescEn,
+							description_ar: hostDescAr,
 							isRead: false,
 							notification_type: 1, // New booking request
 							event_id: book_event.event_id,

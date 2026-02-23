@@ -32,12 +32,6 @@ export default function EventAnalytics() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [selectedBookingForReject, setSelectedBookingForReject] = useState(null);
 
-  useEffect(() => {
-    if (eventId) {
-      fetchAnalytics();
-    }
-  }, [eventId, fetchAnalytics]);
-
   const fetchAnalytics = useCallback(async () => {
     try {
       setLoading(true);
@@ -65,6 +59,12 @@ export default function EventAnalytics() {
       setLoading(false);
     }
   }, [eventId, i18n.language]);
+
+  useEffect(() => {
+    if (eventId) {
+      fetchAnalytics();
+    }
+  }, [eventId, fetchAnalytics]);
 
   const getFilteredBookings = () => {
     if (!analyticsData?.bookings) return [];

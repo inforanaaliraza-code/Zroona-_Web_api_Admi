@@ -202,7 +202,7 @@ export default function JoinUsDetail() {
                       className={`group flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${isRTL ? "flex-row-reverse" : "flex-row"}`}
                     >
                       <Icon icon="lucide:x-circle" className="h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
-                      <span>{t("events.cancelEvent", "Cancel Event")}</span>
+                      <span>{t("eventsMain.cancelEvent", "Cancel Event")}</span>
                     </button>
                   )}
                   

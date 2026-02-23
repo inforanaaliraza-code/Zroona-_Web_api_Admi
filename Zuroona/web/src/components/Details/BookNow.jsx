@@ -238,9 +238,9 @@ const BookNow = ({ props, pageType }) => {
                                         {status || (props?.book_details?.book_status === 2 ? t('detail.tab52') : t('detail.tab53'))}
                                     </div>
                                 ) : (
-                                    <div className={`flex ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} space-x-8`}>
-                                        <button onClick={() => handleReject()} className="text-[#a797cc] text-base font-semibold">{t('detail.tab48')}</button>
-                                        <button onClick={() => handleAccept()} className="bg-[#a797cc] text-white py-3 px-24 lg:px-36 rounded-xl text-base font-semibold hover:bg-orange-600 transition duration-300">{t('detail.tab47')}</button>
+                                    <div className={`flex ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-4 flex-wrap`}>
+                                        <button type="button" onClick={() => handleReject()} className="border-2 border-[#a797cc] text-[#a797cc] bg-white py-3 px-8 lg:px-12 rounded-xl text-base font-semibold hover:bg-[#a797cc]/10 transition duration-300">{t('detail.tab48')}</button>
+                                        <button type="button" onClick={() => handleAccept()} className="bg-[#a797cc] text-white py-3 px-8 lg:px-12 rounded-xl text-base font-semibold hover:opacity-90 transition duration-300">{t('detail.tab47')}</button>
                                     </div>
                                 )
                             )}

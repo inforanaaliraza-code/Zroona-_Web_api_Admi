@@ -2274,33 +2274,31 @@ const organizerController = {
 				await sendEventBookingAcceptNotification(res, booked_event.user_id, notification_data);
 			}
 
-			// Create in-app notification for the guest (always create for consistency)
+			// Create in-app notification for the guest (store both EN and AR for UI locale switch)
 			try {
-				const notificationTitle = book_status === 2
-					? (req.lang === "ar" ? "تم قبول طلبك" : "Booking Accepted")
-					: (req.lang === "ar" ? "تم رفض طلبك" : "Booking Rejected");
-				
-				let notificationDescription = "";
+				const titleEn = book_status === 2 ? "Booking Accepted" : "Booking Rejected";
+				const titleAr = book_status === 2 ? "تم قبول طلبك" : "تم رفض طلبك";
+				let descriptionEn = "";
+				let descriptionAr = "";
 				if (book_status === 2) {
-					notificationDescription = req.lang === "ar"
-						? `تم قبول طلبك لحجز "${event.event_name}". يمكنك الآن المتابعة للدفع.`
-						: `Your booking request for "${event.event_name}" has been accepted by the host. You can now proceed with payment.`;
+					descriptionEn = `Your booking request for "${event.event_name}" has been accepted by the host. You can now proceed with payment.`;
+					descriptionAr = `تم قبول طلبك لحجز "${event.event_name}". يمكنك الآن المتابعة للدفع.`;
 				} else if (book_status === 3 || book_status === 4) {
-					notificationDescription = req.lang === "ar"
-						? `تم رفض طلبك لحجز "${event.event_name}". لا يمكنك حجز هذا الحدث.`
-						: `Your booking request for "${event.event_name}" has been rejected by the host. You cannot book this event.`;
+					descriptionEn = `Your booking request for "${event.event_name}" has been rejected by the host. You cannot book this event.`;
+					descriptionAr = `تم رفض طلبك لحجز "${event.event_name}". لا يمكنك حجز هذا الحدث.`;
 					if (rejection_reason) {
-						notificationDescription += req.lang === "ar"
-							? ` السبب: ${rejection_reason}`
-							: ` Reason: ${rejection_reason}`;
+						descriptionEn += ` Reason: ${rejection_reason}`;
+						descriptionAr += ` السبب: ${rejection_reason}`;
 					}
 				}
 
 				await NotificationService.CreateService({
 					user_id: booked_event.user_id,
 					role: 1, // User/Guest role
-					title: notificationTitle,
-					description: notificationDescription,
+					title: titleEn,
+					title_ar: titleAr,
+					description: descriptionEn,
+					description_ar: descriptionAr,
 					isRead: false,
 					notification_type: book_status == 2 ? 2 : 3,
 					event_id: event._id,

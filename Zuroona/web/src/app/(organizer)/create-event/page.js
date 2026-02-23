@@ -407,12 +407,12 @@ export default function CreateEventPage() {
     const mapLoadedRef = useRef(false);
     
     const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    const mapLanguage = (typeof i18n !== 'undefined' && i18n.language === 'ar') ? 'ar' : 'en';
+    // Loader options must stay stable: do NOT pass language here. Changing language causes
+    // "Loader must not be called again with different options". Map/Places use default script language.
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
         googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
         libraries: ['places'],
-        language: mapLanguage,
     });
 
     const eventId = searchParams.get("id");
