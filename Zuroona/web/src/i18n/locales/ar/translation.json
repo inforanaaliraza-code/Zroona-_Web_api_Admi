@@ -1023,6 +1023,12 @@
   "maps": {
     "loadError": "الخريطة غير متاحة",
     "loadErrorHint": "يمكنك إدخال عنوان الفعالية في الحقل أعلاه للمتابعة.",
+    "referrerHint": "إذا كنت تستخدم 127.0.0.1، أضف http://127.0.0.1:3000/* إلى قيود المواقع المسموحة لمفتاح API في Google Cloud Console. وتأكد من تفعيل Maps JavaScript API وPlaces API وإعداد الفوترة.",
+    "fixTitle": "الخريطة لا تُحمّل؟ نفّذ هذه الخطوات:",
+    "fixStep0": "٠) اختبار سريع: أنشئ مفتاح API جديد → Application restrictions: None، API restrictions: Don't restrict key → الصقه في .env.local → أعد تشغيل السيرفر.",
+    "fixStep1": "١) Google Cloud → APIs & Services → Library → ابحث 'Maps JavaScript API' → Enable. ثم ابحث 'Places API' → Enable. (يجب أن يظهر كلاهما مفعّلان.)",
+    "fixStep2": "٢) Credentials → مفتاح API → API restrictions: إما اختر 'Maps JavaScript API' و'Places API' تحت Restrict key، أو جرّب مؤقتاً 'Don't restrict key' للاختبار.",
+    "fixStep3": "٣) Billing يجب أن يكون مفعّلاً لهذا المشروع. انتظر حتى ٢٤ ساعة بعد أول دفعة. استخدم http://localhost:3000 أو أضف http://127.0.0.1:3000/* في Website restrictions.",
     "ok": "موافق",
     "apiKeyMissing": "مفتاح Google Maps API مفقود. يرجى تعيين NEXT_PUBLIC_GOOGLE_MAPS_API_KEY في web/.env.local.",
     "loadFailed": "فشل تحميل خرائط Google. يرجى التحقق من مفتاح API واتصال الإنترنت.",

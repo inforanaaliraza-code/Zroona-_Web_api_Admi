@@ -180,7 +180,7 @@ export default function UpcomingEvents() {
 								</Slider>
 							</div>
 						) : (
-							<div className="text-gray-800">No Data Found</div>
+							<div className="text-gray-800">{t("events.noDataFound", "No Data Found")}</div>
 						)}
 					</>
 				)}

@@ -102,7 +102,8 @@ export default function EventAnalytics() {
           {t("approved") || "Approved"}
         </span>
       );
-    } else if (status === 3) {
+    } else if (status === 3 || status === 4) {
+      // 3 = legacy cancelled/rejected, 4 = rejected by host
       return (
         <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
           {t("rejected") || "Rejected"}

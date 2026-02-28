@@ -22,7 +22,7 @@ import Image from 'next/image';
 import Breadcrumbs from '@/components/Breadcrumbs/Breadcrumbs';
 import { DatePickerTime } from '@/components/ui/date-picker-time';
 import { BASE_API_URL } from '@/until';
-import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
+import EventLocationMapBlock from '@/components/EventLocationMapBlock';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
@@ -398,22 +398,7 @@ export default function CreateEventPage() {
     const [showCreateConfirm, setShowCreateConfirm] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [pendingPayload, setPendingPayload] = useState(null);
-    const [map, setMap] = useState(null);
-    const [markerPosition, setMarkerPosition] = useState(null);
-    const [autocomplete, setAutocomplete] = useState(null);
-    const [mapError, setMapError] = useState(null);
-    const [mapLoadedSuccessfully, setMapLoadedSuccessfully] = useState(false);
-    const [mapRetryCount, setMapRetryCount] = useState(0);
-    const mapLoadedRef = useRef(false);
-    
-    const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    // Loader options must stay stable: do NOT pass language here. Changing language causes
-    // "Loader must not be called again with different options". Map/Places use default script language.
-    const { isLoaded, loadError } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
-        libraries: ['places'],
-    });
+    const GOOGLE_MAPS_API_KEY = (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim();
 
     const eventId = searchParams.get("id");
     const eventType = searchParams.get("type") || "1"; // 1 = Join Event, 2 = Welcome Event
@@ -704,72 +689,6 @@ export default function CreateEventPage() {
     const handleEventForSelect = (gender) => {
         formik.setFieldValue("event_for", gender);
     };
-
-    // Geocode function to get address from coordinates
-    const geocodeLocation = (location) => {
-        if (!isLoaded || !window.google) return;
-        
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location }, (results, status) => {
-            if (status === 'OK' && results && results[0]) {
-                const address = results[0].formatted_address;
-                formik.setFieldValue('event_address', address);
-
-                // Extract neighborhood
-                let neighborhood = '';
-                results[0].address_components.forEach(component => {
-                    if (component.types.includes('neighborhood') || component.types.includes('sublocality')) {
-                        neighborhood = component.long_name;
-                    } else if (component.types.includes('locality') && !neighborhood) {
-                        neighborhood = component.long_name;
-                    }
-                });
-                formik.setFieldValue('neighborhood', neighborhood || address);
-            }
-        });
-    };
-
-    // Initialize marker position from form values
-    useEffect(() => {
-        if (formik.values.latitude && formik.values.longitude) {
-            const position = {
-                lat: parseFloat(formik.values.latitude),
-                lng: parseFloat(formik.values.longitude)
-            };
-            setMarkerPosition(position);
-            
-            if (map && isLoaded) {
-                map.setCenter(position);
-                map.setZoom(15);
-            }
-        } else {
-            setMarkerPosition(null);
-        }
-    }, [formik.values.latitude, formik.values.longitude, map, isLoaded]);
-
-    // Surface missing key or load errors clearly (messages translated)
-    useEffect(() => {
-        if (!GOOGLE_MAPS_API_KEY) {
-            setMapError(t('maps.apiKeyMissing'));
-        }
-    }, [GOOGLE_MAPS_API_KEY, t]);
-
-    useEffect(() => {
-        if (loadError) {
-            setMapError(loadError.message || t('maps.loadFailed'));
-        }
-    }, [loadError, t]);
-
-    // Overlay stays until onLoad. Give map 12s to load (slow networks) before showing "Map unavailable".
-    useEffect(() => {
-        if (!isLoaded || mapError) return;
-        mapLoadedRef.current = false;
-        setMapLoadedSuccessfully(false);
-        const timer = setTimeout(() => {
-            if (!mapLoadedRef.current) setMapError(t('maps.loadFailed'));
-        }, 12000);
-        return () => clearTimeout(timer);
-    }, [isLoaded, mapError, t]);
 
     const validateStep = (step) => {
         const errors = {};
@@ -1156,161 +1075,32 @@ export default function CreateEventPage() {
                                     </div>
 
                                     <div>
-                                        <Label className="text-xs font-semibold mb-1.5 block">{t('add.tab7')} *</Label>
-                                        <div className="space-y-2">
-                                            {/* Manual Address Input */}
-                                            <Input
-                                                type="text"
-                                                placeholder={t("add.enterAddressManually") || "Enter address manually or select from map"}
-                                                {...formik.getFieldProps('event_address')}
-                                                className={`${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS}`}
-                                                onChange={(e) => {
-                                                    formik.setFieldValue('event_address', e.target.value);
-                                                    // Geocode address when manually entered
-                                                    if (e.target.value && isLoaded && window.google) {
-                                                        const geocoder = new window.google.maps.Geocoder();
-                                                        geocoder.geocode({ address: e.target.value }, (results, status) => {
-                                                            if (status === 'OK' && results && results[0]) {
-                                                                const location = results[0].geometry.location;
-                                                                formik.setFieldValue('latitude', location.lat().toFixed(6));
-                                                                formik.setFieldValue('longitude', location.lng().toFixed(6));
-                                                                setMarkerPosition({ lat: location.lat(), lng: location.lng() });
-                                                                if (map) {
-                                                                    map.setCenter({ lat: location.lat(), lng: location.lng() });
-                                                                    map.setZoom(15);
-                                                                }
-                                                            }
-                                                        });
-                                                    }
-                                                }}
+                                        {GOOGLE_MAPS_API_KEY ? (
+                                            <EventLocationMapBlock
+                                                apiKey={GOOGLE_MAPS_API_KEY}
+                                                formik={formik}
+                                                t={t}
+                                                fieldBoxClass={FIELD_BOX_CLASS}
+                                                placeholderOpacityClass={PLACEHOLDER_OPACITY_CLASS}
+                                                containerHeight="288px"
+                                                showLabel={true}
+                                                labelKey="add.tab7"
                                             />
-                                            
-                                            {/* Google Maps Autocomplete */}
-                                            {isLoaded && !mapError && (
-                                                <Autocomplete
-                                                    onLoad={(autocomplete) => setAutocomplete(autocomplete)}
-                                                    onPlaceChanged={() => {
-                                                        if (autocomplete) {
-                                                            const place = autocomplete.getPlace();
-                                                            if (place.geometry && place.geometry.location) {
-                                                                const location = {
-                                                                    lat: place.geometry.location.lat(),
-                                                                    lng: place.geometry.location.lng(),
-                                                                };
-                                                                formik.setFieldValue('latitude', location.lat.toFixed(6));
-                                                                formik.setFieldValue('longitude', location.lng.toFixed(6));
-                                                                formik.setFieldValue('event_address', place.formatted_address || place.name);
-                                                                setMarkerPosition(location);
-                                                                if (map) {
-                                                                    map.setCenter(location);
-                                                                    map.setZoom(15);
-                                                                }
-                                                            }
-                                                        }
-                                                    }}
-                                                >
-                                                    <Input
-                                                        type="text"
-                                                        placeholder={t("add.orSearchOnMap") || "Or search on map..."}
-                                                        className={`${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS}`}
-                                                    />
-                                                </Autocomplete>
-                                            )}
-                                            
-                                            {/* Google Map - professional fallback when map unavailable */}
-                                            {mapError ? (
-                                                <div className="relative h-48 w-full rounded-xl border border-gray-200 overflow-hidden bg-gradient-to-br from-gray-50 to-white">
-                                                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-5 py-6 text-center">
-                                                        <div className="w-12 h-12 rounded-full bg-[#a797cc]/10 flex items-center justify-center mb-3">
-                                                            <Icon icon="lucide:map-pin-off" className="w-6 h-6 text-[#a797cc]" />
-                                                        </div>
-                                                        <p className="text-sm font-semibold text-gray-800 mb-1">
-                                                            {t('maps.loadError')}
-                                                        </p>
-                                                        <p className="text-xs text-gray-500 max-w-xs mb-4 leading-relaxed">
-                                                            {t('maps.loadErrorHint')}
-                                                        </p>
-                                                        <div className="flex flex-wrap items-center justify-center gap-2">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => { mapLoadedRef.current = false; setMapLoadedSuccessfully(false); setMapError(null); setMapRetryCount((c) => c + 1); }}
-                                                                className="px-4 py-2 rounded-xl border-2 border-[#a797cc] text-[#a797cc] text-sm font-medium hover:bg-[#a797cc]/10 transition-colors"
-                                                            >
-                                                                {t('maps.retry')}
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setMapError(null)}
-                                                                className="px-5 py-2.5 rounded-xl bg-[#a797cc] text-white text-sm font-medium hover:bg-[#9d8bc0] transition-colors shadow-sm"
-                                                            >
-                                                                {t('maps.ok')}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ) : isLoaded ? (
-                                                <div key={mapRetryCount} className="relative h-48 w-full rounded-md overflow-hidden border isolate">
-                                                    {/* Overlay until map onLoad; 12s timeout then "Map unavailable" + Retry */}
-                                                    {!mapLoadedSuccessfully && (
-                                                        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white rounded-md shadow-inner">
-                                                            <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#a797cc] border-t-transparent mb-3" />
-                                                            <p className="text-sm font-medium text-gray-700">{t('maps.loadingMap')}</p>
-                                                            <p className="text-xs text-gray-500 mt-1">{t('maps.loadingMapHint')}</p>
-                                                        </div>
-                                                    )}
-                                                    <GoogleMap
-                                                        mapContainerStyle={{ width: '100%', height: '100%' }}
-                                                        center={markerPosition || { lat: 24.7136, lng: 46.6753 }}
-                                                        zoom={markerPosition ? 15 : 10}
-                                                        onLoad={(mapInstance) => { mapLoadedRef.current = true; setMap(mapInstance); setMapLoadedSuccessfully(true); }}
-                                                        onClick={(e) => {
-                                                            const lat = e.latLng.lat();
-                                                            const lng = e.latLng.lng();
-                                                            const position = { lat, lng };
-                                                            formik.setFieldValue('latitude', lat.toFixed(6));
-                                                            formik.setFieldValue('longitude', lng.toFixed(6));
-                                                            setMarkerPosition(position);
-                                                            // Geocode to get address
-                                                            if (window.google) {
-                                                                const geocoder = new window.google.maps.Geocoder();
-                                                                geocoder.geocode({ location: position }, (results, status) => {
-                                                                    if (status === 'OK' && results && results[0]) {
-                                                                        formik.setFieldValue('event_address', results[0].formatted_address);
-                                                                    }
-                                                                });
-                                                            }
-                                                        }}
-                                                    >
-                                                        {markerPosition && (
-                                                            <Marker
-                                                                position={markerPosition}
-                                                                draggable
-                                                                onDragEnd={(e) => {
-                                                                    const lat = e.latLng.lat();
-                                                                    const lng = e.latLng.lng();
-                                                                    const position = { lat, lng };
-                                                                    formik.setFieldValue('latitude', lat.toFixed(6));
-                                                                    formik.setFieldValue('longitude', lng.toFixed(6));
-                                                                    setMarkerPosition(position);
-                                                                    if (window.google) {
-                                                                        const geocoder = new window.google.maps.Geocoder();
-                                                                        geocoder.geocode({ location: position }, (results, status) => {
-                                                                            if (status === 'OK' && results && results[0]) {
-                                                                                formik.setFieldValue('event_address', results[0].formatted_address);
-                                                                            }
-                                                                        });
-                                                                    }
-                                                                }}
-                                                            />
-                                                        )}
-                                                    </GoogleMap>
-                                                </div>
-                                            ) : (
-                                                <div className="h-48 w-full rounded-md border flex items-center justify-center bg-gray-100">
-                                                    <p className="text-xs text-gray-500">{t('maps.loadingMap')}</p>
-                                                </div>
-                                            )}
-                                        </div>
+                                        ) : (
+                                            <>
+                                                <Label className="text-xs font-semibold mb-1.5 block">{t('add.tab7')} *</Label>
+                                                <Input
+                                                    type="text"
+                                                    placeholder={t("add.enterAddressManually") || "Enter event address"}
+                                                    {...formik.getFieldProps('event_address')}
+                                                    className={`${FIELD_BOX_CLASS} ${PLACEHOLDER_OPACITY_CLASS}`}
+                                                />
+                                                <p className="text-amber-600 text-xs mt-2 flex items-center gap-1">
+                                                    <Icon icon="lucide:info" className="w-3 h-3" />
+                                                    {t('maps.apiKeyMissing')}
+                                                </p>
+                                            </>
+                                        )}
                                         {formik.touched.event_address && formik.errors.event_address && (
                                             <p className="text-red-500 text-xs mt-0.5">{formik.errors.event_address}</p>
                                         )}

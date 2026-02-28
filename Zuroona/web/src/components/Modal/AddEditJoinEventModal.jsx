@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { getProfile } from '@/redux/slices/profileInfo';
 import { format } from 'date-fns';
 import { BASE_API_URL } from '@/until';
-import { useJsApiLoader, GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
+import EventLocationMapBlock from '@/components/EventLocationMapBlock';
 import { Icon } from '@iconify/react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -369,9 +369,6 @@ const DatePicker = ({
     );
 };
 
-// Keep libraries constant to avoid Google Maps reload warnings
-const GOOGLE_MAP_LIBRARIES = ['places'];
-
 // Shared field box style (same look as create-event page)
 const FIELD_BOX_CLASS = "h-12 text-base rounded-xl border-2 border-gray-200 bg-gray-50/50 focus:border-[#a797cc] focus:ring-4 focus:ring-purple-100 transition-all hover:border-purple-200";
 const PLACEHOLDER_OPACITY_CLASS = "placeholder:opacity-60 placeholder:text-gray-400";
@@ -405,52 +402,12 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
     const router = useRouter();
     const [page, setPage] = useState(1);
     const [loading, setLoding] = useState(false);
-    const [map, setMap] = useState(null);
-    const [markerPosition, setMarkerPosition] = useState(null);
-    const [autocomplete, setAutocomplete] = useState(null);
     const [activeSection, setActiveSection] = useState('basic');
-    const [mapError, setMapError] = useState(null);
-    const [mapLoadedSuccessfully, setMapLoadedSuccessfully] = useState(false);
-    const [mapRetryCount, setMapRetryCount] = useState(0);
-    const mapLoadedRef = useRef(false);
     const [showCreateConfirm, setShowCreateConfirm] = useState(false);
     const [showSuccessPopup, setShowSuccessPopup] = useState(false);
     const [pendingPayload, setPendingPayload] = useState(null);
-    // Get API key from environment variable (must be set in .env.local)
-    const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    
-    // Loader options must stay stable: do NOT pass language here. Changing language causes
-    // "Loader must not be called again with different options". Map/Places use default script language.
-    const { isLoaded, loadError } = useJsApiLoader({
-        id: 'google-map-script',
-        googleMapsApiKey: GOOGLE_MAPS_API_KEY || '',
-        libraries: GOOGLE_MAP_LIBRARIES,
-    });
+    const GOOGLE_MAPS_API_KEY = (process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "").trim();
     const { profile } = useSelector((state) => state.profileData || {});
-
-    // Surface missing key or load errors clearly (translated)
-    useEffect(() => {
-        if (!GOOGLE_MAPS_API_KEY) {
-            setMapError(t('maps.apiKeyMissing'));
-        }
-    }, [GOOGLE_MAPS_API_KEY, t]);
-
-    useEffect(() => {
-        if (loadError) {
-            setMapError(loadError.message || t('maps.loadFailed'));
-        }
-    }, [loadError, t]);
-
-    // Overlay until onLoad; 12s timeout then show "Map unavailable" + Retry
-    useEffect(() => {
-        if (!isLoaded || mapError) return;
-        mapLoadedRef.current = false;
-        setMapLoadedSuccessfully(false);
-        const timer = setTimeout(() => {
-            if (!mapLoadedRef.current) setMapError(t('maps.loadFailed'));
-        }, 12000);
-        return () => clearTimeout(timer);
-    }, [isLoaded, mapError, t]);
 
     const EventListId = searchParams.get("id");
     const { EventListdetails = {}, loadingDetail } = useSelector(
@@ -902,126 +859,6 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
                 toast.error(errorMessage);
             }
     };
-
-    // Initialize marker position from form values
-    useEffect(() => {
-        if (formik.values.latitude && formik.values.longitude) {
-            const position = {
-                lat: parseFloat(formik.values.latitude),
-                lng: parseFloat(formik.values.longitude)
-            };
-            setMarkerPosition(position);
-            
-            // Update map center if map is loaded
-            if (map && isLoaded) {
-                map.setCenter(position);
-                map.setZoom(15);
-            }
-        } else {
-            setMarkerPosition(null);
-        }
-    }, [formik.values.latitude, formik.values.longitude, map, isLoaded]);
-
-    // Handle map load error
-    useEffect(() => {
-        if (loadError) {
-            setMapError('Failed to load Google Maps. Please check your API key configuration and internet connection.');
-        } else {
-            setMapError(null);
-        }
-    }, [loadError]);
-
-    // Geocode function to get address from coordinates
-    const geocodeLocation = (location) => {
-        if (!isLoaded || !window.google) return;
-        
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location }, (results, status) => {
-            if (status === 'OK' && results && results[0]) {
-                const address = results[0].formatted_address;
-                formik.setFieldValue('event_address', address);
-
-                // Extract neighborhood
-                let neighborhood = '';
-                results[0].address_components.forEach(component => {
-                    if (component.types.includes('neighborhood') || component.types.includes('sublocality')) {
-                        neighborhood = component.long_name;
-                    } else if (component.types.includes('locality') && !neighborhood) {
-                        neighborhood = component.long_name;
-                    }
-                });
-                formik.setFieldValue('neighborhood', neighborhood || address);
-            }
-        });
-    };
-
-    // Handle map click to place marker
-    const handleMapClick = (e) => {
-        const lat = e.latLng.lat();
-        const lng = e.latLng.lng();
-        const position = { lat, lng };
-
-        formik.setFieldValue('latitude', lat.toFixed(6));
-        formik.setFieldValue('longitude', lng.toFixed(6));
-        setMarkerPosition(position);
-        geocodeLocation(position);
-    };
-
-    // Handle marker drag end
-    const handleMarkerDragEnd = (e) => {
-        const lat = e.latLng.lat();
-        const lng = e.latLng.lng();
-        const position = { lat, lng };
-
-        formik.setFieldValue('latitude', lat.toFixed(6));
-        formik.setFieldValue('longitude', lng.toFixed(6));
-        geocodeLocation(position);
-    };
-
-    // Handle autocomplete place selection
-    const handlePlaceSelect = () => {
-        if (!autocomplete) return;
-
-        const place = autocomplete.getPlace();
-        if (!place.geometry || !place.geometry.location) {
-            return;
-        }
-
-        const location = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-        };
-
-        // Update map center
-        if (map) {
-            map.setCenter(location);
-            map.setZoom(15);
-        }
-
-        // Update form values
-        formik.setFieldValue('latitude', location.lat.toFixed(6));
-        formik.setFieldValue('longitude', location.lng.toFixed(6));
-        formik.setFieldValue('event_address', place.formatted_address || place.name);
-        setMarkerPosition(location);
-
-        // Extract neighborhood
-        let neighborhood = '';
-        if (place.address_components) {
-            place.address_components.forEach(component => {
-                if (component.types.includes('neighborhood') || component.types.includes('sublocality')) {
-                    neighborhood = component.long_name;
-                } else if (component.types.includes('locality') && !neighborhood) {
-                    neighborhood = component.long_name;
-                }
-            });
-        }
-        formik.setFieldValue('neighborhood', neighborhood || place.formatted_address || place.name);
-    };
-
-    // Get default center
-    const defaultCenter = formik.values.latitude && formik.values.longitude
-        ? { lat: parseFloat(formik.values.latitude), lng: parseFloat(formik.values.longitude) }
-        : { lat: 24.7136, lng: 46.6753 }; // Default to Riyadh
 
     const handleFile = async (file) => {
         if (!file) return;
@@ -1606,198 +1443,70 @@ const AddEditJoinEventModal = ({ isOpen, onClose, eventId, eventpage, eventlimit
 
                         {/* 2x2 Grid Layout for Location */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Event Address - Full Width */}
+                            {/* Event Address - Full Width: mount map only when modal is open and API key exists */}
                             <div className="md:col-span-2 bg-white p-5 rounded-xl border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                                <label className="block text-gray-700 text-sm font-semibold mb-3">
-                                    {t('add.tab7') || 'Event Address'} <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative mb-3">
-                                {isLoaded ? (
-                                    <Autocomplete
-                                        onLoad={(autocomplete) => setAutocomplete(autocomplete)}
-                                        onPlaceChanged={handlePlaceSelect}
-                                        options={{
-                                            types: ['address'],
-                                            componentRestrictions: { country: 'sa' },
-                                        }}
-                                    >
-                                        <div className="relative">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                                                <Image
-                                                    src="/assets/images/icons/location-pin.png"
-                                                    height={20}
-                                                    width={20}
-                                                    alt="Location"
-                                                />
-                                            </span>
-                                            <input
-                                                type="text"
-                                                placeholder={t('add.tab7') || 'Search and select location on map'}
-                                                value={formik.values.event_address || ''}
-                                                onChange={(e) => {
-                                                    formik.setFieldValue('event_address', e.target.value);
-                                                }}
-                                                className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all"
-                                            />
+                                {isOpen && GOOGLE_MAPS_API_KEY ? (
+                                    <>
+                                        <div className="bg-gradient-to-r from-[#a797cc] to-purple-600 rounded-t-xl p-4 shadow-lg mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="text-white font-bold text-base mb-0.5">{t('add.selectLocationOnMap')}</h4>
+                                                    <p className="text-white/90 text-xs">{t('add.mapInstructions')}</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </Autocomplete>
+                                        <EventLocationMapBlock
+                                            apiKey={GOOGLE_MAPS_API_KEY}
+                                            formik={formik}
+                                            t={t}
+                                            fieldBoxClass={FIELD_BOX_CLASS}
+                                            placeholderOpacityClass={PLACEHOLDER_OPACITY_CLASS}
+                                            containerHeight="400px"
+                                            showLabel={true}
+                                            labelKey="add.tab7"
+                                        />
+                                        <div className="mt-3 flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <Icon icon="lucide:info" className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                            <div className="flex-1">
+                                                <p className="text-xs font-semibold text-blue-900 mb-1">Pro Tip</p>
+                                                <p className="text-xs text-blue-700 leading-relaxed">
+                                                    You can search for an address above, then click on the map to fine-tune the exact location. The marker is draggable for precise positioning.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </>
                                 ) : (
-                                    <div className="relative">
-                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none z-10">
-                                            <Image
-                                                src="/assets/images/icons/location-pin.png"
-                                                height={20}
-                                                width={20}
-                                                alt="Location"
-                                            />
-                                        </span>
+                                    <>
+                                        <label className="block text-gray-700 text-sm font-semibold mb-3">
+                                            {t('add.tab7') || 'Event Address'} <span className="text-red-500">*</span>
+                                        </label>
                                         <input
                                             type="text"
-                                            placeholder={t('add.tab7') || 'Search and select location on map'}
+                                            placeholder={t('add.tab7') || 'Enter event address'}
                                             value={formik.values.event_address || ''}
-                                            onChange={(e) => {
-                                                formik.setFieldValue('event_address', e.target.value);
-                                            }}
+                                            onChange={(e) => formik.setFieldValue('event_address', e.target.value)}
                                             className="w-full pl-10 pr-4 py-3 border bg-white border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a797cc] focus:border-transparent text-gray-900 placeholder:text-gray-400 text-sm transition-all"
                                         />
-                                    </div>
+                                        {!GOOGLE_MAPS_API_KEY && (
+                                            <p className="text-amber-600 text-xs mt-2 flex items-center gap-1">
+                                                <Icon icon="lucide:info" className="w-3 h-3" />
+                                                {t('maps.apiKeyMissing')}
+                                            </p>
+                                        )}
+                                    </>
                                 )}
-                                </div>
                                 {formik.touched.event_address && formik.errors.event_address ? (
                                     <p className="text-red-500 text-xs mt-2 font-medium flex items-center gap-1">
                                         <Icon icon="lucide:alert-circle" className="w-4 h-4" />
                                         {formik.errors.event_address}
                                     </p>
                                 ) : null}
-                                
-                                {/* Google Maps Container */}
-                                <div className="mt-4">
-                                    <div className="bg-gradient-to-r from-[#a797cc] to-purple-600 rounded-t-xl p-4 shadow-lg">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="text-white font-bold text-base mb-0.5">
-                                                {t('add.selectLocationOnMap')}
-                                            </h4>
-                                            <p className="text-white/90 text-xs">
-                                                {t('add.mapInstructions')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="relative">
-                                    {!isLoaded ? (
-                                        <div 
-                                            className="w-full border-x-2 border-b-2 border-gray-200 rounded-b-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 shadow-xl"
-                                            style={{ minHeight: '400px', height: '400px' }}
-                                        >
-                                            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
-                                                <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#a797cc] border-t-transparent mb-4"></div>
-                                                <p className="text-sm font-medium text-gray-600">
-                                                    {t('maps.loadingMap')}
-                                                </p>
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    {t('maps.loadingMapHint')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : mapError ? (
-                                        <div 
-                                            className="w-full border-x-2 border-b-2 border-gray-200 rounded-b-xl overflow-hidden bg-gradient-to-br from-gray-50 to-white shadow-xl relative"
-                                            style={{ minHeight: '400px', height: '400px' }}
-                                        >
-                                            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center px-5 py-6 text-center">
-                                                <div className="w-14 h-14 rounded-full bg-[#a797cc]/10 flex items-center justify-center mb-4">
-                                                    <Icon icon="lucide:map-pin-off" className="w-7 h-7 text-[#a797cc]" />
-                                                </div>
-                                                <p className="text-sm font-semibold text-gray-800 mb-1">{t('maps.loadError')}</p>
-                                                <p className="text-xs text-gray-500 max-w-sm mb-5 leading-relaxed">{t('maps.loadErrorHint')}</p>
-                                                <div className="flex flex-wrap items-center justify-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => { mapLoadedRef.current = false; setMapLoadedSuccessfully(false); setMapError(null); setMapRetryCount((c) => c + 1); }}
-                                                        className="px-4 py-2 rounded-xl border-2 border-[#a797cc] text-[#a797cc] text-sm font-medium hover:bg-[#a797cc]/10 transition-colors"
-                                                    >
-                                                        {t('maps.retry')}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setMapError(null)}
-                                                        className="px-5 py-2.5 rounded-xl bg-[#a797cc] text-white text-sm font-medium hover:bg-[#9d8bc0] transition-colors shadow-sm"
-                                                    >
-                                                        {t('maps.ok')}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div key={mapRetryCount} className="relative isolate" style={{ minHeight: '400px', height: '400px' }}>
-                                            {!mapLoadedSuccessfully && (
-                                                <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white rounded-b-xl shadow-inner">
-                                                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-[#a797cc] border-t-transparent mb-3" />
-                                                    <p className="text-sm font-medium text-gray-700">{t('maps.loadingMap')}</p>
-                                                    <p className="text-xs text-gray-500 mt-1">{t('maps.loadingMapHint')}</p>
-                                                </div>
-                                            )}
-                                            <GoogleMap
-                                                mapContainerStyle={{ 
-                                                    width: '100%', 
-                                                    height: '400px',
-                                                    borderRadius: '0 0 0.75rem 0.75rem'
-                                                }}
-                                                center={defaultCenter}
-                                                zoom={formik.values.latitude && formik.values.longitude ? 15 : 13}
-                                                onClick={handleMapClick}
-                                                onLoad={(mapInstance) => { mapLoadedRef.current = true; setMap(mapInstance); setMapLoadedSuccessfully(true); }}
-                                                options={{
-                                                    mapTypeControl: true,
-                                                    fullscreenControl: true,
-                                                    streetViewControl: false,
-                                                    zoomControl: true,
-                                                    mapTypeId: 'roadmap',
-                                                }}
-                                            >
-                                                {markerPosition && (
-                                                    <Marker
-                                                        position={markerPosition}
-                                                        draggable={true}
-                                                        onDragEnd={handleMarkerDragEnd}
-                                                    />
-                                                )}
-                                            </GoogleMap>
-                                            {/* Map Overlay Instructions - only when map loaded */}
-                                            {mapLoadedSuccessfully && (() => {
-                                                const pos = isRTL ? 'left-4' : 'right-4';
-                                                return (
-                                                    <div className={`absolute top-4 ${pos} bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-4 py-2 z-10 border border-gray-200`}>
-                                                        <div className="flex items-center gap-2">
-                                                            <svg className="w-4 h-4 text-[#a797cc]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                            </svg>
-                                                            <span className="text-xs font-semibold text-gray-700">Click to place marker</span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })()}
-                                        </div>
-                                    )}
-                                </div>
-                                {/* Additional Help Text */}
-                                <div className="mt-3 flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <Icon icon="lucide:info" className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                                    <div className="flex-1">
-                                        <p className="text-xs font-semibold text-blue-900 mb-1">Pro Tip</p>
-                                        <p className="text-xs text-blue-700 leading-relaxed">
-                                            You can search for an address above, then click on the map to fine-tune the exact location. The marker is draggable for precise positioning.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
                             </div>
 
                             {/* Neighborhood Display */}

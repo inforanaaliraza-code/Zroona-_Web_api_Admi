@@ -1883,15 +1883,16 @@ const organizerController = {
 
 	bookingList: async (req, res) => {
 		try {
-			const { userId } = req;
-			const {
-				page = 1,
-				limit = 10,
-				search = "",
-				book_status,
-				booking_date,
-			} = req.query;
-			const skip = (parseInt(page) - 1) * parseInt(limit);
+			const userId = req.userId || req.user?._id;
+			if (!userId) {
+				return Response.unauthorizedResponse(res, null, 401, resp_messages(req.lang).invalid_token || "Invalid or missing token.");
+			}
+			const pageNum = Math.max(1, parseInt(req.query.page, 10) || 1);
+			const limitNum = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
+			const search = typeof req.query.search === "string" ? req.query.search : "";
+			const book_status = req.query.book_status;
+			const booking_date = req.query.booking_date;
+			const skip = (pageNum - 1) * limitNum;
 			const startOfTodayUTC = new Date(
 				Date.UTC(
 					new Date().getUTCFullYear(),
@@ -1964,16 +1965,16 @@ const organizerController = {
 				});
 			}
 
-			// Add event date filter for pending bookings (only future events)
-			// Don't apply date filter for cancelled (3) or rejected (4) bookings - show all regardless of event date
-			const eventDateFilter = 
-				(book_status === "0" || book_status === "1" || book_status === "")
+			// Add event date filter only for Pending tab (0/1) - show only future events for pending
+			// For All (""), Approved (2), Cancelled (3), Rejected (4): show all bookings including completed events
+			const eventDateFilter =
+				(book_status === "0" || book_status === "1")
 					? {
 						"$eventDetails.event_date": {
 							$gte: startOfTodayUTC,
 						},
 					}
-					: {}; // No date filter for approved (2), cancelled (3), or rejected (4) bookings
+					: {};
 
 			const total_count = await BookEvent.aggregate([
 				{
@@ -2059,7 +2060,7 @@ const organizerController = {
 				},
 				{ $sort: { createdAt: -1 } },
 				{ $skip: skip },
-				{ $limit: parseInt(limit) },
+				{ $limit: limitNum },
 			]);
 
 			// Remove duplicates based on booking _id (in case of any data inconsistency)
@@ -2104,14 +2105,14 @@ const organizerController = {
 				res,
 				finalEvents,
 				200,
-				resp_messages(req.lang).fetched_data,
-				finalEvents.length // Use deduplicated count
+				resp_messages(req.lang || "en").fetched_data,
+				_totalDocuments
 			);
 		} catch (error) {
-			console.log(error.message);
+			console.error("[organizerController.bookingList]", error.message, error.stack);
 			return Response.serverErrorResponse(
 				res,
-				resp_messages(req.lang).internalServerError
+				(resp_messages(req.lang || "en") || {}).internalServerError || "Internal server error."
 			);
 		}
 	},
@@ -2149,8 +2150,8 @@ const organizerController = {
 				);
 			}
 
-			// Validate rejection reason if rejecting
-			if (book_status === 3 && (!rejection_reason || rejection_reason.trim().length < 10)) {
+			// Rejected by host = 4 (3 = cancelled by guest). Require rejection reason when rejecting.
+			if (book_status === 4 && (!rejection_reason || rejection_reason.trim().length < 10)) {
 				return Response.badRequestResponse(
 					res,
 					resp_messages(req.lang).rejection_reason_required || "Rejection reason is required (minimum 10 characters)"
@@ -2158,12 +2159,12 @@ const organizerController = {
 			}
 
 			booked_event.book_status = book_status;
-			
-			// Store rejection reason if provided
-			if (book_status === 3 && rejection_reason) {
+
+			// Store rejection reason if provided (host reject = 4)
+			if (book_status === 4 && rejection_reason) {
 				booked_event.rejection_reason = rejection_reason.trim();
-			} else if (book_status !== 3) {
-				// Clear rejection reason if accepting
+			} else if (book_status !== 4) {
+				// Clear rejection reason if accepting or other status
 				booked_event.rejection_reason = null;
 			}
 			
@@ -2492,12 +2493,12 @@ const organizerController = {
 				{ $sort: { createdAt: -1 } }
 			]);
 
-			// Calculate statistics
+			// Calculate statistics (4 = rejected by host, 3 = cancelled by guest)
 			const stats = {
 				total_bookings: bookings.length,
 				pending: bookings.filter(b => b.book_status === 0 || b.book_status === 1).length,
 				approved: bookings.filter(b => b.book_status === 2).length,
-				rejected: bookings.filter(b => b.book_status === 3).length,
+				rejected: bookings.filter(b => b.book_status === 4).length,
 				paid: bookings.filter(b => b.payment_status === 1).length,
 				unpaid: bookings.filter(b => b.payment_status === 0).length,
 				total_attendees: bookings.reduce((sum, b) => sum + (b.no_of_attendees || 0), 0),
@@ -2699,11 +2700,77 @@ const organizerController = {
 		}
 	},
 
+	/**
+	 * Release earnings to host wallet when event is completed (event_date has passed).
+	 * So host sees balance in withdrawal only after the event is done.
+	 */
+	releaseEarningsForCompletedEvents: async (organizerId) => {
+		const now = new Date();
+		const toRelease = await TransactionService.AggregateService([
+			{
+				$match: {
+					organizer_id: new mongoose.Types.ObjectId(organizerId),
+					type: 1,
+					status: 1,
+					book_id: { $exists: true, $ne: null },
+					$or: [
+						{ released_to_wallet_at: { $exists: false } },
+						{ released_to_wallet_at: null }
+					]
+				}
+			},
+			{
+				$lookup: {
+					from: "book_event",
+					localField: "book_id",
+					foreignField: "_id",
+					as: "bookDetails"
+				}
+			},
+			{ $unwind: { path: "$bookDetails", preserveNullAndEmptyArrays: false } },
+			{
+				$lookup: {
+					from: "events",
+					localField: "bookDetails.event_id",
+					foreignField: "_id",
+					as: "eventDetails"
+				}
+			},
+			{ $unwind: { path: "$eventDetails", preserveNullAndEmptyArrays: false } },
+			{
+				$match: {
+					"eventDetails.event_date": { $lt: now }
+				}
+			},
+			{ $project: { _id: 1, amount: 1 } }
+		]);
+		if (!toRelease || toRelease.length === 0) return;
+		let wallet = await WalletService.FindOneService({ organizer_id: organizerId });
+		if (!wallet) {
+			wallet = await WalletService.CreateService({
+				organizer_id: organizerId,
+				total_amount: 0,
+				minimum_withdrawal: 100,
+				maximum_withdrawal: 50000
+			});
+		}
+		for (const row of toRelease) {
+			await TransactionService.FindByIdAndUpdateService(row._id, {
+				released_to_wallet_at: new Date()
+			});
+			wallet.total_amount = (wallet.total_amount || 0) + (row.amount || 0);
+		}
+		await wallet.save();
+	},
+
 	earningList: async (req, res) => {
 		try {
 		const { userId, lang = "en" } = req;
 		const { filter = "m", page = 1, limit = 10 } = req.query;
 		const skip = (Number(page) - 1) * Number(limit);
+
+		// Release earnings to wallet when event is completed (so host can withdraw after event)
+		await organizerController.releaseEarningsForCompletedEvents(userId);
 
 		const wallet = await WalletService.FindOneService({
 			organizer_id: userId,
@@ -3042,6 +3109,9 @@ const organizerController = {
 			const { userId } = req;
 			const lang = req.lang || "en";
 
+			// Release earnings to wallet when event is completed (so host can withdraw after event)
+			await organizerController.releaseEarningsForCompletedEvents(userId);
+
 			// Get wallet information for the organizer
 			const wallet = await WalletService.FindOneService({
 				organizer_id: userId,
@@ -3093,6 +3163,10 @@ const organizerController = {
 		try {
 			const { amount } = req.body;
 			const { userId } = req;
+
+			// Release earnings to wallet when event is completed (so host can withdraw after event)
+			await organizerController.releaseEarningsForCompletedEvents(userId);
+
 			const organizerWallet = await WalletService.FindOneService({
 				organizer_id: userId,
 			});

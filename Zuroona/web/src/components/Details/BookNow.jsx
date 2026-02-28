@@ -66,7 +66,7 @@ const BookNow = ({ props, pageType }) => {
     const [status, setStatus] = useState(
         props?.book_details?.book_status === 2
             ? t("common.approved")
-            : props?.book_details?.book_status === 3
+            : (props?.book_details?.book_status === 3 || props?.book_details?.book_status === 4)
                 ? t("common.rejected")
                 : ""
     );
@@ -96,11 +96,11 @@ const BookNow = ({ props, pageType }) => {
         setLoading(true);
         const data = {
             book_id: BookingListId,
-            book_status: newStatus, // 2 for approved, 3 for rejected
+            book_status: newStatus, // 2 = approved, 4 = rejected by host
         };
         
         // Add rejection reason if rejecting
-        if (newStatus === 3 && rejectionReason) {
+        if (newStatus === 4 && rejectionReason) {
             data.rejection_reason = rejectionReason;
         }
 
@@ -133,7 +133,7 @@ const BookNow = ({ props, pageType }) => {
 
     const handleRejectConfirm = (rejectionReason) => {
         if (selectedBookingForReject) {
-            ChangeStatus(selectedBookingForReject.bookingId, 3, rejectionReason);
+            ChangeStatus(selectedBookingForReject.bookingId, 4, rejectionReason);
         }
     };
 
@@ -233,9 +233,9 @@ const BookNow = ({ props, pageType }) => {
                                     <div className="flex justify-center items-center">
                                         <Loader height="30" />
                                     </div>
-                                ) : status || props?.book_details?.book_status === 2 || props?.book_details?.book_status === 3 ? (
+                                ) : status || props?.book_details?.book_status === 2 || props?.book_details?.book_status === 3 || props?.book_details?.book_status === 4 ? (
                                     <div className={`py-3 px-24 lg:px-36 rounded-xl text-base font-semibold ${status === 'Approved' || props?.book_details?.book_status === 2 ? 'bg-[#d5fae3] text-green-600' : 'bg-[#ff00002e] text-red-500'}`}>
-                                        {status || (props?.book_details?.book_status === 2 ? t('detail.tab52') : t('detail.tab53'))}
+                                        {status || (props?.book_details?.book_status === 2 ? t('detail.tab52') : (props?.book_details?.book_status === 3 || props?.book_details?.book_status === 4 ? t('detail.tab53') : null))}
                                     </div>
                                 ) : (
                                     <div className={`flex ${isRTL ? 'flex-row-reverse space-x-reverse' : ''} gap-4 flex-wrap`}>

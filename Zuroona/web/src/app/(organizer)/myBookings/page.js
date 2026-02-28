@@ -196,7 +196,7 @@ export default function MyBookings() {
   const handleAcceptReject = async (bookingId, action, rejectionReason = null) => {
     setProcessingBooking(bookingId);
     try {
-      const book_status = action === "accept" ? 2 : 3; // 2 = approved, 3 = rejected
+      const book_status = action === "accept" ? 2 : 4; // 2 = approved, 4 = rejected by host
       const payload = {
         book_id: bookingId,
         book_status: book_status,

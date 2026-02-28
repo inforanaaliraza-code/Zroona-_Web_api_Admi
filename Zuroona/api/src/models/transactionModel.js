@@ -83,6 +83,11 @@ const transactionSchema = new mongoose.Schema({
     requested_at: {
         type: Date,
         default: Date.now
+    },
+    // When event is completed, earning is released to host wallet (so they can withdraw)
+    released_to_wallet_at: {
+        type: Date,
+        default: null
     }
 }, { timestamps: true });
 

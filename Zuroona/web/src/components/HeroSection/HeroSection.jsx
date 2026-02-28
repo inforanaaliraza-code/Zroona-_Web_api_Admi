@@ -25,11 +25,11 @@ const HeroSection = () => {
 
     return (
         <div
-            className="relative min-h-screen md:min-h-0 lg:min-h-0 xl:min-h-screen min-h-viewport bg-white overflow-hidden w-full min-w-0 flex flex-col m-0"
+            className="relative min-h-0 md:min-h-0 lg:min-h-0 xl:min-h-screen xl:min-h-viewport bg-white overflow-hidden w-full min-w-0 flex flex-col m-0"
             style={{ margin: 0, width: '100%' }}
         >
-            {/* Full-viewport white layer - fills entire width on iPad Pro / tablet */}
-            <div className="fixed inset-0 w-full min-w-full min-h-viewport h-viewport bg-white -z-20" aria-hidden="true" style={{ width: '100%' }} />
+            {/* Full-viewport white layer - desktop only so mobile has no forced height */}
+            <div className="fixed inset-0 w-full min-w-full hidden xl:block xl:min-h-viewport xl:h-viewport bg-white -z-20" aria-hidden="true" style={{ width: '100%' }} />
             {/* Background Pattern */}
             <div className="fixed inset-0 bg-[url('/assets/images/home/bg-img.png')] bg-cover bg-center opacity-5 -z-10"></div>
 
