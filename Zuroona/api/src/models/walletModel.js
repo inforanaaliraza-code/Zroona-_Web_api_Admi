@@ -4,7 +4,23 @@ const mongoose = require('mongoose')
 const walletSchema = new mongoose.Schema({
     total_amount: {
         type: Number,
-        default:0
+        default: 0,
+        description: "Total balance (available + on_hold + pending)"
+    },
+    available_amount: {
+        type: Number,
+        default: 0,
+        description: "Amount available for withdrawal"
+    },
+    on_hold_amount: {
+        type: Number,
+        default: 0,
+        description: "Amount from pending withdrawal requests"
+    },
+    pending_amount: {
+        type: Number,
+        default: 0,
+        description: "Earnings from events not yet released"
     },
     organizer_id: {
         type: mongoose.Schema.Types.ObjectId,

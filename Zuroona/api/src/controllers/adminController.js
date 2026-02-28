@@ -1933,7 +1933,7 @@ const adminController = {
             }
 
             if (status == 1) {
-                // APPROVED - money is withdrawn, wallet already set to 0 when request was made
+                // APPROVED - deduct from on_hold_amount (money is withdrawn)
                 transaction.status = 1;
                 transaction.processed_by = userId;
                 transaction.processed_at = new Date();
@@ -1947,6 +1947,14 @@ const adminController = {
                 }
 
                 await transaction.save();
+
+                // Deduct from on_hold_amount and reduce total_amount
+                const wallet = await WalletService.FindOneService({ organizer_id: transaction.organizer_id });
+                if (wallet) {
+                    wallet.on_hold_amount = Math.max(0, wallet.on_hold_amount - transaction.amount);
+                    wallet.total_amount = Math.max(0, wallet.total_amount - transaction.amount);
+                    await wallet.save();
+                }
 
                 // Send notification to organizer
                 try {
@@ -1999,7 +2007,7 @@ const adminController = {
                 return Response.ok(res, transaction, 200, resp_messages(lang).withdrawal_approved || 'Withdrawal approved successfully');
 
             } else if (status == 2) {
-                // REJECTED - restore wallet balance
+                // REJECTED - restore amount back to available_amount
                 transaction.status = 2;
                 transaction.processed_by = userId;
                 transaction.processed_at = new Date();
@@ -2017,10 +2025,14 @@ const adminController = {
                 const amount = transaction.amount;
                 const organizer_id = transaction.organizer_id;
 
-                // Restore the amount back to wallet
+                // Restore the amount back to available_amount (from on_hold_amount)
                 const wallet = await WalletService.FindOneService({ organizer_id: organizer_id });
-                wallet.total_amount = wallet.total_amount + amount;
-                await wallet.save();
+                if (wallet) {
+                    wallet.on_hold_amount = Math.max(0, wallet.on_hold_amount - amount);
+                    wallet.available_amount += amount;
+                    // total_amount stays the same (available + on_hold + pending)
+                    await wallet.save();
+                }
 
                 // Send notification to organizer
                 try {
@@ -2059,7 +2071,7 @@ const adminController = {
                                     ${rejection_reason ? `<p><strong>Rejection Reason:</strong> ${rejection_reason}</p>` : ''}
                                     ${admin_notes ? `<p><strong>Admin Notes:</strong> ${admin_notes}</p>` : ''}
                                 </div>
-                                <p><strong>Good News:</strong> The amount of ${amount} ${transaction.currency || 'SAR'} has been restored to your wallet balance.</p>
+                                <p><strong>Good News:</strong> The amount of ${amount} ${transaction.currency || 'SAR'} has been restored to your wallet balance and is now available for withdrawal.</p>
                                 <p>You can submit a new withdrawal request after resolving the mentioned issues.</p>
                                 <p>If you have any questions, please contact our support team.</p>
                                 <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">

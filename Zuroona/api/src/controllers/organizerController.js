@@ -43,6 +43,18 @@ custom_log.clear();
 custom_log.closeByNewLine = true;
 custom_log.useIcons = true;
 
+// utility: ensure wallet balance consistency before performing operations
+function validateWalletConsistency(wallet) {
+    const sum = (wallet.available_amount || 0) +
+                (wallet.on_hold_amount || 0) +
+                (wallet.pending_amount || 0);
+    if (Math.abs(sum - (wallet.total_amount || 0)) > 0.01) {
+        custom_log.error(`Wallet inconsistency: organizer ${wallet.organizer_id}, total ${wallet.total_amount}, sum ${sum}`);
+        return false;
+    }
+    return true;
+}
+
 // ===== SPECIAL TEST PHONES (AUTO-VERIFIED) =====
 // Match against last 9 digits of the phone number (local part without country code)
 // Also supports 8-digit test numbers (50000001-50000009)
@@ -2776,6 +2788,9 @@ const organizerController = {
 			organizer_id: userId,
 		});
 		const total_amount = wallet?.total_amount || 0;
+		const available_amount = wallet?.available_amount || 0;
+		const on_hold_amount = wallet?.on_hold_amount || 0;
+		const pending_amount = wallet?.pending_amount || 0;
 
 			const transactions = await TransactionService.AggregateService([
 				{
@@ -3089,6 +3104,10 @@ const organizerController = {
 
 			return Response.ok(res, {
 				total_earnings: total_amount,
+				total_amount: total_amount,
+				available_amount: available_amount,
+				on_hold_amount: on_hold_amount,
+				pending_amount: pending_amount,
 				transactions,
 				graph_data,
 				total_attendees: total_attendee,
@@ -3122,6 +3141,9 @@ const organizerController = {
 				const _newWallet = await WalletService.CreateService({
 					organizer_id: userId,
 					total_amount: 0,
+					available_amount: 0,
+					on_hold_amount: 0,
+					pending_amount: 0,
 					minimum_withdrawal: 100,
 					maximum_withdrawal: 50000
 				});
@@ -3131,21 +3153,62 @@ const organizerController = {
 					{
 						organizer_id: userId,
 						total_amount: 0,
+						available_amount: 0,
+						on_hold_amount: 0,
+						pending_amount: 0,
 						minimum_withdrawal: 100,
-						maximum_withdrawal: 50000
+						maximum_withdrawal: 50000,
+						can_withdraw: false,
+						withdrawal_status: lang === "ar" ? "لا توجد أموال متاحة" : "No funds available",
+						last_withdrawal: null,
+						pending_requests_count: 0
 					},
 					200,
 					lang === "ar" ? "تم جلب معلومات المحفظة" : "Wallet information retrieved"
 				);
 			}
 
+			// Get count of pending withdrawal requests
+			const pendingWithdrawals = await TransactionService.CountDocumentService({
+				organizer_id: userId,
+				type: 2,
+				status: 0
+			});
+
+			// Get last withdrawal
+			const lastWithdrawal = await TransactionService.FindOneService(
+				{ organizer_id: userId, type: 2 },
+				{ sort: { createdAt: -1 } }
+			);
+
+			const availableAmount = wallet.available_amount || 0;
+			const canWithdraw = availableAmount >= (wallet.minimum_withdrawal || 100);
+
 			return Response.ok(
 				res,
 				{
 					organizer_id: userId,
 					total_amount: wallet.total_amount || 0,
+					available_amount: availableAmount,
+					on_hold_amount: wallet.on_hold_amount || 0,
+					pending_amount: wallet.pending_amount || 0,
 					minimum_withdrawal: wallet.minimum_withdrawal || 100,
-					maximum_withdrawal: wallet.maximum_withdrawal || 50000
+					maximum_withdrawal: wallet.maximum_withdrawal || 50000,
+					can_withdraw: canWithdraw,
+					withdrawal_status: canWithdraw 
+						? (lang === "ar" ? "متاح" : "Available")
+						: (lang === "ar" ? "غير متاح" : "Unavailable"),
+					last_withdrawal: lastWithdrawal ? {
+						amount: lastWithdrawal.amount,
+						status: lastWithdrawal.status,
+						created_at: lastWithdrawal.createdAt
+					} : null,
+					pending_requests_count: pendingWithdrawals,
+					balance_breakdown: {
+						ready_to_withdraw: availableAmount,
+						awaiting_approval: wallet.on_hold_amount || 0,
+						from_pending_events: wallet.pending_amount || 0
+					}
 				},
 				200,
 				lang === "ar" ? "تم جلب معلومات المحفظة" : "Wallet information retrieved"
@@ -3161,7 +3224,7 @@ const organizerController = {
 
 	withdrawal: async (req, res) => {
 		try {
-			const { amount } = req.body;
+			const { amount, balance_type = 'available_amount' } = req.body;
 			const { userId } = req;
 
 			// Release earnings to wallet when event is completed (so host can withdraw after event)
@@ -3191,32 +3254,67 @@ const organizerController = {
 				);
 			}
 			
-			// Check if amount is greater than available balance (host can withdraw full wallet amount)
-			if (amount > organizerWallet.total_amount) {
+			// Validate minimum withdrawal amount
+			const minimumWithdrawal = organizerWallet.minimum_withdrawal || 100;
+			if (amount < minimumWithdrawal) {
 				return Response.badRequestResponse(
 					res,
-					resp_messages(req.lang).insufficient_funds
+					req.lang === "ar" 
+						? `الحد الأدنى للسحب ${minimumWithdrawal} ريال`
+						: `Minimum withdrawal amount is ${minimumWithdrawal} SAR`
 				);
 			}
 
-			// Minimum 0.01 SAR to avoid zero/negative
-			if (amount < 0.01) {
+			// Validate maximum withdrawal amount
+			const maximumWithdrawal = organizerWallet.maximum_withdrawal || 50000;
+			if (amount > maximumWithdrawal) {
 				return Response.badRequestResponse(
 					res,
-					req.lang === "ar" ? "الحد الأدنى للسحب 0.01 ريال" : "Minimum withdrawal amount is 0.01 SAR"
+					req.lang === "ar" 
+						? `الحد الأقصى للسحب ${maximumWithdrawal} ريال`
+						: `Maximum withdrawal amount is ${maximumWithdrawal} SAR`
 				);
 			}
 			
-			// Requirement #22: Set wallet balance to 0 when withdrawal is requested (even if pending)
-			// This allows host to request withdrawal again
-			organizerWallet.total_amount = 0;
+			// Check available balance - only allow withdrawal from available_amount
+			const availableBalance = organizerWallet.available_amount || 0;
+			if (amount > availableBalance) {
+				return Response.badRequestResponse(
+					res,
+					req.lang === "ar"
+						? `الرصيد المتاح غير كافي. الرصيد المتاح: ${availableBalance} ريال`
+						: `Insufficient available balance. Available: ${availableBalance} SAR`
+				);
+			}
+			
+			// Validate wallet balance consistency before modification
+			const balanceSum = (organizerWallet.available_amount || 0) + 
+			                  (organizerWallet.on_hold_amount || 0) + 
+			                  (organizerWallet.pending_amount || 0);
+			
+			if (Math.abs(balanceSum - organizerWallet.total_amount) > 0.01) {
+				console.error(`[WITHDRAWAL] Balance inconsistency detected for organizer ${userId}`);
+				return Response.badRequestResponse(
+					res,
+					req.lang === "ar"
+						? "خطأ في نظام المحفظة. يرجى التواصل مع الدعم"
+						: "Wallet system error. Please contact support"
+				);
+			}
+			
+			// Move amount from available_amount to on_hold_amount
+			organizerWallet.available_amount -= amount;
+			organizerWallet.on_hold_amount += amount;
+			// Total amount remains the same (available + on_hold + pending)
 			await organizerWallet.save();
 			
 			// Create withdrawal transaction with pending status (status = 0)
-		const _transaction = await TransactionService.CreateService({
+			const _transaction = await TransactionService.CreateService({
 				amount: amount,
 				organizer_id: userId,
+				type: 2, // Withdrawal type
 				status: 0, // Pending
+				balance_type: balance_type, // Track which balance type was used
 			});
 			
 			// Create notification for admin when withdrawal is requested
@@ -3252,9 +3350,20 @@ const organizerController = {
 			
 			return Response.ok(
 				res,
-				{},
+				{
+					transaction_id: _transaction._id,
+					amount_requested: amount,
+					status: "pending",
+					remaining_balance: organizerWallet.available_amount,
+					submitted_at: new Date(),
+					message: req.lang === "ar" 
+						? `طلب سحب ${amount} ريال تم إرساله بنجاح. رقم التتبع: ${_transaction._id}`
+						: `Withdrawal request of ${amount} SAR submitted. Request ID: ${_transaction._id}`
+				},
 				200,
-				resp_messages(req.lang).withdrawalSuccess
+				req.lang === "ar" 
+					? "تم إرسال طلب السحب بنجاح. سيتم مراجعته من قبل فريق الدعم."
+					: "Withdrawal request submitted successfully. It will be reviewed by our support team."
 			);
 		} catch (error) {
 			console.log(error.message);

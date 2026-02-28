@@ -20,7 +20,11 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
     const [loading, setLoading] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
-    const availableBalance = Number(data?.total_earnings) || 0;
+    // Get available balance from wallet data (should be passed from parent)
+    const availableBalance = Number(data?.available_amount || data?.total_earnings || 0);
+    const totalBalance = Number(data?.total_amount || 0);
+    const onHoldAmount = Number(data?.on_hold_amount || 0);
+    
     const minAmount = 0.01;
     const maxAmount = availableBalance;
 
@@ -35,6 +39,7 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
     const formik = useFormik({
         initialValues: {
             amount: "",
+            balance_type: "available_amount",
         },
         validationSchema: validationSchema,
         enableReinitialize: true,
@@ -45,7 +50,10 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
             }
 
             setLoading(true);
-            WithdrawalApi(values)
+            WithdrawalApi({
+                amount: values.amount,
+                balance_type: values.balance_type,
+            })
                 .then((response) => {
                     setLoading(false);
                     if (response?.status === 1) {
@@ -93,11 +101,18 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                                 />
                             </div>
                             
-                            {/* Balance */}
+                            {/* Available Balance */}
                             <p className="mt-4 font-semibold text-sm opacity-90">{t('earning.tab5') || 'Available Balance'}</p>
-                            <h2 className="text-5xl font-bold text-white mb-2">{availableBalance}</h2>
+                            <h2 className="text-5xl font-bold text-white mb-2">{availableBalance.toFixed(2)}</h2>
                             <p className="text-lg font-medium opacity-90">{t('card.tab2') || 'SAR'}</p>
 
+                            {/* Balance breakdown */}
+                            {(onHoldAmount > 0 || totalBalance > availableBalance) && (
+                                <div className="mt-4 pt-4 border-t border-white/30 w-full text-center text-sm opacity-75">
+                                    {onHoldAmount > 0 && <p>On Hold: {onHoldAmount.toFixed(2)} SAR</p>}
+                                    {totalBalance > availableBalance && <p>Total: {totalBalance.toFixed(2)} SAR</p>}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -144,7 +159,7 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                                 onClick={() => formik.setFieldValue('amount', availableBalance)}
                                 className="mb-3 w-full py-2.5 px-4 rounded-lg font-semibold text-sm bg-gradient-to-r from-[#a3cc69]/20 to-[#a797cc]/20 text-gray-800 border-2 border-[#a3cc69] hover:from-[#a3cc69]/30 hover:to-[#a797cc]/30 transition-all"
                             >
-                                {t('withdrawal.withdrawFullBalance') || 'Withdraw full balance'} ({availableBalance} SAR)
+                                {t('withdrawal.withdrawFullBalance') || 'Withdraw full balance'} ({availableBalance.toFixed(2)} SAR)
                             </button>
                         )}
                         <div className="mt-4 grid grid-cols-4 gap-2">
@@ -165,7 +180,7 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                             ))}
                         </div>
 
-                        {/* Info Box - no min/max limits shown */}
+                        {/* Info Box - Processing information */}
                         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
                             <div className="flex items-start gap-3">
                                 <FaInfoCircle className="text-blue-500 text-xl mt-0.5 flex-shrink-0" />
@@ -207,15 +222,23 @@ const WithdrawModal = ({ isOpen, onClose, data, page, limit }) => {
                         {/* Amount Display */}
                         <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-8 mb-8">
                             <p className="text-gray-600 text-sm font-medium mb-2">Withdrawal Amount</p>
-                            <p className="text-5xl font-bold text-[#a3cc69] mb-2">{formik.values.amount}</p>
+                            <p className="text-5xl font-bold text-[#a3cc69] mb-2">{Number(formik.values.amount).toFixed(2)}</p>
                             <p className="text-gray-600 font-medium">SAR</p>
                         </div>
 
                         {/* Info */}
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-8">
-                            <p className="text-yellow-800 text-sm font-medium">
-                                ⚠️ Your wallet balance will be set to 0 after submitting this request.
-                            </p>
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-8">
+                            <div className="flex items-start gap-3">
+                                <FaCheckCircle className="text-green-600 mt-0.5 flex-shrink-0" />
+                                <div className="text-left">
+                                    <p className="text-green-800 text-sm font-medium">
+                                        ✓ Your available balance: {availableBalance.toFixed(2)} SAR
+                                    </p>
+                                    <p className="text-green-700 text-xs mt-1">
+                                        After withdrawal: {(availableBalance - Number(formik.values.amount)).toFixed(2)} SAR
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Buttons */}

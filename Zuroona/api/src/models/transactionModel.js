@@ -88,6 +88,13 @@ const transactionSchema = new mongoose.Schema({
     released_to_wallet_at: {
         type: Date,
         default: null
+    },
+    // Track which balance type was used for withdrawal
+    balance_type: {
+        type: String,
+        enum: ['available_amount', 'pending_amount', 'on_hold_amount'],
+        default: 'available_amount',
+        description: "Which balance type was used for this withdrawal"
     }
 }, { timestamps: true });
 
