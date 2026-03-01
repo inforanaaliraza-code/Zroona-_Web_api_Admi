@@ -1,0 +1,85 @@
+# CI: Lint, type-check, and build on PRs and push to develop
+# Kyun: Merge se pehle pata chale code build ho raha hai; develop branch quality check
+name: CI
+
+on:
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # --- Web ---
+      - name: Web – install
+        working-directory: ./web
+        run: npm ci --legacy-peer-deps
+
+      - name: Web – lint
+        working-directory: ./web
+        run: npm run lint
+
+      - name: Web – type-check
+        working-directory: ./web
+        run: npm run type-check
+
+      - name: Web – build
+        working-directory: ./web
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://api.zuroona.sa/api/
+          NEXT_PUBLIC_API_URL: https://api.zuroona.sa/api
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'dummy' }}
+          NEXT_PUBLIC_S3_BUCKET: ${{ secrets.NEXT_PUBLIC_S3_BUCKET || 'dummy' }}
+          NEXT_PUBLIC_S3_REGION: ${{ secrets.NEXT_PUBLIC_S3_REGION || 'dummy' }}
+          NEXT_PUBLIC_S3_URL: ${{ secrets.NEXT_PUBLIC_S3_URL || 'dummy' }}
+          NEXT_PUBLIC_S3_DIR: Zuroona
+
+      # --- Admin ---
+      - name: Admin – install
+        working-directory: ./admin
+        run: npm ci
+
+      - name: Admin – lint
+        working-directory: ./admin
+        run: npm run lint
+
+      - name: Admin – type-check
+        working-directory: ./admin
+        run: npm run type-check
+
+      - name: Admin – build
+        working-directory: ./admin
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: https://api.zuroona.sa/api/
+          NEXT_PUBLIC_API_ADMIN_BASE_URL: https://api.zuroona.sa/api/admin/
+          NEXT_PUBLIC_S3_BUCKET: ${{ secrets.NEXT_PUBLIC_S3_BUCKET || 'dummy' }}
+          NEXT_PUBLIC_S3_REGION: ${{ secrets.NEXT_PUBLIC_S3_REGION || 'dummy' }}
+          NEXT_PUBLIC_S3_URL: ${{ secrets.NEXT_PUBLIC_S3_URL || 'dummy' }}
+          NEXT_PUBLIC_S3_DIR: Zuroona
+          NEXT_PUBLIC_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_MAPS_API_KEY || 'dummy' }}
+
+      # --- API ---
+      - name: API – install
+        working-directory: ./api
+        run: npm ci --legacy-peer-deps
+
+      - name: API – lint
+        working-directory: ./api
+        run: npm run lint
+
+      - name: API – type-check
+        working-directory: ./api
+        run: npm run type-check

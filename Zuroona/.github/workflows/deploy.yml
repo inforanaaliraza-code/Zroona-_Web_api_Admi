@@ -1,0 +1,27 @@
+# Deploy: main branch pe push/merge hote hi VPS pe auto deploy
+# Kyun: Manual SSH na karna pade; professional CI/CD
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Manual run bhi kar sakte ho: Actions → Deploy to VPS → Run workflow
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/Zuroona
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose build --no-cache
+            docker compose up -d
+            docker system prune -f

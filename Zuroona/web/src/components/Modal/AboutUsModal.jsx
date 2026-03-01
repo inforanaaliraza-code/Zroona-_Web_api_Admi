@@ -53,7 +53,7 @@ export default function AboutUsModal({ isOpen, onClose }) {
         <div className="px-4 md:px-6 py-6 space-y-6">
           {/* Content Section - ONLY from CMS */}
           <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl p-6 md:p-8 border border-gray-200/80">
-            <div className="prose prose-lg max-w-none">
+            <div className="prose prose-lg max-w-none break-words overflow-x-auto">
               {content ? (
                 <div
                   className={`text-gray-700 leading-relaxed ${textAlign}

@@ -16,6 +16,7 @@ const ReactQuill = dynamic(() => import("react-quill"), {
 // Import CSS normally (Next.js handles CSS imports)
 import "react-quill/dist/quill.snow.css";
 import "../TextEditor/style.css";
+import HtmlCodeEditor from "./HtmlCodeEditor";
 
 // Lazy register Quill modules
 let quillInitialized = false;
@@ -212,7 +213,8 @@ const EnhancedTextEditor = memo(function EnhancedTextEditor(props) {
       {/* Editor Content */}
       <div className="relative">
         {showPreview ? (
-          <div className="min-h-[400px] p-6 bg-white overflow-auto">
+          // the ql-snow wrapper ensures Quill color/background classes are scoped properly
+          <div className="min-h-[400px] p-6 bg-white overflow-auto ql-snow">
             <div
               className="prose prose-lg max-w-none cms-preview-content"
               dangerouslySetInnerHTML={{
@@ -224,22 +226,13 @@ const EnhancedTextEditor = memo(function EnhancedTextEditor(props) {
             />
           </div>
         ) : mode === "code" ? (
-          <div className="relative">
-            <textarea
-              value={htmlCode}
-              onChange={handleCodeChange}
-              onBlur={props.onBlur}
-              className="w-full min-h-[400px] p-4 font-mono text-sm border-0 focus:outline-none focus:ring-0 resize-none"
-              placeholder="Enter HTML code here..."
-              style={{
-                fontFamily: "'Courier New', monospace",
-                lineHeight: "1.6",
-              }}
-            />
-            <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white px-2 py-1 rounded">
-              {htmlCode.length} characters
-            </div>
-          </div>
+          <HtmlCodeEditor
+            value={htmlCode}
+            onChange={handleCodeChange}
+            onBlur={props.onBlur}
+            className="min-h-[400px]"
+            placeholder="Enter HTML code here..."
+          />
         ) : (
           <ReactQuill
             theme="snow"
